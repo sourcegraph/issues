@@ -7,12 +7,14 @@ import { Settings, SettingsCascadeOrError } from '../settings/settings'
 import { TelemetryService } from '../telemetry/telemetryService'
 import { FileSpec, PositionSpec, RawRepoSpec, RepoSpec, RevSpec, ViewStateSpec } from '../util/url'
 
+export interface StartableEndpoint extends Endpoint, Pick<MessagePort, 'start'> {}
+
 export interface EndpointPair {
     /** The endpoint to proxy the API of the other thread from */
-    proxy: Endpoint & Pick<MessagePort, 'start'>
+    proxy: StartableEndpoint
 
     /** The endpoint to expose the API of this thread to */
-    expose: Endpoint & Pick<MessagePort, 'start'>
+    expose: StartableEndpoint
 }
 export const isEndpointPair = (val: any): val is EndpointPair =>
     typeof val === 'object' && val !== null && isEndpoint(val.proxy) && isEndpoint(val.expose)

@@ -123,8 +123,10 @@ cmd/management-console/assets/*.css
 cmd/management-console/assets/*.html
 cmd/management-console/assets/favicon.*.png
 cmd/management-console/web/src/favicon.png
-cmd/management-console/web/.cache
 cmd/management-console/assets/assets_vfsdata.go
+
+.cache/
+dist/
 
 # Symbols service: PCRE extension to sqlite3
 libsqlite3-pcre.dylib

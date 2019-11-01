@@ -134,6 +134,7 @@
     "@types/webpack": "4.39.2",
     "@types/webpack-dev-server": "3.1.7",
     "@types/whatwg-url": "6.4.0",
+    "@types/ws": "6.0.3",
     "abort-controller": "^3.0.0",
     "autoprefixer": "^9.6.1",
     "babel-jest": "^24.9.0",
@@ -172,6 +173,7 @@
     "node-sass": "^4.12.0",
     "optimize-css-assets-webpack-plugin": "^5.0.3",
     "p-retry": "^4.1.0",
+    "parcel-bundler": "^1.12.4",
     "postcss-focus-visible": "^4.0.0",
     "postcss-loader": "^3.0.0",
     "prettier": "^1.18.2",
@@ -220,6 +222,8 @@
     "d3-shape": "^1.3.5",
     "date-fns": "^2.2.1",
     "downshift": "^3.2.10",
+    "esm": "^3.2.25",
+    "event-target-shim": "^5.0.1",
     "focus-visible": "^5.0.2",
     "got": "^9.6.0",
     "graphiql": "^0.13.2",
@@ -250,6 +254,7 @@
     "sourcegraph": "link:packages/sourcegraph-extension-api",
     "string-score": "^1.0.1",
     "symbol-observable": "^1.2.0",
+    "tagged-template-noop": "^2.1.0",
     "textarea-caret": "^3.1.0",
     "ts-key-enum": "^2.0.0",
     "tslib": "^1.10.0",
@@ -257,7 +262,8 @@
     "uuid": "^3.3.2",
     "webext-domain-permission-toggle": "^1.0.0",
     "webextension-polyfill": "^0.5.0",
-    "whatwg-url": "^7.0.0"
+    "whatwg-url": "^7.0.0",
+    "ws": "^7.1.2"
   },
   "resolutions": {
     "history": "4.5.1"

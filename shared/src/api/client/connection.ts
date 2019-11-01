@@ -1,9 +1,9 @@
 import * as comlink from '@sourcegraph/comlink'
 import { from, merge, Subject, Subscription, of } from 'rxjs'
 import { concatMap } from 'rxjs/operators'
-import { ContextValues, Progress, ProgressOptions, Unsubscribable } from 'sourcegraph'
+import { ContextValues, Progress, ProgressOptions } from 'sourcegraph'
 import { EndpointPair } from '../../platform/context'
-import { ExtensionHostAPIFactory } from '../extension/api/api'
+import { ExtensionHostAPIFactory, ExtensionHostAPI } from '../extension/api/api'
 import { InitData } from '../extension/extensionHost'
 import { ClientAPI } from './api/api'
 import { ClientCodeEditor } from './api/codeEditor'
@@ -32,6 +32,8 @@ export interface ExtensionHostClientConnection {
      * Closes the connection to and terminates the extension host.
      */
     unsubscribe(): void
+
+    proxy: comlink.ProxiedObject<ExtensionHostAPI>
 }
 
 /**
@@ -56,7 +58,7 @@ export async function createExtensionHostClientConnection(
     endpoints: EndpointPair,
     services: Services,
     initData: InitData
-): Promise<Unsubscribable> {
+): Promise<ExtensionHostClientConnection> {
     const subscription = new Subscription()
 
     // MAIN THREAD
@@ -151,5 +153,8 @@ export async function createExtensionHostClientConnection(
     }
     comlink.expose(clientAPI, endpoints.expose)
 
-    return subscription
+    return {
+        unsubscribe: () => subscription.unsubscribe(),
+        proxy,
+    }
 }

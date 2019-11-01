@@ -1,0 +1,11 @@
+{
+  "private": true,
+  "scripts": {
+    "start": "node -r esm out/extrunner/src/main",
+    "build": "yarn run build-ext-runner && yarn run build-ext-host",
+    "build-ext-runner": "tsc -p .",
+    "watch-ext-runner": "tsc -p -w .",
+    "build-ext-host": "parcel build --out-dir out/extrunner/src --out-file extensionHost.bundle.js src/extensionHost.ts",
+    "watch-ext-host": "parcel watch --no-hmr --out-dir out/extrunner/src --out-file extensionHost.bundle.js src/extensionHost.ts"
+  }
+}
