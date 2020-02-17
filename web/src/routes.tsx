@@ -140,9 +140,13 @@ export const routes: readonly LayoutRouteProps<any>[] = [
     },
     {
         path: '/help',
+        render: lazyComponent(() => import('./marketing/HelpPage'), 'HelpPage'),
+    },
+    {
+        path: '/documentation',
         render: () => {
-            // Force a hard reload so that we delegate to the HTTP handler for /help, which handles
-            // redirecting /help to https://docs.sourcegraph.com. That logic is not duplicated in
+            // Force a hard reload so that we delegate to the HTTP handler for /documentation, which handles
+            // redirecting /documentation to https://docs.sourcegraph.com. That logic is not duplicated in
             // the web app because that would add complexity with no user benefit.
             window.location.reload()
             return null

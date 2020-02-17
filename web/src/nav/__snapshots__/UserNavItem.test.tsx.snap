@@ -141,6 +141,13 @@ exports[`UserNavItem simple 1`] = `
       href="https://docs.sourcegraph.com"
       target="_blank"
     >
+      Documentation
+    </a>
+    <a
+      className="dropdown-item"
+      href="/help"
+      onClick={[Function]}
+    >
       Help
     </a>
     <div

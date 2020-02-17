@@ -131,13 +131,16 @@ export class UserNavItem extends React.PureComponent<Props, State> {
                     {this.props.showDotComMarketing ? (
                         // eslint-disable-next-line react/jsx-no-target-blank
                         <a href="https://docs.sourcegraph.com" target="_blank" className="dropdown-item">
-                            Help
+                            Documentation
                         </a>
                     ) : (
-                        <Link to="/help" className="dropdown-item">
-                            Help
+                        <Link to="/documentation" className="dropdown-item">
+                            Documentation
                         </Link>
                     )}
+                    <Link to="/help" className="dropdown-item">
+                        Help
+                    </Link>
                     {this.props.authenticatedUser.session && this.props.authenticatedUser.session.canSignOut && (
                         <a href="/-/sign-out" className="dropdown-item">
                             Sign out

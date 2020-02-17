@@ -10,12 +10,12 @@ import (
 	"github.com/sourcegraph/sourcegraph/internal/version"
 )
 
-// serveHelp redirects to documentation pages on https://docs.sourcegraph.com for the current
+// serveDocumentation redirects to documentation pages on https://docs.sourcegraph.com for the current
 // product version, i.e., /help/PATH -> https://docs.sourcegraph.com/@VERSION/PATH. In unreleased
 // development builds (whose docs aren't necessarily available on https://docs.sourcegraph.com, it
 // shows a message with instructions on how to see the docs.)
-func serveHelp(w http.ResponseWriter, r *http.Request) {
-	page := strings.TrimPrefix(r.URL.Path, "/help")
+func serveDocumentation(w http.ResponseWriter, r *http.Request) {
+	page := strings.TrimPrefix(r.URL.Path, "/documentation")
 	versionStr := version.Version()
 
 	// For release builds, use the version string. Otherwise, don't use any version string because:

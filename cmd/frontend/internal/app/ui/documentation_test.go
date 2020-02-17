@@ -10,7 +10,7 @@ import (
 	"github.com/sourcegraph/sourcegraph/internal/version"
 )
 
-func TestServeHelp(t *testing.T) {
+func TestServeDocumentation(t *testing.T) {
 	t.Run("unreleased dev version", func(t *testing.T) {
 		{
 			orig := envvar.SourcegraphDotComMode()
@@ -25,8 +25,8 @@ func TestServeHelp(t *testing.T) {
 
 		rw := httptest.NewRecorder()
 		rw.Body = new(bytes.Buffer)
-		req, _ := http.NewRequest("GET", "/help/foo/bar", nil)
-		serveHelp(rw, req)
+		req, _ := http.NewRequest("GET", "/documentation/foo/bar", nil)
+		serveDocumentation(rw, req)
 
 		if want := http.StatusTemporaryRedirect; rw.Code != want {
 			t.Errorf("got %d, want %d", rw.Code, want)
@@ -49,8 +49,8 @@ func TestServeHelp(t *testing.T) {
 		}
 
 		rw := httptest.NewRecorder()
-		req, _ := http.NewRequest("GET", "/help/foo/bar", nil)
-		serveHelp(rw, req)
+		req, _ := http.NewRequest("GET", "/documentation/foo/bar", nil)
+		serveDocumentation(rw, req)
 
 		if want := http.StatusTemporaryRedirect; rw.Code != want {
 			t.Errorf("got %d, want %d", rw.Code, want)
@@ -66,8 +66,8 @@ func TestServeHelp(t *testing.T) {
 		defer envvar.MockSourcegraphDotComMode(orig) // reset
 
 		rw := httptest.NewRecorder()
-		req, _ := http.NewRequest("GET", "/help/foo/bar", nil)
-		serveHelp(rw, req)
+		req, _ := http.NewRequest("GET", "/documentation/foo/bar", nil)
+		serveDocumentation(rw, req)
 
 		if want := http.StatusTemporaryRedirect; rw.Code != want {
 			t.Errorf("got %d, want %d", rw.Code, want)
