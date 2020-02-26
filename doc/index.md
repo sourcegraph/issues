@@ -49,7 +49,7 @@ We actively maintain the two most recent monthly releases of Sourcegraph.
 Upgrades should happen across consecutive minor versions of Sourcegraph. For example, if you are
 running Sourcegraph 3.1 and want to upgrade to 3.3, you should upgrade to 3.2 and then 3.3.
 
-> The Docker server image tags follow SemVer semantics, so version 3.8 can be found at `sourcegraph/server:3.13.0`. You can see the full list of tags on our [Docker Hub page](https://hub.docker.com/r/sourcegraph/server/tags).
+> The Docker server image tags follow SemVer semantics, so version 3.13.0 can be found at `sourcegraph/server:3.13.0`. You can see the full list of tags on our [Docker Hub page](https://hub.docker.com/r/sourcegraph/server/tags).
 
 ## Documentation
 
