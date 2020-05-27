@@ -275,10 +275,23 @@ const nativeTooltipResolver: ViewResolver<NativeTooltip> = {
 
 const iconClassName = 'icon--github v-align-text-bottom'
 
+const adjustOverlayPosition: CodeHost['adjustOverlayPosition'] = ({ top, left }) => {
+    // if octotree sidebar is pinned
+    const octotree = document.querySelector('.octotree-show')
+    if (octotree) {
+        left += octotree.getBoundingClientRect().left
+    }
+    return {
+        top,
+        left,
+    }
+}
+
 export const githubCodeHost: CodeHost = {
     type: 'github',
     name: checkIsGitHubEnterprise() ? 'GitHub Enterprise' : 'GitHub',
     codeViewResolvers: [genericCodeViewResolver, fileLineContainerResolver, searchResultCodeViewResolver],
+    adjustOverlayPosition,
     contentViewResolvers: [markdownBodyViewResolver],
     textFieldResolvers: [commentTextFieldResolver],
     nativeTooltipResolvers: [nativeTooltipResolver],
