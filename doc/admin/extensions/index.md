@@ -1,6 +1,6 @@
 # Administration of Sourcegraph extensions and the extension registry
 
-[Sourcegraph extensions](../../extensions/index.md) add features to Sourcegraph. Sourcegraph Core and Enterprise instances allow users to view and enable extensions from the [Sourcegraph.com extension registry](https://sourcegraph.com/extensions).
+[Sourcegraph extensions](../../extensions/index.md) add features to Sourcegraph. Sourcegraph Core, Enterprise, Enterprise Plus, and Elite instances allow users to view and enable extensions from the [Sourcegraph.com extension registry](https://sourcegraph.com/extensions).
 
 Site administrators can customize how Sourcegraph extensions are used on their instance, with options for:
 
@@ -32,7 +32,7 @@ If a user's organization settings or user settings explicitly disable the extens
 
 ## Publish extensions to a private extension registry
 
-If you want to create extensions that are only visible to users on your Sourcegraph instance, you can use Sourcegraph Enterprise's private extension registry feature. This is enabled by default on Sourcegraph Enterprise.
+If you want to create extensions that are only visible to users on your Sourcegraph instance, you can use Sourcegraph Elite's private extension registry feature. This is enabled by default on Sourcegraph Elite.
 
 To publish an extension to your instance's private extension registry:
 
@@ -45,7 +45,7 @@ On Sourcegraph Core, the only way to publish extensions is to publish them to th
 
 ## Use extensions from Sourcegraph.com (or disable remote extensions)
 
-Sourcegraph Core and Enterprise instances use extensions from Sourcegraph.com with [`extensions.remoteRegistry`](../config/site_config.md) set to `"https://sourcegraph.com/.api/registry"`. The OSS version of Sourcegraph has no dependencies on external services, and its `extensions.remoteRegistry` defaults to `false`.
+Sourcegraph Core, Enterprise, Enterprise Plus, and Elite instances use extensions from Sourcegraph.com with [`extensions.remoteRegistry`](../config/site_config.md) set to `"https://sourcegraph.com/.api/registry"`. The OSS version of Sourcegraph has no dependencies on external services, and its `extensions.remoteRegistry` defaults to `false`.
 
 You can disable extensions from Sourcegraph.com by setting [`extensions.remoteRegistry`](../config/site_config.md) to `false` in your site configuration:
 
@@ -57,7 +57,7 @@ You can disable extensions from Sourcegraph.com by setting [`extensions.remoteRe
 
 ## Allow only specific extensions from Sourcegraph.com
 
-On Sourcegraph Enterprise, you can set [`extensions.allowRemoteExtensions`](../config/site_config.md) so that only the explicitly specified extensions can be used from Sourcegraph.com:
+On Sourcegraph Enterprise Plus and Sourcegraph Elite, you can set [`extensions.allowRemoteExtensions`](../config/site_config.md) so that only the explicitly specified extensions can be used from Sourcegraph.com:
 
 ```json
 {
