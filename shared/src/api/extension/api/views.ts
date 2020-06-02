@@ -1,7 +1,7 @@
 import * as comlink from 'comlink'
 import * as sourcegraph from 'sourcegraph'
 import { ClientViewsAPI, PanelUpdater, PanelViewData } from '../../client/api/views'
-import { syncSubscription } from '../../util'
+import { synchronousSubscription } from '../../util'
 import { Unsubscribable } from 'rxjs'
 import { toProxyableSubscribable } from './common'
 import { ContributableViewContainer } from '../../protocol'
@@ -77,7 +77,7 @@ export class ExtViews implements comlink.ProxyMarked {
     public registerViewProvider(id: string, provider: sourcegraph.ViewProvider): Unsubscribable {
         switch (provider.where) {
             case ContributableViewContainer.Directory: {
-                return syncSubscription(
+                return synchronousSubscription(
                     this.proxy.$registerDirectoryViewProvider(
                         id,
                         comlink.proxy((context: ViewContexts[typeof ContributableViewContainer.Directory]) =>
@@ -101,7 +101,7 @@ export class ExtViews implements comlink.ProxyMarked {
                 )
             }
             case ContributableViewContainer.GlobalPage: {
-                return syncSubscription(
+                return synchronousSubscription(
                     this.proxy.$registerGlobalPageViewProvider(
                         id,
                         comlink.proxy((context: ViewContexts[typeof ContributableViewContainer.GlobalPage]) =>

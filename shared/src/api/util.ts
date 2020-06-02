@@ -32,18 +32,35 @@ export function registerComlinkTransferHandlers(): void {
 /**
  * Creates a synchronous Subscription that will unsubscribe the given proxied Subscription asynchronously.
  *
+ * When calling a method that returns a proxied `Subscription` through comlink, we don't get a proxy for the
+ * `Subscription` object directly, but a `Promise` for the proxy of the `Subscription` object. However, it is
+ * easier to work with a synchronous `Subscription` object, and the proxy can also not always be passed directly to
+ * rxjs. This function wraps the Promise for the proxy into a synchronous Subscription. If the Subscription is
+ * unsubscribed before the Promise resolves, it will wait until the Promise resolves, then immediately unsubscribe
+ * the Subscription proxy.
+ *
+ * Since a Subscription can only be unsubscribed once and the proxy is therefor no longer needed afterwards, it
+ * will then also release the proxy.
+ *
  * @param subscriptionPromise A Promise for a Subscription proxied from the other thread
  */
-export const syncSubscription = (subscriptionPromise: Promise<Remote<Unsubscribable & ProxyMarked>>): Subscription =>
-    // We cannot pass the proxy subscription directly to Rx because it is a Proxy that looks like a function
+export const synchronousSubscription = (
+    subscriptionPromise: Promise<Remote<Unsubscribable & ProxyMarked>>
+): Subscription =>
     // eslint-disable-next-line @typescript-eslint/no-misused-promises
     new Subscription(async function (this: any) {
+        // Wait to retrieve the proxy
         const subscriptionProxy = await subscriptionPromise
+
+        // Forward the unsubscribe
         await subscriptionProxy.unsubscribe()
+
+        // Release the proxy, since it's no longer needed.
         subscriptionProxy[releaseProxy]()
 
-        this._unsubscribe = null // Workaround: rxjs doesn't null out the reference to this callback
-        ;(subscriptionPromise as any) = null
+        // Workaround for https://github.com/ReactiveX/rxjs/issues/5464
+        // remove when fixed
+        this._unsubscribe = null
     })
 
 /**

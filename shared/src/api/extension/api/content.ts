@@ -2,7 +2,7 @@ import * as comlink from 'comlink'
 import { Unsubscribable } from 'rxjs'
 import { LinkPreviewProvider } from 'sourcegraph'
 import { ClientContentAPI } from '../../client/api/content'
-import { syncSubscription } from '../../util'
+import { synchronousSubscription } from '../../util'
 import { toProxyableSubscribable } from './common'
 
 /** @internal */
@@ -15,6 +15,6 @@ export class ExtContent {
         > = comlink.proxy((url: string) =>
             toProxyableSubscribable(provider.provideLinkPreview(new URL(url)), preview => preview)
         )
-        return syncSubscription(this.proxy.$registerLinkPreviewProvider(urlMatchPattern, providerFunction))
+        return synchronousSubscription(this.proxy.$registerLinkPreviewProvider(urlMatchPattern, providerFunction))
     }
 }

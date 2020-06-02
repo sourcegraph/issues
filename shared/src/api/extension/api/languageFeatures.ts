@@ -13,7 +13,7 @@ import {
 } from 'sourcegraph'
 import { ClientLanguageFeaturesAPI } from '../../client/api/languageFeatures'
 import { ReferenceParams, TextDocumentPositionParams } from '../../protocol'
-import { syncSubscription } from '../../util'
+import { synchronousSubscription } from '../../util'
 import { toProxyableSubscribable } from './common'
 import { ExtDocuments } from './documents'
 import { fromHover, fromLocation, toPosition, fromDocumentSelector } from './types'
@@ -31,7 +31,9 @@ export class ExtLanguageFeatures {
                 hover => (hover ? fromHover(hover) : hover)
             )
         )
-        return syncSubscription(this.proxy.$registerHoverProvider(fromDocumentSelector(selector), providerFunction))
+        return synchronousSubscription(
+            this.proxy.$registerHoverProvider(fromDocumentSelector(selector), providerFunction)
+        )
     }
 
     public registerDefinitionProvider(selector: DocumentSelector, provider: DefinitionProvider): Unsubscribable {
@@ -43,7 +45,7 @@ export class ExtLanguageFeatures {
                 toLocations
             )
         )
-        return syncSubscription(
+        return synchronousSubscription(
             this.proxy.$registerDefinitionProvider(fromDocumentSelector(selector), providerFunction)
         )
     }
@@ -61,7 +63,9 @@ export class ExtLanguageFeatures {
                 toLocations
             )
         )
-        return syncSubscription(this.proxy.$registerReferenceProvider(fromDocumentSelector(selector), providerFunction))
+        return synchronousSubscription(
+            this.proxy.$registerReferenceProvider(fromDocumentSelector(selector), providerFunction)
+        )
     }
 
     public registerLocationProvider(
@@ -77,7 +81,7 @@ export class ExtLanguageFeatures {
                 toLocations
             )
         )
-        return syncSubscription(
+        return synchronousSubscription(
             this.proxy.$registerLocationProvider(idStr, fromDocumentSelector(selector), comlink.proxy(providerFunction))
         )
     }
@@ -94,7 +98,7 @@ export class ExtLanguageFeatures {
                 items => items
             )
         )
-        return syncSubscription(
+        return synchronousSubscription(
             this.proxy.$registerCompletionItemProvider(fromDocumentSelector(selector), providerFunction)
         )
     }

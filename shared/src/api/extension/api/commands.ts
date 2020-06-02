@@ -1,7 +1,7 @@
 import * as comlink from 'comlink'
 import { Unsubscribable } from 'rxjs'
 import { ClientCommandsAPI } from '../../client/api/commands'
-import { syncSubscription } from '../../util'
+import { synchronousSubscription } from '../../util'
 
 interface CommandEntry {
     command: string
@@ -22,6 +22,6 @@ export class ExtCommands {
     }
 
     public registerCommand(entry: CommandEntry): Unsubscribable {
-        return syncSubscription(this.proxy.$registerCommand(entry.command, comlink.proxy(entry.callback)))
+        return synchronousSubscription(this.proxy.$registerCommand(entry.command, comlink.proxy(entry.callback)))
     }
 }
