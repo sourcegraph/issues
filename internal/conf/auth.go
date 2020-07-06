@@ -1,9 +1,6 @@
 package conf
 
-import (
-	"github.com/sourcegraph/sourcegraph/cmd/frontend/envvar"
-	"github.com/sourcegraph/sourcegraph/schema"
-)
+import "github.com/sourcegraph/sourcegraph/schema"
 
 // AuthProviderType returns the type string for the auth provider.
 func AuthProviderType(p schema.AuthProviders) string {
@@ -25,11 +22,10 @@ func AuthProviderType(p schema.AuthProviders) string {
 	}
 }
 
-// AuthPublic reports whether the site is public. Because many core features rely on persisted user
-// settings, this leads to a degraded experience for most users. As a result, for self-hosted private
-// usage it is preferable for all users to have accounts. But on sourcegraph.com, allowing users to
-// opt-in to accounts remains worthwhile, despite the degraded UX.
-func AuthPublic() bool { return envvar.SourcegraphDotComMode() }
+// AuthPublic reports whether the site is public and can be accessed by unauthenticated
+// viewers.
+func AuthPublic() bool           { return authPublic(Get()) }
+func authPublic(c *Unified) bool { return c.AuthPublic }
 
 // AuthAllowSignup reports whether the site allows signup. Currently only the builtin auth provider
 // allows signup. AuthAllowSignup returns true if auth.providers' builtin provider has allowSignup

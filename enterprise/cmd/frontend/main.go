@@ -10,8 +10,6 @@ import (
 	"database/sql"
 	"log"
 	"net/http"
-	"os"
-	"strconv"
 	"time"
 
 	"github.com/inconshreveable/log15"
@@ -47,16 +45,14 @@ import (
 	"github.com/sourcegraph/sourcegraph/internal/env"
 	"github.com/sourcegraph/sourcegraph/internal/goroutine"
 	"github.com/sourcegraph/sourcegraph/internal/observation"
+	"github.com/sourcegraph/sourcegraph/internal/servicecmdutil"
 	"github.com/sourcegraph/sourcegraph/internal/trace"
 )
 
 func main() {
-	shared.Main(func() enterprise.Services {
-		debug, _ := strconv.ParseBool(os.Getenv("DEBUG"))
-		if debug {
-			log.Println("enterprise edition")
-		}
+	servicecmdutil.Init()
 
+	shared.Main(func() enterprise.Services {
 		ctx := context.Background()
 		enterpriseServices := enterprise.DefaultServices()
 

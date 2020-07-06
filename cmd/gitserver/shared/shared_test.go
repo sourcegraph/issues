@@ -1,5 +1,4 @@
-// gitserver is the gitserver server.
-package main
+package shared
 
 import "testing"
 

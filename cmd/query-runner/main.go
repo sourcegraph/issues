@@ -20,10 +20,9 @@ import (
 
 	"github.com/sourcegraph/sourcegraph/cmd/query-runner/queryrunnerapi"
 	"github.com/sourcegraph/sourcegraph/internal/api"
-	"github.com/sourcegraph/sourcegraph/internal/debugserver"
 	"github.com/sourcegraph/sourcegraph/internal/env"
 	"github.com/sourcegraph/sourcegraph/internal/eventlogger"
-	"github.com/sourcegraph/sourcegraph/internal/tracer"
+	"github.com/sourcegraph/sourcegraph/internal/servicecmdutil"
 )
 
 var forceRunInterval = env.Get("FORCE_RUN_INTERVAL", "", "Force an interval to run saved queries at, instead of assuming query execution time * 30 (query that takes 2s to run, runs every 60s)")
@@ -31,10 +30,10 @@ var forceRunInterval = env.Get("FORCE_RUN_INTERVAL", "", "Force an interval to r
 const port = "3183"
 
 func main() {
+	servicecmdutil.Init()
+
 	env.Lock()
 	env.HandleHelpFlag()
-
-	tracer.Init()
 
 	go func() {
 		c := make(chan os.Signal, 1)
@@ -42,8 +41,6 @@ func main() {
 		<-c
 		os.Exit(0)
 	}()
-
-	go debugserver.Start()
 
 	ctx := context.Background()
 

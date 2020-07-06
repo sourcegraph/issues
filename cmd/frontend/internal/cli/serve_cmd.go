@@ -23,25 +23,19 @@ import (
 	"github.com/sourcegraph/sourcegraph/cmd/frontend/graphqlbackend"
 	"github.com/sourcegraph/sourcegraph/cmd/frontend/internal/app/pkg/updatecheck"
 	"github.com/sourcegraph/sourcegraph/cmd/frontend/internal/bg"
-	"github.com/sourcegraph/sourcegraph/cmd/frontend/internal/cli/loghandlers"
 	"github.com/sourcegraph/sourcegraph/cmd/frontend/internal/pkg/siteid"
 	"github.com/sourcegraph/sourcegraph/internal/conf"
 	"github.com/sourcegraph/sourcegraph/internal/db/dbconn"
 	"github.com/sourcegraph/sourcegraph/internal/db/dbutil"
-	"github.com/sourcegraph/sourcegraph/internal/debugserver"
 	"github.com/sourcegraph/sourcegraph/internal/env"
 	"github.com/sourcegraph/sourcegraph/internal/goroutine"
 	"github.com/sourcegraph/sourcegraph/internal/processrestart"
 	"github.com/sourcegraph/sourcegraph/internal/sysreq"
-	"github.com/sourcegraph/sourcegraph/internal/tracer"
 	"github.com/sourcegraph/sourcegraph/internal/version"
 	"github.com/sourcegraph/sourcegraph/internal/vfsutil"
 )
 
 var (
-	trace          = env.Get("SRC_LOG_TRACE", "HTTP", "space separated list of trace logs to show. Options: all, HTTP, build, github")
-	traceThreshold = env.Get("SRC_LOG_TRACE_THRESHOLD", "", "show traces that take longer than this")
-
 	printLogo, _ = strconv.ParseBool(env.Get("LOGO", "false", "print Sourcegraph logo upon startup"))
 
 	httpAddr         = env.Get("SRC_HTTP_ADDR", ":3080", "HTTP listen address for app and HTTP API")
@@ -113,8 +107,7 @@ func InitDB() error {
 
 // Main is the main entrypoint for the frontend server program.
 func Main(enterpriseSetupHook func() enterprise.Services) error {
-	log.SetFlags(0)
-	log.SetPrefix("")
+	env.Lock()
 
 	if err := InitDB(); err != nil {
 		log.Fatalf("ERROR: %v", err)
@@ -126,10 +119,6 @@ func Main(enterpriseSetupHook func() enterprise.Services) error {
 
 	globals.ConfigurationServerFrontendOnly = conf.InitConfigurationServerFrontendOnly(&configurationSource{})
 	conf.MustValidateDefaults()
-
-	// Filter trace logs
-	d, _ := time.ParseDuration(traceThreshold)
-	tracer.Init(tracer.Filter(loghandlers.Trace(strings.Fields(trace), d)))
 
 	// Run enterprise setup hook
 	enterprise := enterpriseSetupHook()
@@ -181,16 +170,12 @@ func Main(enterpriseSetupHook func() enterprise.Services) error {
 		return err
 	}
 
-	go debugserver.Start()
-
 	siteid.Init()
 
 	globals.WatchExternalURL(defaultExternalURL(nginxAddr, httpAddr))
 	globals.WatchPermissionsUserMapping()
 	globals.WatchPermissionsBackgroundSync()
 
-	goroutine.Go(func() { bg.MigrateAllSettingsMOTDToNotices(context.Background()) })
-	goroutine.Go(func() { bg.MigrateSavedQueriesAndSlackWebhookURLsFromSettingsToDatabase(context.Background()) })
 	goroutine.Go(func() { bg.CheckRedisCacheEvictionPolicy() })
 	goroutine.Go(func() { bg.DeleteOldCacheDataInRedis() })
 	goroutine.Go(func() { bg.DeleteOldEventLogsInPostgres(context.Background()) })

@@ -1,20 +1,12 @@
 package main
 
 import (
-	"log"
-	"os"
 	"path/filepath"
-	"strconv"
 
 	"github.com/sourcegraph/sourcegraph/cmd/server/shared"
 )
 
 func main() {
-	debug, _ := strconv.ParseBool(os.Getenv("DEBUG"))
-	if debug {
-		log.Println("enterprise edition")
-	}
-
 	shared.ProcfileAdditions = append(
 		shared.ProcfileAdditions,
 		`precise-code-intel-bundle-manager: precise-code-intel-bundle-manager`,

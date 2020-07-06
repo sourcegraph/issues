@@ -19,17 +19,18 @@ import (
 	"github.com/sourcegraph/sourcegraph/cmd/symbols/internal/pkg/ctags"
 	"github.com/sourcegraph/sourcegraph/cmd/symbols/internal/symbols"
 	"github.com/sourcegraph/sourcegraph/internal/api"
-	"github.com/sourcegraph/sourcegraph/internal/debugserver"
 	"github.com/sourcegraph/sourcegraph/internal/env"
 	"github.com/sourcegraph/sourcegraph/internal/gitserver"
+	"github.com/sourcegraph/sourcegraph/internal/servicecmdutil"
 	"github.com/sourcegraph/sourcegraph/internal/sqliteutil"
 	"github.com/sourcegraph/sourcegraph/internal/trace/ot"
-	"github.com/sourcegraph/sourcegraph/internal/tracer"
 )
 
 const port = "3184"
 
 func main() {
+	servicecmdutil.Init()
+
 	var (
 		cacheDir       = env.Get("CACHE_DIR", "/tmp/symbols-cache", "directory to store cached symbols")
 		cacheSizeMB    = env.Get("SYMBOLS_CACHE_SIZE_MB", "100000", "maximum size of the disk cache in megabytes")
@@ -38,12 +39,8 @@ func main() {
 
 	env.Lock()
 	env.HandleHelpFlag()
-	log.SetFlags(0)
-	tracer.Init()
 
 	sqliteutil.MustRegisterSqlite3WithPcre()
-
-	go debugserver.Start()
 
 	service := symbols.Service{
 		FetchTar: func(ctx context.Context, repo gitserver.Repo, commit api.CommitID) (io.ReadCloser, error) {

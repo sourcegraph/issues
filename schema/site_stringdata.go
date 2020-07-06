@@ -721,7 +721,7 @@ const SiteSchemaJSON = `{
       "default": [{ "type": "builtin", "allowSignup": true }]
     },
     "auth.public": {
-      "description": "WARNING: This option has been removed as of 3.8.",
+      "description": "Allows anonymous visitors full read access to repositories, code files, search, and other data (except site configuration).\n\nSECURITY WARNING: If you enable this, you must ensure that only authorized users can access the server (using firewall rules or an external proxy, for example).\n\nRequires usage of the builtin authentication provider.",
       "type": "boolean",
       "default": false,
       "group": "Authentication"

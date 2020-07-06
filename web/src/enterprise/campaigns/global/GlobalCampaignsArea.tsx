@@ -3,7 +3,6 @@ import { RouteComponentProps, Switch, Route } from 'react-router'
 import { GlobalCampaignListPage } from './list/GlobalCampaignListPage'
 import { CampaignDetails } from '../detail/CampaignDetails'
 import { IUser } from '../../../../../shared/src/graphql/schema'
-import { withAuthenticatedUser } from '../../../auth/withAuthenticatedUser'
 import { ThemeProps } from '../../../../../shared/src/theme'
 import { CreateCampaign } from './create/CreateCampaign'
 import { ExtensionsControllerProps } from '../../../../../shared/src/extensions/controller'
@@ -22,19 +21,22 @@ interface Props
         ExtensionsControllerProps,
         TelemetryProps,
         PlatformContextProps {
-    authenticatedUser: IUser
+    authenticatedUser: IUser | null
     isSourcegraphDotCom: boolean
 }
 
 /**
  * The global campaigns area.
  */
-export const GlobalCampaignsArea = withAuthenticatedUser<Props>(({ match, ...outerProps }) => {
+export const GlobalCampaignsArea: React.FunctionComponent<Props> = ({ match, ...outerProps }) => {
     let content: React.ReactFragment
     if (outerProps.isSourcegraphDotCom) {
         content = <CampaignsDotComPage {...outerProps} />
     } else if (window.context.experimentalFeatures?.automation === 'enabled') {
-        if (!outerProps.authenticatedUser.siteAdmin && window.context.site['campaigns.readAccess.enabled'] !== true) {
+        if (
+            (!outerProps.authenticatedUser || !outerProps.authenticatedUser.siteAdmin) &&
+            window.context.site['campaigns.readAccess.enabled'] !== true
+        ) {
             content = <CampaignsUserMarketingPage {...outerProps} enableReadAccess={true} />
         } else {
             content = (
@@ -90,10 +92,10 @@ export const GlobalCampaignsArea = withAuthenticatedUser<Props>(({ match, ...out
                 </>
             )
         }
-    } else if (outerProps.authenticatedUser.siteAdmin) {
+    } else if (outerProps.authenticatedUser?.siteAdmin) {
         content = <CampaignsSiteAdminMarketingPage {...outerProps} />
     } else {
         content = <CampaignsUserMarketingPage {...outerProps} enableReadAccess={false} />
     }
     return <div className="container mt-4">{content}</div>
-})
+}

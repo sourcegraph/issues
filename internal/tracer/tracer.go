@@ -22,7 +22,6 @@ import (
 	"github.com/sourcegraph/sourcegraph/internal/env"
 	"github.com/sourcegraph/sourcegraph/internal/trace"
 	"github.com/sourcegraph/sourcegraph/internal/trace/ot"
-	"go.uber.org/automaxprocs/maxprocs"
 
 	opentracing "github.com/opentracing/opentracing-go"
 	jaeger "github.com/uber/jaeger-client-go"
@@ -49,18 +48,6 @@ var (
 		log15.LvlDebug: "DEBUG",
 	}
 )
-
-func init() {
-	// Tune GOMAXPROCS for kubernetes. All our binaries import this package,
-	// so we tune for all of them.
-	//
-	// TODO it is surprising that we do this here. We should create a standard
-	// import for sourcegraph binaries which would have less surprising
-	// behaviour.
-	if _, err := maxprocs.Set(); err != nil {
-		log15.Error("automaxprocs failed", "error", err)
-	}
-}
 
 func condensedFormat(r *log15.Record) []byte {
 	colorAttr := logColors[r.Lvl]

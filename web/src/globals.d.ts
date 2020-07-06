@@ -106,6 +106,9 @@ interface SourcegraphContext
      */
     deployType: DeployType
 
+    /** Whether unauthenticated viewers can view the site. */
+    readonly authPublic: boolean
+
     /** Whether signup is allowed on the site. */
     allowSignup: boolean
 

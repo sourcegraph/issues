@@ -71,6 +71,7 @@ type JSContext struct {
 
 	AccessTokensAllow conf.AccessTokAllow `json:"accessTokensAllow"`
 
+	AuthPublic  bool `json:"authPublic"`
 	AllowSignup bool `json:"allowSignup"`
 
 	ResetPasswordEnabled bool `json:"resetPasswordEnabled"`
@@ -162,6 +163,7 @@ func NewJSContextFromRequest(req *http.Request) JSContext {
 
 		ResetPasswordEnabled: userpasswd.ResetPasswordEnabled(),
 
+		AuthPublic:  conf.AuthPublic(),
 		AllowSignup: conf.AuthAllowSignup(),
 
 		AuthProviders: authProviders,

@@ -10,7 +10,7 @@ import { useObservable } from '../../../../../../shared/src/util/useObservable'
 import { Observable } from 'rxjs'
 
 interface Props extends Pick<RouteComponentProps, 'history' | 'location'> {
-    authenticatedUser: IUser
+    authenticatedUser: IUser | null
     queryCampaignsCount?: () => Observable<number>
 }
 
@@ -55,7 +55,7 @@ export const GlobalCampaignListPage: React.FunctionComponent<Props> = ({
                         <a href="https://docs.sourcegraph.com/user/campaigns">Learn how.</a>
                     </p>
                 </div>
-                {props.authenticatedUser.siteAdmin && (
+                {props.authenticatedUser?.siteAdmin && (
                     <Link to="/campaigns/create" className="btn btn-primary ml-3">
                         <AddIcon className="icon-inline" /> New campaign
                     </Link>

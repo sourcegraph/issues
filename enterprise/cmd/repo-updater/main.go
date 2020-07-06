@@ -3,9 +3,6 @@ package main
 import (
 	"context"
 	"database/sql"
-	"log"
-	"os"
-	"strconv"
 	"time"
 
 	"github.com/inconshreveable/log15"
@@ -26,13 +23,11 @@ import (
 	"github.com/sourcegraph/sourcegraph/internal/gitserver"
 	"github.com/sourcegraph/sourcegraph/internal/httpcli"
 	"github.com/sourcegraph/sourcegraph/internal/ratelimit"
+	"github.com/sourcegraph/sourcegraph/internal/servicecmdutil"
 )
 
 func main() {
-	debug, _ := strconv.ParseBool(os.Getenv("DEBUG"))
-	if debug {
-		log.Println("enterprise edition")
-	}
+	servicecmdutil.Init()
 	shared.Main(enterpriseInit)
 }
 

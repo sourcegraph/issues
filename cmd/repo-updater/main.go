@@ -4,8 +4,10 @@ package main
 
 import (
 	"github.com/sourcegraph/sourcegraph/cmd/repo-updater/shared"
+	"github.com/sourcegraph/sourcegraph/internal/servicecmdutil"
 )
 
 func main() {
+	servicecmdutil.Init(servicecmdutil.NoDebugServer) // registers a custom debugserver handler
 	shared.Main(nil)
 }

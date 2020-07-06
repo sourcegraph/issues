@@ -1,0 +1,7 @@
+{
+  "externalURL": "http://sourcegraph-cmd.test:7077",
+  "auth.public": true,
+  "auth.providers": [
+    { "type": "builtin", "allowSignup": true },
+  ],
+}

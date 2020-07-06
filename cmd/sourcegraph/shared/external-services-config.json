@@ -1,0 +1,9 @@
+{
+  "OTHER": [
+    {
+      "url": "https://github.com",
+      "repos": ["sqs/spans", "sourcegraph/docsite"],
+      "repositoryPathPattern": "{base}/{repo}"
+    }
+  ]
+}

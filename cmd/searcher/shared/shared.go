@@ -1,6 +1,4 @@
-// Command replacer is an interface to replace and rewrite code. It passes a zipped repo
-// to external tools and streams back JSON lines results.
-package main
+package shared
 
 import (
 	"context"
@@ -16,46 +14,43 @@ import (
 
 	"github.com/inconshreveable/log15"
 
-	"github.com/sourcegraph/sourcegraph/cmd/replacer/replace"
+	"github.com/sourcegraph/sourcegraph/cmd/searcher/search"
 	"github.com/sourcegraph/sourcegraph/internal/api"
 	"github.com/sourcegraph/sourcegraph/internal/env"
 	"github.com/sourcegraph/sourcegraph/internal/gitserver"
-	"github.com/sourcegraph/sourcegraph/internal/servicecmdutil"
 	"github.com/sourcegraph/sourcegraph/internal/store"
 	"github.com/sourcegraph/sourcegraph/internal/trace/ot"
 )
 
-var cacheDir = env.Get("CACHE_DIR", "/tmp", "directory to store cached archives.")
-var cacheSizeMB = env.Get("REPLACER_CACHE_SIZE_MB", "100000", "maximum size of the on disk cache in megabytes")
+var (
+	cacheDir    = env.Get("CACHE_DIR", "/tmp", "directory to store cached archives.")
+	cacheSizeMB = env.Get("SEARCHER_CACHE_SIZE_MB", "100000", "maximum size of the on disk cache in megabytes")
+)
 
-const port = "3185"
+const port = "3181"
 
-func main() {
-	servicecmdutil.Init()
-
+func Main() {
 	env.Lock()
 	env.HandleHelpFlag()
-
 	var cacheSizeBytes int64
 	if i, err := strconv.ParseInt(cacheSizeMB, 10, 64); err != nil {
-		log.Fatalf("invalid int %q for REPLACER_CACHE_SIZE_MB: %s", cacheSizeMB, err)
+		log.Fatalf("invalid int %q for SEARCHER_CACHE_SIZE_MB: %s", cacheSizeMB, err)
 	} else {
 		cacheSizeBytes = i * 1000 * 1000
 	}
 
-	store := store.Store{
-		FetchTar: func(ctx context.Context, repo gitserver.Repo, commit api.CommitID) (io.ReadCloser, error) {
-			return gitserver.DefaultClient.Archive(ctx, repo, gitserver.ArchiveOptions{Treeish: string(commit), Format: "tar"})
+	service := &search.Service{
+		Store: &store.Store{
+			FetchTar: func(ctx context.Context, repo gitserver.Repo, commit api.CommitID) (io.ReadCloser, error) {
+				return gitserver.DefaultClient.Archive(ctx, repo, gitserver.ArchiveOptions{Treeish: string(commit), Format: "tar"})
+			},
+			Path:              filepath.Join(cacheDir, "searcher-archives"),
+			MaxCacheSizeBytes: cacheSizeBytes,
 		},
-		Path:              filepath.Join(cacheDir, "replacer-archives"),
-		MaxCacheSizeBytes: cacheSizeBytes,
+		Log: log15.Root(),
 	}
-	store.SetMaxConcurrentFetchTar(10)
-	store.Start()
-	service := &replace.Service{
-		Store: &store,
-		Log:   log15.Root(),
-	}
+	service.Store.SetMaxConcurrentFetchTar(10)
+	service.Store.Start()
 	handler := ot.Middleware(service)
 
 	host := ""
@@ -69,19 +64,15 @@ func main() {
 			// For cluster liveness and readiness probes
 			if r.URL.Path == "/healthz" {
 				w.WriteHeader(200)
-				_, err := w.Write([]byte("ok"))
-				if err != nil {
-					log15.Info("Error checking /healthz: " + err.Error())
-				}
+				_, _ = w.Write([]byte("ok"))
 				return
 			}
-
 			handler.ServeHTTP(w, r)
 		}),
 	}
 	go shutdownOnSIGINT(server)
 
-	log15.Info("replacer: listening", "addr", server.Addr)
+	log15.Info("searcher: listening", "addr", server.Addr)
 	if err := server.ListenAndServe(); err != http.ErrServerClosed {
 		log.Fatal(err)
 	}

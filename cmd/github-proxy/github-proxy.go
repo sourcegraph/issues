@@ -21,9 +21,8 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 
-	"github.com/sourcegraph/sourcegraph/internal/debugserver"
 	"github.com/sourcegraph/sourcegraph/internal/env"
-	"github.com/sourcegraph/sourcegraph/internal/tracer"
+	"github.com/sourcegraph/sourcegraph/internal/servicecmdutil"
 )
 
 var logRequests, _ = strconv.ParseBool(env.Get("LOG_REQUESTS", "", "log HTTP requests"))
@@ -58,9 +57,10 @@ var hopHeaders = map[string]struct{}{
 }
 
 func main() {
+	servicecmdutil.Init()
+
 	env.Lock()
 	env.HandleHelpFlag()
-	tracer.Init()
 
 	go func() {
 		c := make(chan os.Signal, 1)
@@ -68,8 +68,6 @@ func main() {
 		<-c
 		os.Exit(0)
 	}()
-
-	go debugserver.Start()
 
 	// Use a custom client/transport because GitHub closes keep-alive
 	// connections after 60s. In order to avoid running into EOF errors, we use

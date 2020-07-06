@@ -1034,7 +1034,11 @@ type SiteConfiguration struct {
 	AuthMinPasswordLength int `json:"auth.minPasswordLength,omitempty"`
 	// AuthProviders description: The authentication providers to use for identifying and signing in users. See instructions below for configuring SAML, OpenID Connect (including G Suite), and HTTP authentication proxies. Multiple authentication providers are supported (by specifying multiple elements in this array).
 	AuthProviders []AuthProviders `json:"auth.providers,omitempty"`
-	// AuthPublic description: WARNING: This option has been removed as of 3.8.
+	// AuthPublic description: Allows anonymous visitors full read access to repositories, code files, search, and other data (except site configuration).
+	//
+	// SECURITY WARNING: If you enable this, you must ensure that only authorized users can access the server (using firewall rules or an external proxy, for example).
+	//
+	// Requires usage of the builtin authentication provider.
 	AuthPublic bool `json:"auth.public,omitempty"`
 	// AuthSessionExpiry description: The duration of a user session, after which it expires and the user is required to re-authenticate. The default is 90 days. There is typically no need to set this, but some users may have specific internal security requirements.
 	//
