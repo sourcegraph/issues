@@ -358,8 +358,7 @@ class ColdSourcegraphWebApp extends React.Component<SourcegraphWebAppProps, Sour
         document.body.classList.toggle('theme-dark', !this.isLightTheme())
     }
 
-    private toggleSearchMode = (event: React.MouseEvent<HTMLAnchorElement>): void => {
-        event.preventDefault()
+    private toggleSearchMode = (): void => {
         localStorage.setItem(SEARCH_MODE_KEY, this.state.interactiveSearchMode ? 'plain' : 'interactive')
 
         eventLogger.log('SearchModeToggled', { mode: this.state.interactiveSearchMode ? 'plain' : 'interactive' })

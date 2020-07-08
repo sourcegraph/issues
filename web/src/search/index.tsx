@@ -145,7 +145,7 @@ export interface InteractiveSearchProps {
     onFiltersInQueryChange: (filtersInQuery: FiltersToTypeAndValue) => void
     splitSearchModes: boolean
     interactiveSearchMode: boolean
-    toggleSearchMode: (event: React.MouseEvent<HTMLAnchorElement>) => void
+    toggleSearchMode: () => void
 }
 
 export interface SmartSearchFieldProps {

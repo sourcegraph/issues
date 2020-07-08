@@ -2,7 +2,6 @@ import CloudAlertIcon from 'mdi-react/CloudAlertIcon'
 import CloudCheckIcon from 'mdi-react/CloudCheckIcon'
 import CloudSyncIcon from 'mdi-react/CloudSyncIcon'
 import React from 'react'
-import { ButtonDropdown, DropdownMenu, DropdownToggle } from 'reactstrap'
 import { Observable, Subscription } from 'rxjs'
 import { catchError, map, repeatWhen, delay } from 'rxjs/operators'
 import { Link } from '../../../shared/src/components/Link'
@@ -14,6 +13,7 @@ import classNames from 'classnames'
 import { ErrorAlert } from '../components/alerts'
 import * as H from 'history'
 import { repeatUntil } from '../../../shared/src/util/rxjs/repeatUntil'
+import { MenuButton, Menu, MenuPopover } from '@reach/menu-button'
 
 export function fetchAllStatusMessages(): Observable<GQL.StatusMessage[]> {
     return queryGraphQL(
@@ -210,41 +210,49 @@ export class StatusMessagesNavItem extends React.PureComponent<Props, State> {
 
     public render(): JSX.Element | null {
         return (
-            <ButtonDropdown
-                isOpen={this.state.isOpen}
-                toggle={this.toggleIsOpen}
-                className="nav-link py-0 px-0 status-messages-nav-item__nav-link"
-            >
-                <DropdownToggle caret={false} className="btn btn-link" nav={true}>
-                    {this.renderIcon()}
-                </DropdownToggle>
-
-                <DropdownMenu right={true} className="status-messages-nav-item__dropdown-menu">
-                    <h3>Code host status</h3>
-                    <div className="status-messages-nav-item__dropdown-menu-content">
-                        {isErrorLike(this.state.messagesOrError) ? (
-                            <ErrorAlert
-                                className="status-messages-nav-item__entry"
-                                prefix="Failed to load status messages"
-                                error={this.state.messagesOrError}
-                                history={this.props.history}
-                            />
-                        ) : this.state.messagesOrError.length > 0 ? (
-                            this.state.messagesOrError.map((message, index) => this.renderMessage(message, index))
-                        ) : (
-                            <StatusMessagesNavItemEntry
-                                title="Repositories up to date"
-                                text="All repositories hosted on the configured code hosts are synced."
-                                showLink={this.props.isSiteAdmin}
-                                linkTo="/site-admin/external-services"
-                                linkText="Manage repositories"
-                                linkOnClick={this.toggleIsOpen}
-                                entryType="success"
-                            />
-                        )}
+            <Menu>
+                {({ isExpanded }) => (
+                    <div className="nav-link py-0 px-0 status-messages-nav-item__nav-link">
+                        <MenuButton className="btn btn-link" onKeyDown={this.toggleIsOpen} onClick={this.toggleIsOpen}>
+                            {this.renderIcon()}
+                        </MenuButton>
+                        <MenuPopover
+                            className={classNames(
+                                'status-messages-nav-item__dropdown-menu dropdown-menu dropdown-menu-right',
+                                {
+                                    show: isExpanded,
+                                }
+                            )}
+                        >
+                            <h3>Code host status</h3>
+                            <div className="status-messages-nav-item__dropdown-menu-content">
+                                {isErrorLike(this.state.messagesOrError) ? (
+                                    <ErrorAlert
+                                        className="status-messages-nav-item__entry"
+                                        prefix="Failed to load status messages"
+                                        error={this.state.messagesOrError}
+                                        history={this.props.history}
+                                    />
+                                ) : this.state.messagesOrError.length > 0 ? (
+                                    this.state.messagesOrError.map((message, index) =>
+                                        this.renderMessage(message, index)
+                                    )
+                                ) : (
+                                    <StatusMessagesNavItemEntry
+                                        title="Repositories up to date"
+                                        text="All repositories hosted on the configured code hosts are synced."
+                                        showLink={this.props.isSiteAdmin}
+                                        linkTo="/site-admin/external-services"
+                                        linkText="Manage repositories"
+                                        linkOnClick={this.toggleIsOpen}
+                                        entryType="success"
+                                    />
+                                )}
+                            </div>
+                        </MenuPopover>
                     </div>
-                </DropdownMenu>
-            </ButtonDropdown>
+                )}
+            </Menu>
         )
     }
 }

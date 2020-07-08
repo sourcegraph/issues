@@ -3,4 +3,15 @@
         border-top-right-radius: 0;
         border-bottom-right-radius: 0;
     }
+
+    &__item {
+        cursor: pointer;
+    }
+
+    [data-reach-menu-item][data-selected] {
+        background: $dropdown-link-hover-bg;
+    }
+    .active[data-reach-menu-item][data-selected] {
+        background: $primary;
+    }
 }

@@ -1,56 +1,50 @@
 import HelpCircleOutlineIcon from 'mdi-react/HelpCircleOutlineIcon'
 import React from 'react'
-import { Dropdown, DropdownItem, DropdownMenu, DropdownToggle } from 'reactstrap'
 import { renderMarkdown } from '../../../../shared/src/util/markdown'
-import { pluralize } from '../../../../shared/src/util/strings'
 import { QueryFieldExample } from '../queryBuilder/QueryBuilderInputRow'
+import { Menu, MenuButton, MenuPopover } from '@reach/menu-button'
+import classNames from 'classnames'
+import { pluralize } from '../../../../shared/src/util/strings'
 
 interface Props {
     title: string
     markdown: string
     examples?: QueryFieldExample[]
+    /**
+     * Whether to display dropdown on the left. Used for testing.
+     */
+    left?: boolean
 }
 
-interface State {
-    isOpen: boolean
-}
-
-export class InfoDropdown extends React.Component<Props, State> {
-    constructor(props: Props) {
-        super(props)
-        this.state = { isOpen: false }
-    }
-
-    private toggleIsOpen = (): void => this.setState(previousState => ({ isOpen: !previousState.isOpen }))
-
-    public render(): JSX.Element | null {
-        return (
-            <Dropdown isOpen={this.state.isOpen} toggle={this.toggleIsOpen} className="info-dropdown d-flex">
-                <>
-                    <DropdownToggle
-                        tag="span"
-                        caret={false}
-                        className="pl-2 pr-0 btn btn-link d-flex align-items-center"
+export const InfoDropdown: React.FunctionComponent<Props> = props => (
+    <Menu>
+        {({ isExpanded }) => (
+            <>
+                <MenuButton className="pl-2 pr-0 btn btn-link d-flex align-items-center">
+                    <HelpCircleOutlineIcon className="icon-inline small" />
+                </MenuButton>
+                <MenuPopover className={classNames('info-dropdown', 'dropdown')} portal={false}>
+                    <div
+                        className={classNames('info-dropdown__item dropdown-menu', {
+                            'dropdown-menu-right': !props.left,
+                            show: isExpanded,
+                        })}
                     >
-                        <HelpCircleOutlineIcon className="icon-inline small" />
-                    </DropdownToggle>
-                    <DropdownMenu right={true} className="pb-0 info-dropdown__item">
-                        <DropdownItem header={true}>
-                            <strong>{this.props.title}</strong>
-                        </DropdownItem>
-                        <DropdownItem divider={true} />
-                        <div className="info-dropdown__content">
-                            <small dangerouslySetInnerHTML={{ __html: renderMarkdown(this.props.markdown) }} />
+                        <div className="dropdown-header">
+                            <strong>{props.title}</strong>
                         </div>
-
-                        {this.props.examples && (
+                        <div className="dropdown-divider" />
+                        <div className="info-dropdown__content">
+                            <small dangerouslySetInnerHTML={{ __html: renderMarkdown(props.markdown) }} />
+                        </div>
+                        {props.examples && (
                             <>
-                                <DropdownItem divider={true} />
-                                <DropdownItem header={true}>
-                                    <strong>{pluralize('Example', this.props.examples.length)}</strong>
-                                </DropdownItem>
+                                <div className="dropdown-divider" />
+                                <div className="dropdown-header">
+                                    <strong>{pluralize('Example', props.examples.length)}</strong>
+                                </div>
                                 <ul className="list-unstyled mb-2">
-                                    {this.props.examples.map(example => (
+                                    {props.examples.map((example: QueryFieldExample) => (
                                         <div key={example.value}>
                                             <div className="p-2">
                                                 <span className="text-muted small">{example.description}: </span>
@@ -61,9 +55,19 @@ export class InfoDropdown extends React.Component<Props, State> {
                                 </ul>
                             </>
                         )}
-                    </DropdownMenu>
-                </>
-            </Dropdown>
-        )
-    }
-}
+                        <ul className="list-unstyled mb-2">
+                            {props.examples?.map((example: QueryFieldExample) => (
+                                <div key={example.value}>
+                                    <div className="p-2">
+                                        <span className="text-muted small">{example.description}: </span>
+                                        <code>{example.value}</code>
+                                    </div>
+                                </div>
+                            ))}
+                        </ul>
+                    </div>
+                </MenuPopover>
+            </>
+        )}
+    </Menu>
+)
