@@ -3,9 +3,17 @@ import { android } from './Android'
 import { kubernetes } from './Kubernetes'
 import { golang } from './Golang'
 import { reactHooks } from './ReactHooks'
+import { ethereum } from './Ethereum'
 import { RepogroupMetadata } from './types'
 
-export const repogroupList: RepogroupMetadata[] = [python2To3Metadata, kubernetes, golang, reactHooks, android]
+export const repogroupList: RepogroupMetadata[] = [
+    python2To3Metadata,
+    kubernetes,
+    golang,
+    reactHooks,
+    android,
+    ethereum,
+]
 
 export const homepageLanguageList: { name: string; filterName: string }[] = [
     { name: 'C', filterName: 'c' },

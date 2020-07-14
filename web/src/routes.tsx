@@ -10,6 +10,7 @@ import { kubernetes } from './repogroups/Kubernetes'
 import { golang } from './repogroups/Golang'
 import { reactHooks } from './repogroups/ReactHooks'
 import { android } from './repogroups/Android'
+import { ethereum } from './repogroups/Ethereum'
 
 const SearchPage = lazyComponent(() => import('./search/input/SearchPage'), 'SearchPage')
 const SearchResults = lazyComponent(() => import('./search/results/SearchResults'), 'SearchResults')
@@ -189,6 +190,10 @@ export const routes: readonly LayoutRouteProps<any>[] = [
     {
         path: '/android',
         render: props => <RepogroupPage {...props} repogroupMetadata={android} />,
+    },
+    {
+        path: '/ethereum',
+        render: props => <RepogroupPage {...props} repogroupMetadata={ethereum} />,
     },
     {
         path: '/:repoRevAndRest+',
