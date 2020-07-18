@@ -111,8 +111,10 @@ func testPermsStore_LoadUserPermissions(db *sql.DB) func(*testing.T) {
 				t.Fatal(err)
 			}
 			equal(t, "IDs", []int{1}, bitmapToArray(up.IDs))
-			equal(t, "UpdatedAt", now, up.UpdatedAt.UnixNano())
 
+			if up.UpdatedAt.IsZero() {
+				t.Fatal("UpdatedAt was not updated but supposed to")
+			}
 			if !up.SyncedAt.IsZero() {
 				t.Fatal("SyncedAt was updated but not supposed to")
 			}
@@ -151,8 +153,10 @@ func testPermsStore_LoadUserPermissions(db *sql.DB) func(*testing.T) {
 				t.Fatal(err)
 			}
 			equal(t, "IDs", 0, len(bitmapToArray(up1.IDs)))
-			equal(t, "UpdatedAt", now, up1.UpdatedAt.UnixNano())
 
+			if up1.UpdatedAt.IsZero() {
+				t.Fatal("UpdatedAt was not updated but supposed to")
+			}
 			if !up1.SyncedAt.IsZero() {
 				t.Fatal("SyncedAt was updated but not supposed to")
 			}
@@ -166,8 +170,10 @@ func testPermsStore_LoadUserPermissions(db *sql.DB) func(*testing.T) {
 				t.Fatal(err)
 			}
 			equal(t, "IDs", []int{1}, bitmapToArray(up2.IDs))
-			equal(t, "UpdatedAt", now, up2.UpdatedAt.UnixNano())
 
+			if up2.UpdatedAt.IsZero() {
+				t.Fatal("UpdatedAt was not updated but supposed to")
+			}
 			if !up2.SyncedAt.IsZero() {
 				t.Fatal("SyncedAt was updated but not supposed to")
 			}
@@ -181,8 +187,10 @@ func testPermsStore_LoadUserPermissions(db *sql.DB) func(*testing.T) {
 				t.Fatal(err)
 			}
 			equal(t, "IDs", []int{1}, bitmapToArray(up3.IDs))
-			equal(t, "UpdatedAt", now, up3.UpdatedAt.UnixNano())
 
+			if up3.UpdatedAt.IsZero() {
+				t.Fatal("UpdatedAt was not updated but supposed to")
+			}
 			if !up3.SyncedAt.IsZero() {
 				t.Fatal("SyncedAt was updated but not supposed to")
 			}
@@ -2259,9 +2267,13 @@ WHERE repo_id = 2`, clock().AddDate(1, 0, 0))
 		if err != nil {
 			t.Fatal(err)
 		}
+		got := make(map[api.RepoID]struct{}, len(results))
+		for repoID := range results {
+			got[repoID] = struct{}{}
+		}
 
-		wantResults := map[api.RepoID]time.Time{1: clock()}
-		if diff := cmp.Diff(wantResults, results); diff != "" {
+		want := map[api.RepoID]struct{}{1: {}}
+		if diff := cmp.Diff(want, got); diff != "" {
 			t.Fatalf("Results mismatch (-want +got):\n%s", diff)
 		}
 
@@ -2270,12 +2282,16 @@ WHERE repo_id = 2`, clock().AddDate(1, 0, 0))
 		if err != nil {
 			t.Fatal(err)
 		}
-
-		wantResults = map[api.RepoID]time.Time{
-			1: clock(),
-			2: clock().AddDate(1, 0, 0),
+		got = make(map[api.RepoID]struct{}, len(results))
+		for repoID := range results {
+			got[repoID] = struct{}{}
 		}
-		if diff := cmp.Diff(wantResults, results); diff != "" {
+
+		want = map[api.RepoID]struct{}{
+			1: {},
+			2: {},
+		}
+		if diff := cmp.Diff(want, got); diff != "" {
 			t.Fatalf("Results mismatch (-want +got):\n%s", diff)
 		}
 
@@ -2289,9 +2305,13 @@ WHERE repo_id = 2`, clock().AddDate(1, 0, 0))
 		if err != nil {
 			t.Fatal(err)
 		}
+		got = make(map[api.RepoID]struct{}, len(results))
+		for repoID := range results {
+			got[repoID] = struct{}{}
+		}
 
-		wantResults = map[api.RepoID]time.Time{1: clock()}
-		if diff := cmp.Diff(wantResults, results); diff != "" {
+		want = map[api.RepoID]struct{}{1: {}}
+		if diff := cmp.Diff(want, got); diff != "" {
 			t.Fatalf("Results mismatch (-want +got):\n%s", diff)
 		}
 	}
