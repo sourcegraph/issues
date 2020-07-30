@@ -19,15 +19,14 @@ import { NamespaceProps } from '../namespaces'
 import { fetchSavedSearch, updateSavedSearch } from '../search/backend'
 import { eventLogger } from '../tracking/eventLogger'
 import { SavedQueryFields, SavedSearchForm } from './SavedSearchForm'
+import { OptionalAuthProps } from '../auth'
 
-interface Props extends RouteComponentProps<{ id: GQL.ID }>, NamespaceProps {
-    authenticatedUser: GQL.IUser | null
-}
+interface Props extends RouteComponentProps<{ id: GQL.Scalars['ID'] }>, NamespaceProps, OptionalAuthProps {}
 
 const LOADING = 'loading' as const
 
 interface State {
-    savedSearchOrError: typeof LOADING | GQL.ISavedSearch | ErrorLike
+    savedSearchOrError: typeof LOADING | GQL.SavedSearch | ErrorLike
     updatedOrError: null | true | typeof LOADING | ErrorLike
 }
 

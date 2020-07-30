@@ -30,7 +30,7 @@ const CHART_ID_KEY = 'latest-usage-statistics-chart-id'
 
 interface UsageChartPageProps {
     isLightTheme: boolean
-    stats: GQL.ISiteUsageStatistics
+    stats: GQL.SiteUsageStatistics
     chartID: keyof ChartOptions
     header?: JSX.Element
     showLegend?: boolean
@@ -63,7 +63,7 @@ export const UsageChart: React.FunctionComponent<UsageChartPageProps> = (props: 
 )
 
 interface UserUsageStatisticsHeaderFooterProps {
-    nodes: GQL.IUser[]
+    nodes: GQL.User[]
 }
 
 class UserUsageStatisticsHeader extends React.PureComponent<UserUsageStatisticsHeaderFooterProps> {
@@ -122,7 +122,7 @@ interface UserUsageStatisticsNodeProps {
     /**
      * The user to display in this list item.
      */
-    node: GQL.IUser
+    node: GQL.User
 }
 
 class UserUsageStatisticsNode extends React.PureComponent<UserUsageStatisticsNodeProps> {
@@ -154,7 +154,7 @@ class UserUsageStatisticsNode extends React.PureComponent<UserUsageStatisticsNod
     }
 }
 
-class FilteredUserConnection extends FilteredConnection<GQL.IUser, {}> {}
+class FilteredUserConnection extends FilteredConnection<GQL.User, {}> {}
 export const USER_ACTIVITY_FILTERS: FilteredConnectionFilter[] = [
     {
         label: 'All users',
@@ -187,8 +187,8 @@ interface SiteAdminUsageStatisticsPageProps extends RouteComponentProps<{}> {
 }
 
 interface SiteAdminUsageStatisticsPageState {
-    users?: GQL.IUserConnection
-    stats?: GQL.ISiteUsageStatistics
+    users?: GQL.UserConnection
+    stats?: GQL.SiteUsageStatistics
     error?: Error
     chartID: keyof ChartOptions
 }

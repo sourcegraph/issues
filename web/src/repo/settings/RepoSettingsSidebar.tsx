@@ -18,7 +18,7 @@ export type RepoSettingsSideBarGroups = readonly RepoSettingsSideBarGroup[]
 interface Props extends RouteComponentProps<{}> {
     repoSettingsSidebarGroups: RepoSettingsSideBarGroups
     className?: string
-    repo?: GQL.IRepository
+    repo?: GQL.Repository
 }
 
 /**

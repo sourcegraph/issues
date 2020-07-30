@@ -10,7 +10,6 @@ import {
 } from '../../../shared/src/extensions/extension'
 import { viewerConfiguredExtensions } from '../../../shared/src/extensions/helpers'
 import { gql } from '../../../shared/src/graphql/graphql'
-import * as GQL from '../../../shared/src/graphql/schema'
 import { PlatformContextProps } from '../../../shared/src/platform/context'
 import { Settings, SettingsCascadeProps, SettingsSubject } from '../../../shared/src/settings/settings'
 import { asError, createAggregateError, ErrorLike, isErrorLike } from '../../../shared/src/util/errors'
@@ -20,42 +19,7 @@ import { extensionsQuery, isExtensionAdded } from './extension/extension'
 import { ExtensionCard } from './ExtensionCard'
 import { ExtensionsQueryInputToolbar } from './ExtensionsQueryInputToolbar'
 import { ErrorAlert } from '../components/alerts'
-
-export const registryExtensionFragment = gql`
-    fragment RegistryExtensionFields on RegistryExtension {
-        id
-        publisher {
-            __typename
-            ... on User {
-                id
-                username
-                displayName
-                url
-            }
-            ... on Org {
-                id
-                name
-                displayName
-                url
-            }
-        }
-        extensionID
-        extensionIDWithoutRegistry
-        name
-        manifest {
-            raw
-            description
-        }
-        createdAt
-        updatedAt
-        url
-        remoteURL
-        registryName
-        isLocal
-        isWorkInProgress
-        viewerCanAdminister
-    }
-`
+import { RegistryExtensionsResult, RegistryExtensionsVariables } from '../graphql-operations'
 
 interface Props extends SettingsCascadeProps, PlatformContextProps<'settings' | 'updateSettings' | 'requestGraphQL'> {
     subject: Pick<SettingsSubject, 'id' | 'viewerCanAdminister'>
@@ -67,7 +31,9 @@ const LOADING = 'loading' as const
 
 interface ExtensionsResult {
     /** The configured extensions. */
-    extensions: ConfiguredRegistryExtension<GQL.IRegistryExtension>[]
+    extensions: ConfiguredRegistryExtension<
+        RegistryExtensionsResult['extensionRegistry']['extensions']['nodes'][number]
+    >[]
 
     /** An error message that should be displayed to the user (in addition to the configured extensions). */
     error: string | null
@@ -257,26 +223,60 @@ export class ExtensionsList extends React.PureComponent<Props, State> {
             // toggling its enablement), to reduce UI jitter.
             take(1),
 
-            switchMap(viewerExtensions =>
-                from(
-                    queryGraphQL(
+            switchMap(viewerExtensions => {
+                const variables: RegistryExtensionsVariables = {
+                    query: args.query ?? null,
+                    prioritizeExtensionIDs: viewerExtensions.map(({ id }) => id),
+                }
+                return from(
+                    queryGraphQL<RegistryExtensionsResult>(
                         gql`
                             query RegistryExtensions($query: String, $prioritizeExtensionIDs: [String!]!) {
                                 extensionRegistry {
                                     extensions(query: $query, prioritizeExtensionIDs: $prioritizeExtensionIDs) {
                                         nodes {
-                                            ...RegistryExtensionFields
+                                            ...RegistryExtensionFieldsForList
                                         }
                                         error
                                     }
                                 }
                             }
-                            ${registryExtensionFragment}
+
+                            fragment RegistryExtensionFieldsForList on RegistryExtension {
+                                id
+                                publisher {
+                                    __typename
+                                    ... on User {
+                                        id
+                                        username
+                                        displayName
+                                        url
+                                    }
+                                    ... on Org {
+                                        id
+                                        name
+                                        displayName
+                                        url
+                                    }
+                                }
+                                extensionID
+                                extensionIDWithoutRegistry
+                                name
+                                manifest {
+                                    raw
+                                    description
+                                }
+                                createdAt
+                                updatedAt
+                                url
+                                remoteURL
+                                registryName
+                                isLocal
+                                isWorkInProgress
+                                viewerCanAdminister
+                            }
                         `,
-                        {
-                            ...args,
-                            prioritizeExtensionIDs: viewerExtensions.map(({ id }) => id),
-                        } as GQL.IExtensionsOnExtensionRegistryArguments
+                        variables
                     )
                 ).pipe(
                     map(({ data, errors }) => {
@@ -289,7 +289,7 @@ export class ExtensionsList extends React.PureComponent<Props, State> {
                         }
                     })
                 )
-            ),
+            }),
             map(({ registryExtensions, error }) => ({
                 extensions: applyExtensionsQuery(
                     args.query || '',

@@ -1,9 +1,9 @@
 import React from 'react'
-import * as GQL from '../../../../shared/src/graphql/schema'
 import { formatUserCount } from './helpers'
+import { ProductLicenseFields } from '../../graphql-operations'
 
 export const ProductLicenseInfoDescription: React.FunctionComponent<{
-    licenseInfo: GQL.IProductLicenseInfo
+    licenseInfo: NonNullable<ProductLicenseFields['info']>
     className?: string
 }> = ({ licenseInfo, className = '' }) => (
     <span

@@ -38,16 +38,17 @@ import { queryRepositoryComparisonFileDiffs } from '../compare/RepositoryCompare
 import { ThemeProps } from '../../../../shared/src/theme'
 import { ErrorAlert } from '../../components/alerts'
 import { FilteredConnectionQueryArgs } from '../../components/FilteredConnection'
+import { RepositoryCommitResult } from '../../graphql-operations'
 
 const queryCommit = memoizeObservable(
-    (args: { repo: GQL.ID; revspec: string }): Observable<GQL.IGitCommit> =>
-        queryGraphQL(
+    (args: { repo: GQL.Scalars['ID']; revspec: string }): Observable<GQL.GitCommit> =>
+        queryGraphQL<RepositoryCommitResult>(
             gql`
                 query RepositoryCommit($repo: ID!, $revspec: String!) {
                     node(id: $repo) {
                         ... on Repository {
                             commit(rev: $revspec) {
-                                __typename # necessary so that isErrorLike(x) is false when x: GQL.IGitCommit
+                                __typename # necessary so that isErrorLike(x) is false when x: GQL.GitCommit
                                 ...GitCommitFields
                             }
                         }
@@ -61,7 +62,7 @@ const queryCommit = memoizeObservable(
                 if (!data || !data.node) {
                     throw createAggregateError(errors)
                 }
-                const repo = data.node as GQL.IRepository
+                const repo = data.node as GQL.Repository
                 if (!repo.commit) {
                     throw createAggregateError(errors || [new Error('Commit not found')])
                 }
@@ -77,14 +78,14 @@ interface Props
         PlatformContextProps,
         ExtensionsControllerProps,
         ThemeProps {
-    repo: GQL.IRepository
+    repo: GQL.Repository
 
-    onDidUpdateExternalLinks: (externalLinks: GQL.IExternalLink[] | undefined) => void
+    onDidUpdateExternalLinks: (externalLinks: GQL.ExternalLink[] | undefined) => void
 }
 
 interface State extends HoverState<HoverContext, HoverMerged, ActionItemAction> {
     /** The commit, undefined while loading, or an error. */
-    commitOrError?: GQL.IGitCommit | ErrorLike
+    commitOrError?: GQL.GitCommit | ErrorLike
 }
 
 /** Displays a commit. */
@@ -173,7 +174,7 @@ export class RepositoryCommitPage extends React.Component<Props, State> {
                             queryCommit({ repo: repo.id, revspec: match.params.revspec }).pipe(
                                 catchError(error => [asError(error)]),
                                 map(commitOrError => ({ commitOrError })),
-                                tap(({ commitOrError }: { commitOrError: GQL.IGitCommit | ErrorLike }) => {
+                                tap(({ commitOrError }: { commitOrError: GQL.GitCommit | ErrorLike }) => {
                                     if (isErrorLike(commitOrError)) {
                                         this.props.onDidUpdateExternalLinks(undefined)
                                     } else {
@@ -282,17 +283,17 @@ export class RepositoryCommitPage extends React.Component<Props, State> {
         )
     }
 
-    private queryDiffs = (args: FilteredConnectionQueryArgs): Observable<GQL.IFileDiffConnection> =>
+    private queryDiffs = (args: FilteredConnectionQueryArgs): Observable<GQL.FileDiffConnection> =>
         queryRepositoryComparisonFileDiffs({
             ...args,
             repo: this.props.repo.id,
-            base: commitParentOrEmpty(this.state.commitOrError as GQL.IGitCommit),
-            head: (this.state.commitOrError as GQL.IGitCommit).oid,
+            base: commitParentOrEmpty(this.state.commitOrError as GQL.GitCommit),
+            head: (this.state.commitOrError as GQL.GitCommit).oid,
             isLightTheme: this.props.isLightTheme,
         })
 }
 
-function commitParentOrEmpty(commit: GQL.IGitCommit): string {
+function commitParentOrEmpty(commit: GQL.GitCommit): string {
     // 4b825dc642cb6eb9a060e54bf8d69288fbee4904 is `git hash-object -t tree /dev/null`, which is used as the base
     // when computing the `git diff` of the root commit.
     return commit.parents.length > 0 ? commit.parents[0].oid : '4b825dc642cb6eb9a060e54bf8d69288fbee4904'

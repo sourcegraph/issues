@@ -87,7 +87,7 @@ export interface PlatformContext {
      * @returns A promise that resolves after the update succeeds and {@link PlatformContext#settings} reflects the
      * update.
      */
-    updateSettings: (subject: GQL.ID, edit: SettingsEdit | string) => Promise<void>
+    updateSettings: (subject: GQL.Scalars['ID'], edit: SettingsEdit | string) => Promise<void>
 
     /**
      * Sends a request to the Sourcegraph GraphQL API and returns the response.
@@ -96,7 +96,7 @@ export interface PlatformContext {
      * could leak private information such as repository names.
      * @returns Observable that emits the result or an error if the HTTP request failed
      */
-    requestGraphQL: <R extends GQL.IQuery | GQL.IMutation>(options: {
+    requestGraphQL: <TData>(options: {
         /**
          * The GraphQL request (query or mutation)
          */
@@ -110,7 +110,7 @@ export interface PlatformContext {
          * could leak private information such as repository names.
          */
         mightContainPrivateInfo: boolean
-    }) => Observable<GraphQLResult<R>>
+    }) => Observable<GraphQLResult<TData>>
 
     /**
      * Forces the currently displayed tooltip, if any, to update its contents.

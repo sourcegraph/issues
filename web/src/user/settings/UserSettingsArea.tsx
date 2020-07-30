@@ -11,30 +11,31 @@ import { RouteDescriptor } from '../../util/contributions'
 import { UserAreaRouteContext } from '../area/UserArea'
 import { UserSettingsSidebar, UserSettingsSidebarItems } from './UserSettingsSidebar'
 import { TelemetryProps } from '../../../../shared/src/telemetry/telemetryService'
+import { User } from '../area/backend'
+import { RequiredAuthProps } from '../../auth'
 
 const NotFoundPage: React.FunctionComponent = () => <HeroPage icon={MapSearchIcon} title="404: Not Found" />
 
 export interface UserSettingsAreaRoute extends RouteDescriptor<UserSettingsAreaRouteContext> {}
 
-export interface UserSettingsAreaProps
-    extends UserAreaRouteContext,
-        RouteComponentProps<{}>,
-        ThemeProps,
-        TelemetryProps {
-    authenticatedUser: GQL.IUser
-    sideBarItems: UserSettingsSidebarItems
-    routes: readonly UserSettingsAreaRoute[]
-}
+export type UserSettingsAreaProps = UserAreaRouteContext &
+    RouteComponentProps<{}> &
+    ThemeProps &
+    TelemetryProps &
+    RequiredAuthProps & {
+        sideBarItems: UserSettingsSidebarItems
+        routes: readonly UserSettingsAreaRoute[]
+    }
 
 export interface UserSettingsAreaRouteContext extends UserSettingsAreaProps {
     /**
      * The user who is the subject of the page. This can differ from the authenticatedUser (e.g., when a site admin
      * is viewing another user's account page).
      */
-    user: GQL.IUser
-    newToken?: GQL.ICreateAccessTokenResult
-    onDidCreateAccessToken: (value?: GQL.ICreateAccessTokenResult) => void
-    onDidPresentNewToken: (value?: GQL.ICreateAccessTokenResult) => void
+    user: User
+    newToken?: GQL.CreateAccessTokenResult
+    onDidCreateAccessToken: (value?: GQL.CreateAccessTokenResult) => void
+    onDidPresentNewToken: (value?: GQL.CreateAccessTokenResult) => void
 }
 
 interface UserSettingsAreaState {
@@ -42,7 +43,7 @@ interface UserSettingsAreaState {
      * Holds the newly created access token (from UserSettingsCreateAccessTokenPage), if any. After
      * it is displayed to the user, this subject's value is set back to undefined.
      */
-    newlyCreatedAccessToken?: GQL.ICreateAccessTokenResult
+    newlyCreatedAccessToken?: GQL.CreateAccessTokenResult
 }
 
 /**
@@ -106,7 +107,7 @@ export const UserSettingsArea = withAuthenticatedUser(
             )
         }
 
-        private setNewToken = (value?: GQL.ICreateAccessTokenResult): void => {
+        private setNewToken = (value?: GQL.CreateAccessTokenResult): void => {
             this.setState({ newlyCreatedAccessToken: value })
         }
     }

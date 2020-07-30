@@ -17,16 +17,17 @@ import { FileDiffNode } from '../../components/diff/FileDiffNode'
 import { RepositoryCompareAreaPageProps } from './RepositoryCompareArea'
 import { ThemeProps } from '../../../../shared/src/theme'
 import { FileDiffFields, DiffStatFields } from '../../backend/diff'
+import { RepositoryComparisonDiffResult } from '../../graphql-operations'
 
 export function queryRepositoryComparisonFileDiffs(args: {
-    repo: GQL.ID
+    repo: GQL.Scalars['ID']
     base: string | null
     head: string | null
     first?: number
     after?: string
     isLightTheme: boolean
-}): Observable<GQL.IFileDiffConnection> {
-    return queryGraphQL(
+}): Observable<GQL.FileDiffConnection> {
+    return queryGraphQL<RepositoryComparisonDiffResult>(
         gql`
             query RepositoryComparisonDiff(
                 $repo: ID!
@@ -67,7 +68,7 @@ export function queryRepositoryComparisonFileDiffs(args: {
             if (!data || !data.node) {
                 throw createAggregateError(errors)
             }
-            const repo = data.node as GQL.IRepository
+            const repo = data.node as GQL.Repository
             if (!repo.comparison || !repo.comparison.fileDiffs || errors) {
                 throw createAggregateError(errors)
             }
@@ -83,10 +84,10 @@ interface RepositoryCompareDiffPageProps
         ExtensionsControllerProps,
         ThemeProps {
     /** The base of the comparison. */
-    base: { repoName: string; repoID: GQL.ID; revision: string | null; commitID: string }
+    base: { repoName: string; repoID: GQL.Scalars['ID']; revision: string | null; commitID: string }
 
     /** The head of the comparison. */
-    head: { repoName: string; repoID: GQL.ID; revision: string | null; commitID: string }
+    head: { repoName: string; repoID: GQL.Scalars['ID']; revision: string | null; commitID: string }
     hoverifier: Hoverifier<RepoSpec & RevisionSpec & FileSpec & ResolvedRevisionSpec, HoverMerged, ActionItemAction>
 }
 
@@ -123,7 +124,7 @@ export class RepositoryCompareDiffPage extends React.PureComponent<RepositoryCom
         )
     }
 
-    private queryDiffs = (args: { first?: number }): Observable<GQL.IFileDiffConnection> =>
+    private queryDiffs = (args: { first?: number }): Observable<GQL.FileDiffConnection> =>
         queryRepositoryComparisonFileDiffs({
             ...args,
             repo: this.props.repo.id,

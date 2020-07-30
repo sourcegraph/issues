@@ -1,15 +1,11 @@
 import * as React from 'react'
-import * as GQL from '../../../shared/src/graphql/schema'
 import { LinkOrSpan } from '../../../shared/src/components/LinkOrSpan'
-
-interface Person extends Pick<GQL.IPerson, 'email' | 'displayName'> {
-    user: Pick<GQL.IUser, 'username' | 'displayName' | 'url'> | null
-}
+import { SignatureFields } from '../graphql-operations'
 
 /**
  * Formats a person name to: "username (Display Name)" or "Display Name"
  */
-export const formatPersonName = ({ user, displayName }: GQL.IPerson | Person): string =>
+export const formatPersonName = ({ user, displayName }: SignatureFields['person']): string =>
     user ? user.username : displayName
 
 /**
@@ -18,7 +14,7 @@ export const formatPersonName = ({ user, displayName }: GQL.IPerson | Person): s
  */
 export const PersonLink: React.FunctionComponent<{
     /** The person to link to. */
-    person: GQL.IPerson | Person
+    person: SignatureFields['person']
 
     /** A class name that is always applied. */
     className?: string

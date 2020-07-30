@@ -1,15 +1,15 @@
 import { Observable } from 'rxjs'
 import { map } from 'rxjs/operators'
 import { gql } from '../../../../shared/src/graphql/graphql'
-import * as GQL from '../../../../shared/src/graphql/schema'
 import { createAggregateError } from '../../../../shared/src/util/errors'
 import { queryGraphQL } from '../../backend/graphql'
+import { RepositoryResult } from '../../graphql-operations'
 
 /**
  * Fetches a repository.
  */
-export function fetchRepository(name: string): Observable<GQL.IRepository> {
-    return queryGraphQL(
+export function fetchRepository(name: string): Observable<RepositoryResult['repository']> {
+    return queryGraphQL<RepositoryResult>(
         gql`
             query Repository($name: String!) {
                 repository(name: $name) {

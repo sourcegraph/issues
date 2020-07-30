@@ -20,9 +20,14 @@ import { queryViewerRegistryPublishers } from './backend'
 import { RegistryAreaPageProps } from './RegistryArea'
 import { ErrorAlert } from '../../../components/alerts'
 import * as H from 'history'
+import { CreateRegistryExtensionResult } from '../../../graphql-operations'
+import { RequiredAuthProps } from '../../../auth'
 
-function createExtension(publisher: GQL.ID, name: string): Observable<GQL.IExtensionRegistryCreateExtensionResult> {
-    return mutateGraphQL(
+function createExtension(
+    publisher: GQL.Scalars['ID'],
+    name: string
+): Observable<CreateRegistryExtensionResult['extensionRegistry']['createExtension']> {
+    return mutateGraphQL<CreateRegistryExtensionResult>(
         gql`
             mutation CreateRegistryExtension($publisher: ID!, $name: String!) {
                 extensionRegistry {
@@ -52,20 +57,21 @@ function createExtension(publisher: GQL.ID, name: string): Observable<GQL.IExten
     )
 }
 
-interface Props extends RegistryAreaPageProps, RouteComponentProps<{}> {
-    authenticatedUser: GQL.IUser
-    history: H.History
-}
+type Props = RegistryAreaPageProps &
+    RouteComponentProps<{}> &
+    RequiredAuthProps & {
+        history: H.History
+    }
 
 interface State {
     /** The viewer's authorized publishers, undefined while loading, or an error. */
     publishersOrError: 'loading' | RegistryPublisher[] | ErrorLike
 
     name: string
-    publisher?: GQL.ID
+    publisher?: GQL.Scalars['ID']
 
     /** The creation result, undefined while loading, or an error. */
-    creationOrError?: 'loading' | GQL.IExtensionRegistryCreateExtensionResult | ErrorLike
+    creationOrError?: 'loading' | GQL.ExtensionRegistryCreateExtensionResult | ErrorLike
 }
 
 /** A page with a form to create a new extension in the extension registry. */

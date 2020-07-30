@@ -15,7 +15,7 @@ export const logUserEvent = (
     url: string,
     requestGraphQL: PlatformContext['requestGraphQL']
 ): void => {
-    requestGraphQL<GQL.IMutation>({
+    requestGraphQL<GQL.Mutation>({
         request: gql`
             mutation logUserEvent($event: UserEvent!, $userCookieID: String!) {
                 logUserEvent(event: $event, userCookieID: $userCookieID) {
@@ -51,7 +51,7 @@ export const logEvent = (
         return
     }
 
-    requestGraphQL<GQL.IMutation>({
+    requestGraphQL<GQL.Mutation>({
         request: gql`
             mutation logEvent(
                 $name: String!

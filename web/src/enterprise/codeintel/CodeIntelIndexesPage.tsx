@@ -124,7 +124,7 @@ const IndexNode: FunctionComponent<IndexNodeProps> = ({ node, onDelete, history,
 }
 
 interface Props extends RouteComponentProps<{}> {
-    repo?: GQL.IRepository
+    repo?: GQL.Repository
     fetchLsifIndexes?: typeof defaultFetchLsifIndexes
 
     /** Function that returns the current time (for stability in visual tests). */
@@ -175,8 +175,9 @@ export const CodeIntelIndexesPage: FunctionComponent<Props> = ({
     const onDeleteCallback = useMemo(() => onDeleteSubject.next.bind(onDeleteSubject), [onDeleteSubject])
 
     const queryIndexes = useCallback(
-        (args: FilteredConnectionQueryArgs) => fetchLsifIndexes({ repository: repo?.id, ...args }),
-        [repo?.id, fetchLsifIndexes]
+        (args: FilteredConnectionQueryArgs) =>
+            fetchLsifIndexes(repo ? { repository: repo.id, state: null, ...args } : { state: null, ...args }),
+        [repo, fetchLsifIndexes]
     )
 
     return (

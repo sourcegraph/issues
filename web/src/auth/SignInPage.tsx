@@ -2,17 +2,16 @@ import * as H from 'history'
 import KeyIcon from 'mdi-react/KeyIcon'
 import React, { useEffect } from 'react'
 import { Redirect } from 'react-router-dom'
-import * as GQL from '../../../shared/src/graphql/schema'
 import { HeroPage } from '../components/HeroPage'
 import { PageTitle } from '../components/PageTitle'
 import { eventLogger } from '../tracking/eventLogger'
 import { getReturnTo } from './SignInSignUpCommon'
 import { UsernamePasswordSignInForm } from './UsernamePasswordSignInForm'
+import { OptionalAuthProps } from '../auth'
 
-interface SignInPageProps {
+interface SignInPageProps extends OptionalAuthProps, OptionalAuthProps {
     location: H.Location
     history: H.History
-    authenticatedUser: GQL.IUser | null
 }
 
 export const SignInPage: React.FunctionComponent<SignInPageProps> = props => {

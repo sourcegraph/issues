@@ -16,13 +16,17 @@ import { BackToAllSubscriptionsLink } from './BackToAllSubscriptionsLink'
 import { ProductSubscriptionForm } from './ProductSubscriptionForm'
 import { ThemeProps } from '../../../../../shared/src/theme'
 import { useEventObservable } from '../../../../../shared/src/util/useObservable'
+import {
+    CreatePaidProductSubscriptionVariables,
+    CreatePaidProductSubscriptionResult,
+} from '../../../graphql-operations'
 
 interface Props extends RouteComponentProps<{}>, ThemeProps {
     /**
      * The user who will own the new subscription when created, or null when there is no
      * authenticated user and this page is accessed at /subscriptions/new.
      */
-    user: GQL.IUser | null
+    user: GQL.User | null
     history: H.History
 }
 
@@ -49,7 +53,7 @@ export const UserSubscriptionsNewProductSubscriptionPage: React.FunctionComponen
      */
     const [nextCreation, creation] = useEventObservable(
         useCallback(
-            (creations: Observable<GQL.ICreatePaidProductSubscriptionOnDotcomMutationArguments>) =>
+            (creations: Observable<CreatePaidProductSubscriptionVariables>) =>
                 creations.pipe(
                     switchMap(args =>
                         createPaidProductSubscription(args).pipe(
@@ -110,7 +114,7 @@ export const UserSubscriptionsNewProductSubscriptionPage: React.FunctionComponen
  *
  * Inverse of {@link productSubscriptionInputForLocationHash}.
  */
-function parseProductSubscriptionInputFromLocation(location: H.Location): GQL.IProductSubscriptionInput | null {
+function parseProductSubscriptionInputFromLocation(location: H.Location): GQL.ProductSubscriptionInput | null {
     if (location.hash) {
         const parameters = new URLSearchParams(location.hash.slice('#'.length))
         const billingPlanID = parameters.get('plan')
@@ -127,7 +131,7 @@ function parseProductSubscriptionInputFromLocation(location: H.Location): GQL.IP
  *
  * Inverse of {@link parseProductSubscriptionInputFromLocation}.
  */
-export function productSubscriptionInputForLocationHash(value: GQL.IProductSubscriptionInput | null): string {
+export function productSubscriptionInputForLocationHash(value: GQL.ProductSubscriptionInput | null): string {
     if (value === null) {
         return ''
     }
@@ -138,9 +142,9 @@ export function productSubscriptionInputForLocationHash(value: GQL.IProductSubsc
 }
 
 function createPaidProductSubscription(
-    args: GQL.ICreatePaidProductSubscriptionOnDotcomMutationArguments
-): Observable<GQL.ICreatePaidProductSubscriptionResult> {
-    return mutateGraphQL(
+    args: CreatePaidProductSubscriptionVariables
+): Observable<CreatePaidProductSubscriptionResult['dotcom']['createPaidProductSubscription']> {
+    return mutateGraphQL<CreatePaidProductSubscriptionResult>(
         gql`
             mutation CreatePaidProductSubscription(
                 $accountID: ID!

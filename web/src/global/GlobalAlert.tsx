@@ -11,7 +11,7 @@ import * as H from 'history'
 /**
  * A global alert that is shown at the top of the viewport.
  */
-export const GlobalAlert: React.FunctionComponent<{ alert: GQL.IAlert; className: string; history: H.History }> = ({
+export const GlobalAlert: React.FunctionComponent<{ alert: GQL.Alert; className: string; history: H.History }> = ({
     alert,
     history,
     className: commonClassName,

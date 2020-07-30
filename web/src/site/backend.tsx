@@ -5,6 +5,7 @@ import { gql } from '../../../shared/src/graphql/graphql'
 import { createAggregateError } from '../../../shared/src/util/errors'
 import { authRequired } from '../auth'
 import { queryGraphQL } from '../backend/graphql'
+import { SiteFlagsResult } from '../graphql-operations'
 
 /**
  * The latest state of the site flags.
@@ -20,7 +21,7 @@ export function refreshSiteFlags(): Observable<never> {
         take(1),
         filter(authRequired => !authRequired),
         mergeMap(() =>
-            queryGraphQL(gql`
+            queryGraphQL<SiteFlagsResult>(gql`
                 query SiteFlags {
                     site {
                         needsRepositoryConfiguration

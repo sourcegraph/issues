@@ -22,7 +22,7 @@ async function deleteOrganizationByName(
     name: string
 ): Promise<void> {
     const orgs = await fetchAllOrganizations({ requestGraphQL }, { first: 1000, query: '' }).toPromise()
-    const matches = orgs.nodes.filter((org: GQL.IOrg) => org.name === name)
+    const matches = orgs.nodes.filter((org: GQL.Org) => org.name === name)
     await Promise.all(matches.map(org => deleteOrganization({ requestGraphQL }, org.id).toPromise()))
 }
 
@@ -226,7 +226,7 @@ describe('Organizations regression test suite', () => {
             )
 
             // Retry, because the configuration update endpoint is eventually consistent
-            let lastCreatedOrg: GQL.IOrg
+            let lastCreatedOrg: GQL.Org
             await retry(
                 async () => {
                     // Create org

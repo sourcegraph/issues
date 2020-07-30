@@ -7,7 +7,7 @@ import { CopyableText } from '../../components/CopyableText'
 interface AccessTokenCreatedAlertProps {
     className: string
     tokenSecret: string
-    token: GQL.IAccessToken
+    token: GQL.AccessToken
 }
 
 /**

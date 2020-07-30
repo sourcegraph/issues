@@ -11,7 +11,7 @@
 
 import { Project, QuoteKind } from 'ts-morph'
 import { formatSourceFile } from './prettier-ts-morph'
-import { addMissingHistoryProp } from './add-history-prop'
+// import { addMissingHistoryProp } from './add-history-prop'
 import * as path from 'path'
 
 async function main(): Promise<void> {
@@ -37,21 +37,27 @@ async function main(): Promise<void> {
     const diagnostics = project
         .getPreEmitDiagnostics()
         // Some declaration files are not found by ts-morph for some reason, ignore
-        .filter(d => !/(declaration|type definition) file/i.test(project.formatDiagnosticsWithColorAndContext([d])))
+        .filter(
+            diagnostic =>
+                !/(declaration|type definition) file/i.test(project.formatDiagnosticsWithColorAndContext([diagnostic]))
+        )
 
-    for (const diagnostic of diagnostics.filter(d =>
-        /property 'history' is missing/i.test(project.formatDiagnosticsWithColorAndContext([d]))
+    for (const diagnostic of diagnostics.filter(diagnostic =>
+        /cannot find name/i.test(project.formatDiagnosticsWithColorAndContext([diagnostic]))
     )) {
         try {
             let sourceFile = diagnostic.getSourceFile()
             if (!sourceFile) {
                 continue
             }
-            addMissingHistoryProp(diagnostic, sourceFile)
+            console.log(sourceFile.getFilePath())
+            sourceFile = sourceFile.fixMissingImports()
+            sourceFile = sourceFile.fixUnusedIdentifiers()
+            // addMissingHistoryProp(diagnostic, sourceFile)
             sourceFile = await formatSourceFile(sourceFile)
             await sourceFile.save()
-        } catch (err) {
-            console.error(err)
+        } catch (error) {
+            console.error(error)
         }
     }
 }

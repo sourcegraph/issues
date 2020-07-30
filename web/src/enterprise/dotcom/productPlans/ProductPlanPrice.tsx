@@ -1,11 +1,11 @@
 import React from 'react'
-import * as GQL from '../../../../../shared/src/graphql/schema'
 import { ProductPlanTiered } from './ProductPlanTiered'
 import { pluralize } from '../../../../../shared/src/util/strings'
+import { ProductPlan } from './backend'
 
 /** Displays the price of a plan. */
 export const ProductPlanPrice: React.FunctionComponent<{
-    plan: Pick<GQL.IProductPlan, 'pricePerUserPerYear' | 'planTiers' | 'tiersMode' | 'minQuantity' | 'maxQuantity'>
+    plan: Pick<ProductPlan, 'pricePerUserPerYear' | 'planTiers' | 'tiersMode' | 'minQuantity' | 'maxQuantity'>
 }> = ({ plan }) =>
     plan.planTiers.length > 0 ? (
         <ProductPlanTiered plan={plan} />

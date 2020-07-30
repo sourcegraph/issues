@@ -59,13 +59,13 @@ class JSDOMEnvironment {
     /* eslint-disable @typescript-eslint/unbound-method */
     const originalAddListener = global.addEventListener
     const originalRemoveListener = global.removeEventListener
-    global.addEventListener = function(...args) {
+    global.addEventListener = function (...args) {
       if (args[0] === 'error') {
         userErrorListenerCount++
       }
       return originalAddListener.apply(this, args)
     }
-    global.removeEventListener = function(...args) {
+    global.removeEventListener = function (...args) {
       if (args[0] === 'error') {
         userErrorListenerCount--
       }

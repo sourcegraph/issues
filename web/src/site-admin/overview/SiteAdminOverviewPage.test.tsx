@@ -5,7 +5,7 @@ import { of } from 'rxjs'
 import { SiteAdminOverviewPage } from './SiteAdminOverviewPage'
 import { eventLogger } from '../../tracking/eventLogger'
 import sinon from 'sinon'
-import { ISiteUsagePeriod } from '../../../../shared/src/graphql/schema'
+import { SiteUsagePeriod } from '../../../../shared/src/graphql/schema'
 import { PageTitle } from '../../components/PageTitle'
 
 describe('SiteAdminOverviewPage', () => {
@@ -109,7 +109,7 @@ describe('SiteAdminOverviewPage', () => {
         })
     })
     test('>= 2 users', done => {
-        const usageStat: ISiteUsagePeriod = {
+        const usageStat: SiteUsagePeriod = {
             __typename: 'SiteUsagePeriod',
             userCount: 10,
             registeredUserCount: 8,

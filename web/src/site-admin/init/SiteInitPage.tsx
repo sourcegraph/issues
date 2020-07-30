@@ -29,7 +29,7 @@ const initSite = async (args: SignUpArgs): Promise<void> => {
 }
 
 interface Props extends ThemeProps {
-    authenticatedUser: Pick<GQL.IUser, 'username'> | null
+    authenticatedUser: Pick<GQL.User, 'username'> | null
 
     /**
      * Whether site initialization is needed. If not set, the global value from

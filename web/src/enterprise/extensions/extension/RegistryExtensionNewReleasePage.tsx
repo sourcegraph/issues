@@ -23,11 +23,13 @@ import { ErrorAlert } from '../../../components/alerts'
 import CheckCircleIcon from 'mdi-react/CheckCircleIcon'
 import { TelemetryProps } from '../../../../../shared/src/telemetry/telemetryService'
 import { ThemeProps } from '../../../../../shared/src/theme'
+import { PublishRegistryExtensionResult, PublishRegistryExtensionVariables } from '../../../graphql-operations'
+import { RequiredAuthProps } from '../../../auth'
 
 const publishExtension = (
-    args: Pick<GQL.IPublishExtensionOnExtensionRegistryMutationArguments, 'extensionID' | 'manifest' | 'bundle'>
-): Promise<GQL.IExtensionRegistryCreateExtensionResult> =>
-    mutateGraphQL(
+    args: PublishRegistryExtensionVariables
+): Promise<PublishRegistryExtensionResult['extensionRegistry']['publishExtension']> =>
+    mutateGraphQL<PublishRegistryExtensionResult>(
         gql`
             mutation PublishRegistryExtension($extensionID: String!, $manifest: String!, $bundle: String!) {
                 extensionRegistry {
@@ -47,11 +49,10 @@ const publishExtension = (
         )
         .toPromise()
 
-interface Props extends ThemeProps, TelemetryProps {
+interface Props extends ThemeProps, TelemetryProps, RequiredAuthProps {
     /** The extension that is the subject of the page. */
-    extension: ConfiguredRegistryExtension<GQL.IRegistryExtension>
+    extension: ConfiguredRegistryExtension<GQL.RegistryExtension>
 
-    authenticatedUser: GQL.IUser
     history: H.History
 }
 
@@ -108,7 +109,7 @@ export const RegistryExtensionNewReleasePage = withAuthenticatedUser<Props>(
                             return concat(
                                 [LOADING],
                                 from(
-                                    publishExtension({ extensionID: extension.id, manifest, bundle: bundleOrError })
+                                    publishExtension({ extensionID: extension.id, manifest, bundle: bundleOrError! })
                                 ).pipe(catchError(error => [asError(error)]))
                             )
                         })

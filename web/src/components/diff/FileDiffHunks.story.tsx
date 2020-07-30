@@ -4,9 +4,9 @@ import React from 'react'
 import { FileDiffHunks } from './FileDiffHunks'
 import { createMemoryHistory } from 'history'
 import webStyles from '../../SourcegraphWebApp.scss'
-import { DiffHunkLineType, IFileDiffHunk } from '../../../../shared/src/graphql/schema'
+import { DiffHunkLineType, FileDiffHunk } from '../../../../shared/src/graphql/schema'
 
-export const DEMO_HUNKS: IFileDiffHunk[] = [
+export const DEMO_HUNKS: FileDiffHunk[] = [
     {
         __typename: 'FileDiffHunk',
         oldRange: { __typename: 'FileDiffHunkRange', lines: 7, startLine: 3 },

@@ -1,12 +1,10 @@
 import React from 'react'
 import { Redirect, RouteComponentProps } from 'react-router'
-import * as GQL from '../../../../../shared/src/graphql/schema'
 import { UserSubscriptionsNewProductSubscriptionPage } from './UserSubscriptionsNewProductSubscriptionPage'
 import { ThemeProps } from '../../../../../shared/src/theme'
+import { OptionalAuthProps } from '../../../auth'
 
-interface Props extends RouteComponentProps<{}>, ThemeProps {
-    authenticatedUser: GQL.IUser | null
-}
+interface Props extends RouteComponentProps<{}>, ThemeProps, OptionalAuthProps {}
 
 /**
  * Displays or redirects to the new product subscription page.

@@ -34,6 +34,7 @@ import { VersionContextDropdown } from '../../../nav/VersionContextDropdown'
 import { VersionContextProps } from '../../../../../shared/src/search/util'
 import { VersionContext } from '../../../schema/site.schema'
 import { globbingEnabledFromSettings } from '../../../util/globbing'
+import { OptionalAuthProps } from '../../../auth'
 
 interface InteractiveModeProps
     extends SettingsCascadeProps,
@@ -48,6 +49,7 @@ interface InteractiveModeProps
         CaseSensitivityProps,
         CopyQueryButtonProps,
         Pick<InteractiveSearchProps, 'filtersInQuery' | 'onFiltersInQueryChange' | 'toggleSearchMode'>,
+        OptionalAuthProps,
         VersionContextProps {
     location: H.Location
     history: H.History
@@ -62,7 +64,6 @@ interface InteractiveModeProps
 
     // For NavLinks
     authRequired?: boolean
-    authenticatedUser: GQL.IUser | null
     showCampaigns: boolean
     isSourcegraphDotCom: boolean
 

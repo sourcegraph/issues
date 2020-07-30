@@ -12,7 +12,7 @@ import { VersionContextProps } from '../../../../shared/src/search/util'
 
 interface Props extends SettingsCascadeProps, Pick<PatternTypeProps, 'patternType'>, VersionContextProps {
     history: H.History
-    authenticatedUser: Pick<GQL.IUser, never> | null
+    authenticatedUser: Pick<GQL.User, never> | null
 
     /**
      * The current query.

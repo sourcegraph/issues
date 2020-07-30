@@ -4,8 +4,8 @@ import { dataOrThrowErrors, gql } from '../../../../shared/src/graphql/graphql'
 import * as GQL from '../../../../shared/src/graphql/schema'
 import { PlatformContext } from '../../../../shared/src/platform/context'
 
-export const fetchSite = (requestGraphQL: PlatformContext['requestGraphQL']): Observable<GQL.ISite> =>
-    requestGraphQL<GQL.IQuery>({
+export const fetchSite = (requestGraphQL: PlatformContext['requestGraphQL']): Observable<GQL.Site> =>
+    requestGraphQL<GQL.Query>({
         request: gql`
             query SiteProductVersion {
                 site {

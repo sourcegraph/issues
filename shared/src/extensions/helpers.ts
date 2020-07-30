@@ -2,10 +2,10 @@ import { isEqual } from 'lodash'
 import { from, Observable, of, throwError } from 'rxjs'
 import { catchError, distinctUntilChanged, map, publishReplay, refCount, switchMap } from 'rxjs/operators'
 import { gql } from '../graphql/graphql'
-import * as GQL from '../graphql/schema'
 import { PlatformContext } from '../platform/context'
 import { asError, createAggregateError } from '../util/errors'
 import { ConfiguredRegistryExtension, extensionIDsFromSettings, toConfiguredRegistryExtension } from './extension'
+import { ExtensionsVariables, ExtensionsResult } from '../graphql-operations'
 
 /**
  * @returns An observable that emits the list of extensions configured in the viewer's final settings upon
@@ -37,12 +37,12 @@ export function queryConfiguredRegistryExtensions(
     if (extensionIDs.length === 0) {
         return of([])
     }
-    const variables: GQL.IExtensionsOnExtensionRegistryArguments = {
+    const variables: ExtensionsVariables = {
         first: extensionIDs.length,
         prioritizeExtensionIDs: extensionIDs,
     }
     return from(
-        requestGraphQL<GQL.IQuery>({
+        requestGraphQL<ExtensionsResult>({
             request: gql`
                 query Extensions($first: Int!, $prioritizeExtensionIDs: [String!]!) {
                     extensionRegistry {

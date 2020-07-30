@@ -28,8 +28,8 @@ export interface ConfiguredExtension {
  * @template X the registry extension type
  */
 export interface ConfiguredRegistryExtension<
-    X extends Pick<GQL.IRegistryExtension, 'id' | 'url' | 'viewerCanAdminister'> = Pick<
-        GQL.IRegistryExtension,
+    X extends Pick<GQL.RegistryExtension, 'id' | 'url' | 'viewerCanAdminister'> = Pick<
+        GQL.RegistryExtension,
         'id' | 'url' | 'viewerCanAdminister'
     >
 > extends ConfiguredExtension {
@@ -37,7 +37,7 @@ export interface ConfiguredRegistryExtension<
     readonly registryExtension?: X
 }
 
-type MinimalRegistryExtension = Pick<GQL.IRegistryExtension, 'extensionID' | 'id' | 'url' | 'viewerCanAdminister'> & {
+type MinimalRegistryExtension = Pick<GQL.RegistryExtension, 'extensionID' | 'id' | 'url' | 'viewerCanAdminister'> & {
     manifest: { raw: string } | null
 }
 

@@ -42,13 +42,13 @@ const PLATFORM_CONTEXT: ActionItemComponentProps['platformContext'] = {
     settings: NEVER,
 }
 
-const NOOP_CONFIG: GQL.IConfiguration = {
+const NOOP_CONFIG: GQL.Configuration = {
     __typename: 'Configuration',
     contents: '{}',
     messages: [],
 }
 
-const NOOP_CONFIG_CASCADE: GQL.IConfigurationCascade = {
+const NOOP_CONFIG_CASCADE: GQL.ConfigurationCascade = {
     __typename: 'ConfigurationCascade',
     subjects: [],
     merged: NOOP_CONFIG,
@@ -88,7 +88,7 @@ const authUser = {
         nodes: [
             { id: '0', settingsURL: '#', displayName: 'Acme Corp' },
             { id: '1', settingsURL: '#', displayName: 'Beta Inc' },
-        ] as GQL.IOrg[],
+        ] as GQL.Org[],
     },
     tags: [],
     usageStatistics: {
@@ -105,10 +105,10 @@ const authUser = {
         nodes: [],
         totalCount: 0,
         pageInfo: { __typename: 'PageInfo', endCursor: null, hasNextPage: false },
-    } as GQL.IEventLogsConnection,
+    } as GQL.EventLogsConnection,
     emails: [],
-    accessTokens: {} as GQL.IAccessTokenConnection,
-    externalAccounts: {} as GQL.IExternalAccountConnection,
+    accessTokens: {} as GQL.AccessTokenConnection,
+    externalAccounts: {} as GQL.ExternalAccountConnection,
     viewerCanAdminister: true,
     viewerCanChangeUsername: true,
     surveyResponses: [],
@@ -116,7 +116,7 @@ const authUser = {
     databaseID: 0,
     namespaceName: '',
     permissionsInfo: null,
-} as GQL.IUser
+} as GQL.User
 
 const commonProps: RepogroupPageProps = {
     settingsCascade: {

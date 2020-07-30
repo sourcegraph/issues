@@ -4,10 +4,10 @@ import { CampaignsIcon } from '../icons'
 import { Link } from '../../../../../shared/src/components/Link'
 
 interface Props {
-    campaign: Pick<GQL.ICampaign, 'name' | 'closedAt' | 'viewerCanAdminister'> & {
+    campaign: Pick<GQL.Campaign, 'name' | 'closedAt' | 'viewerCanAdminister'> & {
         changesets: {
-            totalCount: GQL.ICampaign['changesets']['totalCount']
-            stats: Pick<GQL.ICampaign['changesets']['stats'], 'total' | 'closed' | 'merged'>
+            totalCount: GQL.Campaign['changesets']['totalCount']
+            stats: Pick<GQL.Campaign['changesets']['stats'], 'total' | 'closed' | 'merged'>
         }
     }
 }

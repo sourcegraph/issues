@@ -10,17 +10,17 @@ import { PhabricatorIcon } from '../../../../shared/src/components/icons' // TOD
 import { LinkOrButton } from '../../../../shared/src/components/LinkOrButton'
 import * as GQL from '../../../../shared/src/graphql/schema'
 import { asError, ErrorLike, isErrorLike } from '../../../../shared/src/util/errors'
-import { fetchFileExternalLinks } from '../backend'
+import { fetchFileExternalLinks, ExternalLink } from '../backend'
 import { RevisionSpec, FileSpec } from '../../../../shared/src/util/url'
 
 interface Props extends RevisionSpec, Partial<FileSpec> {
-    repo?: GQL.IRepository | null
+    repo?: GQL.Repository | null
     filePath?: string
     commitRange?: string
     position?: Position
     range?: Range
 
-    externalLinks?: GQL.IExternalLink[]
+    externalLinks?: ExternalLink[]
 }
 
 interface State {
@@ -28,7 +28,7 @@ interface State {
      * The external links for the current file/dir, or undefined while loading, null while not
      * needed (because not viewing a file/dir), or an error.
      */
-    fileExternalLinksOrError?: GQL.IExternalLink[] | null | ErrorLike
+    fileExternalLinksOrError?: ExternalLink[] | null | ErrorLike
 }
 
 /**
@@ -89,7 +89,7 @@ export class GoToCodeHostAction extends React.PureComponent<Props, State> {
             return null
         }
 
-        let externalURLs: GQL.IExternalLink[]
+        let externalURLs: GQL.ExternalLink[]
         if (this.props.externalLinks && this.props.externalLinks.length > 0) {
             externalURLs = this.props.externalLinks
         } else if (

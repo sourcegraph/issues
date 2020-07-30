@@ -10,7 +10,7 @@ import { scheduleUserPermissionsSync } from '../../../../site-admin/backend'
 /**
  * The user settings permissions page.
  */
-export const UserSettingsPermissionsPage: React.FunctionComponent<{ user: GQL.IUser; history: H.History }> = ({
+export const UserSettingsPermissionsPage: React.FunctionComponent<{ user: GQL.User; history: H.History }> = ({
     user,
     history,
 }) => {
@@ -64,7 +64,7 @@ export const UserSettingsPermissionsPage: React.FunctionComponent<{ user: GQL.IU
 }
 
 interface ScheduleUserPermissionsSyncActionContainerProps {
-    user: GQL.IUser
+    user: GQL.User
     history: H.History
 }
 

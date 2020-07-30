@@ -10,12 +10,13 @@ import { Link } from '../../../../shared/src/components/Link'
 import { PageTitle } from '../../components/PageTitle'
 import { RouteComponentProps } from 'react-router'
 import { Timestamp } from '../../components/time/Timestamp'
-import { fetchLsifUploads as defaultFetchLsifUploads, deleteLsifUpload, Upload } from './backend'
+import { fetchLsifUploads as defaultFetchLsifUploads, deleteLsifUpload } from './backend'
 import DeleteIcon from 'mdi-react/DeleteIcon'
 import { ErrorLike, isErrorLike } from '../../../../shared/src/util/errors'
 import { ErrorAlert } from '../../components/alerts'
 import { Subject } from 'rxjs'
 import * as H from 'history'
+import { LsifUploadConnectionFields } from '../../graphql-operations'
 
 const Header: FunctionComponent<{}> = () => (
     <thead>
@@ -31,8 +32,10 @@ const Header: FunctionComponent<{}> = () => (
     </thead>
 )
 
+export type GraphQlLsifUploadNode = LsifUploadConnectionFields['nodes'][number]
+
 export interface UploadNodeProps {
-    node: Upload
+    node: GraphQlLsifUploadNode
     onDelete: () => void
     history: H.History
 
@@ -138,7 +141,7 @@ const UploadNode: FunctionComponent<UploadNodeProps> = ({ node, onDelete, histor
 }
 
 interface Props extends RouteComponentProps<{}> {
-    repo?: GQL.IRepository
+    repo?: GQL.Repository
     fetchLsifUploads?: typeof defaultFetchLsifUploads
 
     /** Function that returns the current time (for stability in visual tests). */
@@ -195,8 +198,13 @@ export const CodeIntelUploadsPage: FunctionComponent<Props> = ({
     const onDeleteCallback = useMemo(() => onDeleteSubject.next.bind(onDeleteSubject), [onDeleteSubject])
 
     const queryUploads = useCallback(
-        (args: FilteredConnectionQueryArgs) => fetchLsifUploads({ repository: repo?.id, ...args }),
-        [repo?.id, fetchLsifUploads]
+        (args: FilteredConnectionQueryArgs) =>
+            fetchLsifUploads(
+                repo
+                    ? { state: null, isLatestForRepo: null, repository: repo.id, ...args }
+                    : { state: null, isLatestForRepo: null, ...args }
+            ),
+        [repo, fetchLsifUploads]
     )
 
     return (
@@ -221,7 +229,7 @@ export const CodeIntelUploadsPage: FunctionComponent<Props> = ({
                 intelligence for historic and branch commits.
             </p>
 
-            <FilteredConnection<Upload, Omit<UploadNodeProps, 'node'>>
+            <FilteredConnection<GraphQlLsifUploadNode, Omit<UploadNodeProps, 'node'>>
                 className="mt-3"
                 listComponent="table"
                 listClassName="table"

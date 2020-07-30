@@ -3,16 +3,14 @@ import AlertCircleIcon from 'mdi-react/AlertCircleIcon'
 import MapSearchIcon from 'mdi-react/MapSearchIcon'
 import * as React from 'react'
 import { Route, RouteComponentProps, Switch } from 'react-router'
-import { combineLatest, merge, Observable, of, Subject, Subscription } from 'rxjs'
+import { combineLatest, merge, of, Subject, Subscription } from 'rxjs'
 import { catchError, distinctUntilChanged, map, mapTo, startWith, switchMap, filter } from 'rxjs/operators'
 import { ActivationProps } from '../../../../shared/src/components/activation/Activation'
 import { ExtensionsControllerProps } from '../../../../shared/src/extensions/controller'
-import { gql, dataOrThrowErrors } from '../../../../shared/src/graphql/graphql'
 import * as GQL from '../../../../shared/src/graphql/schema'
 import { PlatformContextProps } from '../../../../shared/src/platform/context'
 import { SettingsCascadeProps } from '../../../../shared/src/settings/settings'
 import { isErrorLike, asError } from '../../../../shared/src/util/errors'
-import { queryGraphQL } from '../../backend/graphql'
 import { ErrorBoundary } from '../../components/ErrorBoundary'
 import { HeroPage } from '../../components/HeroPage'
 import { NamespaceProps } from '../../namespaces'
@@ -25,51 +23,8 @@ import { PatternTypeProps } from '../../search'
 import { ErrorMessage } from '../../components/alerts'
 import { isDefined } from '../../../../shared/src/util/types'
 import { TelemetryProps } from '../../../../shared/src/telemetry/telemetryService'
-
-const fetchUser = (args: { username: string; siteAdmin: boolean }): Observable<GQL.IUser> =>
-    queryGraphQL(
-        gql`
-            query User($username: String!, $siteAdmin: Boolean!) {
-                user(username: $username) {
-                    __typename
-                    id
-                    username
-                    displayName
-                    url
-                    settingsURL
-                    avatarURL
-                    viewerCanAdminister
-                    siteAdmin
-                    builtinAuth
-                    createdAt
-                    emails {
-                        email
-                        verified
-                    }
-                    organizations {
-                        nodes {
-                            id
-                            displayName
-                            name
-                        }
-                    }
-                    permissionsInfo @include(if: $siteAdmin) {
-                        syncedAt
-                        updatedAt
-                    }
-                }
-            }
-        `,
-        args
-    ).pipe(
-        map(dataOrThrowErrors),
-        map(data => {
-            if (!data.user) {
-                throw new Error(`User not found: ${JSON.stringify(args.username)}`)
-            }
-            return data.user
-        })
-    )
+import { fetchUser, User } from './backend'
+import { OptionalAuthProps } from '../../auth'
 
 const NotFoundPage: React.FunctionComponent = () => (
     <HeroPage icon={MapSearchIcon} title="404: Not Found" subtitle="Sorry, the requested user page was not found." />
@@ -85,17 +40,12 @@ interface UserAreaProps
         ThemeProps,
         TelemetryProps,
         ActivationProps,
+        OptionalAuthProps,
         Omit<PatternTypeProps, 'setPatternType'> {
     userAreaRoutes: readonly UserAreaRoute[]
     userAreaHeaderNavItems: readonly UserAreaHeaderNavItem[]
     userSettingsSideBarItems: UserSettingsSidebarItems
     userSettingsAreaRoutes: readonly UserSettingsAreaRoute[]
-
-    /**
-     * The currently authenticated user, NOT the user whose username is specified in the URL's "username" route
-     * parameter.
-     */
-    authenticatedUser: GQL.IUser | null
 }
 
 interface UserAreaState {
@@ -103,7 +53,7 @@ interface UserAreaState {
      * The fetched user (who is the subject of the page), or an error if an error occurred; undefined while
      * loading.
      */
-    userOrError?: GQL.IUser | Error
+    userOrError?: User | Error
 }
 
 /**
@@ -117,6 +67,7 @@ export interface UserAreaRouteContext
         TelemetryProps,
         ActivationProps,
         NamespaceProps,
+        OptionalAuthProps,
         Omit<PatternTypeProps, 'setPatternType'> {
     /** The user area main URL. */
     url: string
@@ -124,18 +75,11 @@ export interface UserAreaRouteContext
     /**
      * The user who is the subject of the page.
      */
-    user: GQL.IUser
+    user: User
 
     /** Called when the user is updated and must be reloaded. */
     onDidUpdateUser: () => void
 
-    /**
-     * The currently authenticated user, NOT (necessarily) the user who is the subject of the page.
-     *
-     * For example, if Alice is viewing a user area page about Bob, then the authenticatedUser is Alice and the
-     * user is Bob.
-     */
-    authenticatedUser: GQL.IUser | null
     userSettingsSideBarItems: UserSettingsSidebarItems
     userSettingsAreaRoutes: readonly UserSettingsAreaRoute[]
 }

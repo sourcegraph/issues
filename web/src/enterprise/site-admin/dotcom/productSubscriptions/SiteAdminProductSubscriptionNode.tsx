@@ -8,7 +8,7 @@ import { ProductSubscriptionLabel } from '../../../dotcom/productSubscriptions/P
 import { ProductLicenseTags } from '../../../productSubscription/ProductLicenseTags'
 
 export const siteAdminProductSubscriptionFragment = gql`
-    fragment ProductSubscriptionFields on ProductSubscription {
+    fragment SiteAdminProductSubscriptionFields on ProductSubscription {
         id
         name
         account {
@@ -57,7 +57,7 @@ export const SiteAdminProductSubscriptionNodeHeader: React.FunctionComponent = (
 )
 
 export interface SiteAdminProductSubscriptionNodeProps {
-    node: GQL.IProductSubscription
+    node: GQL.ProductSubscription
 }
 
 /**

@@ -6,9 +6,10 @@ import * as GQL from '../../../shared/src/graphql/schema'
 import { Form } from '../components/Form'
 import { NamespaceProps } from '../namespaces'
 import { ErrorAlert } from '../components/alerts'
+import { OptionalAuthProps } from '../auth'
 
 export interface SavedQueryFields {
-    id: GQL.ID
+    id: GQL.Scalars['ID']
     description: string
     query: string
     notify: boolean
@@ -16,10 +17,9 @@ export interface SavedQueryFields {
     slackWebhookURL: string | null
 }
 
-interface Props extends RouteComponentProps<{}>, NamespaceProps {
+interface Props extends RouteComponentProps<{}>, NamespaceProps, OptionalAuthProps {
     location: H.Location
     history: H.History
-    authenticatedUser: GQL.IUser | null
     defaultValues?: Partial<SavedQueryFields>
     title?: string
     submitLabel: string

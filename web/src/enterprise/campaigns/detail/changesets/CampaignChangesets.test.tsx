@@ -1,5 +1,4 @@
 import React from 'react'
-import * as GQL from '../../../../../../shared/src/graphql/schema'
 import { CampaignChangesets } from './CampaignChangesets'
 import * as H from 'history'
 import { of, Subject } from 'rxjs'
@@ -13,7 +12,7 @@ describe('CampaignChangesets', () => {
             shallow(
                 <CampaignChangesets
                     queryChangesets={() =>
-                        of({ nodes: [{ id: '0' } as GQL.IExternalChangeset] } as GQL.IChangesetConnection)
+                        of({ nodes: [{ id: '0' }] } as any)
                     }
                     campaign={{ id: '123', closedAt: null, viewerCanAdminister: true }}
                     history={history}

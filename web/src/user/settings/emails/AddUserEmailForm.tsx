@@ -9,10 +9,11 @@ import { Form } from '../../../components/Form'
 import { eventLogger } from '../../../tracking/eventLogger'
 import { ErrorAlert } from '../../../components/alerts'
 import * as H from 'history'
+import { AddUserEmailResult } from '../../../graphql-operations'
 
 interface Props {
     /** The GraphQL ID of the user with whom the new emails are associated. */
-    user: GQL.ID
+    user: GQL.Scalars['ID']
 
     /** Called after successfully adding an email to the user. */
     onDidAdd: () => void
@@ -99,7 +100,7 @@ export class AddUserEmailForm extends React.PureComponent<Props, State> {
     private onSubmit: React.FormEventHandler<HTMLFormElement> = event => this.submits.next(event)
 
     private addUserEmail = (email: string): Observable<void> =>
-        mutateGraphQL(
+        mutateGraphQL<AddUserEmailResult>(
             gql`
                 mutation AddUserEmail($user: ID!, $email: String!) {
                     addUserEmail(user: $user, email: $email) {

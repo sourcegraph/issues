@@ -21,13 +21,14 @@ import { RepositoryCompareDiffPage } from './RepositoryCompareDiffPage'
 import { ThemeProps } from '../../../../shared/src/theme'
 import { ErrorAlert } from '../../components/alerts'
 import * as H from 'history'
+import { RepositoryComparisonResult } from '../../graphql-operations'
 
 function queryRepositoryComparison(args: {
-    repo: GQL.ID
+    repo: GQL.Scalars['ID']
     base: string | null
     head: string | null
-}): Observable<GQL.IGitRevisionRange> {
-    return queryGraphQL(
+}): Observable<GQL.GitRevisionRange> {
+    return queryGraphQL<RepositoryComparisonResult>(
         gql`
             query RepositoryComparison($repo: ID!, $base: String, $head: String) {
                 node(id: $repo) {
@@ -57,7 +58,7 @@ function queryRepositoryComparison(args: {
             if (!data || !data.node) {
                 throw createAggregateError(errors)
             }
-            const repo = data.node as GQL.IRepository
+            const repo = data.node as GQL.Repository
             if (
                 !repo.comparison ||
                 !repo.comparison.range ||
@@ -82,17 +83,17 @@ interface Props
         ExtensionsControllerProps,
         ThemeProps {
     /** The base of the comparison. */
-    base: { repoName: string; repoID: GQL.ID; revision?: string | null }
+    base: { repoName: string; repoID: GQL.Scalars['ID']; revision?: string | null }
 
     /** The head of the comparison. */
-    head: { repoName: string; repoID: GQL.ID; revision?: string | null }
+    head: { repoName: string; repoID: GQL.Scalars['ID']; revision?: string | null }
     hoverifier: Hoverifier<RepoSpec & RevisionSpec & FileSpec & ResolvedRevisionSpec, HoverMerged, ActionItemAction>
     history: H.History
 }
 
 interface State {
     /** The comparison's range, null when no comparison is requested, undefined while loading, or an error. */
-    rangeOrError?: null | GQL.IGitRevisionRange | ErrorLike
+    rangeOrError?: null | GQL.GitRevisionRange | ErrorLike
 }
 
 /** A page with an overview of the comparison. */

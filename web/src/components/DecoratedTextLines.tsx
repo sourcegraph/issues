@@ -19,7 +19,7 @@ interface Props {
     /**
      * The highlights for the lines.
      */
-    highlights?: GQL.IHighlight[] | HighlightRange[]
+    highlights?: GQL.Highlight[] | HighlightRange[]
 
     /**
      * A list of classes to apply to 1-indexed line numbers.
@@ -34,7 +34,7 @@ interface Props {
 
 interface DecoratedLine {
     value: string
-    highlights?: (GQL.IHighlight | HighlightRange)[]
+    highlights?: (GQL.Highlight | HighlightRange)[]
     classNames?: string[]
     url?: string
 }

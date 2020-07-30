@@ -1,7 +1,7 @@
 import * as React from 'react'
 import { Subject, Subscription } from 'rxjs'
 import { catchError, map, switchMap } from 'rxjs/operators'
-import { IFileDiffConnection } from '../../../../shared/src/graphql/schema'
+import { FileDiffConnection } from '../../../../shared/src/graphql/schema'
 import { PlatformContextProps } from '../../../../shared/src/platform/context'
 import { queryRepositoryComparisonFileDiffs } from '../backend/diffs'
 import { OpenDiffInSourcegraphProps } from '../repo'
@@ -14,7 +14,7 @@ interface Props extends SourcegraphIconButtonProps, PlatformContextProps<'reques
 }
 
 interface State {
-    fileDiff: IFileDiffConnection | undefined
+    fileDiff: FileDiffConnection | undefined
 }
 
 export class OpenDiffOnSourcegraph extends React.Component<Props, State> {

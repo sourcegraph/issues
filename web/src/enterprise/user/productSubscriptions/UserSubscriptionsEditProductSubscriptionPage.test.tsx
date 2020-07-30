@@ -37,7 +37,7 @@ describe('UserSubscriptionsEditProductSubscriptionPage', () => {
                                 __typename: 'ProductSubscriptionInvoiceItem',
                                 userCount: 123,
                                 expiresAt: '2020-01-01',
-                                plan: { __typename: 'ProductPlan', billingPlanID: 'bp' } as GQL.IProductPlan,
+                                plan: { __typename: 'ProductPlan', billingPlanID: 'bp' } as GQL.ProductPlan,
                             },
                             url: '/s',
                         })

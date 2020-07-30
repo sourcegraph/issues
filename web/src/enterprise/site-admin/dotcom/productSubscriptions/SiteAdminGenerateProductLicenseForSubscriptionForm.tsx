@@ -12,9 +12,13 @@ import { ExpirationDate } from '../../../productSubscription/ExpirationDate'
 import { ErrorAlert } from '../../../../components/alerts'
 import { useEventObservable } from '../../../../../../shared/src/util/useObservable'
 import * as H from 'history'
+import {
+    GenerateProductLicenseForSubscriptionResult,
+    GenerateProductLicenseForSubscriptionVariables,
+} from '../../../../graphql-operations'
 
 interface Props {
-    subscriptionID: GQL.ID
+    subscriptionID: GQL.Scalars['ID']
     onGenerate: () => void
     history: H.History
 }
@@ -241,9 +245,9 @@ function addDaysAndRoundToEndOfDay(amount: number): number {
 }
 
 function generateProductLicenseForSubscription(
-    args: GQL.IGenerateProductLicenseForSubscriptionOnDotcomMutationArguments
-): Observable<Pick<GQL.IProductSubscription, 'id'>> {
-    return mutateGraphQL(
+    args: GenerateProductLicenseForSubscriptionVariables
+): Observable<GenerateProductLicenseForSubscriptionResult['dotcom']['generateProductLicenseForSubscription']> {
+    return mutateGraphQL<GenerateProductLicenseForSubscriptionResult>(
         gql`
             mutation GenerateProductLicenseForSubscription(
                 $productSubscriptionID: ID!

@@ -11,6 +11,7 @@ import {
 } from './graphQlResponseHelpers'
 import { saveScreenshotsUponFailures } from '../../../shared/src/testing/screenshotReporter'
 import * as path from 'path'
+import { DiffHunkLineType } from '../../../shared/src/graphql/schema'
 
 describe('Repository', () => {
     let driver: Driver
@@ -319,12 +320,12 @@ describe('Repository', () => {
                                                     aborted: false,
                                                     lines: [
                                                         {
-                                                            kind: 'DELETED',
+                                                            kind: DiffHunkLineType.DELETED,
                                                             html:
                                                                 '<div><span style="color:#657b83;">  </span><span style="color:#268bd2;">build</span><span style="color:#657b83;">:\n</span></div>',
                                                         },
                                                         {
-                                                            kind: 'ADDED',
+                                                            kind: DiffHunkLineType.ADDED,
                                                             html:
                                                                 '<div><span style="color:#657b83;">  </span><span style="color:#268bd2;">lsif-go</span><span style="color:#657b83;">:\n</span></div>',
                                                         },

@@ -1,2 +1,5 @@
 out/
 src/graphql/schema.ts
+src/graphql/schema_.ts
+src/graphql/schema__.ts
+src/graphql-operations.ts

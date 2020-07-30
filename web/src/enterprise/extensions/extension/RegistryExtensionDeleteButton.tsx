@@ -9,7 +9,7 @@ import { asError, ErrorLike, isErrorLike } from '../../../../../shared/src/util/
 import { deleteRegistryExtensionWithConfirmation } from '../registry/backend'
 
 interface RegistryExtensionDeleteButtonProps {
-    extension: Pick<GQL.IRegistryExtension, 'id'>
+    extension: Pick<GQL.RegistryExtension, 'id'>
 
     compact?: boolean
 

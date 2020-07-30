@@ -10,9 +10,10 @@ import { FilteredConnection } from '../../../components/FilteredConnection'
 import { PageTitle } from '../../../components/PageTitle'
 import { eventLogger } from '../../../tracking/eventLogger'
 import { externalAccountFragment, ExternalAccountNode, ExternalAccountNodeProps } from './ExternalAccountNode'
+import { UserExternalAccountsResult } from '../../../graphql-operations'
 
 interface Props extends RouteComponentProps<{}> {
-    user: GQL.IUser
+    user: GQL.User
 }
 
 /**
@@ -41,7 +42,7 @@ export class UserSettingsExternalAccountsPage extends React.Component<Props> {
             <div className="user-settings-external-accounts-page">
                 <PageTitle title="External accounts" />
                 <h2>External accounts</h2>
-                <FilteredConnection<GQL.IExternalAccount, Omit<ExternalAccountNodeProps, 'node'>>
+                <FilteredConnection<GQL.ExternalAccount, Omit<ExternalAccountNodeProps, 'node'>>
                     className="list-group list-group-flush mt-3"
                     noun="external account"
                     pluralNoun="external accounts"
@@ -58,8 +59,8 @@ export class UserSettingsExternalAccountsPage extends React.Component<Props> {
         )
     }
 
-    private queryUserExternalAccounts = (args: { first?: number }): Observable<GQL.IExternalAccountConnection> =>
-        queryGraphQL(
+    private queryUserExternalAccounts = (args: { first?: number }): Observable<GQL.ExternalAccountConnection> =>
+        queryGraphQL<UserExternalAccountsResult>(
             gql`
                 query UserExternalAccounts($user: ID!, $first: Int) {
                     node(id: $user) {
@@ -84,7 +85,7 @@ export class UserSettingsExternalAccountsPage extends React.Component<Props> {
                 if (!data || !data.node) {
                     throw createAggregateError(errors)
                 }
-                const user = data.node as GQL.IUser
+                const user = data.node as GQL.User
                 if (!user.externalAccounts) {
                     throw createAggregateError(errors)
                 }

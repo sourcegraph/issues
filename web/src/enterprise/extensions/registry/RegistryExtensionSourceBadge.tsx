@@ -5,7 +5,7 @@ import { LinkOrSpan } from '../../../../../shared/src/components/LinkOrSpan'
 import * as GQL from '../../../../../shared/src/graphql/schema'
 
 export const RegistryExtensionSourceBadge: React.FunctionComponent<{
-    extension: Pick<GQL.IRegistryExtension, 'remoteURL' | 'registryName' | 'isLocal'>
+    extension: Pick<GQL.RegistryExtension, 'remoteURL' | 'registryName' | 'isLocal'>
     showIcon?: boolean
     showText?: boolean
     showRegistryName?: boolean

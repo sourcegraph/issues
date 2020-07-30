@@ -17,7 +17,9 @@ describe('GlobalCampaignListPage', () => {
                         history={history}
                         location={history.location}
                         authenticatedUser={{ siteAdmin: true }}
-                        queryCampaigns={() => of({ nodes: Object.values(nodes) })}
+                        queryCampaigns={() =>
+                            of({ totalCount: Object.values(nodes).length, nodes: Object.values(nodes) })
+                        }
                         telemetryService={NOOP_TELEMETRY_SERVICE}
                     />
                 )
@@ -30,7 +32,9 @@ describe('GlobalCampaignListPage', () => {
                         history={history}
                         location={history.location}
                         authenticatedUser={{ siteAdmin: false }}
-                        queryCampaigns={() => of({ nodes: Object.values(nodes) })}
+                        queryCampaigns={() =>
+                            of({ totalCount: Object.values(nodes).length, nodes: Object.values(nodes) })
+                        }
                         telemetryService={NOOP_TELEMETRY_SERVICE}
                     />
                 )

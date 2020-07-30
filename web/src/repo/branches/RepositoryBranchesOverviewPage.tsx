@@ -15,16 +15,17 @@ import { gitReferenceFragments, GitReferenceNode } from '../GitReference'
 import { RepositoryBranchesAreaPageProps } from './RepositoryBranchesArea'
 import { ErrorAlert } from '../../components/alerts'
 import * as H from 'history'
+import { RepositoryGitBranchesOverviewVariables, RepositoryGitBranchesOverviewResult } from '../../graphql-operations'
 
 interface Data {
-    defaultBranch: GQL.IGitRef | null
-    activeBranches: GQL.IGitRef[]
+    defaultBranch: GQL.GitRef | null
+    activeBranches: GQL.GitRef[]
     hasMoreActiveBranches: boolean
 }
 
 const queryGitBranches = memoizeObservable(
-    (args: { repo: GQL.ID; first: number }): Observable<Data> =>
-        queryGraphQL(
+    (args: Omit<RepositoryGitBranchesOverviewVariables, 'withBehindAhead'>): Observable<Data> =>
+        queryGraphQL<RepositoryGitBranchesOverviewResult>(
             gql`
                 query RepositoryGitBranchesOverview($repo: ID!, $first: Int!, $withBehindAhead: Boolean!) {
                     node(id: $repo) {
@@ -51,7 +52,7 @@ const queryGitBranches = memoizeObservable(
                 if (!data || !data.node) {
                     throw createAggregateError(errors)
                 }
-                const repo = data.node as GQL.IRepository
+                const repo = data.node as GQL.Repository
                 if (!repo.gitRefs || !repo.gitRefs.nodes) {
                     throw createAggregateError(errors)
                 }

@@ -5,15 +5,17 @@ import { Observable } from 'rxjs'
 import { map } from 'rxjs/operators'
 import { CircleChevronLeftIcon } from '../../../shared/src/components/icons'
 import { displayRepoName } from '../../../shared/src/components/RepoFileLink'
-import { gql } from '../../../shared/src/graphql/graphql'
+import { gql, dataOrThrowErrors } from '../../../shared/src/graphql/graphql'
 import * as GQL from '../../../shared/src/graphql/schema'
-import { createAggregateError } from '../../../shared/src/util/errors'
 import { queryGraphQL } from '../backend/graphql'
-import { FilteredConnection, FilteredConnectionQueryArgs } from '../components/FilteredConnection'
+import { FilteredConnection } from '../components/FilteredConnection'
 import { eventLogger } from '../tracking/eventLogger'
+import { RepositoriesForPopoverResult, RepositoriesForPopoverVariables } from '../graphql-operations'
 
-function fetchRepositories(args: { first?: number; query?: string }): Observable<GQL.IRepositoryConnection> {
-    return queryGraphQL(
+function fetchRepositories(
+    args: RepositoriesForPopoverVariables
+): Observable<RepositoriesForPopoverResult['repositories']> {
+    return queryGraphQL<RepositoriesForPopoverResult>(
         gql`
             query RepositoriesForPopover($first: Int, $query: String) {
                 repositories(first: $first, query: $query) {
@@ -30,18 +32,14 @@ function fetchRepositories(args: { first?: number; query?: string }): Observable
         `,
         args
     ).pipe(
-        map(({ data, errors }) => {
-            if (!data || !data.repositories) {
-                throw createAggregateError(errors)
-            }
-            return data.repositories
-        })
+        map(dataOrThrowErrors),
+        map(data => data.repositories)
     )
 }
 
 interface RepositoryNodeProps {
-    node: GQL.IRepository
-    currentRepo?: GQL.ID
+    node: GQL.Repository
+    currentRepo?: GQL.Scalars['ID']
 }
 
 const RepositoryNode: React.FunctionComponent<RepositoryNodeProps> = ({ node, currentRepo }) => (
@@ -64,13 +62,13 @@ interface Props {
     /**
      * The current repository (shown as selected in the list), if any.
      */
-    currentRepo?: GQL.ID
+    currentRepo?: GQL.Scalars['ID']
 
     history: H.History
     location: H.Location
 }
 
-class FilteredRepositoryConnection extends FilteredConnection<GQL.IRepository> {}
+class FilteredRepositoryConnection extends FilteredConnection<GQL.Repository> {}
 
 /**
  * A popover that displays a searchable list of repositories.
@@ -91,7 +89,7 @@ export class RepositoriesPopover extends React.PureComponent<Props> {
                     compact={true}
                     noun="repository"
                     pluralNoun="repositories"
-                    queryConnection={this.queryRepositories}
+                    queryConnection={fetchRepositories}
                     nodeComponent={RepositoryNode}
                     nodeComponentProps={nodeProps}
                     defaultFirst={10}
@@ -104,7 +102,4 @@ export class RepositoriesPopover extends React.PureComponent<Props> {
             </div>
         )
     }
-
-    private queryRepositories = (args: FilteredConnectionQueryArgs): Observable<GQL.IRepositoryConnection> =>
-        fetchRepositories({ ...args })
 }

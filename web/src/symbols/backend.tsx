@@ -3,16 +3,17 @@ import { map } from 'rxjs/operators'
 import { gql, dataOrThrowErrors } from '../../../shared/src/graphql/graphql'
 import * as GQL from '../../../shared/src/graphql/schema'
 import { queryGraphQL } from '../backend/graphql'
+import { SymbolsResult } from '../graphql-operations'
 
 /**
  * Fetches symbols.
  */
 export function fetchSymbols(
-    repo: GQL.ID,
+    repo: GQL.Scalars['ID'],
     revision: string,
     args: { first?: number; query?: string; includePatterns?: string[] }
-): Observable<GQL.ISymbolConnection> {
-    return queryGraphQL(
+): Observable<NonNullable<(SymbolsResult['node'] & { __typename: 'Repository' })['commit']>['symbols']> {
+    return queryGraphQL<SymbolsResult>(
         gql`
             query Symbols($repo: ID!, $revision: String!, $first: Int, $query: String, $includePatterns: [String!]) {
                 node(id: $repo) {

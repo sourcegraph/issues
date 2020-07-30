@@ -21,7 +21,7 @@ import { RepoRevisionSidebarSymbols } from './RepoRevisionSidebarSymbols'
 type SidebarTabID = 'files' | 'symbols' | 'history'
 
 interface Props extends AbsoluteRepoFile, ExtensionsControllerProps {
-    repoID: GQL.ID
+    repoID: GQL.Scalars['ID']
     isDir: boolean
     defaultBranch: string
     className: string

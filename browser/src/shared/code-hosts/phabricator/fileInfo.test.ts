@@ -4,7 +4,7 @@ import { resolveDiffusionFileInfo, resolveRevisionFileInfo, resolveDiffFileInfo 
 import { GraphQLResponseMap, mockRequestGraphQL } from '../shared/testHelpers'
 import { QueryConduitHelper } from './backend'
 import { SuccessGraphQLResult } from '../../../../../shared/src/graphql/graphql'
-import { IMutation, IQuery } from '../../../../../shared/src/graphql/schema'
+import { Mutation, Query } from '../../../../../shared/src/graphql/schema'
 import { resetAllMemoizationCaches } from '../../../../../shared/src/util/memoizeObservable'
 import { PlatformContext } from '../../../../../shared/src/platform/context'
 import { DiffOrBlobInfo } from '../shared/codeHost'
@@ -93,19 +93,19 @@ const DEFAULT_GRAPHQL_RESPONSES: GraphQLResponseMap = {
         of({
             data: {},
             errors: undefined,
-        } as SuccessGraphQLResult<IMutation>),
+        } as SuccessGraphQLResult<Mutation>),
     ResolveRepo: () =>
         of({
             data: {
                 repository: null,
             },
             errors: undefined,
-        } as SuccessGraphQLResult<IQuery>),
+        } as SuccessGraphQLResult<Query>),
     ResolveStagingRev: () =>
         of({
             data: { resolvePhabricatorDiff: { oid: 'staging-revision' } },
             errors: undefined,
-        } as SuccessGraphQLResult<IMutation>),
+        } as SuccessGraphQLResult<Mutation>),
 }
 
 function mockQueryConduit(responseMap?: ConduitResponseMap): QueryConduitHelper<any> {
@@ -382,7 +382,7 @@ describe('Phabricator file info', () => {
                                         },
                                     },
                                     errors: undefined,
-                                } as SuccessGraphQLResult<IQuery>),
+                                } as SuccessGraphQLResult<Query>),
                         },
                     },
                     resolveDiffFileInfo
@@ -408,7 +408,7 @@ describe('Phabricator file info', () => {
                                         },
                                     },
                                     errors: undefined,
-                                } as SuccessGraphQLResult<IMutation>),
+                                } as SuccessGraphQLResult<Mutation>),
                         },
                         conduitResponseMap: {
                             '/api/differential.getrawdiff': parameters =>
@@ -448,7 +448,7 @@ describe('Phabricator file info', () => {
                                         },
                                     },
                                     errors: undefined,
-                                } as SuccessGraphQLResult<IQuery>),
+                                } as SuccessGraphQLResult<Query>),
                         },
                     },
                     resolveDiffFileInfo

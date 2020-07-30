@@ -3,7 +3,6 @@ import * as H from 'history'
 import * as React from 'react'
 import { RouteComponentProps } from 'react-router'
 import { catchError } from 'rxjs/operators'
-import * as GQL from '../../../shared/src/graphql/schema'
 import { FeedbackText } from '../components/FeedbackText'
 import { Form } from '../components/Form'
 import { HeroPage } from '../components/HeroPage'
@@ -14,11 +13,11 @@ import { SurveyCTA } from './SurveyToast'
 import { Subscription } from 'rxjs'
 import { ThemeProps } from '../../../shared/src/theme'
 import TwitterIcon from 'mdi-react/TwitterIcon'
+import { OptionalAuthProps } from '../auth'
 
-interface SurveyFormProps {
+interface SurveyFormProps extends OptionalAuthProps {
     location: H.Location
     history: H.History
-    authenticatedUser: GQL.IUser | null
     score?: number
     onScoreChange?: (score: number) => void
     onSubmit?: () => void
@@ -175,9 +174,7 @@ class SurveyForm extends React.Component<SurveyFormProps, SurveyFormState> {
     }
 }
 
-interface SurveyPageProps extends RouteComponentProps<{ score?: string }>, ThemeProps {
-    authenticatedUser: GQL.IUser | null
-}
+interface SurveyPageProps extends RouteComponentProps<{ score?: string }>, ThemeProps, OptionalAuthProps {}
 
 export interface TweetFeedbackProps {
     score: number

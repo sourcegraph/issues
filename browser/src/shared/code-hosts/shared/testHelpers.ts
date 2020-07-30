@@ -1,13 +1,13 @@
 import { Observable, of, throwError } from 'rxjs'
 import { SuccessGraphQLResult } from '../../../../../shared/src/graphql/graphql'
-import { IMutation, IQuery } from '../../../../../shared/src/graphql/schema'
+import { Query } from '../../../../../shared/src/graphql/schema'
 import { PlatformContext } from '../../../../../shared/src/platform/context'
 
 export interface GraphQLResponseMap {
     [requestName: string]: (
         variables: { [k: string]: any },
         mightContainPrivateInfo?: boolean
-    ) => Observable<SuccessGraphQLResult<IQuery | IMutation>>
+    ) => Observable<SuccessGraphQLResult<any>>
 }
 
 export const DEFAULT_GRAPHQL_RESPONSES: GraphQLResponseMap = {
@@ -22,7 +22,7 @@ export const DEFAULT_GRAPHQL_RESPONSES: GraphQLResponseMap = {
                 },
             },
             errors: undefined,
-        } as SuccessGraphQLResult<IQuery>),
+        } as SuccessGraphQLResult<Query>),
     CurrentUSer: () =>
         // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
         of({
@@ -38,7 +38,7 @@ export const DEFAULT_GRAPHQL_RESPONSES: GraphQLResponseMap = {
                     siteAdmin: false,
                 },
             },
-        } as SuccessGraphQLResult<IQuery>),
+        } as SuccessGraphQLResult<Query>),
 
     ResolveRev: () =>
         // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
@@ -54,7 +54,7 @@ export const DEFAULT_GRAPHQL_RESPONSES: GraphQLResponseMap = {
                 },
             },
             errors: undefined,
-        } as SuccessGraphQLResult<IQuery>),
+        } as SuccessGraphQLResult<Query>),
     BlobContent: () =>
         // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
         of({
@@ -68,7 +68,7 @@ export const DEFAULT_GRAPHQL_RESPONSES: GraphQLResponseMap = {
                 },
             },
             errors: undefined,
-        } as SuccessGraphQLResult<IQuery>),
+        } as SuccessGraphQLResult<Query>),
     ResolveRepo: variables =>
         // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
         of({
@@ -78,7 +78,7 @@ export const DEFAULT_GRAPHQL_RESPONSES: GraphQLResponseMap = {
                 },
             },
             errors: undefined,
-        } as SuccessGraphQLResult<IQuery>),
+        } as SuccessGraphQLResult<Query>),
 }
 
 /**
@@ -88,7 +88,7 @@ export const DEFAULT_GRAPHQL_RESPONSES: GraphQLResponseMap = {
  */
 export const mockRequestGraphQL = (
     responseMap: GraphQLResponseMap = DEFAULT_GRAPHQL_RESPONSES
-): PlatformContext['requestGraphQL'] => <R extends IQuery | IMutation>({
+): PlatformContext['requestGraphQL'] => <R>({
     request,
     variables,
     mightContainPrivateInfo,

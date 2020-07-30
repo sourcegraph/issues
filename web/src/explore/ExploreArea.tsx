@@ -7,6 +7,7 @@ import { eventLogger } from '../tracking/eventLogger'
 import { ComponentDescriptor } from '../util/contributions'
 import { PatternTypeProps } from '../search'
 import { ThemeProps } from '../../../shared/src/theme'
+import { OptionalAuthProps } from '../auth'
 
 /**
  * Properties passed to all section components in the explore area.
@@ -14,12 +15,10 @@ import { ThemeProps } from '../../../shared/src/theme'
 export interface ExploreAreaSectionContext
     extends ExtensionsControllerProps,
         ThemeProps,
+        OptionalAuthProps,
         Omit<PatternTypeProps, 'setPatternType'> {
-    /** The currently authenticated user. */
-    authenticatedUser: GQL.IUser | null
-
     /** The subject whose extensions and settings to display. */
-    viewerSubject: Pick<GQL.ISettingsSubject, 'id' | 'viewerCanAdminister'>
+    viewerSubject: Pick<GQL.SettingsSubject, 'id' | 'viewerCanAdminister'>
 
     /** The viewer's settings. */
     settingsCascade: SettingsCascadeOrError

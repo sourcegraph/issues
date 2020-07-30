@@ -62,7 +62,7 @@ describe('DiffHunk', () => {
                 },
             ],
         },
-    } as GQL.IFileDiffHunk
+    } as GQL.FileDiffHunk
 
     it('renders a unified diff view for the given diff hunk', () => {
         expect(

@@ -15,8 +15,8 @@ export const queryRepositoryComparisonFileDiffs = memoizeObservable(
         base: string | null
         head: string | null
         first?: number
-    } & Pick<PlatformContext, 'requestGraphQL'>): Observable<GQL.IFileDiffConnection> =>
-        requestGraphQL<GQL.IQuery>({
+    } & Pick<PlatformContext, 'requestGraphQL'>): Observable<GQL.FileDiffConnection> =>
+        requestGraphQL<GQL.Query>({
             request: gql`
                 query RepositoryComparisonDiff($repo: String!, $base: String, $head: String, $first: Int) {
                     repository(name: $repo) {

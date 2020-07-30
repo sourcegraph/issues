@@ -5,7 +5,7 @@ import * as GQL from '../../../../../shared/src/graphql/schema'
  * Displays an inline list of email addresses for an account.
  */
 export const AccountEmailAddresses: React.FunctionComponent<{
-    emails: Pick<GQL.IUserEmail, 'email' | 'verified'>[]
+    emails: Pick<GQL.UserEmail, 'email' | 'verified'>[]
 }> = ({ emails }) => (
     <>
         {emails.map(({ email, verified }, index) => (

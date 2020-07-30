@@ -12,13 +12,13 @@ import { BadgeAttachmentRenderOptions } from 'sourcegraph'
 
 const SUBSET_COUNT_KEY = 'fileMatchSubsetCount'
 
-export type IFileMatch = Partial<Pick<GQL.IFileMatch, 'revSpec' | 'symbols' | 'limitHit'>> & {
-    file: Pick<GQL.IFile, 'path' | 'url'> & { commit: Pick<GQL.IGitCommit, 'oid'> }
-    repository: Pick<GQL.IRepository, 'name' | 'url'>
+export type IFileMatch = Partial<Pick<GQL.FileMatch, 'revSpec' | 'symbols' | 'limitHit'>> & {
+    file: Pick<GQL.File, 'path' | 'url'> & { commit: Pick<GQL.GitCommit, 'oid'> }
+    repository: Pick<GQL.Repository, 'name' | 'url'>
     lineMatches: ILineMatch[]
 }
 
-export type ILineMatch = Pick<GQL.ILineMatch, 'preview' | 'lineNumber' | 'offsetAndLengths' | 'limitHit'> & {
+export type ILineMatch = Pick<GQL.LineMatch, 'preview' | 'lineNumber' | 'offsetAndLengths' | 'limitHit'> & {
     badge?: BadgeAttachmentRenderOptions
 }
 

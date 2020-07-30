@@ -27,7 +27,7 @@ add('List of campaigns', () => {
     return (
         <GlobalCampaignListPage
             authenticatedUser={{ siteAdmin: true }}
-            queryCampaigns={() => of({ nodes: Object.values(nodes) })}
+            queryCampaigns={() => of({ totalCount: Object.values(nodes).length, nodes: Object.values(nodes) })}
             telemetryService={NOOP_TELEMETRY_SERVICE}
             history={history}
             location={history.location}

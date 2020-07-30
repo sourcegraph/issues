@@ -178,7 +178,7 @@ export async function ensureNewOrganization(
         /** The new organization's display name (e.g. full name) in the organization profile. */
         displayName?: string
     }
-): Promise<{ destroy: ResourceDestructor; result: GQL.IOrg }> {
+): Promise<{ destroy: ResourceDestructor; result: GQL.Org }> {
     const matchingOrgs = (await fetchAllOrganizations({ requestGraphQL }, { first: 1000 }).toPromise()).nodes.filter(
         org => org.name === variables.name
     )
@@ -197,9 +197,9 @@ export async function ensureNewOrganization(
 
 export async function getGlobalSettings(
     gqlClient: GraphQLClient
-): Promise<{ subjectID: GQL.ID; settingsID: number | null; contents: string }> {
+): Promise<{ subjectID: GQL.Scalars['ID']; settingsID: number | null; contents: string }> {
     const settings = await getViewerSettings(gqlClient)
-    const globalSettingsSubject = first(settings.subjects.filter(subject => subject.__typename === 'Site'))
+    const globalSettingsSubject: any = first(settings.subjects.filter((subject: any) => subject.__typename === 'Site'))
     if (!globalSettingsSubject) {
         throw new Error('Could not get global settings')
     }

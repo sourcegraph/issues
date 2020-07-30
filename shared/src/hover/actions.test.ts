@@ -16,7 +16,6 @@ import { ContributableMenu, ReferenceParams, TextDocumentPositionParams } from '
 import { PrivateRepoPublicSourcegraphComError } from '../backend/errors'
 import { getContributedActionItems } from '../contributions/contributions'
 import { SuccessGraphQLResult } from '../graphql/graphql'
-import { IMutation, IQuery } from '../graphql/schema'
 import { PlatformContext, URLToFileContext } from '../platform/context'
 import { EMPTY_SETTINGS_CASCADE } from '../settings/settings'
 import { resetAllMemoizationCaches } from '../util/memoizeObservable'
@@ -71,12 +70,11 @@ beforeEach(() => {
     urlToFile = sinon.stub<Parameters<PlatformContext['urlToFile']>, string>().callsFake(toPrettyBlobURL)
 })
 
-const requestGraphQL: PlatformContext['requestGraphQL'] = <R extends IQuery | IMutation>({
+const requestGraphQL: PlatformContext['requestGraphQL'] = <R>({
     variables,
 }: {
     variables: { [key: string]: any }
 }) =>
-    // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
     of({
         data: {
             repository: {
@@ -85,8 +83,9 @@ const requestGraphQL: PlatformContext['requestGraphQL'] = <R extends IQuery | IM
                     cloned: true,
                 },
             },
-        },
-    } as SuccessGraphQLResult<R>)
+        } as any,
+        errors: undefined,
+    })
 
 const scheduler = (): TestScheduler => new TestScheduler((actual, expected) => expect(actual).toStrictEqual(expected))
 
@@ -400,7 +399,7 @@ describe('getDefinitionURL', () => {
 
     describe('if there is exactly 1 location result', () => {
         it('resolves the raw repo name and passes it to urlToFile()', async () => {
-            const requestGraphQL = <R extends IQuery | IMutation>({
+            const requestGraphQL = <R>({
                 variables,
             }: {
                 variables: any
@@ -414,8 +413,9 @@ describe('getDefinitionURL', () => {
                                 cloned: true,
                             },
                         },
-                    },
-                } as SuccessGraphQLResult<R>)
+                    } as any,
+                    errors: undefined,
+                })
             const urlToFile = sinon.spy(
                 (
                     _location: RepoSpec &

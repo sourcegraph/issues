@@ -29,6 +29,7 @@ import { RepogroupMetadata } from './types'
 import { SearchPageInput } from '../search/input/SearchPageInput'
 import { displayRepoName } from '../../../shared/src/components/RepoFileLink'
 import { PrivateCodeCta } from '../search/input/PrivateCodeCta'
+import { OptionalAuthProps } from '../auth'
 
 export interface RepogroupPageProps
     extends SettingsCascadeProps<Settings>,
@@ -44,8 +45,8 @@ export interface RepogroupPageProps
         InteractiveSearchProps,
         SmartSearchFieldProps,
         CopyQueryButtonProps,
-        VersionContextProps {
-    authenticatedUser: GQL.IUser | null
+        VersionContextProps,
+        OptionalAuthProps {
     location: H.Location
     history: H.History
     isSourcegraphDotCom: boolean

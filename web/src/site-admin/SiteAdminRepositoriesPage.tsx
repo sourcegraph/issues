@@ -21,7 +21,7 @@ import { fetchAllRepositoriesAndPollIfEmptyOrAnyCloning } from './backend'
 import * as H from 'history'
 
 interface RepositoryNodeProps extends ActivationProps {
-    node: GQL.IRepository
+    node: GQL.Repository
     onDidUpdate?: () => void
     history: H.History
 }
@@ -124,7 +124,7 @@ export const SiteAdminRepositoriesPage: React.FunctionComponent<Props> = props =
         history: props.history,
     }
     const queryRepositories = useCallback(
-        (args: FilteredConnectionQueryArgs): Observable<GQL.IRepositoryConnection> =>
+        (args: FilteredConnectionQueryArgs): Observable<GQL.RepositoryConnection> =>
             fetchAllRepositoriesAndPollIfEmptyOrAnyCloning({ ...args }),
         []
     )
@@ -144,7 +144,7 @@ export const SiteAdminRepositoriesPage: React.FunctionComponent<Props> = props =
                 Repositories are synced from connected{' '}
                 <Link to="/site-admin/external-services">code host connections</Link>.
             </p>
-            <FilteredConnection<GQL.IRepository, Omit<RepositoryNodeProps, 'node'>>
+            <FilteredConnection<GQL.Repository, Omit<RepositoryNodeProps, 'node'>>
                 className="list-group list-group-flush mt-3"
                 noun="repository"
                 pluralNoun="repositories"

@@ -2,7 +2,7 @@ import React from 'react'
 import { createRenderer } from 'react-test-renderer/shallow'
 import * as H from 'history'
 import { RepositoryReleasesTagsPage } from './RepositoryReleasesTagsPage'
-import { IRepository, IGitRef } from '../../../../shared/src/graphql/schema'
+import { Repository, GitRef } from '../../../../shared/src/graphql/schema'
 import { of } from 'rxjs'
 
 describe('RepositoryReleasesTagsPage', () => {
@@ -13,11 +13,11 @@ describe('RepositoryReleasesTagsPage', () => {
                 <RepositoryReleasesTagsPage
                     history={history}
                     location={history.location}
-                    repo={{ id: '123' } as IRepository}
+                    repo={{ id: '123' } as Repository}
                     queryGitReferences={() =>
                         of({
                             totalCount: 0,
-                            nodes: [] as IGitRef[],
+                            nodes: [] as GitRef[],
                             __typename: 'GitRefConnection',
                             pageInfo: { __typename: 'PageInfo', endCursor: '', hasNextPage: false },
                         })

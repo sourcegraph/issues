@@ -4,7 +4,6 @@ import { Link } from 'react-router-dom'
 import { Observable } from 'rxjs'
 import { catchError, map } from 'rxjs/operators'
 import { gql, dataOrThrowErrors } from '../../../../../shared/src/graphql/graphql'
-import * as GQL from '../../../../../shared/src/graphql/schema'
 import { asError, ErrorLike, isErrorLike } from '../../../../../shared/src/util/errors'
 import { numberWithCommas } from '../../../../../shared/src/util/strings'
 import { queryGraphQL } from '../../../backend/graphql'
@@ -16,9 +15,10 @@ import { ErrorAlert } from '../../../components/alerts'
 import { LoadingSpinner } from '@sourcegraph/react-loading-spinner'
 import { useObservable } from '../../../../../shared/src/util/useObservable'
 import * as H from 'history'
+import { ProductLicenseInfoResult } from '../../../graphql-operations'
 
-const queryProductLicenseInfo = (): Observable<GQL.IProductSubscriptionStatus> =>
-    queryGraphQL(gql`
+const queryProductLicenseInfo = (): Observable<ProductLicenseInfoResult['site']['productSubscription']> =>
+    queryGraphQL<ProductLicenseInfoResult>(gql`
         query ProductLicenseInfo {
             site {
                 productSubscription {

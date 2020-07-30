@@ -15,11 +15,12 @@ import {
     ExternalAccountNode,
     ExternalAccountNodeProps,
 } from '../user/settings/ExternalAccountNode'
+import { ExternalAccountsResult, ExternalAccountsVariables } from '../../graphql-operations'
 
 interface Props extends RouteComponentProps<{}> {}
 
 interface FilterParams {
-    user?: GQL.ID
+    user?: GQL.Scalars['ID']
     serviceType?: string
     serviceID?: string
     clientID?: string
@@ -60,7 +61,7 @@ export class SiteAdminExternalAccountsPage extends React.Component<Props> {
                     An external account (on an <Link to="/site-admin/auth/providers">authentication provider</Link>) is
                     linked to a Sourcegraph user when it's used to sign into Sourcegraph.
                 </p>
-                <FilteredConnection<GQL.IExternalAccount, Omit<ExternalAccountNodeProps, 'node'>>
+                <FilteredConnection<ExternalAccountsResult['site']['externalAccounts']['nodes'][number], Omit<ExternalAccountNodeProps, 'node'>>
                     className="list-group list-group-flush mt-3"
                     noun="external user account"
                     pluralNoun="external user accounts"
@@ -77,26 +78,16 @@ export class SiteAdminExternalAccountsPage extends React.Component<Props> {
     }
 
     private queryExternalAccounts = (
-        args: {
-            first?: number
-        } & FilterParams
-    ): Observable<GQL.IExternalAccountConnection> =>
-        queryGraphQL(
+        args: ExternalAccountsVariables
+    ): Observable<ExternalAccountsResult['site']['externalAccounts']> =>
+        queryGraphQL<ExternalAccountsResult>(
             gql`
                 query ExternalAccounts(
                     $first: Int
-                    $user: ID
-                    $serviceType: String
-                    $serviceID: String
-                    $clientID: String
                 ) {
                     site {
                         externalAccounts(
                             first: $first
-                            user: $user
-                            serviceType: $serviceType
-                            serviceID: $serviceID
-                            clientID: $clientID
                         ) {
                             nodes {
                                 ...ExternalAccountFields

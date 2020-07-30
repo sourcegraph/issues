@@ -6,7 +6,7 @@ import { createMemoryHistory } from 'history'
 import webStyles from '../../../SourcegraphWebApp.scss'
 import { MemoryRouter } from 'react-router'
 import { NOOP_TELEMETRY_SERVICE } from '../../../../../shared/src/telemetry/telemetryService'
-import { IUser } from '../../../../../shared/src/graphql/schema'
+import { User } from '../../../../../shared/src/graphql/schema'
 
 const { add } = storiesOf('web/campaigns/GlobalCampaignsArea', module).addDecorator(story => {
     const theme = radios('Theme', { Light: 'light', Dark: 'dark' }, 'light')
@@ -29,7 +29,7 @@ add('Dotcom', () => (
         telemetryService={NOOP_TELEMETRY_SERVICE}
         platformContext={undefined as any}
         extensionsController={undefined as any}
-        authenticatedUser={boolean('isAuthenticated', false) ? ({ username: 'alice' } as IUser) : null}
+        authenticatedUser={boolean('isAuthenticated', false) ? ({ username: 'alice' } as User) : null}
         match={{ isExact: true, path: '/campaigns', url: 'http://test.test/campaigns', params: {} }}
     />
 ))
@@ -43,7 +43,7 @@ add('Private instance', () => (
         telemetryService={NOOP_TELEMETRY_SERVICE}
         platformContext={undefined as any}
         extensionsController={undefined as any}
-        authenticatedUser={{ username: 'alice', siteAdmin: boolean('Site admin', false) } as IUser}
+        authenticatedUser={{ username: 'alice', siteAdmin: boolean('Site admin', false) } as User}
         match={{ isExact: true, path: '/campaigns', url: 'http://test.test/campaigns', params: {} }}
     />
 ))

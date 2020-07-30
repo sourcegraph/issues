@@ -1,7 +1,7 @@
 import * as GQL from '../../../shared/src/graphql/schema'
 
 export type SiteFlags = Pick<
-    GQL.ISite,
+    GQL.Site,
     | 'needsRepositoryConfiguration'
     | 'freeUsersExceeded'
     | 'alerts'

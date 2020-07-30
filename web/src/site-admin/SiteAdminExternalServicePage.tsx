@@ -18,10 +18,11 @@ import { useEventObservable } from '../../../shared/src/util/useObservable'
 import { TelemetryProps } from '../../../shared/src/telemetry/telemetryService'
 import { mutateGraphQL, queryGraphQL } from '../backend/graphql'
 import { gql, dataOrThrowErrors } from '../../../shared/src/graphql/graphql'
+import { ExternalServiceResult, UpdateExternalServiceResult } from '../graphql-operations'
 
-type ExternalService = Pick<GQL.IExternalService, 'id' | 'kind' | 'displayName' | 'config' | 'warning' | 'webhookURL'>
+type ExternalService = Pick<GQL.ExternalService, 'id' | 'kind' | 'displayName' | 'config' | 'warning' | 'webhookURL'>
 
-interface Props extends RouteComponentProps<{ id: GQL.ID }>, TelemetryProps {
+interface Props extends RouteComponentProps<{ id: GQL.Scalars['ID'] }>, TelemetryProps {
     isLightTheme: boolean
     history: H.History
 }
@@ -55,7 +56,7 @@ export const SiteAdminExternalServicePage: React.FunctionComponent<Props> = ({
     }, [match.params.id])
 
     const onChange = useCallback(
-        (input: GQL.IAddExternalServiceInput) => {
+        (input: GQL.AddExternalServiceInput) => {
             if (isExternalService(externalServiceOrError)) {
                 setExternalServiceOrError({ ...externalServiceOrError, ...input })
             }
@@ -65,7 +66,7 @@ export const SiteAdminExternalServicePage: React.FunctionComponent<Props> = ({
 
     const [nextSubmit, updatedServiceOrError] = useEventObservable(
         useCallback(
-            (submits: Observable<GQL.IExternalService>): Observable<typeof LOADING | ErrorLike | ExternalService> =>
+            (submits: Observable<GQL.ExternalService>): Observable<typeof LOADING | ErrorLike | ExternalService> =>
                 submits.pipe(
                     switchMap(input =>
                         concat(
@@ -233,7 +234,7 @@ export const SiteAdminExternalServicePage: React.FunctionComponent<Props> = ({
 
 function isExternalService(
     externalServiceOrError: typeof LOADING | ExternalService | ErrorLike
-): externalServiceOrError is GQL.IExternalService {
+): externalServiceOrError is GQL.ExternalService {
     return externalServiceOrError !== LOADING && !isErrorLike(externalServiceOrError)
 }
 
@@ -248,8 +249,8 @@ const externalServiceFragment = gql`
     }
 `
 
-function updateExternalService(input: GQL.IUpdateExternalServiceInput): Observable<ExternalService> {
-    return mutateGraphQL(
+function updateExternalService(input: GQL.UpdateExternalServiceInput): Observable<ExternalService> {
+    return mutateGraphQL<UpdateExternalServiceResult>(
         gql`
             mutation UpdateExternalService($input: UpdateExternalServiceInput!) {
                 updateExternalService(input: $input) {
@@ -265,8 +266,8 @@ function updateExternalService(input: GQL.IUpdateExternalServiceInput): Observab
     )
 }
 
-function fetchExternalService(id: GQL.ID): Observable<ExternalService> {
-    return queryGraphQL(
+function fetchExternalService(id: GQL.Scalars['ID']): Observable<ExternalService> {
+    return queryGraphQL<ExternalServiceResult>(
         gql`
             query ExternalService($id: ID!) {
                 node(id: $id) {

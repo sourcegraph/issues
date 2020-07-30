@@ -13,9 +13,9 @@ const UNKNOWN_LANGUAGE = 'Unknown'
  * grouped together as "" (which is displayed as "Other").
  */
 export const summarizeSearchResultsStatsLanguages = (
-    languages: GQL.ISearchResultsStats['languages'],
+    languages: GQL.SearchResultsStats['languages'],
     minFraction: number
-): GQL.ISearchResultsStats['languages'] => {
+): GQL.SearchResultsStats['languages'] => {
     const totalLines = languages.reduce((sum, language) => sum + language.totalLines, 0)
     const minLines = minFraction * totalLines
     const languagesAboveMin = languages.filter(language => language.totalLines >= minLines)
@@ -34,7 +34,7 @@ const UNKNOWN_COLOR = '#777777'
 
 interface Props {
     query: string
-    stats: GQL.ISearchResultsStats
+    stats: GQL.SearchResultsStats
 }
 
 /**

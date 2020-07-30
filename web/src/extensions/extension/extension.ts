@@ -17,8 +17,8 @@ export const EXTENSION_NAME_MAX_LENGTH = 128
 
 /** A useful minimal type for a registry extension's publisher. */
 export type RegistryPublisher = (
-    | Pick<GQL.IUser, '__typename' | 'id' | 'username'>
-    | Pick<GQL.IOrg, '__typename' | 'id' | 'name'>
+    | Pick<GQL.User, '__typename' | 'id' | 'username'>
+    | Pick<GQL.Org, '__typename' | 'id' | 'name'>
 ) & {
     /** The prefix for extension IDs published by this publisher (with the registry's host), if any. */
     extensionIDPrefix?: string

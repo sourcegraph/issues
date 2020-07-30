@@ -27,7 +27,7 @@ import {
  */
 export const resolveRepo = memoizeObservable(
     ({ rawRepoName, requestGraphQL }: RawRepoSpec & Pick<PlatformContext, 'requestGraphQL'>): Observable<string> =>
-        requestGraphQL<GQL.IQuery>({
+        requestGraphQL<GQL.Query>({
             request: gql`
                 query ResolveRepo($rawRepoName: String!) {
                     repository(name: $rawRepoName) {
@@ -59,7 +59,7 @@ export const resolveRevision = memoizeObservable(
         ...context
     }: RepoSpec & Partial<RevisionSpec> & Pick<PlatformContext, 'requestGraphQL'>): Observable<string> =>
         from(
-            requestGraphQL<GQL.IQuery>({
+            requestGraphQL<GQL.Query>({
                 request: gql`
                     query ResolveRev($repoName: String!, $revision: String!) {
                         repository(name: $repoName) {
@@ -124,7 +124,7 @@ export const fetchBlobContentLines = memoizeObservable(
         ...context
     }: RepoSpec & ResolvedRevisionSpec & FileSpec & Pick<PlatformContext, 'requestGraphQL'>): Observable<string[]> =>
         from(
-            requestGraphQL<GQL.IQuery>({
+            requestGraphQL<GQL.Query>({
                 request: gql`
                     query BlobContent($repoName: String!, $commitID: String!, $filePath: String!) {
                         repository(name: $repoName) {

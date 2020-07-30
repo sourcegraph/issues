@@ -21,7 +21,8 @@
     "test": "jest",
     "graphql": "gulp graphQLTypes",
     "schema": "gulp schema",
-    "extract-graphql-operations": "TS_NODE_COMPILER_OPTIONS=\"{\\\"module\\\":\\\"commonjs\\\"}\" ts-node ./dev/extract-graphql-operations.ts",
+    "t": "gulp generateGraphQlOperations",
+    "t-w": "gulp watchGraphQlOperations",
     "watch-schema": "gulp watchSchema"
   },
   "sideEffects": true

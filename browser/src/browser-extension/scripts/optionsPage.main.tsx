@@ -54,14 +54,14 @@ const fetchCurrentTabStatus = async (): Promise<OptionsMenuProps['currentTabStat
 }
 
 // Make GraphQL requests from background page
-function requestGraphQL<T extends GQL.IQuery | GQL.IMutation>(options: {
+function requestGraphQL<T>(options: {
     request: string
     variables: {}
 }): Observable<GraphQLResult<T>> {
     return from(background.requestGraphQL<T>(options))
 }
 
-const ensureValidSite = (): Observable<GQL.ISite> => fetchSite(requestGraphQL)
+const ensureValidSite = (): Observable<GQL.Site> => fetchSite(requestGraphQL)
 
 class Options extends React.Component<{}, State> {
     public state: State = {

@@ -9,7 +9,7 @@ interface Props {
     /**
      * The repository that was matched.
      */
-    result: GQL.IRepository
+    result: GQL.Repository
 
     /**
      * Called when the search result is selected.

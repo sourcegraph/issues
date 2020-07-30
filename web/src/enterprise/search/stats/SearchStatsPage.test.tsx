@@ -14,7 +14,7 @@ describe('SearchStatsPage', () => {
                     location={H.createLocation({ pathname: '/stats', search: 'q=abc' })}
                     history={H.createMemoryHistory()}
                     _querySearchResultsStats={() =>
-                        of<GQL.ISearchResultsStats & { limitHit: boolean }>({
+                        of<GQL.SearchResultsStats & { limitHit: boolean }>({
                             __typename: 'SearchResultsStats',
                             approximateResultCount: '123',
                             sparkline: [],
@@ -45,7 +45,7 @@ describe('SearchStatsPage', () => {
                     location={H.createLocation({ pathname: '/stats', search: 'q=abc' })}
                     history={H.createMemoryHistory()}
                     _querySearchResultsStats={() =>
-                        of<GQL.ISearchResultsStats & { limitHit: boolean }>({
+                        of<GQL.SearchResultsStats & { limitHit: boolean }>({
                             __typename: 'SearchResultsStats',
                             approximateResultCount: '123',
                             sparkline: [],

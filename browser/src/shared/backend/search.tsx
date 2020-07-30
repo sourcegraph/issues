@@ -143,7 +143,7 @@ const fetchSuggestions = (
     first: number,
     requestGraphQL: PlatformContext['requestGraphQL']
 ): Observable<GQL.SearchSuggestion> =>
-    requestGraphQL<GQL.IQuery>({
+    requestGraphQL<GQL.Query>({
         request: gql`
             query SearchSuggestions($query: String!, $first: Int!) {
                 search(query: $query) {

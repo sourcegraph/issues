@@ -30,16 +30,16 @@ describe('SiteAdminProductSubscriptionPage', () => {
                     history={history}
                     location={location}
                     _queryProductSubscription={() =>
-                        of<GQL.IProductSubscription>({
+                        of<GQL.ProductSubscription>({
                             __typename: 'ProductSubscription',
-                            events: [] as GQL.IProductSubscription['events'],
+                            events: [] as GQL.ProductSubscription['events'],
                             createdAt: '2020-01-01',
                             url: '/s',
                             urlForSiteAdminBilling: null,
-                        } as GQL.IProductSubscription)
+                        } as GQL.ProductSubscription)
                     }
                     _queryProductLicenses={() =>
-                        of<GQL.IProductLicenseConnection>({
+                        of<GQL.ProductLicenseConnection>({
                             __typename: 'ProductLicenseConnection',
                             nodes: [
                                 {
@@ -53,11 +53,11 @@ describe('SiteAdminProductSubscriptionPage', () => {
                                         tags: ['a'],
                                         userCount: 123,
                                     },
-                                    subscription: { activeLicense: { id: 'l1' } } as GQL.IProductSubscription,
+                                    subscription: { activeLicense: { id: 'l1' } } as GQL.ProductSubscription,
                                 },
-                            ] as GQL.IProductLicense[],
+                            ] as GQL.ProductLicense[],
                             totalCount: 1,
-                            pageInfo: { hasNextPage: false } as GQL.IPageInfo,
+                            pageInfo: { hasNextPage: false } as GQL.PageInfo,
                         })
                     }
                 />

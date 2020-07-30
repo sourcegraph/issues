@@ -14,8 +14,8 @@ describe('UserNavItem', () => {
             { id: '2', name: 'n', settingsURL: 'u' },
         ] as unknown,
         totalCount: 2,
-    } as GQL.IOrgConnection
-    const USER = { username: 'u', url: '/u', settingsURL: '/u/settings', organizations: ORG_CONNECTION } as GQL.IUser
+    } as GQL.OrgConnection
+    const USER = { username: 'u', url: '/u', settingsURL: '/u/settings', organizations: ORG_CONNECTION } as GQL.User
 
     const history = H.createMemoryHistory({ keyLength: 0 })
 

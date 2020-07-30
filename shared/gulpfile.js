@@ -10,6 +10,8 @@ const { readFile, writeFile } = require('mz/fs')
 const path = require('path')
 const { format, resolveConfig } = require('prettier')
 
+const { generateGraphQlOperations } = require('./dev/generateGraphQlOperations')
+
 const GRAPHQL_SCHEMA_PATH = path.join(__dirname, '../cmd/frontend/graphqlbackend/schema.graphql')
 
 /**
@@ -58,10 +60,27 @@ async function graphQLTypes() {
   await writeFile(__dirname + '/src/graphql/schema.ts', typings)
 }
 
+/**
+ * Generates the legacy graphql.ts types on file changes.
+ */
 async function watchGraphQLTypes() {
   await new Promise((resolve, reject) => {
     gulp.watch(GRAPHQL_SCHEMA_PATH, graphQLTypes).on('error', reject)
   })
+}
+
+/**
+ * Generates the new query-specific types on file changes.
+ */
+async function watchGraphQlOperations() {
+  await generateGraphQlOperations({ watch: true })
+}
+
+/**
+ * Generates the new query-specific types.
+ */
+async function graphQlOperations() {
+  await generateGraphQlOperations()
 }
 
 /**
@@ -113,4 +132,13 @@ function watchSchema() {
   return gulp.watch(path.join(__dirname, '../schema/*.schema.json'), schema)
 }
 
-module.exports = { watchSchema, schema, graphQLTypes, watchGraphQLTypes }
+// const watchGraphQlOperations = () => generateGraphQlOperations(true)
+
+module.exports = {
+  watchSchema,
+  schema,
+  graphQLTypes,
+  watchGraphQLTypes,
+  graphQlOperations,
+  watchGraphQlOperations,
+}

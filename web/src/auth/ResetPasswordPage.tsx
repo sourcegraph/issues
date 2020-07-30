@@ -2,7 +2,6 @@ import { LoadingSpinner } from '@sourcegraph/react-loading-spinner'
 import KeyIcon from 'mdi-react/KeyIcon'
 import * as React from 'react'
 import { Link, RouteComponentProps } from 'react-router-dom'
-import * as GQL from '../../../shared/src/graphql/schema'
 import { asError, ErrorLike, isErrorLike } from '../../../shared/src/util/errors'
 import { Form } from '../components/Form'
 import { HeroPage } from '../components/HeroPage'
@@ -11,6 +10,7 @@ import { eventLogger } from '../tracking/eventLogger'
 import { PasswordInput } from './SignInSignUpCommon'
 import { ErrorAlert } from '../components/alerts'
 import * as H from 'history'
+import { OptionalAuthProps } from '../auth'
 
 interface ResetPasswordInitFormState {
     /** The user's email input value. */
@@ -209,9 +209,7 @@ class ResetPasswordCodeForm extends React.PureComponent<ResetPasswordCodeFormPro
     }
 }
 
-interface ResetPasswordPageProps extends RouteComponentProps<{}> {
-    authenticatedUser: GQL.IUser | null
-}
+interface ResetPasswordPageProps extends RouteComponentProps<{}>, OptionalAuthProps {}
 
 /**
  * A page that implements the reset-password flow for a user: (1) initiate the flow by providing the email address

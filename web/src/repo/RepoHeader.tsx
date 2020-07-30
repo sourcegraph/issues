@@ -137,11 +137,11 @@ interface Props extends PlatformContextProps, ExtensionsControllerProps, EventLo
      * The repository that this header is for.
      */
     repo:
-        | GQL.IRepository
+        | GQL.Repository
         | {
-              /** The repository's GQL.ID, if it has one.
+              /** The repository's GQL.Scalars['ID'], if it has one.
                */
-              id?: GQL.ID
+              id?: GQL.Scalars['ID']
 
               name: string
               url: string

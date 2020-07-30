@@ -149,7 +149,7 @@ export function toggleSearchType(query: string, searchType: SearchType): string 
 }
 
 /** Returns true if the given value is of the GraphQL SearchResults type */
-export const isSearchResults = (value: any): value is GQL.ISearchResults =>
+export const isSearchResults = (value: any): value is GQL.SearchResults =>
     value && typeof value === 'object' && value.__typename === 'SearchResults'
 
 const isValidFilter = (filter: string = ''): filter is FilterSuggestionTypes =>

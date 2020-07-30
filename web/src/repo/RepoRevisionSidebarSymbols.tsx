@@ -26,7 +26,7 @@ const symbolIsActiveTrue = (): boolean => true
 const symbolIsActiveFalse = (): boolean => false
 
 interface SymbolNodeProps {
-    node: GQL.ISymbol
+    node: GQL.Symbol
     location: H.Location
 }
 
@@ -55,10 +55,10 @@ const SymbolNode: React.FunctionComponent<SymbolNodeProps> = ({ node, location }
     )
 }
 
-class FilteredSymbolsConnection extends FilteredConnection<GQL.ISymbol, Pick<SymbolNodeProps, 'location'>> {}
+class FilteredSymbolsConnection extends FilteredConnection<GQL.Symbol, Pick<SymbolNodeProps, 'location'>> {}
 
 interface Props extends Partial<RevisionSpec> {
-    repoID: GQL.ID
+    repoID: GQL.Scalars['ID']
     history: H.History
     location: H.Location
     /** The path of the file or directory currently shown in the content area */
@@ -90,7 +90,7 @@ export class RepoRevisionSidebarSymbols extends React.PureComponent<Props> {
         )
     }
 
-    private fetchSymbols = (args: { first?: number; query?: string }): Observable<GQL.ISymbolConnection> =>
+    private fetchSymbols = (args: { first?: number; query?: string }): Observable<GQL.SymbolConnection> =>
         this.componentUpdates.pipe(
             startWith(this.props),
             map(({ repoID, revision, activePath }) => ({ repoID, revision, activePath })),

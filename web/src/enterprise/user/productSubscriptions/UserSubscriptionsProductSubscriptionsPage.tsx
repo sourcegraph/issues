@@ -16,15 +16,15 @@ import {
     ProductSubscriptionNodeHeader,
     ProductSubscriptionNodeProps,
 } from '../../dotcom/productSubscriptions/ProductSubscriptionNode'
+import { ProductSubscriptionsResult, ProductSubscriptionsVariables } from '../../../graphql-operations'
+import {
+    GraphQlProductSubscriptionNode,
+    GraphQlProductSubscriptionConnection,
+} from '../../dotcom/productSubscriptions/backend'
 
 interface Props extends RouteComponentProps<{}> {
-    user: GQL.IUser
+    user: GQL.User
 }
-
-class FilteredProductSubscriptionConnection extends FilteredConnection<
-    GQL.IProductSubscription,
-    ProductSubscriptionNodeProps
-> {}
 
 /**
  * Displays the product subscriptions associated with this account.
@@ -35,12 +35,12 @@ export const UserSubscriptionsProductSubscriptionsPage: React.FunctionComponent<
     }, [])
 
     const queryLicenses = useCallback(
-        (args: { first?: number }): Observable<GQL.IProductSubscriptionConnection> => {
-            const vars: GQL.IProductSubscriptionsOnDotcomQueryArguments = {
+        (args: { first: number | null }): Observable<GraphQlProductSubscriptionConnection> => {
+            const vars: ProductSubscriptionsVariables = {
                 first: args.first,
                 account: props.user.id,
             }
-            return queryGraphQL(
+            return queryGraphQL<ProductSubscriptionsResult>(
                 gql`
                     query ProductSubscriptions($first: Int, $account: ID) {
                         dotcom {
@@ -83,7 +83,7 @@ export const UserSubscriptionsProductSubscriptionsPage: React.FunctionComponent<
                 A subscription gives you a license key to run a self-hosted Sourcegraph instance. See{' '}
                 <a href="https://about.sourcegraph.com/pricing">Sourcegraph pricing</a> for more information.
             </p>
-            <FilteredProductSubscriptionConnection
+            <FilteredConnection<GraphQlProductSubscriptionNode, ProductSubscriptionNodeProps>
                 className="mt-3"
                 listComponent="table"
                 listClassName="table"

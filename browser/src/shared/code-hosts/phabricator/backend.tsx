@@ -210,7 +210,7 @@ interface CreatePhabricatorRepoOptions extends Pick<PlatformContext, 'requestGra
 
 const createPhabricatorRepo = memoizeObservable(
     ({ requestGraphQL, ...variables }: CreatePhabricatorRepoOptions): Observable<void> =>
-        requestGraphQL<GQL.IMutation>({
+        requestGraphQL<GQL.Mutation>({
             request: gql`
                 mutation addPhabricatorRepo($callsign: String!, $repoName: String!, $phabricatorURL: String!) {
                     addPhabricatorRepo(callsign: $callsign, uri: $repoName, url: $phabricatorURL) {
@@ -411,7 +411,7 @@ const resolveStagingRevision = ({
     requestGraphQL,
     ...variables
 }: ResolveStagingOptions): Observable<ResolvedRevisionSpec> =>
-    requestGraphQL<GQL.IMutation>({
+    requestGraphQL<GQL.Mutation>({
         request: gql`
             mutation ResolveStagingRev(
                 $repoName: String!

@@ -20,7 +20,7 @@ export class RepositoryBranchesAllPage extends React.PureComponent<Props> {
         return (
             <div className="repository-branches-page">
                 <PageTitle title="All branches" />
-                <FilteredConnection<GQL.IGitRef>
+                <FilteredConnection<GQL.GitRef>
                     className=""
                     listClassName="list-group list-group-flush"
                     noun="branch"
@@ -36,6 +36,6 @@ export class RepositoryBranchesAllPage extends React.PureComponent<Props> {
         )
     }
 
-    private queryBranches = (args: FilteredConnectionQueryArgs): Observable<GQL.IGitRefConnection> =>
+    private queryBranches = (args: FilteredConnectionQueryArgs): Observable<GQL.GitRefConnection> =>
         queryGitReferences({ ...args, repo: this.props.repo.id, type: GQL.GitRefType.GIT_BRANCH })
 }

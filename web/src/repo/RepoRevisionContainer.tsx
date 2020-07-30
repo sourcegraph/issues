@@ -40,6 +40,7 @@ import * as H from 'history'
 import { VersionContextProps } from '../../../shared/src/search/util'
 import { RevisionSpec } from '../../../shared/src/util/url'
 import { RepoSettingsSideBarGroup } from './settings/RepoSettingsSidebar'
+import { OptionalAuthProps } from '../auth'
 
 /** Props passed to sub-routes of {@link RepoRevisionContainer}. */
 export interface RepoRevisionContainerContext
@@ -59,7 +60,7 @@ export interface RepoRevisionContainerContext
         CopyQueryButtonProps,
         VersionContextProps,
         RevisionSpec {
-    repo: GQL.IRepository
+    repo: GQL.Repository
     resolvedRev: ResolvedRevision
 
     /** The URL route match for {@link RepoRevisionContainer}. */
@@ -84,12 +85,12 @@ interface RepoRevisionContainerProps
         CaseSensitivityProps,
         CopyQueryButtonProps,
         VersionContextProps,
+        OptionalAuthProps,
         RevisionSpec {
     routes: readonly RepoRevisionContainerRoute[]
     repoSettingsAreaRoutes: readonly RepoSettingsAreaRoute[]
     repoSettingsSidebarGroups: readonly RepoSettingsSideBarGroup[]
-    repo: GQL.IRepository
-    authenticatedUser: GQL.IUser | null
+    repo: GQL.Repository
     routePrefix: string
 
     /**

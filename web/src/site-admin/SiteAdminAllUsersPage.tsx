@@ -19,17 +19,13 @@ import { setUserEmailVerified } from '../user/settings/backend'
 import { deleteUser, fetchAllUsers, randomizeUserPassword, setUserIsSiteAdmin } from './backend'
 import { ErrorAlert } from '../components/alerts'
 import * as H from 'history'
+import { RequiredAuthProps } from '../auth'
 
-interface UserNodeProps {
+interface UserNodeProps extends RequiredAuthProps {
     /**
      * The user to display in this list item.
      */
-    node: GQL.IUser
-
-    /**
-     * The currently authenticated user.
-     */
-    authenticatedUser: GQL.IUser
+    node: GQL.User
 
     /**
      * Called when the user is updated by an action in this list item.
@@ -275,13 +271,12 @@ class UserNode extends React.PureComponent<UserNodeProps, UserNodeState> {
     }
 }
 
-interface Props extends RouteComponentProps<{}> {
-    authenticatedUser: GQL.IUser
+interface Props extends RouteComponentProps<{}>, RequiredAuthProps {
     history: H.History
 }
 
 interface State {
-    users?: GQL.IUser[]
+    users?: GQL.User[]
     totalCount?: number
 }
 
@@ -320,7 +315,7 @@ export class SiteAdminAllUsersPage extends React.Component<Props, State> {
                         </Link>
                     </div>
                 </div>
-                <FilteredConnection<GQL.IUser, Omit<UserNodeProps, 'node'>>
+                <FilteredConnection<GQL.User, Omit<UserNodeProps, 'node'>>
                     className="list-group list-group-flush mt-3"
                     noun="user"
                     pluralNoun="users"

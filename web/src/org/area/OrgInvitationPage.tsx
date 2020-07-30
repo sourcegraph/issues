@@ -7,7 +7,7 @@ import { orgURL } from '..'
 import { gql } from '../../../../shared/src/graphql/graphql'
 import * as GQL from '../../../../shared/src/graphql/schema'
 import { asError, createAggregateError, ErrorLike, isErrorLike } from '../../../../shared/src/util/errors'
-import { refreshAuthenticatedUser } from '../../auth'
+import { refreshAuthenticatedUser, RequiredAuthProps } from '../../auth'
 import { withAuthenticatedUser } from '../../auth/withAuthenticatedUser'
 import { mutateGraphQL } from '../../backend/graphql'
 import { Form } from '../../components/Form'
@@ -19,10 +19,12 @@ import { OrgAvatar } from '../OrgAvatar'
 import { OrgAreaPageProps } from './OrgArea'
 import { ErrorAlert } from '../../components/alerts'
 import * as H from 'history'
+import {
+    RespondToOrganizationInvitationResult,
+    RespondToOrganizationInvitationVariables,
+} from '../../graphql-operations'
 
-interface Props extends OrgAreaPageProps {
-    authenticatedUser: GQL.IUser
-
+interface Props extends OrgAreaPageProps, RequiredAuthProps {
     /** Called when the viewer responds to the invitation. */
     onDidRespondToInvitation: () => void
     history: H.History
@@ -187,10 +189,8 @@ export const OrgInvitationPage = withAuthenticatedUser(
             this.responses.next(GQL.OrganizationInvitationResponseType.REJECT)
         }
 
-        private respondToOrganizationInvitation = (
-            args: GQL.IRespondToOrganizationInvitationOnMutationArguments
-        ): Observable<void> =>
-            mutateGraphQL(
+        private respondToOrganizationInvitation = (args: RespondToOrganizationInvitationVariables): Observable<void> =>
+            mutateGraphQL<RespondToOrganizationInvitationResult>(
                 gql`
                     mutation RespondToOrganizationInvitation(
                         $organizationInvitation: ID!

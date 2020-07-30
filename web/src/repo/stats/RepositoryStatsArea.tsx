@@ -23,7 +23,7 @@ interface Props
     extends RouteComponentProps<{}>,
         RepoHeaderContributionsLifecycleProps,
         Omit<PatternTypeProps, 'setPatternType'> {
-    repo: GQL.IRepository
+    repo: GQL.Repository
     globbing: boolean
 }
 
@@ -34,7 +34,7 @@ export interface RepositoryStatsAreaPageProps {
     /**
      * The active repository.
      */
-    repo: GQL.IRepository
+    repo: GQL.Repository
 }
 
 const showNavbar = false

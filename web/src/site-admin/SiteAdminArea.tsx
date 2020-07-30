@@ -12,6 +12,8 @@ import { RouteDescriptor } from '../util/contributions'
 import { SiteAdminSidebar, SiteAdminSideBarGroups } from './SiteAdminSidebar'
 import { LoadingSpinner } from '@sourcegraph/react-loading-spinner'
 import { TelemetryProps } from '../../../shared/src/telemetry/telemetryService'
+import { RequiredAuthProps } from '../auth'
+import { ThemeProps } from '../../../shared/src/theme'
 
 const NotFoundPage: React.ComponentType<{}> = () => (
     <HeroPage
@@ -29,9 +31,9 @@ export interface SiteAdminAreaRouteContext
     extends PlatformContextProps,
         SettingsCascadeProps,
         ActivationProps,
-        TelemetryProps {
-    site: Pick<GQL.ISite, '__typename' | 'id'>
-    authenticatedUser: GQL.IUser
+        TelemetryProps,
+        RequiredAuthProps {
+    site: Pick<GQL.Site, '__typename' | 'id'>
     isLightTheme: boolean
 
     /** This property is only used by {@link SiteAdminOverviewPage}. */
@@ -45,12 +47,12 @@ interface SiteAdminAreaProps
         PlatformContextProps,
         SettingsCascadeProps,
         ActivationProps,
-        TelemetryProps {
+        TelemetryProps,
+        RequiredAuthProps,
+        ThemeProps {
     routes: readonly SiteAdminAreaRoute[]
     sideBarGroups: SiteAdminSideBarGroups
     overviewComponents: readonly React.ComponentType[]
-    authenticatedUser: GQL.IUser
-    isLightTheme: boolean
 }
 
 const AuthenticatedSiteAdminArea: React.FunctionComponent<SiteAdminAreaProps> = props => {

@@ -60,7 +60,7 @@ describe('SearchResultsList', () => {
     }: {
         resultCount: number
         limitHit: boolean
-    }): GQL.ISearchResults => ({
+    }): GQL.SearchResults => ({
         ...MULTIPLE_SEARCH_REQUEST(),
         limitHit,
         resultCount,

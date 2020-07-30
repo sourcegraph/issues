@@ -21,7 +21,7 @@ interface Props extends RouteComponentProps<{}> {}
 interface State {
     buildVersion?: string
     productVersion?: string
-    updateCheck?: GQL.IUpdateCheck
+    updateCheck?: GQL.UpdateCheck
     error?: string
 }
 

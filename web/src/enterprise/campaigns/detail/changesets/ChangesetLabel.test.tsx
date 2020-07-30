@@ -8,7 +8,6 @@ describe('ChangesetLabel', () => {
             mount(
                 <ChangesetLabel
                     label={{
-                        __typename: 'ChangesetLabel',
                         text: 'bug',
                         description: 'Something is wrong',
                         color: 'acfc99',
@@ -22,7 +21,6 @@ describe('ChangesetLabel', () => {
             mount(
                 <ChangesetLabel
                     label={{
-                        __typename: 'ChangesetLabel',
                         text: 'bug',
                         description: 'Something is wrong',
                         color: '330912',

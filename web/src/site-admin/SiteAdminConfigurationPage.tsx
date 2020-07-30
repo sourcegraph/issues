@@ -199,7 +199,7 @@ interface Props extends RouteComponentProps<{}>, ThemeProps, TelemetryProps {
 }
 
 interface State {
-    site?: GQL.ISite
+    site?: GQL.Site
     loading: boolean
     error?: Error
 

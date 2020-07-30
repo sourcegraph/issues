@@ -1,5 +1,4 @@
 import * as H from 'history'
-import * as GQL from '../../../../shared/src/graphql/schema'
 import React, { useState, useCallback } from 'react'
 import { InteractiveModeInput } from './interactive/InteractiveModeInput'
 import { Form } from 'reactstrap'
@@ -31,6 +30,7 @@ import { PlatformContextProps } from '../../../../shared/src/platform/context'
 import { VersionContextProps } from '../../../../shared/src/search/util'
 import { VersionContext } from '../../schema/site.schema'
 import { submitSearch, SubmitSearchParams } from '../helpers'
+import { OptionalAuthProps } from '../../auth'
 
 interface Props
     extends SettingsCascadeProps<Settings>,
@@ -47,8 +47,8 @@ interface Props
         SmartSearchFieldProps,
         CopyQueryButtonProps,
         Pick<SubmitSearchParams, 'source'>,
+        OptionalAuthProps,
         VersionContextProps {
-    authenticatedUser: GQL.IUser | null
     location: H.Location
     history: H.History
     isSourcegraphDotCom: boolean

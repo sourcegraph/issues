@@ -20,9 +20,10 @@ import { UserProductSubscriptionStatus } from './UserProductSubscriptionStatus'
 import { ErrorAlert } from '../../../components/alerts'
 import { useObservable } from '../../../../../shared/src/util/useObservable'
 import * as H from 'history'
+import { ProductSubscriptionResult } from '../../../graphql-operations'
 
 interface Props extends Pick<RouteComponentProps<{ subscriptionUUID: string }>, 'match'> {
-    user: Pick<GQL.IUser, 'settingsURL'>
+    user: Pick<GQL.User, 'settingsURL'>
 
     /** For mocking in tests only. */
     _queryProductSubscription?: typeof queryProductSubscription
@@ -144,18 +145,20 @@ export const UserSubscriptionsProductSubscriptionPage: React.FunctionComponent<P
     )
 }
 
-function queryProductSubscription(uuid: string): Observable<GQL.IProductSubscription> {
-    return queryGraphQL(
+function queryProductSubscription(
+    uuid: string
+): Observable<ProductSubscriptionResult['dotcom']['productSubscription']> {
+    return queryGraphQL<ProductSubscriptionResult>(
         gql`
             query ProductSubscription($uuid: String!) {
                 dotcom {
                     productSubscription(uuid: $uuid) {
-                        ...ProductSubscriptionFields
+                        ...ProductSubscriptionFieldsOnSubscriptionPage
                     }
                 }
             }
 
-            fragment ProductSubscriptionFields on ProductSubscription {
+            fragment ProductSubscriptionFieldsOnSubscriptionPage on ProductSubscription {
                 id
                 name
                 account {

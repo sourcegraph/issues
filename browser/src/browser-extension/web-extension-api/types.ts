@@ -1,5 +1,4 @@
 import { GraphQLResult } from '../../../../shared/src/graphql/graphql'
-import * as GQL from '../../../../shared/src/graphql/schema'
 
 export interface PhabricatorMapping {
     callsign: string
@@ -69,7 +68,7 @@ export interface ManagedStorageItems extends SourcegraphURL {
 export interface BackgroundMessageHandlers {
     openOptionsPage(): Promise<void>
     createBlobURL(bundleUrl: string): Promise<string>
-    requestGraphQL<T extends GQL.IQuery | GQL.IMutation>(options: {
+    requestGraphQL<T>(options: {
         request: string
         variables: {}
     }): Promise<GraphQLResult<T>>

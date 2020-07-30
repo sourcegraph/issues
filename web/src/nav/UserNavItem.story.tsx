@@ -43,7 +43,7 @@ add(
                         nodes: [
                             { id: '0', settingsURL: '#', displayName: 'Acme Corp' },
                             { id: '1', settingsURL: '#', displayName: 'Beta Inc' },
-                        ] as GQL.IOrg[],
+                        ] as GQL.Org[],
                     },
                 }}
                 isLightTheme={true}

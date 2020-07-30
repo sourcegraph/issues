@@ -1,13 +1,14 @@
 import { storiesOf } from '@storybook/react'
 import { radios } from '@storybook/addon-knobs'
 import React from 'react'
-import { CampaignNode, CampaignNodeProps } from './CampaignNode'
+import { CampaignNode } from './CampaignNode'
 import { createMemoryHistory } from 'history'
 import webStyles from '../../../enterprise.scss'
 import { Tooltip } from '../../../components/tooltip/Tooltip'
 import isChromatic from 'chromatic/isChromatic'
+import { ListCampaign } from '../../../graphql-operations'
 
-export const nodes: Record<string, CampaignNodeProps['node']> = {
+export const nodes: Record<string, ListCampaign> = {
     'Open campaign': {
         id: 'test',
         name: 'Awesome campaign',

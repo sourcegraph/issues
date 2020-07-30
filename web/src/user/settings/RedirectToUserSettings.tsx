@@ -10,7 +10,7 @@ import { withAuthenticatedUser } from '../../auth/withAuthenticatedUser'
  * username.
  */
 export const RedirectToUserSettings = withAuthenticatedUser(
-    ({ authenticatedUser, location }: { authenticatedUser: GQL.IUser; location: H.Location }) => (
+    ({ authenticatedUser, location }: { authenticatedUser: GQL.User; location: H.Location }) => (
         <Redirect
             to={{
                 pathname: `${userURL(authenticatedUser.username)}/settings`,

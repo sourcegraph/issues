@@ -12,7 +12,7 @@ import { ThemeProps } from '../../../shared/src/theme'
 
 interface Props extends Pick<AddExternalServiceOptions, 'jsonSchema' | 'editorActions'>, ThemeProps, TelemetryProps {
     history: H.History
-    input: GQL.IAddExternalServiceInput
+    input: GQL.AddExternalServiceInput
     error?: ErrorLike
     warning?: string | null
     mode: 'edit' | 'create'
@@ -20,7 +20,7 @@ interface Props extends Pick<AddExternalServiceOptions, 'jsonSchema' | 'editorAc
     hideDisplayNameField?: boolean
     submitName?: string
     onSubmit: (event?: React.FormEvent<HTMLFormElement>) => void
-    onChange: (change: GQL.IAddExternalServiceInput) => void
+    onChange: (change: GQL.AddExternalServiceInput) => void
 }
 
 /**

@@ -20,7 +20,7 @@ describe('ProductPlanFormControl', () => {
                 value="p"
                 onChange={() => undefined}
                 _queryProductPlans={() =>
-                    of<GQL.IProductPlan[]>([
+                    of<GQL.ProductPlan[]>([
                         {
                             __typename: 'ProductPlan',
                             billingPlanID: 'p0',

@@ -4,12 +4,19 @@ import { dataOrThrowErrors, gql } from '../../../shared/src/graphql/graphql'
 import * as GQL from '../../../shared/src/graphql/schema'
 import { mutateGraphQL, queryGraphQL } from '../backend/graphql'
 import { SurveyResponse } from './SurveyPage'
+import {
+    FetchSurveyResponsesResult,
+    FetchAllUsersWithSurveyResponsesResult,
+    FetchSurveyResponseAggregatesResult,
+    SubmitSurveyResult,
+    RequestTrialResult,
+} from '../graphql-operations'
 
 /**
  * Submits a user satisfaction survey.
  */
 export function submitSurvey(input: SurveyResponse): Observable<void> {
-    return mutateGraphQL(
+    return mutateGraphQL<SubmitSurveyResult>(
         gql`
             mutation SubmitSurvey($input: SurveySubmissionInput!) {
                 submitSurvey(input: $input) {
@@ -27,8 +34,8 @@ export function submitSurvey(input: SurveyResponse): Observable<void> {
 /**
  * Fetches survey responses.
  */
-export function fetchAllSurveyResponses(args: { first?: number }): Observable<GQL.ISurveyResponseConnection> {
-    return queryGraphQL(
+export function fetchAllSurveyResponses(args: { first?: number }): Observable<GQL.SurveyResponseConnection> {
+    return queryGraphQL<FetchSurveyResponsesResult>(
         gql`
             query FetchSurveyResponses {
                 surveyResponses {
@@ -64,8 +71,8 @@ export function fetchAllUsersWithSurveyResponses(args: {
     activePeriod?: GQL.UserActivePeriod
     first?: number
     query?: string
-}): Observable<GQL.IUserConnection> {
-    return queryGraphQL(
+}): Observable<GQL.UserConnection> {
+    return queryGraphQL<FetchAllUsersWithSurveyResponsesResult>(
         gql`
             query FetchAllUsersWithSurveyResponses($activePeriod: UserActivePeriod, $first: Int, $query: String) {
                 users(activePeriod: $activePeriod, first: $first, query: $query) {
@@ -96,13 +103,13 @@ export function fetchAllUsersWithSurveyResponses(args: {
     )
 }
 
-export type SurveyResponseConnectionAggregates = Exclude<GQL.ISurveyResponseConnection, 'nodes'>
+export type SurveyResponseConnectionAggregates = Exclude<GQL.SurveyResponseConnection, 'nodes'>
 
 /**
  * Fetches survey response aggregate data.
  */
 export function fetchSurveyResponseAggregates(): Observable<SurveyResponseConnectionAggregates> {
-    return queryGraphQL(
+    return queryGraphQL<FetchSurveyResponseAggregatesResult>(
         gql`
             query FetchSurveyResponseAggregates {
                 surveyResponses {
@@ -123,7 +130,7 @@ export function fetchSurveyResponseAggregates(): Observable<SurveyResponseConnec
  * Submits a request for a Sourcegraph Enterprise trial license.
  */
 export const submitTrialRequest = (email: string): void => {
-    mutateGraphQL(
+    mutateGraphQL<RequestTrialResult>(
         gql`
             mutation RequestTrial($email: String!) {
                 requestTrial(email: $email) {

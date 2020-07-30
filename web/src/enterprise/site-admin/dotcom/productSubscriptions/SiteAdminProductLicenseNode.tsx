@@ -1,13 +1,13 @@
 import * as React from 'react'
 import { LinkOrSpan } from '../../../../../../shared/src/components/LinkOrSpan'
 import { gql } from '../../../../../../shared/src/graphql/graphql'
-import * as GQL from '../../../../../../shared/src/graphql/schema'
 import { CopyableText } from '../../../../components/CopyableText'
 import { Timestamp } from '../../../../components/time/Timestamp'
 import { AccountName } from '../../../dotcom/productSubscriptions/AccountName'
 import { ProductLicenseValidity } from '../../../dotcom/productSubscriptions/ProductLicenseValidity'
 import { ProductLicenseInfoDescription } from '../../../productSubscription/ProductLicenseInfoDescription'
 import { ProductLicenseTags } from '../../../productSubscription/ProductLicenseTags'
+import { ProductLicenseFields } from '../../../../graphql-operations'
 
 export const siteAdminProductLicenseFragment = gql`
     fragment ProductLicenseFields on ProductLicense {
@@ -37,7 +37,7 @@ export const siteAdminProductLicenseFragment = gql`
 `
 
 export interface SiteAdminProductLicenseNodeProps {
-    node: GQL.IProductLicense
+    node: ProductLicenseFields
     showSubscription: boolean
 }
 

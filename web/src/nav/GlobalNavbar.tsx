@@ -3,10 +3,9 @@ import * as React from 'react'
 import { Subscription } from 'rxjs'
 import { ActivationProps } from '../../../shared/src/components/activation/Activation'
 import { ExtensionsControllerProps } from '../../../shared/src/extensions/controller'
-import * as GQL from '../../../shared/src/graphql/schema'
 import { PlatformContextProps } from '../../../shared/src/platform/context'
 import { SettingsCascadeProps } from '../../../shared/src/settings/settings'
-import { authRequired } from '../auth'
+import { authRequired, OptionalAuthProps } from '../auth'
 import {
     parseSearchURLQuery,
     PatternTypeProps,
@@ -46,10 +45,10 @@ interface Props
         InteractiveSearchProps,
         SmartSearchFieldProps,
         CopyQueryButtonProps,
-        VersionContextProps {
+        VersionContextProps,
+        OptionalAuthProps {
     history: H.History
     location: H.Location<{ query: string }>
-    authenticatedUser: GQL.IUser | null
     navbarSearchQueryState: QueryState
     onNavbarQueryChange: (queryState: QueryState) => void
     isSourcegraphDotCom: boolean

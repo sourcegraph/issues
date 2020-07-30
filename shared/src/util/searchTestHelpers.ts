@@ -1,14 +1,15 @@
+/* eslint-disable @typescript-eslint/ban-types */
 import { of } from 'rxjs'
 import sinon from 'sinon'
 import { Controller } from '../extensions/controller'
 import {
-    ISearchResults,
-    IFileMatch,
-    ILineMatch,
-    IGitBlob,
-    IGitCommit,
-    IRepository,
-    ISymbol,
+    SearchResults,
+    FileMatch,
+    LineMatch,
+    GitBlob,
+    GitCommit,
+    Repository,
+    Symbol,
     SearchResult,
 } from '../graphql/schema'
 import { pretendRemote } from '../api/util'
@@ -19,20 +20,20 @@ export const RESULT = {
     file: {
         path: '.travis.yml',
         url: '/github.com/golang/oauth2/-/blob/.travis.yml',
-        commit: { oid: 'e64efc72b421e893cbf63f17ba2221e7d6d0b0f3' } as IGitCommit,
-    } as IGitBlob,
-    repository: { name: 'github.com/golang/oauth2', url: '/github.com/golang/oauth2' } as IRepository,
+        commit: { oid: 'e64efc72b421e893cbf63f17ba2221e7d6d0b0f3' } as GitCommit,
+    } as GitBlob,
+    repository: { name: 'github.com/golang/oauth2', url: '/github.com/golang/oauth2' } as Repository,
     limitHit: false,
-    symbols: [] as ISymbol[],
+    symbols: [] as Symbol[],
     lineMatches: [
         {
             preview: '  - go test -v golang.org/x/oauth2/...',
             lineNumber: 12,
             offsetAndLengths: [[7, 4]],
             limitHit: false,
-        } as ILineMatch,
+        } as LineMatch,
     ],
-} as IFileMatch
+} as FileMatch
 
 export const MULTIPLE_MATCH_RESULT = {
     __typename: 'FileMatch',
@@ -121,9 +122,9 @@ export const SEARCH_RESULT = {
     limitHit: false,
     resultCount: 1,
     approximateResultCount: '1',
-    missing: [] as IRepository[],
-    cloning: [] as IRepository[],
-    timedout: [] as IRepository[],
+    missing: [] as Repository[],
+    cloning: [] as Repository[],
+    timedout: [] as Repository[],
     indexUnavailable: false,
     dynamicFilters: [
         { value: 'file:\\.yml$', label: 'file:\\.yml$', count: 1, limitHit: false, kind: 'file' },
@@ -139,7 +140,7 @@ export const SEARCH_RESULT = {
     results: [RESULT],
     alert: null,
     elapsedMilliseconds: 78,
-} as ISearchResults
+} as SearchResults
 
 export const MULTIPLE_SEARCH_RESULT = {
     ...SEARCH_RESULT,
@@ -156,24 +157,24 @@ export const MULTIPLE_SEARCH_RESULT = {
                 url: '/github.com/golang/oauth2/-/blob/example_test.go',
                 commit: {
                     oid: 'e64efc72b421e893cbf63f17ba2221e7d6d0b0f3',
-                } as IGitCommit,
-            } as IGitBlob,
+                } as GitCommit,
+            } as GitBlob,
             repository: {
                 name: 'github.com/golang/oauth2',
                 url: '/github.com/golang/oauth2',
-            } as IRepository,
+            } as Repository,
             limitHit: false,
-            symbols: [] as ISymbol[],
+            symbols: [] as Symbol[],
             lineMatches: [
                 {
                     preview: 'package oauth2_test',
                     lineNumber: 4,
                     offsetAndLengths: [[15, 4]],
-                } as ILineMatch,
+                } as LineMatch,
             ],
-        } as IFileMatch,
+        } as FileMatch,
     ] as SearchResult[],
-} as ISearchResults
+} as SearchResults
 
 // Result from query: repo:^github\.com/golang/oauth2$ test f:travis
 export const SEARCH_REQUEST = sinon.spy(() => SEARCH_RESULT)

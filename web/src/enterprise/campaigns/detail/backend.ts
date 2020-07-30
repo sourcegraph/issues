@@ -2,15 +2,17 @@ import { map } from 'rxjs/operators'
 import { dataOrThrowErrors, gql } from '../../../../../shared/src/graphql/graphql'
 import { queryGraphQL, mutateGraphQL } from '../../../backend/graphql'
 import { Observable } from 'rxjs'
+import { ID } from '../../../../../shared/src/graphql/schema'
+import { DiffStatFields, RepositoryComparisonFields } from '../../../backend/diff'
+import { FilteredConnectionQueryArgs } from '../../../components/FilteredConnection'
 import {
-    Changeset,
-    ID,
-    ICampaign,
-    IChangesetsOnCampaignArguments,
-    IExternalChangeset,
-} from '../../../../../shared/src/graphql/schema'
-import { DiffStatFields, FileDiffFields } from '../../../backend/diff'
-import { Connection, FilteredConnectionQueryArgs } from '../../../components/FilteredConnection'
+    CampaignByIDResult,
+    CampaignChangesetsVariables,
+    CampaignChangesetsResult,
+    ExternalChangesetFileDiffsResult,
+    CampaignFields,
+    SyncChangesetResult,
+} from '../../../graphql-operations'
 
 const campaignFragment = gql`
     fragment CampaignFields on Campaign {
@@ -29,6 +31,11 @@ const campaignFragment = gql`
         viewerCanAdminister
         changesets {
             totalCount
+            stats {
+                total
+                closed
+                merged
+            }
         }
         # TODO move to separate query and configure from/to
         changesetCountsOverTime {
@@ -48,8 +55,16 @@ const campaignFragment = gql`
     ${DiffStatFields}
 `
 
-export const fetchCampaignById = (campaign: ID): Observable<ICampaign | null> =>
-    queryGraphQL(
+const changesetLabelFragment = gql`
+    fragment ChangesetLabelFields on ChangesetLabel {
+        color
+        description
+        text
+    }
+`
+
+export const fetchCampaignById = (campaign: ID): Observable<CampaignFields | null> =>
+    queryGraphQL<CampaignByIDResult>(
         gql`
             query CampaignByID($campaign: ID!) {
                 node(id: $campaign) {
@@ -75,11 +90,76 @@ export const fetchCampaignById = (campaign: ID): Observable<ICampaign | null> =>
         })
     )
 
-export const queryChangesets = (
-    campaign: ID,
-    { first, state, reviewState, checkState }: IChangesetsOnCampaignArguments
-): Observable<Connection<Changeset>> =>
-    queryGraphQL(
+export const ChangesetFieldsFragment = gql`
+    fragment ChangesetFields on Changeset {
+        __typename
+
+        state
+        createdAt
+        updatedAt
+        nextSyncAt
+        externalState
+        ... on HiddenExternalChangeset {
+            id
+        }
+        ... on ExternalChangeset {
+            id
+            title
+            body
+            reviewState
+            checkState
+            labels {
+                ...ChangesetLabelFields
+            }
+            repository {
+                id
+                name
+                url
+            }
+            externalURL {
+                url
+            }
+            externalID
+            diff {
+                __typename
+                ... on PreviewRepositoryComparison {
+                    fileDiffs {
+                        diffStat {
+                            ...DiffStatFields
+                        }
+                    }
+                }
+                ... on RepositoryComparison {
+                    fileDiffs {
+                        diffStat {
+                            ...DiffStatFields
+                        }
+                    }
+                }
+            }
+            diffStat {
+                added
+                changed
+                deleted
+            }
+        }
+    }
+
+    ${DiffStatFields}
+
+    ${changesetLabelFragment}
+`
+
+export const queryChangesets = ({
+    campaign,
+    first,
+    state,
+    reviewState,
+    checkState,
+}: CampaignChangesetsVariables): Observable<
+    (CampaignChangesetsResult['node'] & { __typename: 'Campaign' })['changesets']
+> =>
+    queryGraphQL<CampaignChangesetsResult>(
         gql`
             query CampaignChangesets(
                 $campaign: ID!
@@ -94,66 +174,14 @@ export const queryChangesets = (
                         changesets(first: $first, state: $state, reviewState: $reviewState, checkState: $checkState) {
                             totalCount
                             nodes {
-                                __typename
-
-                                state
-                                createdAt
-                                updatedAt
-                                nextSyncAt
-
-                                ... on HiddenExternalChangeset {
-                                    id
-                                }
-                                ... on ExternalChangeset {
-                                    id
-                                    title
-                                    body
-                                    reviewState
-                                    checkState
-                                    labels {
-                                        text
-                                        description
-                                        color
-                                    }
-                                    repository {
-                                        id
-                                        name
-                                        url
-                                    }
-                                    externalURL {
-                                        url
-                                    }
-                                    externalID
-                                    diff {
-                                        __typename
-                                        ... on PreviewRepositoryComparison {
-                                            fileDiffs {
-                                                diffStat {
-                                                    ...DiffStatFields
-                                                }
-                                            }
-                                        }
-                                        ... on RepositoryComparison {
-                                            fileDiffs {
-                                                diffStat {
-                                                    ...DiffStatFields
-                                                }
-                                            }
-                                        }
-                                    }
-                                    diffStat {
-                                        added
-                                        changed
-                                        deleted
-                                    }
-                                }
+                                ...ChangesetFields
                             }
                         }
                     }
                 }
             }
 
-            ${DiffStatFields}
+            ${ChangesetFieldsFragment}
         `,
         { campaign, first, state, reviewState, checkState }
     ).pipe(
@@ -170,7 +198,7 @@ export const queryChangesets = (
     )
 
 export async function syncChangeset(changeset: ID): Promise<void> {
-    const result = await mutateGraphQL(
+    const result = await mutateGraphQL<SyncChangesetResult>(
         gql`
             mutation SyncChangeset($changeset: ID!) {
                 syncChangeset(changeset: $changeset) {
@@ -183,11 +211,15 @@ export async function syncChangeset(changeset: ID): Promise<void> {
     dataOrThrowErrors(result)
 }
 
+export type ExternalChangesetGraphQlNode = ExternalChangesetFileDiffsResult['node'] & {
+    __typename: 'ExternalChangeset'
+}
+
 export const queryExternalChangesetWithFileDiffs = (
     externalChangeset: ID,
     { first, after, isLightTheme }: FilteredConnectionQueryArgs & { isLightTheme: boolean }
-): Observable<IExternalChangeset> =>
-    queryGraphQL(
+): Observable<ExternalChangesetGraphQlNode> =>
+    queryGraphQL<ExternalChangesetFileDiffsResult>(
         gql`
             query ExternalChangesetFileDiffs(
                 $externalChangeset: ID!
@@ -201,27 +233,7 @@ export const queryExternalChangesetWithFileDiffs = (
                         diff {
                             __typename
                             ... on RepositoryComparison {
-                                range {
-                                    base {
-                                        ...GitRefSpecFields
-                                    }
-                                    head {
-                                        ...GitRefSpecFields
-                                    }
-                                }
-                                fileDiffs(first: $first, after: $after) {
-                                    nodes {
-                                        ...FileDiffFields
-                                    }
-                                    totalCount
-                                    pageInfo {
-                                        hasNextPage
-                                        endCursor
-                                    }
-                                    diffStat {
-                                        ...DiffStatFields
-                                    }
-                                }
+                                ...RepositoryComparisonFields
                             }
                             ... on PreviewRepositoryComparison {
                                 fileDiffs(first: $first, after: $after) {
@@ -243,26 +255,7 @@ export const queryExternalChangesetWithFileDiffs = (
                 }
             }
 
-            fragment GitRefSpecFields on GitRevSpec {
-                __typename
-                ... on GitObject {
-                    oid
-                }
-                ... on GitRef {
-                    target {
-                        oid
-                    }
-                }
-                ... on GitRevSpecExpr {
-                    object {
-                        oid
-                    }
-                }
-            }
-
-            ${FileDiffFields}
-
-            ${DiffStatFields}
+            ${RepositoryComparisonFields}
         `,
         { externalChangeset, first, after, isLightTheme }
     ).pipe(

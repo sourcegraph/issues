@@ -18,7 +18,7 @@ const LOADING = 'loading' as const
 
 interface State {
     /** The site usage statistics, loading, or an error. */
-    siteUsageStatisticsOrError: typeof LOADING | GQL.ISiteUsageStatistics | ErrorLike
+    siteUsageStatisticsOrError: typeof LOADING | GQL.SiteUsageStatistics | ErrorLike
 }
 
 /**

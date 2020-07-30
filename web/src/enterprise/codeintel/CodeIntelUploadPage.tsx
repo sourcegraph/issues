@@ -21,7 +21,7 @@ import * as H from 'history'
 const REFRESH_INTERVAL_MS = 5000
 
 interface Props extends RouteComponentProps<{ id: string }> {
-    repo?: GQL.IRepository
+    repo?: GQL.Repository
     fetchLsifUpload?: typeof defaultFetchUpload
 
     /** Scheduler for the refresh timer */

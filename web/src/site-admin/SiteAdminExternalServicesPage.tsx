@@ -18,9 +18,10 @@ import { eventLogger } from '../tracking/eventLogger'
 import { ErrorAlert } from '../components/alerts'
 import { useEventObservable } from '../../../shared/src/util/useObservable'
 import * as H from 'history'
+import { ExternalServicesResult, DeleteExternalServiceResult } from '../graphql-operations'
 
-async function deleteExternalService(externalService: GQL.ID): Promise<void> {
-    const result = await mutateGraphQL(
+async function deleteExternalService(externalService: GQL.Scalars['ID']): Promise<void> {
+    const result = await mutateGraphQL<DeleteExternalServiceResult>(
         gql`
             mutation DeleteExternalService($externalService: ID!) {
                 deleteExternalService(externalService: $externalService) {
@@ -34,7 +35,7 @@ async function deleteExternalService(externalService: GQL.ID): Promise<void> {
 }
 
 interface ExternalServiceNodeProps {
-    node: GQL.IExternalService
+    node: GQL.ExternalService
     onDidUpdate: () => void
     history: H.History
 }
@@ -124,14 +125,14 @@ export class SiteAdminExternalServicesPage extends React.PureComponent<Props, St
         )
     }
 
-    private completeConnectedCodeHostActivation = (externalServices: GQL.IExternalServiceConnection): void => {
+    private completeConnectedCodeHostActivation = (externalServices: GQL.ExternalServiceConnection): void => {
         if (this.props.activation && externalServices.totalCount > 0) {
             this.props.activation.update({ ConnectedCodeHost: true })
         }
     }
 
-    private queryExternalServices = (args: FilteredConnectionQueryArgs): Observable<GQL.IExternalServiceConnection> =>
-        queryGraphQL(
+    private queryExternalServices = (args: FilteredConnectionQueryArgs): Observable<GQL.ExternalServiceConnection> =>
+        queryGraphQL<ExternalServicesResult>(
             gql`
                 query ExternalServices($first: Int) {
                     externalServices(first: $first) {
@@ -183,7 +184,7 @@ export class SiteAdminExternalServicesPage extends React.PureComponent<Props, St
                     </Link>
                 </div>
                 <p className="mt-2">Manage code host connections to sync repositories.</p>
-                <FilteredConnection<GQL.IExternalService, Omit<ExternalServiceNodeProps, 'node'>>
+                <FilteredConnection<GQL.ExternalService, Omit<ExternalServiceNodeProps, 'node'>>
                     className="list-group list-group-flush mt-3"
                     noun="external service"
                     pluralNoun="external services"

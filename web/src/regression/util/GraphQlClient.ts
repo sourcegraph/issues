@@ -12,14 +12,14 @@ export interface GraphQLClient {
      * in CLI-read HTTP headers rather than use the ones in the browser context (which doesn't
      * exist).
      */
-    mutateGraphQL(request: string, variables?: {}): Observable<GraphQLResult<GQL.IMutation>>
+    mutateGraphQL(request: string, variables?: {}): Observable<GraphQLResult<GQL.Mutation>>
 
     /**
      * mimics the `queryGraphQL` function used by the Sourcegraph backend, but substitutes
      * in CLI-read HTTP headers rather than use the ones in the browser context (which doesn't
      * exist).
      */
-    queryGraphQL(request: string, variables?: {}): Observable<GraphQLResult<GQL.IQuery>>
+    queryGraphQL(request: string, variables?: {}): Observable<GraphQLResult<GQL.Query>>
 
     /**
      * Mimics the {@link PlatformContext#requestGraphQL} function that is injected in shared backend functions,

@@ -1,34 +1,28 @@
 import { createAggregateError, isErrorLike } from '../util/errors'
-import {
-    CustomMergeFunctions,
-    gqlToCascade,
-    merge,
-    mergeSettings,
-    Settings,
-    SettingsCascade,
-    SettingsSubject,
-    SubjectSettingsContents,
-} from './settings'
+import { CustomMergeFunctions, gqlToCascade, merge, mergeSettings, Settings, SettingsCascade } from './settings'
+import { SettingsCascadeFields } from '../graphql-operations'
 
-const FIXTURE_ORG: SettingsSubject & SubjectSettingsContents = {
+const FIXTURE_ORG: SettingsCascadeFields['subjects'][number] = {
     __typename: 'Org',
     name: 'n',
     displayName: 'n',
     id: 'a',
     viewerCanAdminister: true,
+    settingsURL: null,
     latestSettings: { id: 1, contents: '{"a":1}' },
 }
 
-const FIXTURE_USER: SettingsSubject & SubjectSettingsContents = {
+const FIXTURE_USER: SettingsCascadeFields['subjects'][number] = {
     __typename: 'User',
     username: 'n',
     displayName: 'n',
     id: 'b',
     viewerCanAdminister: true,
+    settingsURL: null,
     latestSettings: { id: 2, contents: '{"b":2}' },
 }
 
-const FIXTURE_USER_WITH_SETTINGS_ERROR: SettingsSubject & SubjectSettingsContents = {
+const FIXTURE_USER_WITH_SETTINGS_ERROR: SettingsCascadeFields['subjects'][number] = {
     ...FIXTURE_USER,
     id: 'c',
     latestSettings: { id: 3, contents: '.' },

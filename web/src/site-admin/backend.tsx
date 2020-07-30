@@ -13,12 +13,31 @@ import * as GQL from '../../../shared/src/graphql/schema'
 import { resetAllMemoizationCaches } from '../../../shared/src/util/memoizeObservable'
 import { mutateGraphQL, queryGraphQL } from '../backend/graphql'
 import { Settings } from '../../../shared/src/settings/settings'
+import {
+    UsersResult,
+    OrganizationsResult,
+    RepositoriesResult,
+    UserUsageStatisticsResult,
+    SiteUsageStatisticsResult,
+    SiteResult,
+    AllConfigResult,
+    SiteUpdateCheckResult,
+    SiteMonitoringStatisticsResult,
+    UpdateMirrorRepositoryResult,
+    ScheduleRepositoryPermissionsSyncResult,
+    ScheduleUserPermissionsSyncResult,
+    UpdateSiteConfigurationResult,
+    ReloadSiteResult,
+    SetUserIsSiteAdminResult,
+    DeleteUserResult,
+    DeleteOrganizationResult,
+} from '../graphql-operations'
 
 /**
  * Fetches all users.
  */
-export function fetchAllUsers(args: { first?: number; query?: string }): Observable<GQL.IUserConnection> {
-    return queryGraphQL(
+export function fetchAllUsers(args: { first?: number; query?: string }): Observable<GQL.UserConnection> {
+    return queryGraphQL<UsersResult>(
         gql`
             query Users($first: Int, $query: String) {
                 users(first: $first, query: $query) {
@@ -58,8 +77,8 @@ export function fetchAllUsers(args: { first?: number; query?: string }): Observa
 /**
  * Fetches all organizations.
  */
-export function fetchAllOrganizations(args: { first?: number; query?: string }): Observable<GQL.IOrgConnection> {
-    return queryGraphQL(
+export function fetchAllOrganizations(args: { first?: number; query?: string }): Observable<GQL.OrgConnection> {
+    return queryGraphQL<OrganizationsResult>(
         gql`
             query Organizations($first: Int, $query: String) {
                 organizations(first: $first, query: $query) {
@@ -102,7 +121,7 @@ interface RepositoryArgs {
  *
  * @returns Observable that emits the list of repositories
  */
-function fetchAllRepositories(args: RepositoryArgs): Observable<GQL.IRepositoryConnection> {
+function fetchAllRepositories(args: RepositoryArgs): Observable<GQL.RepositoryConnection> {
     args = {
         cloned: true,
         cloneInProgress: true,
@@ -111,7 +130,7 @@ function fetchAllRepositories(args: RepositoryArgs): Observable<GQL.IRepositoryC
         notIndexed: true,
         ...args,
     } // apply defaults
-    return queryGraphQL(
+    return queryGraphQL<RepositoriesResult>(
         gql`
             query Repositories(
                 $first: Int
@@ -159,7 +178,7 @@ function fetchAllRepositories(args: RepositoryArgs): Observable<GQL.IRepositoryC
 
 export function fetchAllRepositoriesAndPollIfEmptyOrAnyCloning(
     args: RepositoryArgs
-): Observable<GQL.IRepositoryConnection> {
+): Observable<GQL.RepositoryConnection> {
     return fetchAllRepositories(args).pipe(
         // Poll every 5000ms if repositories are being cloned or the list is empty.
         repeatUntil(
@@ -172,8 +191,8 @@ export function fetchAllRepositoriesAndPollIfEmptyOrAnyCloning(
     )
 }
 
-export function updateMirrorRepository(args: { repository: GQL.ID }): Observable<void> {
-    return mutateGraphQL(
+export function updateMirrorRepository(args: { repository: GQL.Scalars['ID'] }): Observable<void> {
+    return mutateGraphQL<UpdateMirrorRepositoryResult>(
         gql`
             mutation UpdateMirrorRepository($repository: ID!) {
                 updateMirrorRepository(repository: $repository) {
@@ -192,13 +211,13 @@ export function updateMirrorRepository(args: { repository: GQL.ID }): Observable
 export function checkMirrorRepositoryConnection(
     args:
         | {
-              repository: GQL.ID
+              repository: GQL.Scalars['ID']
           }
         | {
               name: string
           }
-): Observable<GQL.ICheckMirrorRepositoryConnectionResult> {
-    return mutateGraphQL(
+): Observable<GQL.CheckMirrorRepositoryConnectionResult> {
+    return mutateGraphQL<GQL.CheckMirrorRepositoryConnectionResult>(
         gql`
             mutation CheckMirrorRepositoryConnection($repository: ID, $name: String) {
                 checkMirrorRepositoryConnection(repository: $repository, name: $name) {
@@ -214,8 +233,8 @@ export function checkMirrorRepositoryConnection(
     )
 }
 
-export function scheduleRepositoryPermissionsSync(args: { repository: GQL.ID }): Observable<void> {
-    return mutateGraphQL(
+export function scheduleRepositoryPermissionsSync(args: { repository: GQL.Scalars['ID'] }): Observable<void> {
+    return mutateGraphQL<ScheduleRepositoryPermissionsSyncResult>(
         gql`
             mutation ScheduleRepositoryPermissionsSync($repository: ID!) {
                 scheduleRepositoryPermissionsSync(repository: $repository) {
@@ -231,8 +250,8 @@ export function scheduleRepositoryPermissionsSync(args: { repository: GQL.ID }):
     )
 }
 
-export function scheduleUserPermissionsSync(args: { user: GQL.ID }): Observable<void> {
-    return mutateGraphQL(
+export function scheduleUserPermissionsSync(args: { user: GQL.Scalars['ID'] }): Observable<void> {
+    return mutateGraphQL<ScheduleUserPermissionsSyncResult>(
         gql`
             mutation ScheduleUserPermissionsSync($user: ID!) {
                 scheduleUserPermissionsSync(user: $user) {
@@ -257,8 +276,8 @@ export function fetchUserUsageStatistics(args: {
     activePeriod?: GQL.UserActivePeriod
     query?: string
     first?: number
-}): Observable<GQL.IUserConnection> {
-    return queryGraphQL(
+}): Observable<GQL.UserConnection> {
+    return queryGraphQL<UserUsageStatisticsResult>(
         gql`
             query UserUsageStatistics($activePeriod: UserActivePeriod, $query: String, $first: Int) {
                 users(activePeriod: $activePeriod, query: $query, first: $first) {
@@ -289,8 +308,8 @@ export function fetchUserUsageStatistics(args: {
  *
  * @returns Observable that emits the list of users and their usage data
  */
-export function fetchSiteUsageStatistics(): Observable<GQL.ISiteUsageStatistics> {
-    return queryGraphQL(gql`
+export function fetchSiteUsageStatistics(): Observable<GQL.SiteUsageStatistics> {
+    return queryGraphQL<SiteUsageStatisticsResult>(gql`
         query SiteUsageStatistics {
             site {
                 usageStatistics {
@@ -326,8 +345,8 @@ export function fetchSiteUsageStatistics(): Observable<GQL.ISiteUsageStatistics>
  *
  * @returns Observable that emits the site
  */
-export function fetchSite(): Observable<GQL.ISite> {
-    return queryGraphQL(gql`
+export function fetchSite(): Observable<GQL.Site> {
+    return queryGraphQL<SiteResult>(gql`
         query Site {
             site {
                 id
@@ -358,7 +377,7 @@ type SettingsSubject = Pick<GQL.SettingsSubject, 'settingsURL' | '__typename'> &
  * All configuration and settings in one place.
  */
 interface AllConfig {
-    site: GQL.ISiteConfiguration
+    site: GQL.SiteConfiguration
     externalServices: Partial<Record<GQL.ExternalServiceKind, ExternalServiceConfig>>
     settings: {
         subjects: SettingsSubject[]
@@ -370,7 +389,7 @@ interface AllConfig {
  * Fetches all the configuration and settings (requires site admin privileges).
  */
 export function fetchAllConfigAndSettings(): Observable<AllConfig> {
-    return queryGraphQL(
+    return queryGraphQL<AllConfigResult>(
         gql`
             query AllConfig($first: Int) {
                 site {
@@ -400,11 +419,11 @@ export function fetchAllConfigAndSettings(): Observable<AllConfig> {
                 }
 
                 viewerSettings {
-                    ...SettingsCascadeFields
+                    ...SiteAdminSettingsCascadeFields
                 }
             }
 
-            fragment SettingsCascadeFields on SettingsCascade {
+            fragment SiteAdminSettingsCascadeFields on SettingsCascade {
                 subjects {
                     __typename
                     latestSettings {
@@ -465,7 +484,7 @@ export function fetchAllConfigAndSettings(): Observable<AllConfig> {
  * required for the update to be applied.
  */
 export function updateSiteConfiguration(lastID: number, input: string): Observable<boolean> {
-    return mutateGraphQL(
+    return mutateGraphQL<UpdateSiteConfigurationResult>(
         gql`
             mutation UpdateSiteConfiguration($lastID: Int!, $input: String!) {
                 updateSiteConfiguration(lastID: $lastID, input: $input)
@@ -482,7 +501,7 @@ export function updateSiteConfiguration(lastID: number, input: string): Observab
  * Reloads the site.
  */
 export function reloadSite(): Observable<void> {
-    return mutateGraphQL(
+    return mutateGraphQL<ReloadSiteResult>(
         gql`
             mutation ReloadSite {
                 reloadSite {
@@ -500,8 +519,8 @@ export function reloadSite(): Observable<void> {
     )
 }
 
-export function setUserIsSiteAdmin(userID: GQL.ID, siteAdmin: boolean): Observable<void> {
-    return mutateGraphQL(
+export function setUserIsSiteAdmin(userID: GQL.Scalars['ID'], siteAdmin: boolean): Observable<void> {
+    return mutateGraphQL<SetUserIsSiteAdminResult>(
         gql`
             mutation SetUserIsSiteAdmin($userID: ID!, $siteAdmin: Boolean!) {
                 setUserIsSiteAdmin(userID: $userID, siteAdmin: $siteAdmin) {
@@ -516,8 +535,8 @@ export function setUserIsSiteAdmin(userID: GQL.ID, siteAdmin: boolean): Observab
     )
 }
 
-export function randomizeUserPassword(user: GQL.ID): Observable<GQL.IRandomizeUserPasswordResult> {
-    return mutateGraphQL(
+export function randomizeUserPassword(user: GQL.Scalars['ID']): Observable<GQL.RandomizeUserPasswordResult> {
+    return mutateGraphQL<GQL.RandomizeUserPasswordResult>(
         gql`
             mutation RandomizeUserPassword($user: ID!) {
                 randomizeUserPassword(user: $user) {
@@ -532,8 +551,8 @@ export function randomizeUserPassword(user: GQL.ID): Observable<GQL.IRandomizeUs
     )
 }
 
-export function deleteUser(user: GQL.ID, hard?: boolean): Observable<void> {
-    return mutateGraphQL(
+export function deleteUser(user: GQL.Scalars['ID'], hard?: boolean): Observable<void> {
+    return mutateGraphQL<DeleteUserResult>(
         gql`
             mutation DeleteUser($user: ID!, $hard: Boolean) {
                 deleteUser(user: $user, hard: $hard) {
@@ -552,8 +571,8 @@ export function deleteUser(user: GQL.ID, hard?: boolean): Observable<void> {
     )
 }
 
-export function createUser(username: string, email: string | undefined): Observable<GQL.ICreateUserResult> {
-    return mutateGraphQL(
+export function createUser(username: string, email: string | undefined): Observable<GQL.CreateUserResult> {
+    return mutateGraphQL<GQL.CreateUserResult>(
         gql`
             mutation CreateUser($username: String!, $email: String) {
                 createUser(username: $username, email: $email) {
@@ -568,8 +587,8 @@ export function createUser(username: string, email: string | undefined): Observa
     )
 }
 
-export function deleteOrganization(organization: GQL.ID): Observable<void> {
-    return mutateGraphQL(
+export function deleteOrganization(organization: GQL.Scalars['ID']): Observable<void> {
+    return mutateGraphQL<DeleteOrganizationResult>(
         gql`
             mutation DeleteOrganization($organization: ID!) {
                 deleteOrganization(organization: $organization) {
@@ -591,9 +610,9 @@ export function deleteOrganization(organization: GQL.ID): Observable<void> {
 export function fetchSiteUpdateCheck(): Observable<{
     buildVersion: string
     productVersion: string
-    updateCheck: GQL.IUpdateCheck
+    updateCheck: GQL.UpdateCheck
 }> {
-    return queryGraphQL(
+    return queryGraphQL<SiteUpdateCheckResult>(
         gql`
             query SiteUpdateCheck {
                 site {
@@ -619,10 +638,10 @@ export function fetchSiteUpdateCheck(): Observable<{
  *
  * @param days number of days of data to fetch
  */
-export function fetchMonitoringStats(days: number): Observable<GQL.IMonitoringStatistics | false> {
+export function fetchMonitoringStats(days: number): Observable<GQL.MonitoringStatistics | false> {
     // more details in /internal/prometheusutil.ErrPrometheusUnavailable
     const errorPrometheusUnavailable = 'prometheus API is unavailable'
-    return queryGraphQL(
+    return queryGraphQL<SiteMonitoringStatisticsResult>(
         gql`
             query SiteMonitoringStatistics($days: Int!) {
                 site {

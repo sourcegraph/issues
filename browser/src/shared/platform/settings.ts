@@ -1,11 +1,8 @@
 import { applyEdits, parse as parseJSONC } from '@sqs/jsonc-parser'
 import { setProperty } from '@sqs/jsonc-parser/lib/edit'
-import { from, Observable } from 'rxjs'
+import { Observable } from 'rxjs'
 import { map } from 'rxjs/operators'
 import { SettingsEdit } from '../../../../shared/src/api/client/services/settings'
-import { dataOrThrowErrors, gql } from '../../../../shared/src/graphql/graphql'
-import * as GQL from '../../../../shared/src/graphql/schema'
-import { PlatformContext } from '../../../../shared/src/platform/context'
 import {
     mergeSettings,
     SettingsCascade,
@@ -72,81 +69,6 @@ export function mergeCascades(
                 ? cascadeOrError.final
                 : mergeSettings([cascadeOrError.final, cascade.final]),
     }
-}
-
-// This is a fragment on the DEPRECATED GraphQL API type ConfigurationCascade (not SettingsCascade) for backcompat.
-const configurationCascadeFragment = gql`
-    fragment ConfigurationCascadeFields on ConfigurationCascade {
-        subjects {
-            __typename
-            ... on Org {
-                id
-                name
-                displayName
-            }
-            ... on User {
-                id
-                username
-                displayName
-            }
-            ... on Site {
-                id
-                siteID
-            }
-            latestSettings {
-                id
-                contents
-            }
-            settingsURL
-            viewerCanAdminister
-        }
-        merged {
-            contents
-            messages
-        }
-    }
-`
-
-/**
- * Fetches the settings cascade for the viewer.
- *
- * TODO(sqs): This uses the DEPRECATED GraphQL Query.viewerConfiguration and ConfigurationCascade for backcompat.
- */
-export function fetchViewerSettings(
-    requestGraphQL: PlatformContext['requestGraphQL']
-): Observable<Pick<GQL.ISettingsCascade, 'subjects' | 'final'>> {
-    return from(
-        requestGraphQL<GQL.IQuery>({
-            request: gql`
-                query ViewerConfiguration {
-                    viewerConfiguration {
-                        ...ConfigurationCascadeFields
-                    }
-                }
-                ${configurationCascadeFragment}
-            `,
-            variables: {},
-            mightContainPrivateInfo: false,
-        })
-    ).pipe(
-        map(dataOrThrowErrors),
-        map(({ viewerConfiguration }) => {
-            if (!viewerConfiguration) {
-                throw new Error('fetchViewerSettings: empty viewerConfiguration')
-            }
-
-            for (const subject of viewerConfiguration.subjects) {
-                // User/org/global settings cannot be edited from the
-                // browser extension (only client settings can).
-                subject.viewerCanAdminister = false
-            }
-
-            return {
-                subjects: viewerConfiguration.subjects,
-                final: viewerConfiguration.merged.contents,
-            }
-        })
-    )
 }
 
 /**

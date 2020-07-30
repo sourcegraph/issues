@@ -18,7 +18,7 @@ import * as H from 'history'
 import { eventLogger } from '../tracking/eventLogger'
 
 interface NodeProps extends RouteComponentProps, Omit<PatternTypeProps, 'setPatternType'> {
-    savedSearch: GQL.ISavedSearch
+    savedSearch: GQL.SavedSearch
     onDelete: () => void
 }
 
@@ -33,7 +33,7 @@ class SavedSearchNode extends React.PureComponent<NodeProps, NodeState> {
     }
 
     private subscriptions = new Subscription()
-    private delete = new Subject<GQL.ISavedSearch>()
+    private delete = new Subject<GQL.SavedSearch>()
 
     public componentDidMount(): void {
         this.subscriptions.add(
@@ -104,7 +104,7 @@ class SavedSearchNode extends React.PureComponent<NodeProps, NodeState> {
 }
 
 interface State {
-    savedSearchesOrError?: GQL.ISavedSearch[] | ErrorLike
+    savedSearchesOrError?: GQL.SavedSearch[] | ErrorLike
 }
 
 interface Props extends RouteComponentProps<{}>, NamespaceProps, Omit<PatternTypeProps, 'setPatternType'> {

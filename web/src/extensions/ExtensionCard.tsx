@@ -18,7 +18,7 @@ interface Props extends SettingsCascadeProps, PlatformContextProps<'updateSettin
     node: Pick<
         ConfiguredRegistryExtension<
             Pick<
-                GQL.IRegistryExtension,
+                GQL.RegistryExtension,
                 'id' | 'extensionIDWithoutRegistry' | 'isWorkInProgress' | 'viewerCanAdminister' | 'url'
             >
         >,

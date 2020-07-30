@@ -25,7 +25,7 @@ interface State {
     /**
      * The result of creating the user.
      */
-    createUserResult?: GQL.ICreateUserResult
+    createUserResult?: GQL.CreateUserResult
 
     // Form
     username: string

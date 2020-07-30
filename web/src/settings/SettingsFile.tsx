@@ -14,7 +14,7 @@ import { TelemetryProps } from '../../../shared/src/telemetry/telemetryService'
 interface Props extends ThemeProps, TelemetryProps {
     history: H.History
 
-    settings: GQL.ISettings | null
+    settings: GQL.Settings | null
 
     /**
      * JSON Schema of the document.

@@ -16,7 +16,7 @@ interface Props {
      * no license is in use, returns an empty string.
      */
     actualUserCountDate: string
-    license: GQL.IProductLicenseInfo
+    license: GQL.ProductLicenseInfo
 }
 /**
  * Displays a summary of the site's true-up pricing status.

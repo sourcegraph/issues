@@ -34,9 +34,9 @@ describe('UserSubscriptionsProductSubscriptionPage', () => {
                     user={{ settingsURL: '/u' }}
                     match={{ isExact: true, params: { subscriptionUUID: 's' }, path: '/p', url: '/p' }}
                     _queryProductSubscription={() =>
-                        of<GQL.IProductSubscription>({
+                        of<GQL.ProductSubscription>({
                             __typename: 'ProductSubscription',
-                        } as GQL.IProductSubscription)
+                        } as GQL.ProductSubscription)
                     }
                     history={createMemoryHistory()}
                 />

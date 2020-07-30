@@ -16,13 +16,13 @@ import {
     SiteAdminProductSubscriptionNodeHeader,
     SiteAdminProductSubscriptionNodeProps,
 } from './SiteAdminProductSubscriptionNode'
+import {
+    ProductSubscriptionsDotComResult,
+    ProductSubscriptionsDotComVariables,
+    SiteAdminProductSubscriptionFields,
+} from '../../../../graphql-operations'
 
 interface Props extends RouteComponentProps<{}> {}
-
-class FilteredSiteAdminProductSubscriptionConnection extends FilteredConnection<
-    GQL.IProductSubscription,
-    SiteAdminProductSubscriptionNodeProps
-> {}
 
 /**
  * Displays the product subscriptions that have been created on Sourcegraph.com.
@@ -39,7 +39,7 @@ export const SiteAdminProductSubscriptionsPage: React.FunctionComponent<Props> =
                     Create product subscription
                 </Link>
             </div>
-            <FilteredSiteAdminProductSubscriptionConnection
+            <FilteredConnection<SiteAdminProductSubscriptionFields, SiteAdminProductSubscriptionNodeProps>
                 className="mt-3"
                 listComponent="table"
                 listClassName="table"
@@ -55,17 +55,16 @@ export const SiteAdminProductSubscriptionsPage: React.FunctionComponent<Props> =
     )
 }
 
-function queryProductSubscriptions(args: {
-    first?: number
-    query?: string
-}): Observable<GQL.IProductSubscriptionConnection> {
-    return queryGraphQL(
+function queryProductSubscriptions(
+    args: ProductSubscriptionsDotComVariables
+): Observable<ProductSubscriptionsDotComResult['dotcom']['productSubscriptions']> {
+    return queryGraphQL<ProductSubscriptionsDotComResult>(
         gql`
             query ProductSubscriptionsDotCom($first: Int, $account: ID, $query: String) {
                 dotcom {
                     productSubscriptions(first: $first, account: $account, query: $query) {
                         nodes {
-                            ...ProductSubscriptionFields
+                            ...SiteAdminProductSubscriptionFields
                         }
                         totalCount
                         pageInfo {
@@ -76,10 +75,7 @@ function queryProductSubscriptions(args: {
             }
             ${siteAdminProductSubscriptionFragment}
         `,
-        {
-            first: args.first,
-            query: args.query,
-        } as GQL.IProductSubscriptionsOnDotcomQueryArguments
+        args
     ).pipe(
         map(dataOrThrowErrors),
         map(data => data.dotcom.productSubscriptions)

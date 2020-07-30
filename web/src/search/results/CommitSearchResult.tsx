@@ -19,7 +19,7 @@ interface Props {
     /**
      * The commit search result.
      */
-    result: GQL.ICommitSearchResult
+    result: GQL.CommitSearchResult
 
     /**
      * Called when the search result is selected.
@@ -226,9 +226,9 @@ function stopPropagationToCollapseOrExpand(event: React.MouseEvent): void {
     event.stopPropagation()
 }
 
-function uniqueReferences(references: GQL.IGitRef[]): GQL.IGitRef[] {
+function uniqueReferences(references: GQL.GitRef[]): GQL.GitRef[] {
     const seenName = new Set<string>()
-    const uniq: GQL.IGitRef[] = []
+    const uniq: GQL.GitRef[] = []
     for (const reference of references) {
         if (!seenName.has(reference.name)) {
             uniq.push(reference)

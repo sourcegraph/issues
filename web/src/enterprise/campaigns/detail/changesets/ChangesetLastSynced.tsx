@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react'
-import { IExternalChangeset } from '../../../../../../shared/src/graphql/schema'
+import { ExternalChangeset } from '../../../../../../shared/src/graphql/schema'
 import classNames from 'classnames'
 import { formatDistance, parseISO } from 'date-fns'
 import { syncChangeset } from '../backend'
@@ -11,7 +11,7 @@ import { isErrorLike } from '../../../../../../shared/src/util/errors'
 import InfoCircleOutlineIcon from 'mdi-react/InfoCircleOutlineIcon'
 
 interface Props {
-    changeset: Pick<IExternalChangeset, 'id' | 'nextSyncAt' | 'updatedAt'>
+    changeset: Pick<ExternalChangeset, 'id' | 'nextSyncAt' | 'updatedAt'>
     viewerCanAdminister: boolean
     campaignUpdates?: Pick<Observer<void>, 'next'>
     /** For testing purposes only */

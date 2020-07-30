@@ -20,6 +20,8 @@ import { ExtensionAreaHeader, ExtensionAreaHeaderNavItem } from './ExtensionArea
 import { ThemeProps } from '../../../../shared/src/theme'
 import { ErrorMessage } from '../../components/alerts'
 import { TelemetryProps } from '../../../../shared/src/telemetry/telemetryService'
+import { RegistryExtensionResult } from '../../graphql-operations'
+import { OptionalAuthProps } from '../../auth'
 
 export const registryExtensionFragment = gql`
     fragment RegistryExtensionFields on RegistryExtension {
@@ -73,7 +75,7 @@ export interface ExtensionAreaProps
 
 interface ExtensionAreaState {
     /** The registry extension, undefined while loading, or an error.  */
-    extensionOrError?: ConfiguredRegistryExtension<GQL.IRegistryExtension> | ErrorLike
+    extensionOrError?: ConfiguredRegistryExtension<GQL.RegistryExtension> | ErrorLike
 }
 
 /**
@@ -83,17 +85,15 @@ export interface ExtensionAreaRouteContext
     extends SettingsCascadeProps,
         PlatformContextProps,
         ThemeProps,
-        TelemetryProps {
+        TelemetryProps,
+        OptionalAuthProps {
     /** The extension registry area main URL. */
     url: string
 
     /** The extension that is the subject of the page. */
-    extension: ConfiguredRegistryExtension<GQL.IRegistryExtension>
+    extension: ConfiguredRegistryExtension<GQL.RegistryExtension>
 
     onDidUpdateExtension: () => void
-
-    /** The currently authenticated user. */
-    authenticatedUser: GQL.IUser | null
 }
 
 /**
@@ -231,8 +231,8 @@ export class ExtensionArea extends React.Component<ExtensionAreaProps> {
     private onDidUpdateExtension = (): void => this.refreshRequests.next()
 }
 
-function queryExtension(extensionID: string): Observable<ConfiguredRegistryExtension<GQL.IRegistryExtension>> {
-    return queryGraphQL(
+function queryExtension(extensionID: string): Observable<ConfiguredRegistryExtension<GQL.RegistryExtension>> {
+    return queryGraphQL<RegistryExtensionResult>(
         gql`
             query RegistryExtension($extensionID: String!) {
                 extensionRegistry {

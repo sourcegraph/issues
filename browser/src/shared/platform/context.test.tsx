@@ -20,7 +20,7 @@ describe('Platform Context', () => {
             return expect(
                 requestGraphQL({
                     request: gql`
-                        query ResolveRepo($repoName: String!) {
+                        query ResolveRepoTest($repoName: String!) {
                             repository(name: $repoName) {
                                 url
                             }

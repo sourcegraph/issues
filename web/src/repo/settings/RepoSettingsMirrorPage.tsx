@@ -20,7 +20,7 @@ import { asError } from '../../../../shared/src/util/errors'
 import * as H from 'history'
 
 interface UpdateMirrorRepositoryActionContainerProps {
-    repo: GQL.IRepository
+    repo: GQL.Repository
     onDidUpdateRepository: () => void
     disabled: boolean
     disabledReason: string | undefined
@@ -126,14 +126,14 @@ class UpdateMirrorRepositoryActionContainer extends React.PureComponent<UpdateMi
 }
 
 interface CheckMirrorRepositoryConnectionActionContainerProps {
-    repo: GQL.IRepository
+    repo: GQL.Repository
     onDidUpdateReachability: (reachable: boolean | undefined) => void
     history: H.History
 }
 
 interface CheckMirrorRepositoryConnectionActionContainerState {
     loading: boolean
-    result?: GQL.ICheckMirrorRepositoryConnectionResult | null
+    result?: GQL.CheckMirrorRepositoryConnectionResult | null
     errorDescription?: string
 }
 
@@ -239,8 +239,8 @@ class CheckMirrorRepositoryConnectionActionContainer extends React.PureComponent
 }
 
 interface Props extends RouteComponentProps<{}> {
-    repo: GQL.IRepository
-    onDidUpdateRepository: (update: Partial<GQL.IRepository>) => void
+    repo: GQL.Repository
+    onDidUpdateRepository: (update: Partial<GQL.Repository>) => void
     history: H.History
 }
 
@@ -248,7 +248,7 @@ interface State {
     /**
      * The repository object, refreshed after we make changes that modify it.
      */
-    repo: GQL.IRepository
+    repo: GQL.Repository
 
     /**
      * Whether the repository connection check reports that the repository is reachable.

@@ -4,15 +4,15 @@ import DotsHorizontalIcon from 'mdi-react/DotsHorizontalIcon'
 import FileDocumentIcon from 'mdi-react/FileDocumentIcon'
 import * as React from 'react'
 import { Link } from 'react-router-dom'
-import * as GQL from '../../../../shared/src/graphql/schema'
 import { pluralize } from '../../../../shared/src/util/strings'
 import { Timestamp } from '../../components/time/Timestamp'
 import { Tooltip } from '../../components/tooltip/Tooltip'
 import { eventLogger } from '../../tracking/eventLogger'
 import { GitCommitNodeByline } from './GitCommitNodeByline'
+import { GitCommitFields } from '../../graphql-operations'
 
 export interface GitCommitNodeProps {
-    node: GQL.IGitCommit
+    node: GitCommitFields
 
     /** An optional additional CSS class name to apply to this element. */
     className?: string

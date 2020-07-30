@@ -1,16 +1,16 @@
 import { parseISO } from 'date-fns'
 import React from 'react'
-import * as GQL from '../../../../../shared/src/graphql/schema'
 import { numberWithCommas } from '../../../../../shared/src/util/strings'
 import { ExpirationDate } from '../../productSubscription/ExpirationDate'
+import { ProductSubscriptionPreviewInvoice } from './NewProductSubscriptionPaymentSection'
 
 /**
  * Displays a before/after comparison table of a change to the invoice item of a product
  * subscription.
  */
 export const ProductSubscriptionBeforeAfterInvoiceItem: React.FunctionComponent<{
-    beforeInvoiceItem: GQL.IProductSubscriptionInvoiceItem
-    afterInvoiceItem: GQL.IProductSubscriptionInvoiceItem
+    beforeInvoiceItem: NonNullable<ProductSubscriptionPreviewInvoice['beforeInvoiceItem']>
+    afterInvoiceItem: ProductSubscriptionPreviewInvoice['afterInvoiceItem']
     className?: string
 }> = ({ beforeInvoiceItem, afterInvoiceItem, className = '' }) => {
     const planChanged = beforeInvoiceItem.plan.billingPlanID !== afterInvoiceItem.plan.billingPlanID

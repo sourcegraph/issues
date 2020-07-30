@@ -1,12 +1,12 @@
 import * as React from 'react'
 import { Omit } from 'utility-types'
-import * as GQL from '../../../../shared/src/graphql/schema'
 import { getModeFromPath } from '../../../../shared/src/languages'
 import { ErrorLike, isErrorLike } from '../../../../shared/src/util/errors'
 import { Connection, FilteredConnection } from '../FilteredConnection'
 import { FileDiffNodeProps } from './FileDiffNode'
+import { FileDiffFields } from '../../graphql-operations'
 
-class FilteredFileDiffConnection extends FilteredConnection<GQL.IFileDiff, Omit<FileDiffNodeProps, 'node'>> {}
+class FilteredFileDiffConnection extends FilteredConnection<FileDiffFields, Omit<FileDiffNodeProps, 'node'>> {}
 
 type Props = FilteredFileDiffConnection['props']
 
@@ -18,7 +18,7 @@ export class FileDiffConnection extends React.PureComponent<Props> {
         return <FilteredFileDiffConnection {...this.props} onUpdate={this.onUpdate} />
     }
 
-    private onUpdate = (fileDiffsOrError: Connection<GQL.IFileDiff> | ErrorLike | undefined): void => {
+    private onUpdate = (fileDiffsOrError: Connection<FileDiffFields> | ErrorLike | undefined): void => {
         const nodeProps = this.props.nodeComponentProps!
 
         // TODO(sqs): This reports to extensions that these files are empty. This is wrong, but we don't have any

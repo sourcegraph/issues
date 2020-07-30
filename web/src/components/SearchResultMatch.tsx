@@ -17,7 +17,7 @@ import * as H from 'history'
 import { renderMarkdown } from '../../../shared/src/util/markdown'
 
 interface SearchResultMatchProps extends ThemeProps {
-    item: GQL.ISearchResultMatch
+    item: GQL.SearchResultMatch
     highlightRanges: HighlightRange[]
     history: H.History
 }

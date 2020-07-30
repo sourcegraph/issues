@@ -1,7 +1,7 @@
 import assert from 'assert'
 import expect from 'expect'
 import { commonWebGraphQlResults } from './graphQlResults'
-import { ILanguage, IRepository } from '../../../shared/src/graphql/schema'
+import { Language, Repository } from '../../../shared/src/graphql/schema'
 import { SearchResult } from '../graphql-operations'
 import { Driver, createDriverForTest } from '../../../shared/src/testing/driver'
 import { saveScreenshotsUponFailures } from '../../../shared/src/testing/screenshotReporter'
@@ -98,10 +98,10 @@ describe('Search', () => {
                     search: {
                         suggestions: [
                             // TODO the type generation is not correct for this query which causes the need for these casts
-                            { __typename: 'Language' } as ILanguage,
-                            { __typename: 'Repository', name: 'github.com/gorilla/mux' } as IRepository,
-                            { __typename: 'Repository', name: 'github.com/gorilla/css' } as IRepository,
-                            { __typename: 'Repository', name: 'github.com/gorilla/rpc' } as IRepository,
+                            { __typename: 'Language' } as Language,
+                            { __typename: 'Repository', name: 'github.com/gorilla/mux' } as Repository,
+                            { __typename: 'Repository', name: 'github.com/gorilla/css' } as Repository,
+                            { __typename: 'Repository', name: 'github.com/gorilla/rpc' } as Repository,
                         ],
                     },
                 }),

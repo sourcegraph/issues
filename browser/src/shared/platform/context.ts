@@ -2,9 +2,8 @@ import { combineLatest, Observable, ReplaySubject } from 'rxjs'
 import { map, switchMap, take } from 'rxjs/operators'
 import { PrivateRepoPublicSourcegraphComError } from '../../../../shared/src/backend/errors'
 import { GraphQLResult } from '../../../../shared/src/graphql/graphql'
-import * as GQL from '../../../../shared/src/graphql/schema'
 import { PlatformContext } from '../../../../shared/src/platform/context'
-import { mutateSettings, updateSettings } from '../../../../shared/src/settings/edit'
+import { mutateSettings, updateSettings, fetchViewerSettings } from '../../../../shared/src/settings/edit'
 import { EMPTY_SETTINGS_CASCADE, gqlToCascade } from '../../../../shared/src/settings/settings'
 import { LocalStorageSubject } from '../../../../shared/src/util/LocalStorageSubject'
 import { toPrettyBlobURL } from '../../../../shared/src/util/url'
@@ -14,13 +13,14 @@ import { isInPage } from '../context'
 import { CodeHost } from '../code-hosts/shared/codeHost'
 import { DEFAULT_SOURCEGRAPH_URL, observeSourcegraphURL } from '../util/context'
 import { createExtensionHost } from './extensionHost'
-import { editClientSettings, fetchViewerSettings, mergeCascades, storageSettingsCascade } from './settings'
+import { editClientSettings, mergeCascades, storageSettingsCascade } from './settings'
 import { requestGraphQlHelper } from '../backend/requestGraphQl'
 import { isHTTPAuthError } from '../../../../shared/src/backend/fetch'
 import { asError } from '../../../../shared/src/util/errors'
 import { InlineExtensionsService, shouldUseInlineExtensions } from './inlineExtensionsService'
 import { ModelService } from '../../../../shared/src/api/client/services/modelService'
 import { IExtensionsService, ExtensionsService } from '../../../../shared/src/api/client/services/extensionsService'
+import { SettingsCascadeFields } from '../../../../shared/src/graphql-operations'
 
 export interface SourcegraphIntegrationURLs {
     /**
@@ -56,8 +56,8 @@ export function createPlatformContext(
     { sourcegraphURL, assetsURL }: SourcegraphIntegrationURLs,
     isExtension: boolean
 ): BrowserPlatformContext {
-    const updatedViewerSettings = new ReplaySubject<Pick<GQL.ISettingsCascade, 'subjects' | 'final'>>(1)
-    const requestGraphQL: PlatformContext['requestGraphQL'] = <T extends GQL.IQuery | GQL.IMutation>({
+    const updatedViewerSettings = new ReplaySubject<SettingsCascadeFields>(1)
+    const requestGraphQL: PlatformContext['requestGraphQL'] = <T>({
         request,
         variables,
         mightContainPrivateInfo,

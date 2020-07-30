@@ -14,7 +14,7 @@ export const RegistryPublisherFormGroup: React.FunctionComponent<{
     className?: string
 
     /** The current publisher value. */
-    value?: GQL.ID
+    value?: GQL.Scalars['ID']
 
     /** The viewer's authorized publishers, undefined while loading, or an error. */
     publishersOrError: 'loading' | RegistryPublisher[] | ErrorLike

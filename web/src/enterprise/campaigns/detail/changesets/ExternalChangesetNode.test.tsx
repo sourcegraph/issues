@@ -4,7 +4,7 @@ import { ExternalChangesetNode } from './ExternalChangesetNode'
 import {
     ChangesetReviewState,
     ChangesetState,
-    IExternalChangeset,
+    ExternalChangeset,
     ChangesetCheckState,
     ChangesetExternalState,
 } from '../../../../../../shared/src/graphql/schema'
@@ -71,7 +71,7 @@ describe('ExternalChangesetNode', () => {
                                 url: 'github.com/sourcegraph/sourcegraph',
                             },
                             updatedAt: new Date('2020-01-01').toISOString(),
-                        } as IExternalChangeset
+                        } as ExternalChangeset
                     }
                     campaignUpdates={new Subject<void>()}
                 />

@@ -7,7 +7,7 @@ import { getUser } from './api'
  */
 export async function editUserSettings(
     username: string,
-    edit: GQL.ISettingsEdit,
+    edit: GQL.SettingsEdit,
     graphQLClient: GraphQLClient
 ): Promise<void> {
     const user = await getUser(graphQLClient, username)

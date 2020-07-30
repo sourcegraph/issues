@@ -23,7 +23,7 @@ const NotFoundPage: React.FunctionComponent = () => (
 interface Props
     extends RouteComponentProps<{}>,
         Pick<RepoContainerContext, 'repo' | 'routePrefix' | 'repoHeaderContributionsLifecycleProps'> {
-    repo: GQL.IRepository
+    repo: GQL.Repository
     history: H.History
 }
 
@@ -38,7 +38,7 @@ export interface RepositoryReleasesAreaPageProps {
     /**
      * The active repository.
      */
-    repo: GQL.IRepository
+    repo: GQL.Repository
 }
 
 /**
@@ -64,7 +64,7 @@ export class RepositoryReleasesArea extends React.Component<Props> {
             )
         }
 
-        const transferProps: { repo: GQL.IRepository } = {
+        const transferProps: { repo: GQL.Repository } = {
             repo: this.props.repo,
         }
 

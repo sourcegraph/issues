@@ -7,15 +7,16 @@ import { PageTitle } from '../components/PageTitle'
 import { SettingsArea } from '../settings/SettingsArea'
 import { ThemeProps } from '../../../shared/src/theme'
 import { TelemetryProps } from '../../../shared/src/telemetry/telemetryService'
+import { RequiredAuthProps } from '../auth'
 
 interface Props
     extends RouteComponentProps<{}>,
         PlatformContextProps,
         SettingsCascadeProps,
         ThemeProps,
-        TelemetryProps {
-    authenticatedUser: GQL.IUser
-    site: Pick<GQL.ISite, '__typename' | 'id'>
+        TelemetryProps,
+        RequiredAuthProps {
+    site: Pick<GQL.Site, '__typename' | 'id'>
 }
 
 export const SiteAdminSettingsPage: React.FunctionComponent<Props> = props => (

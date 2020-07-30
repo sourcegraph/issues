@@ -2,11 +2,11 @@ import MapSearchIcon from 'mdi-react/MapSearchIcon'
 import * as React from 'react'
 import { Route, RouteComponentProps, Switch } from 'react-router'
 import { Subject, Subscription } from 'rxjs'
-import * as GQL from '../../../../../shared/src/graphql/schema'
 import { PlatformContextProps } from '../../../../../shared/src/platform/context'
 import { HeroPage } from '../../../components/HeroPage'
 import { ExtensionsAreaRouteContext } from '../../../extensions/ExtensionsArea'
 import { RegistryNewExtensionPage } from './RegistryNewExtensionPage'
+import { OptionalAuthProps } from '../../../auth'
 
 const NotFoundPage: React.FunctionComponent = () => <HeroPage icon={MapSearchIcon} title="404: Not Found" />
 
@@ -15,10 +15,7 @@ interface Props extends RouteComponentProps<{}>, ExtensionsAreaRouteContext {}
 /**
  * Properties passed to all page components in the registry area.
  */
-export interface RegistryAreaPageProps extends PlatformContextProps {
-    /** The currently authenticated user. */
-    authenticatedUser: GQL.IUser | null
-}
+export interface RegistryAreaPageProps extends PlatformContextProps, OptionalAuthProps {}
 
 /**
  * The extension registry area.

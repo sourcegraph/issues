@@ -11,7 +11,7 @@ import { integrationTestContext } from '../../../../../shared/src/api/integratio
 import { PrivateRepoPublicSourcegraphComError } from '../../../../../shared/src/backend/errors'
 import { Controller } from '../../../../../shared/src/extensions/controller'
 import { SuccessGraphQLResult } from '../../../../../shared/src/graphql/graphql'
-import { IQuery } from '../../../../../shared/src/graphql/schema'
+import { Query } from '../../../../../shared/src/graphql/schema'
 import { NOOP_TELEMETRY_SERVICE } from '../../../../../shared/src/telemetry/telemetryService'
 import { resetAllMemoizationCaches } from '../../../../../shared/src/util/memoizeObservable'
 import { isDefined, subtypeOf, allOf, check, isTaggedUnionMember } from '../../../../../shared/src/util/types'
@@ -247,7 +247,7 @@ describe('codeHost', () => {
                                         },
                                     },
                                     errors: undefined,
-                                } as SuccessGraphQLResult<IQuery>),
+                                } as SuccessGraphQLResult<Query>),
                         }),
                     }),
                 })

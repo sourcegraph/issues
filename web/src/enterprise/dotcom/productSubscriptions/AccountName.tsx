@@ -7,7 +7,7 @@ import { userURL } from '../../../user'
  * Displays the account name as a link.
  */
 export const AccountName: React.FunctionComponent<{
-    account: Pick<GQL.IUser, 'username' | 'displayName'> | null
+    account: Pick<GQL.User, 'username' | 'displayName'> | null
     link?: string
 }> = ({ account, link }) =>
     account ? (

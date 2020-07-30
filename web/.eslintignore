@@ -1,2 +1,3 @@
 src/schema/*
+src/graphql-operations.ts
 out/

@@ -21,7 +21,7 @@ interface OrgNodeProps {
     /**
      * The org to display in this list item.
      */
-    node: GQL.IOrg
+    node: GQL.Org
 
     /**
      * Called when the org is updated by an action in this list item.
@@ -119,7 +119,7 @@ interface Props extends RouteComponentProps<{}> {
 }
 
 interface State {
-    orgs?: GQL.IOrg[]
+    orgs?: GQL.Org[]
     totalCount?: number
 }
 
@@ -160,7 +160,7 @@ export class SiteAdminOrgsPage extends React.Component<Props, State> {
                     <Link to="/help/user/organizations">Sourcegraph documentation</Link> for information about
                     configuring organizations.
                 </p>
-                <FilteredConnection<GQL.IOrg, Omit<OrgNodeProps, 'node'>>
+                <FilteredConnection<GQL.Org, Omit<OrgNodeProps, 'node'>>
                     className="list-group list-group-flush mt-3"
                     noun="organization"
                     pluralNoun="organizations"

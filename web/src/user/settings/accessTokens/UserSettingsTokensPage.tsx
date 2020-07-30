@@ -14,13 +14,14 @@ import { eventLogger } from '../../../tracking/eventLogger'
 import { UserAreaRouteContext } from '../../area/UserArea'
 import { FilteredConnection } from '../../../components/FilteredConnection'
 import * as H from 'history'
+import { AccessTokensResult, AccessTokensVariables } from '../../../graphql-operations'
 
 interface Props extends UserAreaRouteContext, RouteComponentProps<{}> {
     /**
      * The newly created token, if any. This component must call onDidPresentNewToken
      * when it is finished presenting the token secret to the user.
      */
-    newToken?: GQL.ICreateAccessTokenResult
+    newToken?: GQL.CreateAccessTokenResult
 
     /**
      * Called when the newly created access token has been presented to the user and may be purged
@@ -73,7 +74,7 @@ export class UserSettingsTokensPage extends React.PureComponent<Props, State> {
                     </Link>
                 </div>
                 <p>Access tokens may be used to access the Sourcegraph API.</p>
-                <FilteredConnection<GQL.IAccessToken, Omit<AccessTokenNodeProps, 'node'>>
+                <FilteredConnection<GQL.AccessToken, Omit<AccessTokenNodeProps, 'node'>>
                     listClassName="list-group list-group-flush"
                     noun="access token"
                     pluralNoun="access tokens"
@@ -90,8 +91,8 @@ export class UserSettingsTokensPage extends React.PureComponent<Props, State> {
         )
     }
 
-    private queryAccessTokens = (args: { first?: number }): Observable<GQL.IAccessTokenConnection> =>
-        queryGraphQL(
+    private queryAccessTokens = (args: Omit<AccessTokensVariables, 'user'>): Observable<GQL.AccessTokenConnection> =>
+        queryGraphQL<AccessTokensResult>(
             gql`
                 query AccessTokens($user: ID!, $first: Int) {
                     node(id: $user) {
@@ -116,7 +117,7 @@ export class UserSettingsTokensPage extends React.PureComponent<Props, State> {
                 if (!data || !data.node) {
                     throw createAggregateError(errors)
                 }
-                const user = data.node as GQL.IUser
+                const user = data.node as GQL.User
                 if (!user.accessTokens) {
                     throw createAggregateError(errors)
                 }

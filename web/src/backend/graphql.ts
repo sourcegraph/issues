@@ -1,6 +1,5 @@
 import { Observable } from 'rxjs'
 import { GraphQLResult, requestGraphQL as requestGraphQLCommon } from '../../../shared/src/graphql/graphql'
-import * as GQL from '../../../shared/src/graphql/schema'
 
 const getHeaders = (): { [header: string]: string } => ({
     ...window.context.xhrHeaders,
@@ -16,7 +15,7 @@ const getHeaders = (): { [header: string]: string } => ({
  * @param variables A key/value object with variable values
  * @returns Observable That emits the result or errors if the HTTP request failed
  */
-export const requestGraphQL = <T extends GQL.IQuery | GQL.IMutation>(
+export const requestGraphQL = <T>(
     request: string,
     variables?: {}
 ): Observable<GraphQLResult<T>> =>
@@ -33,7 +32,7 @@ export const requestGraphQL = <T extends GQL.IQuery | GQL.IMutation>(
  * @param variables A key/value object with variable values
  * @returns Observable That emits the result or errors if the HTTP request failed
  */
-export const queryGraphQL = (request: string, variables?: {}): Observable<GraphQLResult<GQL.IQuery>> =>
+export const queryGraphQL = <T>(request: string, variables?: {}): Observable<GraphQLResult<T>> =>
     requestGraphQLCommon({
         request,
         variables,
@@ -47,7 +46,7 @@ export const queryGraphQL = (request: string, variables?: {}): Observable<GraphQ
  * @param variables A key/value object with variable values
  * @returns Observable That emits the result or errors if the HTTP request failed
  */
-export const mutateGraphQL = (request: string, variables?: {}): Observable<GraphQLResult<GQL.IMutation>> =>
+export const mutateGraphQL = <T>(request: string, variables?: {}): Observable<GraphQLResult<T>> =>
     requestGraphQLCommon({
         request,
         variables,

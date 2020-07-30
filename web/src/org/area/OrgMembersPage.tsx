@@ -16,16 +16,15 @@ import { InviteForm } from '../invite/InviteForm'
 import { OrgAreaPageProps } from './OrgArea'
 import { ErrorAlert } from '../../components/alerts'
 import * as H from 'history'
+import { OrganizationMembersResult } from '../../graphql-operations'
+import { OptionalAuthProps } from '../../auth'
 
-interface UserNodeProps {
+interface UserNodeProps extends OptionalAuthProps {
     /** The user to display in this list item. */
-    node: GQL.IUser
+    node: GQL.User
 
     /** The organization being displayed. */
-    org: GQL.IOrg
-
-    /** The currently authenticated user. */
-    authenticatedUser: GQL.IUser | null
+    org: GQL.Org
 
     /** Called when the user is updated by an action in this list item. */
     onDidUpdate?: () => void
@@ -193,7 +192,7 @@ export class OrgMembersPage extends React.PureComponent<Props, State> {
                         history={this.props.history}
                     />
                 )}
-                <FilteredConnection<GQL.IUser, Omit<UserNodeProps, 'node'>>
+                <FilteredConnection<GQL.User, Omit<UserNodeProps, 'node'>>
                     className="list-group list-group-flush mt-3"
                     noun="member"
                     pluralNoun="members"
@@ -214,8 +213,8 @@ export class OrgMembersPage extends React.PureComponent<Props, State> {
 
     private onDidUpdateOrganizationMembers = (): void => this.userUpdates.next()
 
-    private fetchOrgMembers = (): Observable<GQL.IUserConnection> =>
-        queryGraphQL(
+    private fetchOrgMembers = (): Observable<GQL.UserConnection> =>
+        queryGraphQL<OrganizationMembersResult>(
             gql`
                 query OrganizationMembers($id: ID!) {
                     node(id: $id) {
@@ -241,7 +240,7 @@ export class OrgMembersPage extends React.PureComponent<Props, State> {
                     this.setState({ viewerCanAdminister: false })
                     throw createAggregateError(errors)
                 }
-                const org = data.node as GQL.IOrg
+                const org = data.node as GQL.Org
                 if (!org.members) {
                     this.setState({ viewerCanAdminister: false })
                     throw createAggregateError(errors)

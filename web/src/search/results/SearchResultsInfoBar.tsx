@@ -20,18 +20,17 @@ import { ServerBanner, ServerBannerNoRepo } from '../../marketing/ServerBanner'
 import { PerformanceWarningAlert } from '../../site/PerformanceWarningAlert'
 import { PatternTypeProps } from '..'
 import AlertCircleIcon from 'mdi-react/AlertCircleIcon'
+import { OptionalAuthProps } from '../../auth'
 
 interface SearchResultsInfoBarProps
     extends ExtensionsControllerProps<'executeCommand' | 'services'>,
         PlatformContextProps<'forceUpdateTooltip' | 'settings'>,
         TelemetryProps,
-        PatternTypeProps {
-    /** The currently authenticated user or null */
-    authenticatedUser: GQL.IUser | null
-
+        PatternTypeProps,
+        OptionalAuthProps {
     /** The loaded search results and metadata */
     query?: string
-    results: GQL.ISearchResults
+    results: GQL.SearchResults
     onShowMoreResultsClick: () => void
 
     // Expand all feature

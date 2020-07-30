@@ -15,8 +15,8 @@ import { asError } from '../../../../shared/src/util/errors'
 import * as H from 'history'
 
 interface Props extends RouteComponentProps<{}> {
-    repo: GQL.IRepository
-    onDidUpdateRepository: (update: Partial<GQL.IRepository>) => void
+    repo: GQL.Repository
+    onDidUpdateRepository: (update: Partial<GQL.Repository>) => void
     history: H.History
 }
 
@@ -24,7 +24,7 @@ interface State {
     /**
      * The repository object, refreshed after we make changes that modify it.
      */
-    repo: GQL.IRepository
+    repo: GQL.Repository
 
     loading: boolean
     error?: string

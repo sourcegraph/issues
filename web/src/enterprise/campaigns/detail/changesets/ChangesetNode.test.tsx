@@ -2,7 +2,6 @@ import * as H from 'history'
 import React from 'react'
 import { ChangesetNode } from './ChangesetNode'
 import { Subject } from 'rxjs'
-import { Changeset } from '../../../../../../shared/src/graphql/schema'
 import { shallow } from 'enzyme'
 
 describe('ChangesetNode', () => {
@@ -17,7 +16,7 @@ describe('ChangesetNode', () => {
                     location={location}
                     viewerCanAdminister={false}
                     campaignUpdates={new Subject<void>()}
-                    node={{ __typename: 'ExternalChangeset' } as Changeset}
+                    node={{ __typename: 'ExternalChangeset' } as any}
                 />
             )
         ).toMatchSnapshot()
@@ -31,7 +30,7 @@ describe('ChangesetNode', () => {
                     location={location}
                     viewerCanAdminister={false}
                     campaignUpdates={new Subject<void>()}
-                    node={{ __typename: 'HiddenExternalChangeset' } as Changeset}
+                    node={{ __typename: 'HiddenExternalChangeset' } as any}
                 />
             )
         ).toMatchSnapshot()

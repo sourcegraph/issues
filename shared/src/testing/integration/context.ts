@@ -14,7 +14,7 @@ import * as path from 'path'
 import * as util from 'util'
 import * as prettier from 'prettier'
 import { keyExistsIn } from '../../util/types'
-import { IGraphQLResponseError } from '../../graphql/schema'
+import { GraphQLResponseError } from '../../graphql/schema'
 import { readEnvironmentBoolean } from '../utils'
 import { ResourceType } from 'puppeteer'
 import * as mime from 'mime-types'
@@ -32,7 +32,7 @@ const ASSETS_DIRECTORY = path.resolve(__dirname, '../../../../ui/assets')
 const record = readEnvironmentBoolean({ variable: 'RECORD', defaultValue: false })
 
 export class IntegrationTestGraphQlError extends Error {
-    constructor(public errors: IGraphQLResponseError[]) {
+    constructor(public errors: GraphQLResponseError[]) {
         super('graphql error for integration tests')
     }
 }

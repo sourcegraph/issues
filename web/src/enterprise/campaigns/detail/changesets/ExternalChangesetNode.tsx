@@ -1,11 +1,5 @@
 import { ThemeProps } from '../../../../../../shared/src/theme'
-import {
-    IExternalChangeset,
-    ChangesetCheckState,
-    IRepositoryComparison,
-    GitRevSpec,
-    ChangesetExternalState,
-} from '../../../../../../shared/src/graphql/schema'
+import { ChangesetCheckState, ChangesetExternalState } from '../../../../../../shared/src/graphql/schema'
 import { Observer } from 'rxjs'
 import { Hoverifier } from '@sourcegraph/codeintellify'
 import { RepoSpec, RevisionSpec, FileSpec, ResolvedRevisionSpec } from '../../../../../../shared/src/util/url'
@@ -36,9 +30,10 @@ import { FileDiffConnection } from '../../../../components/diff/FileDiffConnecti
 import { FileDiffNode } from '../../../../components/diff/FileDiffNode'
 import { tap, map } from 'rxjs/operators'
 import { ChangesetStateIcon } from './ChangesetStateIcon'
+import { RepositoryComparisonFields, ChangesetFields } from '../../../../graphql-operations'
 
 export interface ExternalChangesetNodeProps extends ThemeProps {
-    node: IExternalChangeset
+    node: ChangesetFields & { __typename: 'ExternalChangeset' }
     viewerCanAdminister: boolean
     campaignUpdates?: Pick<Observer<void>, 'next'>
     history: H.History
@@ -137,7 +132,7 @@ export const ExternalChangesetNode: React.FunctionComponent<ExternalChangesetNod
         </div>
     )
 
-    const [range, setRange] = useState<IRepositoryComparison['range']>()
+    const [range, setRange] = useState<RepositoryComparisonFields['range']>()
 
     /** Fetches the file diffs for the changeset */
     const queryFileDiffs = useCallback(
@@ -224,7 +219,7 @@ export const ExternalChangesetNode: React.FunctionComponent<ExternalChangesetNod
     )
 }
 
-function commitOIDForGitRevision(revision: GitRevSpec): string {
+function commitOIDForGitRevision(revision: RepositoryComparisonFields['range']['head']): string {
     switch (revision.__typename) {
         case 'GitObject':
             return revision.oid

@@ -1,10 +1,65 @@
-import { from } from 'rxjs'
+import { from, Observable } from 'rxjs'
 import { first, map, switchMap } from 'rxjs/operators'
 import { SettingsEdit } from '../api/client/services/settings'
 import { dataOrThrowErrors, gql } from '../graphql/graphql'
 import * as GQL from '../graphql/schema'
 import { PlatformContext } from '../platform/context'
 import { isErrorLike } from '../util/errors'
+import { ViewerSettingsResult } from '../graphql-operations'
+
+const settingsCascadeFragment = gql`
+    fragment SettingsCascadeFields on SettingsCascade {
+        subjects {
+            __typename
+            id
+            ... on Org {
+                name
+                displayName
+            }
+            ... on User {
+                username
+                displayName
+            }
+            ... on Site {
+                siteID
+            }
+            latestSettings {
+                id
+                contents
+            }
+            settingsURL
+            viewerCanAdminister
+        }
+        final
+    }
+`
+
+/**
+ * Fetches the viewer's settings from the server. Callers should use settingsRefreshes#next instead of calling
+ * this function, to ensure that the result is propagated consistently throughout the app instead of only being
+ * returned to the caller.
+ *
+ * @returns Observable that emits the settings
+ */
+export function fetchViewerSettings(
+    requestGraphQL: PlatformContext['requestGraphQL']
+): Observable<ViewerSettingsResult['viewerSettings']> {
+    return requestGraphQL<ViewerSettingsResult>({
+        request: gql`
+            query ViewerSettings {
+                viewerSettings {
+                    ...SettingsCascadeFields
+                }
+            }
+            ${settingsCascadeFragment}
+        `,
+        mightContainPrivateInfo: false,
+        variables: {},
+    }).pipe(
+        map(dataOrThrowErrors),
+        map(data => data.viewerSettings)
+    )
+}
 
 /**
  * A helper function for performing an update to settings.
@@ -13,13 +68,13 @@ import { isErrorLike } from '../util/errors'
  */
 export function updateSettings(
     { settings, requestGraphQL }: Pick<PlatformContext, 'settings' | 'requestGraphQL'>,
-    subjectToUpdate: GQL.ID,
+    subjectToUpdate: GQL.Scalars['ID'],
     args: SettingsEdit | string,
     applySettingsEdit: (
         { requestGraphQL }: Pick<PlatformContext, 'requestGraphQL'>,
-        subject: GQL.ID,
+        subject: GQL.Scalars['ID'],
         lastID: number | null,
-        edit: GQL.ISettingsEdit | string
+        edit: GQL.SettingsEdit | string
     ) => Promise<void>
 ): Promise<void> {
     return from(settings)
@@ -57,7 +112,7 @@ export function updateSettings(
         .toPromise()
 }
 
-function toGQLKeyPath(keyPath: (string | number)[]): GQL.IKeyPathSegment[] {
+function toGQLKeyPath(keyPath: (string | number)[]): GQL.KeyPathSegment[] {
     return keyPath.map(member => (typeof member === 'string' ? { property: member } : { index: member }))
 }
 
@@ -69,9 +124,9 @@ function toGQLKeyPath(keyPath: (string | number)[]): GQL.IKeyPathSegment[] {
  */
 export function mutateSettings(
     { requestGraphQL }: Pick<PlatformContext, 'requestGraphQL'>,
-    subject: GQL.ID,
+    subject: GQL.Scalars['ID'],
     lastID: number | null,
-    edit: GQL.IConfigurationEdit | string
+    edit: GQL.ConfigurationEdit | string
 ): Promise<void> {
     return typeof edit === 'string'
         ? overwriteSettings({ requestGraphQL }, subject, lastID, edit)
@@ -88,9 +143,9 @@ export function mutateSettings(
  */
 function editSettings(
     { requestGraphQL }: Pick<PlatformContext, 'requestGraphQL'>,
-    subject: GQL.ID,
+    subject: GQL.Scalars['ID'],
     lastID: number | null,
-    edit: GQL.IConfigurationEdit
+    edit: GQL.ConfigurationEdit
 ): Promise<void> {
     return from(
         requestGraphQL({
@@ -126,7 +181,7 @@ function editSettings(
  */
 export function overwriteSettings(
     { requestGraphQL }: Pick<PlatformContext, 'requestGraphQL'>,
-    subject: GQL.ID,
+    subject: GQL.Scalars['ID'],
     lastID: number | null,
     contents: string
 ): Promise<void> {

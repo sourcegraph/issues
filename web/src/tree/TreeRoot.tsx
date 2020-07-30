@@ -16,7 +16,7 @@ import {
 import * as GQL from '../../../shared/src/graphql/schema'
 import { asError, ErrorLike, isErrorLike } from '../../../shared/src/util/errors'
 import { AbsoluteRepo } from '../../../shared/src/util/url'
-import { fetchTreeEntries } from '../repo/backend'
+import { fetchTreeEntries, GitTree } from '../repo/backend'
 import { ChildTreeLayer } from './ChildTreeLayer'
 import { TreeNode } from './Tree'
 import { hasSingleChild, singleChildEntriesToGitTree, SingleChildGitTree } from './util'
@@ -50,7 +50,7 @@ export interface TreeRootProps extends AbsoluteRepo {
 
 const LOADING = 'loading' as const
 interface TreeRootState {
-    treeOrError?: typeof LOADING | GQL.IGitTree | ErrorLike
+    treeOrError?: typeof LOADING | GitTree | ErrorLike
 }
 
 export class TreeRoot extends React.Component<TreeRootProps, TreeRootState> {

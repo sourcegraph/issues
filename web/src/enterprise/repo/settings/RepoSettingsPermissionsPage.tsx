@@ -10,7 +10,7 @@ import { ActionContainer } from '../../../repo/settings/components/ActionContain
 /**
  * The repository settings permissions page.
  */
-export const RepoSettingsPermissionsPage: React.FunctionComponent<{ repo: GQL.IRepository; history: H.History }> = ({
+export const RepoSettingsPermissionsPage: React.FunctionComponent<{ repo: GQL.Repository; history: H.History }> = ({
     repo,
     history,
 }) => {
@@ -64,7 +64,7 @@ export const RepoSettingsPermissionsPage: React.FunctionComponent<{ repo: GQL.IR
 }
 
 interface ScheduleRepositoryPermissionsSyncActionContainerProps {
-    repo: GQL.IRepository
+    repo: GQL.Repository
     history: H.History
 }
 

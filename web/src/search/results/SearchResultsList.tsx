@@ -32,8 +32,9 @@ import { SearchResultsInfoBar } from './SearchResultsInfoBar'
 import { ErrorAlert } from '../../components/alerts'
 import { VersionContextProps } from '../../../../shared/src/search/util'
 import { DeployType } from '../../jscontext'
+import { OptionalAuthProps } from '../../auth'
 
-const isSearchResults = (value: unknown): value is GQL.ISearchResults =>
+const isSearchResults = (value: unknown): value is GQL.SearchResults =>
     typeof value === 'object' &&
     value !== null &&
     hasProperty('__typename')(value) &&
@@ -48,15 +49,15 @@ export interface SearchResultsListProps
         PatternTypeProps,
         CaseSensitivityProps,
         InteractiveSearchProps,
-        VersionContextProps {
+        VersionContextProps,
+        OptionalAuthProps {
     location: H.Location
     history: H.History
-    authenticatedUser: GQL.IUser | null
     isSourcegraphDotCom: boolean
     deployType: DeployType
 
     // Result list
-    resultsOrError?: GQL.ISearchResults | ErrorLike
+    resultsOrError?: GQL.SearchResults | ErrorLike
     onShowMoreResultsClick: () => void
 
     // Expand all feature
@@ -254,10 +255,10 @@ export class SearchResultsList extends React.PureComponent<SearchResultsListProp
                     distinctUntilChanged((a, b) => isEqual(a, b)),
                     map(({ resultsOrError }) => resultsOrError),
                     filter(isDefined),
-                    filter((resultsOrError): resultsOrError is GQL.ISearchResults => !isErrorLike(resultsOrError)),
+                    filter((resultsOrError): resultsOrError is GQL.SearchResults => !isErrorLike(resultsOrError)),
                     map(({ results }) => results),
-                    map((results): GQL.IFileMatch[] =>
-                        results.filter((result): result is GQL.IFileMatch => result.__typename === 'FileMatch')
+                    map((results): GQL.FileMatch[] =>
+                        results.filter((result): result is GQL.FileMatch => result.__typename === 'FileMatch')
                     )
                 )
                 .subscribe(fileMatches => {
@@ -508,7 +509,7 @@ export class SearchResultsList extends React.PureComponent<SearchResultsListProp
         )
     }
 
-    private renderResult(result: GQL.GenericSearchResultInterface | GQL.IFileMatch): JSX.Element | undefined {
+    private renderResult(result: GQL.GenericSearchResultInterface | GQL.FileMatch): JSX.Element | undefined {
         switch (result.__typename) {
             case 'FileMatch':
                 return (

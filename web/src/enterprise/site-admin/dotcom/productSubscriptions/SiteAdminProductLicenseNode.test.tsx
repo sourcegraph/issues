@@ -29,8 +29,8 @@ describe('SiteAdminProductLicenseNode', () => {
                                         name: 's',
                                         activeLicense: { id: 'l1' },
                                         urlForSiteAdmin: '/s',
-                                    } as GQL.IProductSubscription,
-                                } as GQL.IProductLicense
+                                    } as GQL.ProductSubscription,
+                                } as GQL.ProductLicense
                             }
                             showSubscription={true}
                         />
@@ -62,8 +62,8 @@ describe('SiteAdminProductLicenseNode', () => {
                                         name: 's',
                                         activeLicense: { id: 'l0' },
                                         urlForSiteAdmin: '/s',
-                                    } as GQL.IProductSubscription,
-                                } as GQL.IProductLicense
+                                    } as GQL.ProductSubscription,
+                                } as GQL.ProductLicense
                             }
                             showSubscription={true}
                         />

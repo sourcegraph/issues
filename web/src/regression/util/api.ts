@@ -213,7 +213,7 @@ export function getExternalServices(
         kind?: GQL.ExternalServiceKind
         uniqueDisplayName?: string
     } = {}
-): Promise<GQL.IExternalService[]> {
+): Promise<GQL.ExternalService[]> {
     return gqlClient
         .queryGraphQL(
             gql`
@@ -248,7 +248,7 @@ export function getExternalServices(
 
 export async function updateExternalService(
     gqlClient: GraphQLClient,
-    input: GQL.IUpdateExternalServiceInput
+    input: GQL.UpdateExternalServiceInput
 ): Promise<void> {
     await gqlClient
         .mutateGraphQL(
@@ -299,7 +299,7 @@ export async function ensureTestExternalService(
     }
 
     // Add a new external service if one doesn't already exist.
-    const input: GQL.IAddExternalServiceInput = {
+    const input: GQL.AddExternalServiceInput = {
         kind: externalServiceOptions.kind,
         displayName: externalServiceOptions.uniqueDisplayName,
         config: JSON.stringify(externalServiceOptions.config),
@@ -322,7 +322,7 @@ export async function deleteUser(
     username: string,
     mustAlreadyExist: boolean = true
 ): Promise<void> {
-    let user: GQL.IUser | null
+    let user: GQL.User | null
     try {
         user = await getUser({ requestGraphQL }, username)
     } catch (error) {
@@ -341,7 +341,7 @@ export async function deleteUser(
         }
     }
 
-    await requestGraphQL<GQL.IMutation>({
+    await requestGraphQL<any>({
         request: gql`
             mutation DeleteUser($user: ID!, $hard: Boolean) {
                 deleteUser(user: $user, hard: $hard) {
@@ -358,7 +358,11 @@ export async function deleteUser(
  * TODO(beyang): remove this after the corresponding API in the main code has been updated to use a
  * dependency-injected `requestGraphQL`.
  */
-export async function setUserSiteAdmin(gqlClient: GraphQLClient, userID: GQL.ID, siteAdmin: boolean): Promise<void> {
+export async function setUserSiteAdmin(
+    gqlClient: GraphQLClient,
+    userID: GQL.Scalars['ID'],
+    siteAdmin: boolean
+): Promise<void> {
     await gqlClient
         .mutateGraphQL(
             gql`
@@ -429,10 +433,8 @@ export async function setUserEmailVerified(
  * TODO(beyang): remove this after the corresponding API in the main code has been updated to use a
  * dependency-injected `requestGraphQL`.
  */
-export function getViewerSettings({
-    requestGraphQL,
-}: Pick<PlatformContext, 'requestGraphQL'>): Promise<GQL.ISettingsCascade> {
-    return requestGraphQL<GQL.IQuery>({
+export function getViewerSettings({ requestGraphQL }: Pick<PlatformContext, 'requestGraphQL'>): Promise<any> {
+    return requestGraphQL<any>({
         request: gql`
             query ViewerSettings {
                 viewerSettings {
@@ -483,9 +485,9 @@ export function getViewerSettings({
  */
 export function deleteOrganization(
     { requestGraphQL }: Pick<PlatformContext, 'requestGraphQL'>,
-    organization: GQL.ID
+    organization: GQL.Scalars['ID']
 ): Observable<void> {
-    return requestGraphQL<GQL.IMutation>({
+    return requestGraphQL<any>({
         request: gql`
             mutation DeleteOrganization($organization: ID!) {
                 deleteOrganization(organization: $organization) {
@@ -512,8 +514,8 @@ export function deleteOrganization(
 export function fetchAllOrganizations(
     { requestGraphQL }: Pick<PlatformContext, 'requestGraphQL'>,
     args: { first?: number; query?: string }
-): Observable<GQL.IOrgConnection> {
-    return requestGraphQL<GQL.IQuery>({
+): Observable<GQL.OrgConnection> {
+    return requestGraphQL<any>({
         request: gql`
             query Organizations($first: Int, $query: String) {
                 organizations(first: $first, query: $query) {
@@ -563,8 +565,8 @@ export function createOrganization(
         /** The new organization's display name (e.g. full name) in the organization profile. */
         displayName?: string
     }
-): Observable<GQL.IOrg> {
-    return requestGraphQL<GQL.IMutation>({
+): Observable<GQL.Org> {
+    return requestGraphQL<any>({
         request: gql`
             mutation createOrganization($name: String!, $displayName: String) {
                 createOrganization(name: $name, displayName: $displayName) {
@@ -595,8 +597,8 @@ export function createUser(
     { requestGraphQL }: Pick<PlatformContext, 'requestGraphQL'>,
     username: string,
     email: string | undefined
-): Observable<GQL.ICreateUserResult> {
-    return requestGraphQL<GQL.IMutation>({
+): Observable<GQL.CreateUserResult> {
+    return requestGraphQL<any>({
         request: gql`
             mutation CreateUser($username: String!, $email: String) {
                 createUser(username: $username, email: $email) {
@@ -619,8 +621,8 @@ export function createUser(
 export async function getUser(
     { requestGraphQL }: Pick<PlatformContext, 'requestGraphQL'>,
     username: string
-): Promise<GQL.IUser | null> {
-    const user = await requestGraphQL<GQL.IQuery>({
+): Promise<GQL.User | null> {
+    const user = await requestGraphQL<any>({
         request: gql`
             query User($username: String!) {
                 user(username: $username) {
@@ -672,13 +674,13 @@ export async function getUser(
  * dependency-injected `requestGraphQL`.
  */
 export function addExternalService(
-    input: GQL.IAddExternalServiceInput,
+    input: GQL.AddExternalServiceInput,
     {
         eventLogger = { log: () => undefined },
         requestGraphQL,
     }: Pick<PlatformContext, 'requestGraphQL'> & { eventLogger: EventLogger }
-): Observable<GQL.IExternalService> {
-    return requestGraphQL<GQL.IMutation>({
+): Observable<GQL.ExternalService> {
+    return requestGraphQL<any>({
         request: gql`
             mutation addExternalService($input: AddExternalServiceInput!) {
                 addExternalService(input: $input) {
@@ -731,8 +733,8 @@ export function search(
     query: string,
     version: string,
     patternType: GQL.SearchPatternType
-): Promise<GQL.ISearch> {
-    return requestGraphQL<GQL.IQuery>({
+): Promise<GQL.Search> {
+    return requestGraphQL<any>({
         request: gql`
         query Search($query: String!, $version: SearchVersion!, $patternType: SearchPatternType!) {
             search(query: $query, version: $version, patternType: $patternType) {
@@ -830,8 +832,8 @@ export function search(
  */
 export function fetchSiteConfiguration({
     requestGraphQL,
-}: Pick<PlatformContext, 'requestGraphQL'>): Observable<GQL.ISite> {
-    return requestGraphQL<GQL.IQuery>({
+}: Pick<PlatformContext, 'requestGraphQL'>): Observable<GQL.Site> {
+    return requestGraphQL<any>({
         request: gql`
             query Site {
                 site {
@@ -863,7 +865,7 @@ export function updateSiteConfiguration(
     lastID: number,
     input: string
 ): Observable<boolean> {
-    return requestGraphQL<GQL.IMutation>({
+    return requestGraphQL<any>({
         request: gql`
             mutation UpdateSiteConfiguration($lastID: Int!, $input: String!) {
                 updateSiteConfiguration(lastID: $lastID, input: $input)

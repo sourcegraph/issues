@@ -16,7 +16,7 @@ export const resolveRawRepoName = memoizeObservable(
         repoName,
     }: Pick<RepoSpec, 'repoName'> & Pick<PlatformContext, 'requestGraphQL'>): Observable<string> =>
         from(
-            requestGraphQL<GQL.IQuery>({
+            requestGraphQL<GQL.Query>({
                 request: gql`
                     query ResolveRawRepoName($repoName: String!) {
                         repository(name: $repoName) {

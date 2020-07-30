@@ -11,7 +11,7 @@ import { fetchCampaignById } from './backend'
 import { useError } from '../../../../../shared/src/util/useObservable'
 import * as H from 'history'
 import { CampaignBurndownChart } from './BurndownChart'
-import { Subject, of, merge, Observable } from 'rxjs'
+import { Subject, of, merge } from 'rxjs'
 import { renderMarkdown } from '../../../../../shared/src/util/markdown'
 import { Markdown } from '../../../../../shared/src/components/Markdown'
 import { switchMap, distinctUntilChanged, repeatWhen, delay } from 'rxjs/operators'
@@ -22,19 +22,20 @@ import { pluralize } from '../../../../../shared/src/util/strings'
 import { ExtensionsControllerProps } from '../../../../../shared/src/extensions/controller'
 import { PlatformContextProps } from '../../../../../shared/src/platform/context'
 import { TelemetryProps } from '../../../../../shared/src/telemetry/telemetryService'
+import { CampaignFields } from '../../../graphql-operations'
 
 interface Props extends ThemeProps, ExtensionsControllerProps, PlatformContextProps, TelemetryProps {
     /**
      * The campaign ID.
      * If not given, will display a creation form.
      */
-    campaignID?: GQL.ID
-    authenticatedUser: Pick<GQL.IUser, 'id' | 'username' | 'avatarURL'>
+    campaignID?: GQL.Scalars['ID']
+    authenticatedUser: Pick<GQL.User, 'id' | 'username' | 'avatarURL'>
     history: H.History
     location: H.Location
 
     /** For testing only. */
-    _fetchCampaignById?: typeof fetchCampaignById | ((campaign: GQL.ID) => Observable<GQL.ICampaign | null>)
+    _fetchCampaignById?: typeof fetchCampaignById
 }
 
 /**
@@ -59,7 +60,7 @@ export const CampaignDetails: React.FunctionComponent<Props> = ({
     /** Retrigger changeset fetching */
     const changesetUpdates = useMemo(() => new Subject<void>(), [])
 
-    const [campaign, setCampaign] = useState<GQL.ICampaign | null>()
+    const [campaign, setCampaign] = useState<CampaignFields | null>()
 
     useEffect(() => {
         telemetryService.logViewEvent(campaignID ? 'CampaignDetailsPage' : 'NewCampaignPage')

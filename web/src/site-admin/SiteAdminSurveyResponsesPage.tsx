@@ -22,7 +22,7 @@ interface SurveyResponseNodeProps {
     /**
      * The survey response to display in this list item.
      */
-    node: GQL.ISurveyResponse
+    node: GQL.SurveyResponse
 }
 
 interface SurveyResponseNodeState {}
@@ -85,7 +85,7 @@ class SurveyResponseNode extends React.PureComponent<SurveyResponseNodeProps, Su
     }
 }
 
-const UserSurveyResponsesHeader: React.FunctionComponent<{ nodes: GQL.IUser[] }> = () => (
+const UserSurveyResponsesHeader: React.FunctionComponent<{ nodes: GQL.User[] }> = () => (
     <thead>
         <tr>
             <th>User</th>
@@ -100,7 +100,7 @@ interface UserSurveyResponseNodeProps {
     /**
      * The survey response to display in this list item.
      */
-    node: GQL.IUser
+    node: GQL.User
 }
 
 interface UserSurveyResponseNodeState {
@@ -258,8 +258,8 @@ type surveyResultsDisplays = 'chronological' | 'by-user'
 
 interface State {}
 
-class FilteredSurveyResponseConnection extends FilteredConnection<GQL.ISurveyResponse, {}> {}
-class FilteredUserSurveyResponseConnection extends FilteredConnection<GQL.IUser, {}> {}
+class FilteredSurveyResponseConnection extends FilteredConnection<GQL.SurveyResponse, {}> {}
+class FilteredUserSurveyResponseConnection extends FilteredConnection<GQL.User, {}> {}
 
 /**
  * A page displaying the survey responses on this site.

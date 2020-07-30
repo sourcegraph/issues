@@ -33,8 +33,8 @@ export enum PaymentValidity {
  */
 export interface ProductSubscriptionFormData {
     /** The customer account (user) owning the product subscription. */
-    accountID: GQL.ID
-    productSubscription: GQL.IProductSubscriptionInput
+    accountID: GQL.Scalars['ID']
+    productSubscription: GQL.ProductSubscriptionInput
     paymentToken: string | null
 }
 
@@ -45,19 +45,19 @@ interface Props extends ThemeProps {
      * The ID of the account associated with the subscription, or null if there is none (in which case this form
      * can only be used to price out a subscription, not to buy).
      */
-    accountID: GQL.ID | null
+    accountID: GQL.Scalars['ID'] | null
 
     /**
      * The existing product subscription to edit, if this form is editing an existing subscription,
      * or null if this is a new subscription.
      */
-    subscriptionID: GQL.ID | null
+    subscriptionID: GQL.Scalars['ID'] | null
 
     /** Called when the user submits the form (to buy or update the subscription). */
     onSubmit: (args: ProductSubscriptionFormData) => void
 
     /** The initial value of the form. */
-    initialValue?: GQL.IProductSubscriptionInput
+    initialValue?: GQL.ProductSubscriptionInput
 
     /**
      * The state of the form submission (the operation triggered by onSubmit): undefined when it
@@ -185,7 +185,7 @@ const _ProductSubscriptionForm: React.FunctionComponent<Props & ReactStripeEleme
             (paymentToken && !isErrorLike(paymentToken))
     )
 
-    const productSubscriptionInput = useMemo<GQL.IProductSubscriptionInput | null>(
+    const productSubscriptionInput = useMemo<GQL.ProductSubscriptionInput | null>(
         () =>
             billingPlanID !== null && userCount !== null
                 ? {

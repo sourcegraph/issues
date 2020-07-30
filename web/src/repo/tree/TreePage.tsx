@@ -43,6 +43,7 @@ import { getViewsForContainer } from '../../../../shared/src/api/client/services
 import { Settings } from '../../schema/settings.schema'
 import { ViewGrid } from './ViewGrid'
 import { VersionContextProps } from '../../../../shared/src/search/util'
+import { TreeCommitsResult } from '../../graphql-operations'
 
 const TreeEntry: React.FunctionComponent<{
     isDir: boolean
@@ -76,7 +77,7 @@ const MIN_ENTRIES_FOR_COLUMN_LAYOUT = 6
 const TreeEntriesSection: React.FunctionComponent<{
     title: string
     parentPath: string
-    entries: Pick<GQL.ITreeEntry, 'name' | 'isDirectory' | 'url'>[]
+    entries: Pick<GQL.TreeEntry, 'name' | 'isDirectory' | 'url'>[]
 }> = ({ title, parentPath, entries }) =>
     entries.length > 0 ? (
         <section className="tree-page__section test-tree-entries">
@@ -97,13 +98,13 @@ const TreeEntriesSection: React.FunctionComponent<{
 
 const fetchTreeCommits = memoizeObservable(
     (args: {
-        repo: GQL.ID
+        repo: GQL.Scalars['ID']
         revspec: string
         first?: number
         filePath?: string
         after?: string
-    }): Observable<GQL.IGitCommitConnection> =>
-        queryGraphQL(
+    }): Observable<GQL.GitCommitConnection> =>
+        queryGraphQL<TreeCommitsResult>(
             gql`
                 query TreeCommits($repo: ID!, $revspec: String!, $first: Int, $filePath: String, $after: String) {
                     node(id: $repo) {
@@ -155,7 +156,7 @@ interface Props
         CopyQueryButtonProps,
         VersionContextProps {
     repoName: string
-    repoID: GQL.ID
+    repoID: GQL.Scalars['ID']
     repoDescription: string
     /** The tree's path in TreePage. We call it filePath for consistency elsewhere. */
     filePath: string
@@ -264,7 +265,7 @@ export const TreePage: React.FunctionComponent<Props> = ({
     }
 
     const queryCommits = useCallback(
-        (args: { first?: number }): Observable<GQL.IGitCommitConnection> => {
+        (args: { first?: number }): Observable<GQL.GitCommitConnection> => {
             const after: string | undefined = showOlderCommits ? undefined : formatISO(subYears(Date.now(), 1))
             return fetchTreeCommits({
                 ...args,
@@ -400,7 +401,7 @@ export const TreePage: React.FunctionComponent<Props> = ({
                     {/* eslint-enable react/jsx-no-bind */}
                     <div className="tree-page__section">
                         <h3 className="tree-page__section-header">Changes</h3>
-                        <FilteredConnection<GQL.IGitCommit, Pick<GitCommitNodeProps, 'className' | 'compact'>>
+                        <FilteredConnection<GQL.GitCommit, Pick<GitCommitNodeProps, 'className' | 'compact'>>
                             location={props.location}
                             className="mt-2 tree-page__section--commits"
                             listClassName="list-group list-group-flush"

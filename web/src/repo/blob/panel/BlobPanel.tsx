@@ -20,6 +20,7 @@ import { AbsoluteRepoFile, ModeSpec, parseHash, UIPositionSpec } from '../../../
 import { RepoHeaderContributionsLifecycleProps } from '../../RepoHeader'
 import { RepoRevisionSidebarCommits } from '../../RepoRevisionSidebarCommits'
 import { ThemeProps } from '../../../../../shared/src/theme'
+import { OptionalAuthProps } from '../../../auth'
 
 interface Props
     extends AbsoluteRepoFile,
@@ -30,13 +31,13 @@ interface Props
         PlatformContextProps,
         ExtensionsControllerProps,
         ThemeProps,
+        OptionalAuthProps,
         ActivationProps {
     location: H.Location
     history: H.History
-    repoID: GQL.ID
+    repoID: GQL.Scalars['ID']
     repoName: string
     commitID: string
-    authenticatedUser: GQL.IUser | null
 }
 
 export type BlobPanelTabID = 'info' | 'def' | 'references' | 'impl' | 'typedef' | 'history'

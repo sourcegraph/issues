@@ -16,9 +16,14 @@ import { SiteAdminAlert } from '../../../site-admin/SiteAdminAlert'
 import { eventLogger } from '../../../tracking/eventLogger'
 import { UserAreaRouteContext } from '../../area/UserArea'
 import { ErrorAlert } from '../../../components/alerts'
+import { CreateAccessTokenResult } from '../../../graphql-operations'
 
-function createAccessToken(user: GQL.ID, scopes: string[], note: string): Observable<GQL.ICreateAccessTokenResult> {
-    return mutateGraphQL(
+function createAccessToken(
+    user: GQL.Scalars['ID'],
+    scopes: string[],
+    note: string
+): Observable<CreateAccessTokenResult['createAccessToken']> {
+    return mutateGraphQL<CreateAccessTokenResult>(
         gql`
             mutation CreateAccessToken($user: ID!, $scopes: [String!]!, $note: String!) {
                 createAccessToken(user: $user, scopes: $scopes, note: $note) {
@@ -42,7 +47,7 @@ function createAccessToken(user: GQL.ID, scopes: string[], note: string): Observ
 
 interface Props extends UserAreaRouteContext, RouteComponentProps<{}> {
     /** Called when a new access token is created and should be temporarily displayed to the user. */
-    onDidCreateAccessToken: (result: GQL.ICreateAccessTokenResult) => void
+    onDidCreateAccessToken: (result: CreateAccessTokenResult['createAccessToken']) => void
 }
 
 interface State {
@@ -52,7 +57,7 @@ interface State {
     /** The selected scopes checkboxes. */
     scopes: string[]
 
-    creationOrError?: 'loading' | GQL.ICreateAccessTokenResult | ErrorLike
+    creationOrError?: 'loading' | CreateAccessTokenResult['createAccessToken'] | ErrorLike
 }
 
 /**

@@ -14,9 +14,10 @@ import { ThemeProps } from '../../../../shared/src/theme'
 import { ExtensionsControllerProps } from '../../../../shared/src/extensions/controller'
 import ChevronRightIcon from 'mdi-react/ChevronRightIcon'
 import classNames from 'classnames'
+import { FileDiffFields } from '../../graphql-operations'
 
 export interface FileDiffNodeProps extends ThemeProps {
-    node: GQL.IFileDiff
+    node: FileDiffFields
     lineNumbers: boolean
     className?: string
     location: H.Location
@@ -24,10 +25,10 @@ export interface FileDiffNodeProps extends ThemeProps {
 
     extensionInfo?: {
         /** The base repository and revision. */
-        base: RepoSpec & RevisionSpec & ResolvedRevisionSpec & { repoID: GQL.ID }
+        base: RepoSpec & RevisionSpec & ResolvedRevisionSpec & { repoID: GQL.Scalars['ID'] }
 
         /** The head repository and revision. */
-        head: RepoSpec & RevisionSpec & ResolvedRevisionSpec & { repoID: GQL.ID }
+        head: RepoSpec & RevisionSpec & ResolvedRevisionSpec & { repoID: GQL.Scalars['ID'] }
 
         hoverifier: Hoverifier<RepoSpec & RevisionSpec & FileSpec & ResolvedRevisionSpec, HoverMerged, ActionItemAction>
     } & ExtensionsControllerProps

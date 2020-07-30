@@ -70,9 +70,9 @@ describe('CampaignDetails', () => {
                     name: 'n',
                     description: 'd',
                     // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
-                    author: { username: 'alice' } as GQL.IUser,
+                    author: { username: 'alice' } as GQL.User,
                     changesets: { totalCount: 2, stats: { total: 10, closed: 0, merged: 0 } },
-                    changesetCountsOverTime: [] as GQL.IChangesetCounts[],
+                    changesetCountsOverTime: [] as GQL.ChangesetCounts[],
                     viewerCanAdminister,
                     hasUnpublishedPatches: false,
                     branch: 'awesome-branch',
@@ -85,7 +85,7 @@ describe('CampaignDetails', () => {
                         changed: 3,
                         deleted: 2,
                     },
-                } as any) as GQL.ICampaign)
+                } as any) as GQL.Campaign)
             }
         />
     )

@@ -12,10 +12,10 @@ import { accessTokenFragment, AccessTokenNode, AccessTokenNodeProps } from '../s
 import { eventLogger } from '../tracking/eventLogger'
 import { LinkOrSpan } from '../../../shared/src/components/LinkOrSpan'
 import { FilteredConnection } from '../components/FilteredConnection'
+import { SiteAdminAccessTokensResult } from '../graphql-operations'
+import { RequiredAuthProps } from '../auth'
 
-interface Props extends RouteComponentProps<{}> {
-    authenticatedUser: GQL.IUser
-}
+interface Props extends RouteComponentProps<{}>, RequiredAuthProps {}
 
 interface State {}
 
@@ -53,7 +53,7 @@ export class SiteAdminTokensPage extends React.PureComponent<Props, State> {
                     </LinkOrSpan>
                 </div>
                 <p>Tokens may be used to access the Sourcegraph API with the full privileges of the token's creator.</p>
-                <FilteredConnection<GQL.IAccessToken, Omit<AccessTokenNodeProps, 'node'>>
+                <FilteredConnection<GQL.AccessToken, Omit<AccessTokenNodeProps, 'node'>>
                     className="list-group list-group-flush mt-3"
                     noun="access token"
                     pluralNoun="access tokens"
@@ -70,8 +70,8 @@ export class SiteAdminTokensPage extends React.PureComponent<Props, State> {
         )
     }
 
-    private queryAccessTokens = (args: { first?: number }): Observable<GQL.IAccessTokenConnection> =>
-        queryGraphQL(
+    private queryAccessTokens = (args: { first?: number }): Observable<GQL.AccessTokenConnection> =>
+        queryGraphQL<SiteAdminAccessTokensResult>(
             gql`
                 query SiteAdminAccessTokens($first: Int) {
                     site {

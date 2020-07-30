@@ -1,11 +1,11 @@
 import EmoticonIcon from 'mdi-react/EmoticonIcon'
 import * as React from 'react'
 import { Link } from 'react-router-dom'
-import * as GQL from '../../../shared/src/graphql/schema'
 import { eventLogger } from '../tracking/eventLogger'
 import { Toast } from './Toast'
 import { daysActiveCount } from './util'
 import { range } from 'lodash'
+import { OptionalAuthProps } from '../auth'
 
 const HAS_DISMISSED_TOAST_KEY = 'has-dismissed-survey-toast'
 
@@ -49,9 +49,7 @@ export class SurveyCTA extends React.PureComponent<SurveyCTAProps> {
     }
 }
 
-interface Props {
-    authenticatedUser: GQL.IUser | null
-}
+interface Props extends OptionalAuthProps {}
 
 interface State {
     visible: boolean

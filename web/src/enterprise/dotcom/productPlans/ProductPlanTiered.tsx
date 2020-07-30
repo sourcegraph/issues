@@ -1,9 +1,10 @@
 import React from 'react'
 import * as GQL from '../../../../../shared/src/graphql/schema'
+import { ProductPlan } from './backend'
 
 /** Displays the price of a tiered plan. */
 export const ProductPlanTiered: React.FunctionComponent<{
-    plan: Pick<GQL.IProductPlan, 'planTiers' | 'tiersMode' | 'minQuantity'>
+    plan: Pick<ProductPlan, 'planTiers' | 'tiersMode' | 'minQuantity'>
 }> = ({ plan: { planTiers, tiersMode, minQuantity } }) => (
     <>
         {planTiers.map((tier, index) => (
@@ -14,7 +15,7 @@ export const ProductPlanTiered: React.FunctionComponent<{
     </>
 )
 
-function formatAmountForTier(tier: GQL.IPlanTier, minQuantity: number | null): string {
+function formatAmountForTier(tier: Omit<GQL.PlanTier, '__typename'>, minQuantity: number | null): string {
     if (minQuantity !== null && tier.upTo !== 0 && tier.upTo <= minQuantity) {
         const amount = tier.flatAmount
             ? tier.flatAmount / 100
@@ -41,7 +42,11 @@ function formatAmountForTier(tier: GQL.IPlanTier, minQuantity: number | null): s
     return `${amount}/user/month`
 }
 
-function formatLabelForTier(tier: GQL.IPlanTier, tiersMode: string, previousTier?: GQL.IPlanTier): string {
+function formatLabelForTier(
+    tier: Omit<GQL.PlanTier, '__typename'>,
+    tiersMode: string,
+    previousTier?: GQL.PlanTier
+): string {
     if (tiersMode === 'volume') {
         if (!previousTier) {
             return `for 1–${tier.upTo} users`

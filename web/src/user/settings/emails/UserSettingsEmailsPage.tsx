@@ -17,10 +17,11 @@ import { setUserEmailVerified } from '../backend'
 import { AddUserEmailForm } from './AddUserEmailForm'
 import { ErrorAlert } from '../../../components/alerts'
 import * as H from 'history'
+import { UserEmailsResult, RemoveUserEmailResult } from '../../../graphql-operations'
 
 interface UserEmailNodeProps {
-    node: GQL.IUserEmail
-    user: GQL.IUser
+    node: GQL.UserEmail
+    user: GQL.User
 
     onDidUpdate: () => void
     history: H.History
@@ -92,7 +93,7 @@ class UserEmailNode extends React.PureComponent<UserEmailNodeProps, UserEmailNod
             loading: true,
         })
 
-        mutateGraphQL(
+        mutateGraphQL<RemoveUserEmailResult>(
             gql`
                 mutation RemoveUserEmail($user: ID!, $email: String!) {
                     removeUserEmail(user: $user, email: $email) {
@@ -150,7 +151,7 @@ class UserEmailNode extends React.PureComponent<UserEmailNodeProps, UserEmailNod
 }
 
 interface Props extends RouteComponentProps<{}> {
-    user: GQL.IUser
+    user: GQL.User
     history: H.History
 }
 
@@ -160,7 +161,7 @@ interface State {
 
 /** We fake a XyzConnection type because our GraphQL API doesn't have one (or need one) for user emails. */
 interface UserEmailConnection {
-    nodes: GQL.IUserEmail[]
+    nodes: GQL.UserEmail[]
     totalCount: number
 }
 
@@ -197,7 +198,7 @@ export class UserSettingsEmailsPage extends React.Component<Props, State> {
                         manually verified by a site admin.
                     </div>
                 )}
-                <FilteredConnection<GQL.IUserEmail, Omit<UserEmailNodeProps, 'node'>>
+                <FilteredConnection<GQL.UserEmail, Omit<UserEmailNodeProps, 'node'>>
                     className="list-group list-group-flush mt-3"
                     noun="email address"
                     pluralNoun="email addresses"
@@ -221,7 +222,7 @@ export class UserSettingsEmailsPage extends React.Component<Props, State> {
     }
 
     private queryUserEmails = (): Observable<UserEmailConnection> =>
-        queryGraphQL(
+        queryGraphQL<UserEmailsResult>(
             gql`
                 query UserEmails($user: ID!) {
                     node(id: $user) {
@@ -243,7 +244,7 @@ export class UserSettingsEmailsPage extends React.Component<Props, State> {
                 if (!data || !data.node) {
                     throw createAggregateError(errors)
                 }
-                const user = data.node as GQL.IUser
+                const user = data.node as GQL.User
                 if (!user.emails) {
                     throw createAggregateError(errors)
                 }

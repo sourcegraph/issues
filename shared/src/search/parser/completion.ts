@@ -1,10 +1,11 @@
+/* eslint-disable @typescript-eslint/ban-types */
 import * as Monaco from 'monaco-editor'
 import { escapeRegExp, startCase } from 'lodash'
 import { FILTERS, resolveFilter } from './filters'
 import { Sequence, toMonacoRange } from './parser'
 import { Omit } from 'utility-types'
 import { Observable } from 'rxjs'
-import { IRepository, IFile, ISymbol, ILanguage, IRepoGroup, SymbolKind } from '../../graphql/schema'
+import { Repository, File, Symbol, Language, RepoGroup, SymbolKind } from '../../graphql/schema'
 import { SearchSuggestion } from '../suggestions'
 import { isDefined } from '../../util/types'
 import { FilterType, isNegatableFilter } from '../interactive/util'
@@ -53,7 +54,7 @@ const FILTER_TYPE_COMPLETIONS: Omit<Monaco.languages.CompletionItem, 'range'>[] 
     }))
 
 const repositoryToCompletion = (
-    { name }: IRepository,
+    { name }: Repository,
     options: { isFilterValue: boolean; globbing: boolean }
 ): PartialCompletionItem => {
     let insertText = options.globbing ? name : `^${escapeRegExp(name)}$`
@@ -68,7 +69,7 @@ const repositoryToCompletion = (
 }
 
 const fileToCompletion = (
-    { name, path, repository, isDirectory }: IFile,
+    { name, path, repository, isDirectory }: File,
     options: { isFilterValue: boolean; globbing: boolean }
 ): PartialCompletionItem => {
     let insertText = options.globbing ? path : `^${escapeRegExp(path)}$`
@@ -115,7 +116,7 @@ const symbolKindToCompletionItemKind: Record<SymbolKind, Monaco.languages.Comple
     TYPEPARAMETER: Monaco.languages.CompletionItemKind.TypeParameter,
 }
 
-const symbolToCompletion = ({ name, kind, location }: ISymbol): PartialCompletionItem => ({
+const symbolToCompletion = ({ name, kind, location }: Symbol): PartialCompletionItem => ({
     label: name,
     kind: symbolKindToCompletionItemKind[kind],
     insertText: name,
@@ -123,7 +124,7 @@ const symbolToCompletion = ({ name, kind, location }: ISymbol): PartialCompletio
     detail: `${startCase(kind.toLowerCase())} - ${location.resource.repository.name}`,
 })
 
-const languageToCompletion = ({ name }: ILanguage): PartialCompletionItem | undefined =>
+const languageToCompletion = ({ name }: Language): PartialCompletionItem | undefined =>
     name
         ? {
               label: name,
@@ -133,7 +134,7 @@ const languageToCompletion = ({ name }: ILanguage): PartialCompletionItem | unde
           }
         : undefined
 
-const repoGroupToCompletion = ({ name }: IRepoGroup): PartialCompletionItem => ({
+const repoGroupToCompletion = ({ name }: RepoGroup): PartialCompletionItem => ({
     label: name,
     kind: repositoryCompletionItemKind,
     insertText: name,

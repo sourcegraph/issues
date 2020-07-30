@@ -6,11 +6,10 @@ import { RouteComponentProps } from 'react-router'
 import { Link } from 'react-router-dom'
 import { Observable, Subject, NEVER } from 'rxjs'
 import { catchError, map, mapTo, startWith, switchMap, tap, filter } from 'rxjs/operators'
-import { gql } from '../../../../../../shared/src/graphql/graphql'
-import * as GQL from '../../../../../../shared/src/graphql/schema'
+import { gql, dataOrThrowErrors } from '../../../../../../shared/src/graphql/graphql'
 import { asError, createAggregateError, isErrorLike } from '../../../../../../shared/src/util/errors'
 import { mutateGraphQL, queryGraphQL } from '../../../../backend/graphql'
-import { FilteredConnection } from '../../../../components/FilteredConnection'
+import { FilteredConnection, FilteredConnectionQueryArgs } from '../../../../components/FilteredConnection'
 import { PageTitle } from '../../../../components/PageTitle'
 import { Timestamp } from '../../../../components/time/Timestamp'
 import { eventLogger } from '../../../../tracking/eventLogger'
@@ -29,6 +28,15 @@ import { SiteAdminProductSubscriptionBillingLink } from './SiteAdminProductSubsc
 import { ErrorAlert } from '../../../../components/alerts'
 import { useEventObservable, useObservable } from '../../../../../../shared/src/util/useObservable'
 import * as H from 'history'
+import {
+    DotComProductSubscriptionResult,
+    ProductLicensesResult,
+    ArchiveProductSubscriptionResult,
+    ArchiveProductSubscriptionVariables,
+    ProductLicensesVariables,
+    ProductLicenseFields,
+} from '../../../../graphql-operations'
+import { productSubscriptionFragment } from '../../../dotcom/productSubscriptions/ProductSubscriptionNode'
 
 interface Props extends RouteComponentProps<{ subscriptionUUID: string }> {
     /** For mocking in tests only. */
@@ -38,11 +46,6 @@ interface Props extends RouteComponentProps<{ subscriptionUUID: string }> {
     _queryProductLicenses?: typeof queryProductLicenses
     history: H.History
 }
-
-class FilteredSiteAdminProductLicenseConnection extends FilteredConnection<
-    GQL.IProductLicense,
-    Pick<SiteAdminProductLicenseNodeProps, 'showSubscription'>
-> {}
 
 const LOADING = 'loading' as const
 
@@ -105,7 +108,7 @@ export const SiteAdminProductSubscriptionPage: React.FunctionComponent<Props> = 
     )
 
     const queryProductLicensesForSubscription = useCallback(
-        (args: { first?: number }) => _queryProductLicenses(subscriptionUUID, args),
+        (args: FilteredConnectionQueryArgs) => _queryProductLicenses(subscriptionUUID, args),
         [_queryProductLicenses, subscriptionUUID]
     )
 
@@ -222,7 +225,10 @@ export const SiteAdminProductSubscriptionPage: React.FunctionComponent<Props> = 
                                 />
                             </div>
                         )}
-                        <FilteredSiteAdminProductLicenseConnection
+                        <FilteredConnection<
+                            ProductLicenseFields,
+                            Pick<SiteAdminProductLicenseNodeProps, 'showSubscription'>
+                        >
                             className="list-group list-group-flush"
                             noun="product license"
                             pluralNoun="product licenses"
@@ -247,23 +253,15 @@ export const SiteAdminProductSubscriptionPage: React.FunctionComponent<Props> = 
     )
 }
 
-function queryProductSubscription(uuid: string): Observable<GQL.IProductSubscription> {
-    return queryGraphQL(
+type GraphQlSiteAdminProductSubscription = DotComProductSubscriptionResult['dotcom']['productSubscription']
+
+function queryProductSubscription(uuid: string): Observable<GraphQlSiteAdminProductSubscription> {
+    return queryGraphQL<DotComProductSubscriptionResult>(
         gql`
             query DotComProductSubscription($uuid: String!) {
                 dotcom {
                     productSubscription(uuid: $uuid) {
-                        id
-                        name
-                        account {
-                            id
-                            username
-                            displayName
-                            emails {
-                                email
-                                verified
-                            }
-                        }
+                        ...ProductSubscriptionFields
                         invoiceItem {
                             plan {
                                 billingPlanID
@@ -297,13 +295,11 @@ function queryProductSubscription(uuid: string): Observable<GQL.IProductSubscrip
                                 hasNextPage
                             }
                         }
-                        createdAt
-                        isArchived
-                        url
                         urlForSiteAdminBilling
                     }
                 }
             }
+            ${productSubscriptionFragment}
         `,
         { uuid }
     ).pipe(
@@ -318,9 +314,9 @@ function queryProductSubscription(uuid: string): Observable<GQL.IProductSubscrip
 
 function queryProductLicenses(
     subscriptionUUID: string,
-    args: { first?: number }
-): Observable<GQL.IProductLicenseConnection> {
-    return queryGraphQL(
+    args: Omit<ProductLicensesVariables, 'subscriptionUUID'>
+): Observable<ProductLicensesResult['dotcom']['productSubscription']['productLicenses']> {
+    return queryGraphQL<ProductLicensesResult>(
         gql`
             query ProductLicenses($first: Int, $subscriptionUUID: String!) {
                 dotcom {
@@ -344,23 +340,13 @@ function queryProductLicenses(
             subscriptionUUID,
         }
     ).pipe(
-        map(({ data, errors }) => {
-            if (
-                !data ||
-                !data.dotcom ||
-                !data.dotcom.productSubscription ||
-                !data.dotcom.productSubscription.productLicenses ||
-                (errors && errors.length > 0)
-            ) {
-                throw createAggregateError(errors)
-            }
-            return data.dotcom.productSubscription.productLicenses
-        })
+        map(dataOrThrowErrors),
+        map(data => data.dotcom.productSubscription.productLicenses)
     )
 }
 
-function archiveProductSubscription(args: GQL.IArchiveProductSubscriptionOnDotcomMutationArguments): Observable<void> {
-    return mutateGraphQL(
+function archiveProductSubscription(args: ArchiveProductSubscriptionVariables): Observable<void> {
+    return mutateGraphQL<ArchiveProductSubscriptionResult>(
         gql`
             mutation ArchiveProductSubscription($id: ID!) {
                 dotcom {

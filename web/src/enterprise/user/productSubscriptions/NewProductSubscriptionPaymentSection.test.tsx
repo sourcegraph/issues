@@ -17,14 +17,14 @@ describe('NewProductSubscriptionPaymentSection', () => {
                 productSubscription={{ billingPlanID: 'p', userCount: 123 }}
                 onValidityChange={() => undefined}
                 _queryPreviewProductSubscriptionInvoice={() =>
-                    of<GQL.IProductSubscriptionPreviewInvoice>({
+                    of<GQL.ProductSubscriptionPreviewInvoice>({
                         __typename: 'ProductSubscriptionPreviewInvoice',
                         beforeInvoiceItem: null,
                         afterInvoiceItem: {
                             __typename: 'ProductSubscriptionInvoiceItem',
                             expiresAt: '2020-01-01',
                             userCount: 123,
-                            plan: {} as GQL.IProductPlan,
+                            plan: {} as GQL.ProductPlan,
                         },
                         prorationDate: null,
                         isDowngradeRequiringManualIntervention: false,
@@ -45,19 +45,19 @@ describe('NewProductSubscriptionPaymentSection', () => {
                 productSubscription={{ billingPlanID: 'p', userCount: 123 }}
                 onValidityChange={() => undefined}
                 _queryPreviewProductSubscriptionInvoice={() =>
-                    of<GQL.IProductSubscriptionPreviewInvoice>({
+                    of<GQL.ProductSubscriptionPreviewInvoice>({
                         __typename: 'ProductSubscriptionPreviewInvoice',
                         beforeInvoiceItem: {
                             __typename: 'ProductSubscriptionInvoiceItem',
                             expiresAt: '2020-01-01',
                             userCount: 123,
-                            plan: {} as GQL.IProductPlan,
+                            plan: {} as GQL.ProductPlan,
                         },
                         afterInvoiceItem: {
                             __typename: 'ProductSubscriptionInvoiceItem',
                             expiresAt: '2021-01-01',
                             userCount: 456,
-                            plan: {} as GQL.IProductPlan,
+                            plan: {} as GQL.ProductPlan,
                         },
                         prorationDate: null,
                         isDowngradeRequiringManualIntervention: false,
@@ -78,19 +78,19 @@ describe('NewProductSubscriptionPaymentSection', () => {
                 productSubscription={{ billingPlanID: 'p', userCount: 123 }}
                 onValidityChange={() => undefined}
                 _queryPreviewProductSubscriptionInvoice={() =>
-                    of<GQL.IProductSubscriptionPreviewInvoice>({
+                    of<GQL.ProductSubscriptionPreviewInvoice>({
                         __typename: 'ProductSubscriptionPreviewInvoice',
                         beforeInvoiceItem: {
                             __typename: 'ProductSubscriptionInvoiceItem',
                             expiresAt: '2020-01-01',
                             userCount: 123,
-                            plan: {} as GQL.IProductPlan,
+                            plan: {} as GQL.ProductPlan,
                         },
                         afterInvoiceItem: {
                             __typename: 'ProductSubscriptionInvoiceItem',
                             expiresAt: '2020-01-01',
                             userCount: 123,
-                            plan: {} as GQL.IProductPlan,
+                            plan: {} as GQL.ProductPlan,
                         },
                         prorationDate: null,
                         isDowngradeRequiringManualIntervention: false,
@@ -111,19 +111,19 @@ describe('NewProductSubscriptionPaymentSection', () => {
                 productSubscription={{ billingPlanID: 'p', userCount: 123 }}
                 onValidityChange={() => undefined}
                 _queryPreviewProductSubscriptionInvoice={() =>
-                    of<GQL.IProductSubscriptionPreviewInvoice>({
+                    of<GQL.ProductSubscriptionPreviewInvoice>({
                         __typename: 'ProductSubscriptionPreviewInvoice',
                         beforeInvoiceItem: {
                             __typename: 'ProductSubscriptionInvoiceItem',
                             expiresAt: '2020-01-01',
                             userCount: 123,
-                            plan: {} as GQL.IProductPlan,
+                            plan: {} as GQL.ProductPlan,
                         },
                         afterInvoiceItem: {
                             __typename: 'ProductSubscriptionInvoiceItem',
                             expiresAt: '2021-01-01',
                             userCount: 456,
-                            plan: {} as GQL.IProductPlan,
+                            plan: {} as GQL.ProductPlan,
                         },
                         prorationDate: null,
                         isDowngradeRequiringManualIntervention: true,

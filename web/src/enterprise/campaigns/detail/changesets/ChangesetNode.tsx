@@ -1,5 +1,4 @@
 import * as H from 'history'
-import { Changeset } from '../../../../../../shared/src/graphql/schema'
 import React from 'react'
 import { ThemeProps } from '../../../../../../shared/src/theme'
 import { Observer } from 'rxjs'
@@ -10,9 +9,10 @@ import { HoverMerged } from '../../../../../../shared/src/api/client/types/hover
 import { ActionItemAction } from '../../../../../../shared/src/actions/ActionItem'
 import { ExternalChangesetNode } from './ExternalChangesetNode'
 import { HiddenExternalChangesetNode } from './HiddenExternalChangesetNode'
+import { ChangesetFields } from '../../../../graphql-operations'
 
 export interface ChangesetNodeProps extends ThemeProps {
-    node: Changeset
+    node: ChangesetFields
     viewerCanAdminister: boolean
     campaignUpdates?: Pick<Observer<void>, 'next'>
     history: H.History

@@ -9,7 +9,6 @@ import {
     RepogroupHomepageProps,
 } from '..'
 import { ActivationProps } from '../../../../shared/src/components/activation/Activation'
-import * as GQL from '../../../../shared/src/graphql/schema'
 import { SettingsCascadeProps } from '../../../../shared/src/settings/settings'
 import { Settings } from '../../schema/settings.schema'
 import { ThemeProps } from '../../../../shared/src/theme'
@@ -32,6 +31,7 @@ import { repogroupList, homepageLanguageList } from '../../repogroups/HomepageCo
 import { SearchPageInput } from './SearchPageInput'
 import { KeyboardShortcutsProps } from '../../keyboardShortcuts/keyboardShortcuts'
 import { PrivateCodeCta } from './PrivateCodeCta'
+import { OptionalAuthProps } from '../../auth'
 
 interface Props
     extends SettingsCascadeProps<Settings>,
@@ -48,8 +48,8 @@ interface Props
         SmartSearchFieldProps,
         CopyQueryButtonProps,
         VersionContextProps,
+        OptionalAuthProps,
         RepogroupHomepageProps {
-    authenticatedUser: GQL.IUser | null
     location: H.Location
     history: H.History
     isSourcegraphDotCom: boolean

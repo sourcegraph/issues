@@ -3,8 +3,8 @@ import * as H from 'history'
 import * as GQL from '../../../../../../shared/src/graphql/schema'
 import { ChangesetNodeProps, ChangesetNode } from './ChangesetNode'
 import { ThemeProps } from '../../../../../../shared/src/theme'
-import { FilteredConnection, FilteredConnectionQueryArgs, Connection } from '../../../../components/FilteredConnection'
-import { Observable, Subject, merge, of } from 'rxjs'
+import { FilteredConnection, FilteredConnectionQueryArgs } from '../../../../components/FilteredConnection'
+import { Subject, merge, of } from 'rxjs'
 import { upperFirst, lowerCase } from 'lodash'
 import { queryChangesets as _queryChangesets } from '../backend'
 import { repeatWhen, delay, withLatestFrom, map, filter, switchMap } from 'rxjs/operators'
@@ -28,16 +28,17 @@ import { PlatformContextProps } from '../../../../../../shared/src/platform/cont
 import { TelemetryProps } from '../../../../../../shared/src/telemetry/telemetryService'
 import { property, isDefined } from '../../../../../../shared/src/util/types'
 import { useObservable } from '../../../../../../shared/src/util/useObservable'
+import { CampaignChangesetsResult } from '../../../../graphql-operations'
 
 interface Props extends ThemeProps, PlatformContextProps, TelemetryProps, ExtensionsControllerProps {
-    campaign: Pick<GQL.ICampaign, 'id' | 'closedAt' | 'viewerCanAdminister'>
+    campaign: Pick<GQL.Campaign, 'id' | 'closedAt' | 'viewerCanAdminister'>
     history: H.History
     location: H.Location
     campaignUpdates: Subject<void>
     changesetUpdates: Subject<void>
 
     /** For testing only. */
-    queryChangesets?: (campaignID: GQL.ID, args: FilteredConnectionQueryArgs) => Observable<Connection<GQL.Changeset>>
+    queryChangesets?: typeof _queryChangesets
 }
 
 function getLSPTextDocumentPositionParameters(
@@ -76,9 +77,13 @@ export const CampaignChangesets: React.FunctionComponent<Props> = ({
         (args: FilteredConnectionQueryArgs) =>
             merge(of(undefined), changesetUpdates).pipe(
                 switchMap(() =>
-                    queryChangesets(campaign.id, { ...args, state, reviewState, checkState }).pipe(
-                        repeatWhen(notifier => notifier.pipe(delay(5000)))
-                    )
+                    queryChangesets({
+                        ...args,
+                        campaign: campaign.id,
+                        state: state ?? null,
+                        reviewState: reviewState ?? null,
+                        checkState: checkState ?? null,
+                    }).pipe(repeatWhen(notifier => notifier.pipe(delay(5000))))
                 )
             ),
         [campaign.id, state, reviewState, checkState, queryChangesets, changesetUpdates]
@@ -193,7 +198,10 @@ export const CampaignChangesets: React.FunctionComponent<Props> = ({
         <>
             {changesetFiltersRow}
             <div className="list-group position-relative" ref={nextContainerElement}>
-                <FilteredConnection<GQL.Changeset, Omit<ChangesetNodeProps, 'node'>>
+                <FilteredConnection<
+                    (CampaignChangesetsResult['node'] & { __typename: 'Campaign' })['changesets']['nodes'][0],
+                    Omit<ChangesetNodeProps, 'node'>
+                >
                     className="mt-2"
                     nodeComponent={ChangesetNode}
                     nodeComponentProps={{

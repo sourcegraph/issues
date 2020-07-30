@@ -1,14 +1,18 @@
-import * as GQL from '../../../../shared/src/graphql/schema'
 import { dataOrThrowErrors, gql } from '../../../../shared/src/graphql/graphql'
 import { map } from 'rxjs/operators'
 import { Observable } from 'rxjs'
 import { queryGraphQL } from '../../backend/graphql'
+import { SiteAdminLsifUploadResult, SiteAdminLsifUploadVariables } from '../../graphql-operations'
 
 /**
  * Fetch a single LSIF upload by id.
  */
-export function fetchLsifUpload({ id }: { id: string }): Observable<GQL.ILSIFUpload | null> {
-    return queryGraphQL(
+export function fetchLsifUpload({
+    id,
+}: SiteAdminLsifUploadVariables): Observable<
+    (SiteAdminLsifUploadResult['node'] & { __typename: 'LSIFUpload' }) | null
+> {
+    return queryGraphQL<SiteAdminLsifUploadResult>(
         gql`
             query SiteAdminLsifUpload($id: ID!) {
                 node(id: $id) {

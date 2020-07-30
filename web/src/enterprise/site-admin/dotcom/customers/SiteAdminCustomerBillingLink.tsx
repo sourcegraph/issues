@@ -8,10 +8,11 @@ import * as GQL from '../../../../../../shared/src/graphql/schema'
 import { asError, createAggregateError, isErrorLike } from '../../../../../../shared/src/util/errors'
 import { mutateGraphQL } from '../../../../backend/graphql'
 import { useEventObservable } from '../../../../../../shared/src/util/useObservable'
+import { SetCustomerBillingResult, SetCustomerBillingVariables } from '../../../../graphql-operations'
 
 interface Props {
     /** The customer to show a billing link for. */
-    customer: Pick<GQL.IUser, 'id' | 'urlForSiteAdminBilling'>
+    customer: Pick<GQL.User, 'id' | 'urlForSiteAdminBilling'>
 
     /** Called when the customer is updated. */
     onDidUpdate: () => void
@@ -27,7 +28,7 @@ export const SiteAdminCustomerBillingLink: React.FunctionComponent<Props> = ({ c
     /** The result of updating this customer: undefined for done or not started, loading, or an error. */
     const [nextUpdate, update] = useEventObservable(
         useCallback(
-            (updates: Observable<{ user: GQL.ID; billingCustomerID: string | null }>) =>
+            (updates: Observable<{ user: GQL.Scalars['ID']; billingCustomerID: string | null }>) =>
                 updates.pipe(
                     switchMap(({ user, billingCustomerID }) =>
                         setCustomerBilling({ user, billingCustomerID }).pipe(
@@ -81,8 +82,8 @@ export const SiteAdminCustomerBillingLink: React.FunctionComponent<Props> = ({ c
     )
 }
 
-function setCustomerBilling(args: GQL.ISetUserBillingOnDotcomMutationArguments): Observable<void> {
-    return mutateGraphQL(
+function setCustomerBilling(args: SetCustomerBillingVariables): Observable<void> {
+    return mutateGraphQL<SetCustomerBillingResult>(
         gql`
             mutation SetCustomerBilling($user: ID!, $billingCustomerID: String) {
                 dotcom {

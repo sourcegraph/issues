@@ -1,14 +1,14 @@
 import React from 'react'
 import { Redirect } from 'react-router'
-import * as GQL from '../../../shared/src/graphql/schema'
+import { RequiredAuthProps, OptionalAuthProps } from '../auth'
 
 /**
  * Wraps a React component and requires an authenticated user. If the viewer is not authenticated, it redirects to
  * the sign-in flow.
  */
-export const withAuthenticatedUser = <P extends object & { authenticatedUser: GQL.IUser }>(
+export const withAuthenticatedUser = <P extends object & RequiredAuthProps>(
     Component: React.ComponentType<P>
-): React.ComponentType<Pick<P, Exclude<keyof P, 'authenticatedUser'>> & { authenticatedUser: GQL.IUser | null }> => ({
+): React.ComponentType<Pick<P, Exclude<keyof P, 'authenticatedUser'>> & OptionalAuthProps> => ({
     authenticatedUser,
     ...props
 }) => {

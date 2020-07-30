@@ -19,6 +19,7 @@ import { useObservable } from '../../../../shared/src/util/useObservable'
 import { ErrorLike, asError, isErrorLike } from '../../../../shared/src/util/errors'
 import { ThemeProps } from '../../../../shared/src/theme'
 import { Link } from '../../../../shared/src/components/Link'
+import { OverviewResult, WAUsResult } from '../../graphql-operations'
 
 interface Props extends ActivationProps, ThemeProps {
     history: H.History
@@ -35,7 +36,7 @@ interface Props extends ActivationProps, ThemeProps {
         }
     }>
     /** For testing only */
-    _fetchWeeklyActiveUsers?: () => Observable<GQL.ISiteUsageStatistics>
+    _fetchWeeklyActiveUsers?: () => Observable<GQL.SiteUsageStatistics>
 }
 
 const fetchOverview = (): Observable<{
@@ -47,7 +48,7 @@ const fetchOverview = (): Observable<{
         averageScore: number
     }
 }> =>
-    queryGraphQL(gql`
+    queryGraphQL<OverviewResult>(gql`
         query Overview {
             repositories {
                 totalCount(precise: true)
@@ -73,8 +74,8 @@ const fetchOverview = (): Observable<{
         }))
     )
 
-const fetchWeeklyActiveUsers = (): Observable<GQL.ISiteUsageStatistics> =>
-    queryGraphQL(gql`
+const fetchWeeklyActiveUsers = (): Observable<GQL.SiteUsageStatistics> =>
+    queryGraphQL<WAUsResult>(gql`
         query WAUs {
             site {
                 usageStatistics {

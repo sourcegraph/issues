@@ -20,14 +20,13 @@ import { RegistryExtensionDeleteButton } from './RegistryExtensionDeleteButton'
 import { RegistryExtensionNameFormGroup, RegistryPublisherFormGroup } from './RegistryExtensionForm'
 import { ErrorAlert } from '../../../components/alerts'
 import * as H from 'history'
+import { UpdateRegistryExtensionResult, UpdateRegistryExtensionVariables } from '../../../graphql-operations'
+import { RequiredAuthProps } from '../../../auth'
 
 function updateExtension(
-    args: Pick<
-        GQL.IUpdateExtensionOnExtensionRegistryMutationArguments,
-        Exclude<keyof GQL.IUpdateExtensionOnExtensionRegistryMutationArguments, 'manifest'>
-    >
-): Observable<GQL.IExtensionRegistryUpdateExtensionResult> {
-    return mutateGraphQL(
+    args: UpdateRegistryExtensionVariables
+): Observable<UpdateRegistryExtensionResult['extensionRegistry']['updateExtension']> {
+    return mutateGraphQL<UpdateRegistryExtensionResult>(
         gql`
             mutation UpdateRegistryExtension($extension: ID!, $name: String) {
                 extensionRegistry {
@@ -55,16 +54,17 @@ function updateExtension(
     )
 }
 
-interface Props extends ExtensionAreaRouteContext, RouteComponentProps<{}> {
-    authenticatedUser: GQL.IUser
-    history: H.History
-}
+type Props = ExtensionAreaRouteContext &
+    RouteComponentProps<{}> &
+    RequiredAuthProps & {
+        history: H.History
+    }
 
 interface State {
     name?: string
 
     /** The update result, undefined if not triggered, 'loading', or an error. */
-    updateOrError?: 'loading' | GQL.IExtensionRegistryUpdateExtensionResult | ErrorLike
+    updateOrError?: 'loading' | GQL.ExtensionRegistryUpdateExtensionResult | ErrorLike
 }
 
 /** A page for managing an extension in the extension registry. */
@@ -88,7 +88,7 @@ export const RegistryExtensionManagePage = withAuthenticatedUser(
                                 [{ updateOrError: 'loading' }],
                                 updateExtension({
                                     extension: this.props.extension.registryExtension!.id,
-                                    name: this.state.name,
+                                    name: this.state.name ?? null,
                                 }).pipe(
                                     tap(result => {
                                         // Redirect to the extension's new URL (if it changed).

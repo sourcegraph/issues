@@ -13,7 +13,7 @@ export interface SearchScopeWithOptionalName {
 
 export const SearchResultsFilterBars: React.FunctionComponent<{
     navbarSearchQuery: string
-    results?: GQL.ISearchResults
+    results?: GQL.SearchResults
     filters: SearchScopeWithOptionalName[]
     extensionFilters: SearchFilters[] | undefined
     quickLinks?: QuickLink[] | undefined

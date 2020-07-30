@@ -52,7 +52,7 @@ interface RepositoryCompareAreaProps
         EventLoggerProps,
         ExtensionsControllerProps,
         ThemeProps {
-    repo: GQL.IRepository
+    repo: GQL.Repository
     history: H.History
 }
 
@@ -65,13 +65,13 @@ interface State extends HoverState<HoverContext, HoverMerged, ActionItemAction> 
  */
 export interface RepositoryCompareAreaPageProps extends PlatformContextProps {
     /** The repository being compared. */
-    repo: GQL.IRepository
+    repo: GQL.Repository
 
     /** The base of the comparison. */
-    base: { repoName: string; repoID: GQL.ID; revision?: string | null }
+    base: { repoName: string; repoID: GQL.Scalars['ID']; revision?: string | null }
 
     /** The head of the comparison. */
-    head: { repoName: string; repoID: GQL.ID; revision?: string | null }
+    head: { repoName: string; repoID: GQL.Scalars['ID']; revision?: string | null }
 
     /** The URL route prefix for the comparison. */
     routePrefix: string

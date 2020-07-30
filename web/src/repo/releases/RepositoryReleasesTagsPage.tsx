@@ -12,12 +12,12 @@ interface Props extends RepositoryReleasesAreaPageProps {
     history: H.History
     location: H.Location
     queryGitReferences?: (args: {
-        repo: GQL.ID
+        repo: GQL.Scalars['ID']
         first?: number
         query?: string
         type: GQL.GitRefType
         withBehindAhead?: boolean
-    }) => Observable<GQL.IGitRefConnection>
+    }) => Observable<GQL.GitRefConnection>
 }
 
 /** A page that shows all of a repository's tags. */
@@ -32,7 +32,7 @@ export const RepositoryReleasesTagsPage: React.FunctionComponent<Props> = ({
     }, [])
 
     const queryTags = useCallback(
-        (args: FilteredConnectionQueryArgs): Observable<GQL.IGitRefConnection> =>
+        (args: FilteredConnectionQueryArgs): Observable<GQL.GitRefConnection> =>
             queryGitReferences({ ...args, repo: repo.id, type: GQL.GitRefType.GIT_TAG }),
         [repo.id, queryGitReferences]
     )
@@ -40,7 +40,7 @@ export const RepositoryReleasesTagsPage: React.FunctionComponent<Props> = ({
     return (
         <div className="repository-releases-page">
             <PageTitle title="Tags" />
-            <FilteredConnection<GQL.IGitRef>
+            <FilteredConnection<GQL.GitRef>
                 className="my-3"
                 listClassName="list-group list-group-flush"
                 noun="tag"

@@ -27,7 +27,7 @@ import { ErrorMessage } from './alerts'
 import { hasProperty } from '../../../shared/src/util/types'
 
 /** Checks if the passed value satisfies the GraphQL Node interface */
-const hasID = (value: unknown): value is { id: GQL.ID } =>
+const hasID = (value: unknown): value is { id: GQL.Scalars['ID'] } =>
     typeof value === 'object' && value !== null && hasProperty('id')(value) && typeof value.id === 'string'
 
 interface FilterProps {
@@ -103,7 +103,7 @@ interface ConnectionDisplayProps {
 /**
  * Props for the FilteredConnection component's result nodes and associated summary/pagination controls.
  *
- * @template N The node type of the GraphQL connection, such as GQL.IRepository (if the connection is GQL.IRepositoryConnection)
+ * @template N The node type of the GraphQL connection, such as GQL.Repository (if the connection is GQL.RepositoryConnection)
  * @template NP Props passed to `nodeComponent` in addition to `{ node: N }`
  */
 interface ConnectionPropsCommon<N, NP = {}> extends ConnectionDisplayProps {
@@ -329,8 +329,8 @@ interface FilteredConnectionDisplayProps extends ConnectionDisplayProps {
 /**
  * Props for the FilteredConnection component.
  *
- * @template C The GraphQL connection type, such as GQL.IRepositoryConnection.
- * @template N The node type of the GraphQL connection, such as GQL.IRepository (if C is GQL.IRepositoryConnection)
+ * @template C The GraphQL connection type, such as GQL.RepositoryConnection.
+ * @template N The node type of the GraphQL connection, such as GQL.Repository (if C is GQL.RepositoryConnection)
  * @template NP Props passed to `nodeComponent` in addition to `{ node: N }`
  */
 interface FilteredConnectionProps<C extends Connection<N>, N, NP = {}>
@@ -347,9 +347,9 @@ interface FilteredConnectionProps<C extends Connection<N>, N, NP = {}>
  * The arguments for the Props.queryConnection function.
  */
 export interface FilteredConnectionQueryArgs {
-    first?: number
-    after?: string
-    query?: string
+    first: number | null
+    after: string | null
+    query: string | null
 }
 
 /**
@@ -422,9 +422,9 @@ const QUERY_KEY = 'query'
  * "connection" because it is intended for use with GraphQL, which calls it that
  * (see http://graphql.org/learn/pagination/).
  *
- * @template N The node type of the GraphQL connection, such as `GQL.IRepository` (if `C` is `GQL.IRepositoryConnection`)
+ * @template N The node type of the GraphQL connection, such as `GQL.Repository` (if `C` is `GQL.RepositoryConnection`)
  * @template NP Props passed to `nodeComponent` in addition to `{ node: N }`
- * @template C The GraphQL connection type, such as `GQL.IRepositoryConnection`.
+ * @template C The GraphQL connection type, such as `GQL.RepositoryConnection`.
  */
 export class FilteredConnection<N, NP = {}, C extends Connection<N> = Connection<N>> extends React.PureComponent<
     FilteredConnectionProps<C, N, NP>,
@@ -547,7 +547,7 @@ export class FilteredConnection<N, NP = {}, C extends Connection<N> = Connection
                                 // load that many results. If we weren't given such a value or this is a
                                 // subsequent request, only ask for one page of results.
                                 first: (queryCount === 1 && this.state.visible) || this.state.first,
-                                after: shouldRefresh ? undefined : this.state.after,
+                                after: (shouldRefresh && this.state.after) || null,
                                 query,
                                 ...(filter ? filter.args : {}),
                             })

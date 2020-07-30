@@ -36,10 +36,14 @@ import { ThemeProps } from '../../../../shared/src/theme'
 import { ErrorMessage } from '../../components/alerts'
 import { Redirect } from 'react-router'
 import { toTreeURL } from '../../util/url'
+import { BlobResult } from '../../graphql-operations'
+import { OptionalAuthProps } from '../../auth'
 
 function fetchBlobCacheKey(parsed: ParsedRepoURI & { isLightTheme: boolean; disableTimeout: boolean }): string {
     return makeRepoURI(parsed) + String(parsed.isLightTheme) + String(parsed.disableTimeout)
 }
+
+type GraphQlBlob = NonNullable<NonNullable<NonNullable<BlobResult['repository']>['commit']>['file']>
 
 const fetchBlob = memoizeObservable(
     (args: {
@@ -48,8 +52,8 @@ const fetchBlob = memoizeObservable(
         filePath: string
         isLightTheme: boolean
         disableTimeout: boolean
-    }): Observable<GQL.File2> =>
-        queryGraphQL(
+    }): Observable<GraphQlBlob> =>
+        queryGraphQL<BlobResult>(
             gql`
                 query Blob(
                     $repoName: String!
@@ -93,11 +97,11 @@ interface Props
         PlatformContextProps,
         EventLoggerProps,
         ExtensionsControllerProps,
+        OptionalAuthProps,
         ThemeProps {
     location: H.Location
     history: H.History
-    repoID: GQL.ID
-    authenticatedUser: GQL.IUser | null
+    repoID: GQL.Scalars['ID']
 }
 
 interface State {
@@ -107,7 +111,7 @@ interface State {
      * The blob data or error that happened.
      * undefined while loading.
      */
-    blobOrError?: GQL.File2 | ErrorLike
+    blobOrError?: GraphQlBlob | ErrorLike
 }
 
 // eslint-disable-next-line react/no-unsafe

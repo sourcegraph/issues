@@ -17,9 +17,10 @@ import { deleteRegistryExtensionWithConfirmation } from '../extensions/registry/
 import { RegistryExtensionSourceBadge } from '../extensions/registry/RegistryExtensionSourceBadge'
 import { ErrorAlert } from '../../components/alerts'
 import * as H from 'history'
+import { SiteAdminRegistryExtensionsResult } from '../../graphql-operations'
 
 interface RegistryExtensionNodeSiteAdminProps {
-    node: GQL.IRegistryExtension
+    node: GQL.RegistryExtension
     onDidUpdate: () => void
     history: H.History
 }
@@ -187,7 +188,7 @@ export class SiteAdminRegistryExtensionsPage extends React.PureComponent<Props> 
                     Extensions add features to Sourcegraph and other connected tools (such as editors, code hosts, and
                     code review tools).
                 </p>
-                <FilteredConnection<GQL.IRegistryExtension, Omit<RegistryExtensionNodeSiteAdminProps, 'node'>>
+                <FilteredConnection<GQL.RegistryExtension, Omit<RegistryExtensionNodeSiteAdminProps, 'node'>>
                     className="list-group list-group-flush registry-extensions-list"
                     listComponent="ul"
                     noun="extension"
@@ -211,8 +212,8 @@ export class SiteAdminRegistryExtensionsPage extends React.PureComponent<Props> 
         first?: number
         local?: boolean
         remote?: boolean
-    }): Observable<GQL.IRegistryExtensionConnection> =>
-        queryGraphQL(
+    }): Observable<GQL.RegistryExtensionConnection> =>
+        queryGraphQL<SiteAdminRegistryExtensionsResult>(
             gql`
                 query SiteAdminRegistryExtensions(
                     $first: Int

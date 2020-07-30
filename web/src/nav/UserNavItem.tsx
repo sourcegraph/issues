@@ -12,7 +12,7 @@ import { ThemePreferenceProps, ThemePreference } from '../theme'
 interface Props extends ThemeProps, ThemePreferenceProps {
     location: H.Location
     authenticatedUser: Pick<
-        GQL.IUser,
+        GQL.User,
         'username' | 'avatarURL' | 'settingsURL' | 'organizations' | 'siteAdmin' | 'session'
     >
     showDotComMarketing: boolean

@@ -14,11 +14,12 @@ import {
     SiteAdminProductLicenseNode,
     SiteAdminProductLicenseNodeProps,
 } from './SiteAdminProductLicenseNode'
+import { DotComProductLicensesResult, DotComProductLicensesVariables } from '../../../../graphql-operations'
 
 interface Props extends RouteComponentProps<{}> {}
 
 class FilteredProductLicenseConnection extends FilteredConnection<
-    GQL.IProductLicense,
+    GQL.ProductLicense,
     Pick<SiteAdminProductLicenseNodeProps, 'showSubscription'>
 > {}
 
@@ -54,13 +55,16 @@ export const SiteAdminProductLicensesPage: React.FunctionComponent<Props> = ({ h
     )
 }
 
-function queryLicenses(args: { first?: number; query?: string }): Observable<GQL.IProductLicenseConnection> {
-    const vars: GQL.IProductLicensesOnDotcomQueryArguments = {
+function queryLicenses(args: {
+    first: number | null
+    query: string | null
+}): Observable<DotComProductLicensesResult['dotcom']['productLicenses']> {
+    const vars: DotComProductLicensesVariables = {
         first: args.first,
         licenseKeySubstring: args.query,
     }
     return args.query
-        ? queryGraphQL(
+        ? queryGraphQL<DotComProductLicensesResult>(
               gql`
                   query DotComProductLicenses($first: Int, $licenseKeySubstring: String) {
                       dotcom {
@@ -87,9 +91,10 @@ function queryLicenses(args: { first?: number; query?: string }): Observable<GQL
               })
           )
         : of({
-              __typename: 'ProductLicenseConnection' as const,
               nodes: [],
               totalCount: 0,
-              pageInfo: { __typename: 'PageInfo' as const, hasNextPage: false, endCursor: null },
+              pageInfo: {
+                  hasNextPage: false,
+              },
           })
 }

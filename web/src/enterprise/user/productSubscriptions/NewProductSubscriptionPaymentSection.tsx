@@ -6,30 +6,34 @@ import ErrorIcon from 'mdi-react/ErrorIcon'
 import React, { useEffect, useMemo } from 'react'
 import { Observable, of } from 'rxjs'
 import { catchError, map, startWith } from 'rxjs/operators'
-import { gql } from '../../../../../shared/src/graphql/graphql'
+import { gql, dataOrThrowErrors } from '../../../../../shared/src/graphql/graphql'
 import * as GQL from '../../../../../shared/src/graphql/schema'
-import { asError, createAggregateError, ErrorLike, isErrorLike } from '../../../../../shared/src/util/errors'
+import { asError, ErrorLike, isErrorLike } from '../../../../../shared/src/util/errors'
 import { numberWithCommas } from '../../../../../shared/src/util/strings'
 import { queryGraphQL } from '../../../backend/graphql'
 import { formatUserCount, mailtoSales } from '../../productSubscription/helpers'
 import { ProductSubscriptionBeforeAfterInvoiceItem } from './ProductSubscriptionBeforeAfterInvoiceItem'
 import { useObservable } from '../../../../../shared/src/util/useObservable'
 import { PaymentValidity } from './ProductSubscriptionForm'
+import {
+    PreviewProductSubscriptionInvoiceResult,
+    PreviewProductSubscriptionInvoiceVariables,
+} from '../../../graphql-operations'
 
 interface Props {
     /**
      * The ID of the account associated with the subscription, or null if there is none (in which case the
      * subscription price can be quoted but the subscription can't be bought).
      */
-    accountID: GQL.ID | null
+    accountID: GQL.Scalars['ID'] | null
 
     /** The existing product subscription to edit, or null if this is a new subscription. */
-    subscriptionID: GQL.ID | null
+    subscriptionID: GQL.Scalars['ID'] | null
 
     /**
      * The product subscription chosen by the user, or null for an invalid choice.
      */
-    productSubscription: GQL.IProductSubscriptionInput | null
+    productSubscription: GQL.ProductSubscriptionInput | null
 
     /**
      * Called when the validity state of the payment and billing information changes. Initially it
@@ -43,7 +47,7 @@ interface Props {
 
 const LOADING = 'loading' as const
 
-type PreviewInvoiceOrError = GQL.IProductSubscriptionPreviewInvoice | null | typeof LOADING | ErrorLike
+type PreviewInvoiceOrError = ProductSubscriptionPreviewInvoice | null | typeof LOADING | ErrorLike
 
 const previewInvoiceValidity = (previewInvoice: PreviewInvoiceOrError): PaymentValidity =>
     previewInvoice === null ||
@@ -145,10 +149,12 @@ export const NewProductSubscriptionPaymentSection: React.FunctionComponent<Props
     )
 }
 
+export type ProductSubscriptionPreviewInvoice = PreviewProductSubscriptionInvoiceResult['dotcom']['previewProductSubscriptionInvoice']
+
 function queryPreviewProductSubscriptionInvoice(
-    args: GQL.IPreviewProductSubscriptionInvoiceOnDotcomQueryArguments
-): Observable<GQL.IProductSubscriptionPreviewInvoice> {
-    return queryGraphQL(
+    args: PreviewProductSubscriptionInvoiceVariables
+): Observable<ProductSubscriptionPreviewInvoice> {
+    return queryGraphQL<PreviewProductSubscriptionInvoiceResult>(
         gql`
             query PreviewProductSubscriptionInvoice(
                 $account: ID
@@ -188,16 +194,7 @@ function queryPreviewProductSubscriptionInvoice(
         `,
         args
     ).pipe(
-        map(({ data, errors }) => {
-            if (
-                !data ||
-                !data.dotcom ||
-                !data.dotcom.previewProductSubscriptionInvoice ||
-                (errors && errors.length > 0)
-            ) {
-                throw createAggregateError(errors)
-            }
-            return data.dotcom.previewProductSubscriptionInvoice
-        })
+        map(dataOrThrowErrors),
+        map(data => data.dotcom.previewProductSubscriptionInvoice)
     )
 }

@@ -41,7 +41,7 @@ export const SiteAdminLsifUploadPage: FunctionComponent<Props> = ({
                 />
             ) : (
                 <Redirect
-                    to={`${uploadOrError.projectRoot.repository.url}/-/settings/code-intelligence/lsif-uploads/${id}`}
+                    to={`${uploadOrError.projectRoot.commit.repository.url}/-/settings/code-intelligence/lsif-uploads/${id}`}
                 />
             )}
         </div>

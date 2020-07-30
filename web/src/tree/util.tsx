@@ -1,18 +1,10 @@
 import * as GQL from '../../../shared/src/graphql/schema'
+import { GitTree } from '../repo/backend'
 
 /** TreeEntryInfo is the information we need to render an entry in the file tree */
-export interface TreeEntryInfo {
-    path: string
-    name: string
-    isDirectory: boolean
-    commit: GQL.IGitCommit
-    repository: GQL.IRepository
-    url: string
-    submodule: GQL.ISubmodule | null
-    isSingleChild: boolean
-}
+export type TreeEntryInfo = GitTree['entries'][number]
 
-export interface SingleChildGitTree extends TreeEntryInfo {
+export type SingleChildGitTree = TreeEntryInfo & {
     children: SingleChildGitTree[]
 }
 

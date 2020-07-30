@@ -11,30 +11,18 @@ import { Remote } from 'comlink'
 import { FlatExtHostAPI } from '../../../shared/src/api/contract'
 import { wrapRemoteObservable } from '../../../shared/src/api/client/api/common'
 import { DeployType } from '../jscontext'
-
-// TODO: Make this a proper fragment, blocked by https://github.com/graph-gophers/graphql-go/issues/241.
-const genericSearchResultInterfaceFields = `
-    label {
-        html
-    }
-    url
-    icon
-    detail {
-        html
-    }
-    matches {
-        url
-        body {
-            text
-            html
-        }
-        highlights {
-            line
-            character
-            length
-        }
-    }
-`
+import {
+    RepoGroupsResult,
+    SearchSuggestionsResult,
+    ReposByQueryResult,
+    savedSearchesResult,
+    SavedSearchResult,
+    highlightCodeResult,
+    ManyReposWarningResult,
+    CreateSavedSearchResult,
+    UpdateSavedSearchResult,
+    DeleteSavedSearchResult,
+} from '../graphql-operations'
 
 export function search(
     query: string,
@@ -42,17 +30,28 @@ export function search(
     patternType: GQL.SearchPatternType,
     versionContext: string | undefined,
     extensionHostPromise: Promise<Remote<FlatExtHostAPI>>
-): Observable<GQL.ISearchResults | ErrorLike> {
+): Observable<GQL.SearchResults | ErrorLike> {
     const transformedQuery = from(extensionHostPromise).pipe(
         switchMap(extensionHost => wrapRemoteObservable(extensionHost.transformSearchQuery(query)))
     )
 
     return transformedQuery.pipe(
         switchMap(query =>
-            queryGraphQL(
+            queryGraphQL<GQL.SearchResult>(
                 gql`
-                    query Search($query: String!, $version: SearchVersion!, $patternType: SearchPatternType!, $useCodemod: Boolean!, $versionContext: String) {
-                        search(query: $query, version: $version, patternType: $patternType, versionContext: $versionContext) {
+                    query Search(
+                        $query: String!
+                        $version: SearchVersion!
+                        $patternType: SearchPatternType!
+                        $useCodemod: Boolean!
+                        $versionContext: String
+                    ) {
+                        search(
+                            query: $query
+                            version: $version
+                            patternType: $patternType
+                            versionContext: $versionContext
+                        ) {
                             results {
                                 __typename
                                 limitHit
@@ -81,7 +80,29 @@ export function search(
                                     ... on Repository {
                                         id
                                         name
-                                        ${genericSearchResultInterfaceFields}
+                                        # TODO: Make this a proper fragment, blocked by https://github.com/graph-gophers/graphql-go/issues/241.
+                                        # beginning of genericSearchResultInterfaceFields inline fragment
+                                        label {
+                                            html
+                                        }
+                                        url
+                                        icon
+                                        detail {
+                                            html
+                                        }
+                                        matches {
+                                            url
+                                            body {
+                                                text
+                                                html
+                                            }
+                                            highlights {
+                                                line
+                                                character
+                                                length
+                                            }
+                                        }
+                                        # end of genericSearchResultInterfaceFields inline fragment
                                     }
                                     ... on FileMatch {
                                         file {
@@ -103,7 +124,11 @@ export function search(
                                             }
                                             ... on GitRevSpecExpr {
                                                 expr
-                                                object { commit { url } }
+                                                object {
+                                                    commit {
+                                                        url
+                                                    }
+                                                }
                                             }
                                             ... on GitObject {
                                                 abbreviatedOID
@@ -126,10 +151,54 @@ export function search(
                                         }
                                     }
                                     ... on CommitSearchResult {
-                                        ${genericSearchResultInterfaceFields}
+                                        # TODO: Make this a proper fragment, blocked by https://github.com/graph-gophers/graphql-go/issues/241.
+                                        # beginning of genericSearchResultInterfaceFields inline fragment
+                                        label {
+                                            html
+                                        }
+                                        url
+                                        icon
+                                        detail {
+                                            html
+                                        }
+                                        matches {
+                                            url
+                                            body {
+                                                text
+                                                html
+                                            }
+                                            highlights {
+                                                line
+                                                character
+                                                length
+                                            }
+                                        }
+                                        # end of genericSearchResultInterfaceFields inline fragment
                                     }
-                                    ...on CodemodResult @include(if: $useCodemod) {
-                                        ${genericSearchResultInterfaceFields}
+                                    ... on CodemodResult @include(if: $useCodemod) {
+                                        # TODO: Make this a proper fragment, blocked by https://github.com/graph-gophers/graphql-go/issues/241.
+                                        # beginning of genericSearchResultInterfaceFields inline fragment
+                                        label {
+                                            html
+                                        }
+                                        url
+                                        icon
+                                        detail {
+                                            html
+                                        }
+                                        matches {
+                                            url
+                                            body {
+                                                text
+                                                html
+                                            }
+                                            highlights {
+                                                line
+                                                character
+                                                length
+                                            }
+                                        }
+                                        # end of genericSearchResultInterfaceFields inline fragment
                                     }
                                 }
                                 alert {
@@ -166,7 +235,7 @@ export function search(
  * which would fail when accessing window.context.xhrHeaders.
  */
 const repogroupSuggestions = defer(() =>
-    queryGraphQL(gql`
+    queryGraphQL<RepoGroupsResult>(gql`
         query RepoGroups {
             repoGroups {
                 __typename
@@ -184,7 +253,7 @@ const repogroupSuggestions = defer(() =>
 export function fetchSuggestions(query: string): Observable<SearchSuggestion[]> {
     return combineLatest([
         repogroupSuggestions,
-        queryGraphQL(
+        queryGraphQL<SearchSuggestionsResult>(
             gql`
                 query SearchSuggestions($query: String!) {
                     search(query: $query) {
@@ -233,7 +302,7 @@ export function fetchSuggestions(query: string): Observable<SearchSuggestion[]> 
 }
 
 export function fetchReposByQuery(query: string): Observable<{ name: string; url: string }[]> {
-    return queryGraphQL(
+    return queryGraphQL<ReposByQueryResult>(
         gql`
             query ReposByQuery($query: String!) {
                 search(query: $query) {
@@ -271,8 +340,8 @@ const savedSearchFragment = gql`
     }
 `
 
-export function fetchSavedSearches(): Observable<GQL.ISavedSearch[]> {
-    return queryGraphQL(gql`
+export function fetchSavedSearches(): Observable<GQL.SavedSearch[]> {
+    return queryGraphQL<savedSearchesResult>(gql`
         query savedSearches {
             savedSearches {
                 ...SavedSearchFields
@@ -289,8 +358,8 @@ export function fetchSavedSearches(): Observable<GQL.ISavedSearch[]> {
     )
 }
 
-export function fetchSavedSearch(id: GQL.ID): Observable<GQL.ISavedSearch> {
-    return queryGraphQL(
+export function fetchSavedSearch(id: GQL.Scalars['ID']): Observable<GQL.SavedSearch> {
+    return queryGraphQL<SavedSearchResult>(
         gql`
             query SavedSearch($id: ID!) {
                 node(id: $id) {
@@ -311,7 +380,7 @@ export function fetchSavedSearch(id: GQL.ID): Observable<GQL.ISavedSearch> {
         { id }
     ).pipe(
         map(dataOrThrowErrors),
-        map(data => data.node as GQL.ISavedSearch)
+        map(data => data.node as GQL.SavedSearch)
     )
 }
 
@@ -320,10 +389,10 @@ export function createSavedSearch(
     query: string,
     notify: boolean,
     notifySlack: boolean,
-    userId: GQL.ID | null,
-    orgId: GQL.ID | null
+    userId: GQL.Scalars['ID'] | null,
+    orgId: GQL.Scalars['ID'] | null
 ): Observable<void> {
-    return mutateGraphQL(
+    return mutateGraphQL<CreateSavedSearchResult>(
         gql`
             mutation CreateSavedSearch(
                 $description: String!
@@ -361,15 +430,15 @@ export function createSavedSearch(
 }
 
 export function updateSavedSearch(
-    id: GQL.ID,
+    id: GQL.Scalars['ID'],
     description: string,
     query: string,
     notify: boolean,
     notifySlack: boolean,
-    userId: GQL.ID | null,
-    orgId: GQL.ID | null
+    userId: GQL.Scalars['ID'] | null,
+    orgId: GQL.Scalars['ID'] | null
 ): Observable<void> {
-    return mutateGraphQL(
+    return mutateGraphQL<UpdateSavedSearchResult>(
         gql`
             mutation UpdateSavedSearch(
                 $id: ID!
@@ -409,8 +478,8 @@ export function updateSavedSearch(
     )
 }
 
-export function deleteSavedSearch(id: GQL.ID): Observable<void> {
-    return mutateGraphQL(
+export function deleteSavedSearch(id: GQL.Scalars['ID']): Observable<void> {
+    return mutateGraphQL<DeleteSavedSearchResult>(
         gql`
             mutation DeleteSavedSearch($id: ID!) {
                 deleteSavedSearch(id: $id) {
@@ -432,7 +501,7 @@ export const highlightCode = memoizeObservable(
         disableTimeout: boolean
         isLightTheme: boolean
     }): Observable<string> =>
-        queryGraphQL(
+        queryGraphQL<highlightCodeResult>(
             gql`
                 query highlightCode(
                     $code: String!
@@ -470,7 +539,7 @@ export function shouldDisplayPerformanceWarning(deployType: DeployType): Observa
         return of(false)
     }
     const manyReposWarningLimit = 100
-    return queryGraphQL(
+    return queryGraphQL<ManyReposWarningResult>(
         gql`
             query ManyReposWarning($first: Int) {
                 repositories(first: $first) {

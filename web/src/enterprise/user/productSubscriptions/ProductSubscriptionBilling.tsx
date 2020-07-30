@@ -4,7 +4,7 @@ import * as GQL from '../../../../../shared/src/graphql/schema'
 import { ProductSubscriptionLabel } from '../../dotcom/productSubscriptions/ProductSubscriptionLabel'
 
 export const ProductSubscriptionBilling: React.FunctionComponent<{
-    productSubscription: GQL.IProductSubscription
+    productSubscription: GQL.ProductSubscription
 }> = ({ productSubscription }) => (
     <table className="table mb-0">
         <tbody>
