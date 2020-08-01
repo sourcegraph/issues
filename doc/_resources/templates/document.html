@@ -76,6 +76,26 @@
                     <input type="hidden" name="v" value="{{block "version" .}}{{end}}">
                     <button class="btn btn-primary nav-search-button ml-2" type="submit">Search</button>
                 </form>
+                <ul class="content-nav-section expandable" data-nav-section="getting_started">
+                    <button class="content-nav-button"></button>
+                    <div class="close--icon">
+                        <svg class="mdi-icon material-icons" width="24" height="24" fill="#000" viewBox="0 0 24 24">
+                                <path d="M19,6.41L17.59,5L12,10.59L6.41,5L5,6.41L10.59,12L5,17.59L6.41,19L12,13.41L17.59,19L19,17.59L13.41,12L19,6.41Z"></path>
+                            </svg>
+                    </div>
+                    <li class="content-nav-no-hover">
+                        <a class="content-nav-section-header" href="/getting_started">Getting started</a>
+                        <ul class="content-nav-section-group">
+                            <li><a href="/getting_started/choosing_the_right_deployment_model">Choosing the right deployment model</a></li>
+                            <li><a href="/getting_started/installing_sourcegraph">Installing Sourcegraph</a></li>
+                            <li><a href="/getting_started/connecting_integrating_your_code_host">Connecting and integrating your code host</a></li>
+                            <li><a href="/getting_started/intro_universal_code_search">Introduction to Universal Code Search</a></li>
+                            <li><a href="/getting_started/deeper_dive_search_modes">Deeper dive into search modes</a></li>
+                            <li><a href="/getting_started/universal_code_intelligence">Universal Code Intelligence</a></li>
+                            <li><a href="/getting_started/next_steps">Next steps</a></li>
+                        </ul>
+                    </li>
+                </ul>
                 <ul class="content-nav-section expandable" data-nav-section="user">
                     <button class="content-nav-button"></button>
                     <div class="close--icon">
@@ -201,7 +221,6 @@
                                     <li><a href="/admin/observability/troubleshooting">Troubleshooting guide</a></li>
                                 </ul>
                             </li>
-                            <li><a href="/admin/sourcegraph-nginx-mermaid">NGINX and Sourcegraph diagram</a></li>
                             <li><a href="/admin/ssl_https_self_signed_cert_nginx">Adding SSL (HTTPS) to Sourcegraph with a self-signed certificate</a></li>
                             <li><a href="/admin/subscriptions">Paid subscriptions for Sourcegraph Enterprise</a></li>
                             <li><a href="/admin/pings">Pings</a></li>

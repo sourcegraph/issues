@@ -451,7 +451,7 @@ Navigate your browser to https://sourcegraph.test:3443 to see if everything work
 
 ## Troubleshooting
 
-#### Problems with node_modules or Javascript packages
+### Problems with node_modules or Javascript packages
 
 Noticing problems with <code>node_modules/</code> or package versions? Try
 running this command to clear the local package cache.
@@ -464,13 +464,13 @@ cd web
 yarn
 ```
 
-#### dial tcp 127.0.0.1:3090: connect: connection refused
+### dial tcp 127.0.0.1:3090: connect: connection refused
 
 This means the `frontend` server failed to start, for some reason. Look through
 the previous logs for possible explanations, such as failure to contact the
 `redis` server, or database migrations failing.
 
-#### Database migration failures
+### Database migration failures
 
 While developing Sourcegraph, you may run into:
 
@@ -492,7 +492,7 @@ dev/drop-entire-local-database.sh
 dev/migrate.sh up
 ```
 
-#### Internal Server Error
+### Internal Server Error
 
 If you see this error when opening the app:
 
@@ -502,7 +502,7 @@ that means Webpack hasn't finished compiling the styles yet (it takes about 3 mi
 Simply wait a little while for a message from webpack like `web | Time: 180000ms` to appear
 in the terminal.
 
-#### Increase maximum available file descriptors.
+### Increase maximum available file descriptors.
 
 `./dev/start.sh` may ask you to run ulimit to increase the maximum number
 of available file descriptors for a process. You can make this setting
