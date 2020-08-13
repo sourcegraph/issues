@@ -1,4 +1,6 @@
 {
   // This is set from an environment variable
-  "experimentalFeatures": {}
+  "experimentalFeatures": {
+    "showRepogroupHomepage": true
+  }
 }

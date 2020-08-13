@@ -90,7 +90,7 @@ export const SearchPage: React.FunctionComponent<Props> = props => {
             [codeInsightsEnabled, props.extensionsController.services.view]
         )
     )
-
+    console.log('###', props)
     return (
         <div className="web-content search-page">
             <BrandLogo className="search-page__logo" isLightTheme={props.isLightTheme} />

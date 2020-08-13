@@ -10,6 +10,7 @@ import { kubernetes } from './repogroups/Kubernetes'
 import { golang } from './repogroups/Golang'
 import { reactHooks } from './repogroups/ReactHooks'
 import { android } from './repogroups/Android'
+import { stanford } from './repogroups/Stanford'
 
 const SearchPage = lazyComponent(() => import('./search/input/SearchPage'), 'SearchPage')
 const SearchResults = lazyComponent(() => import('./search/results/SearchResults'), 'SearchResults')
@@ -193,6 +194,11 @@ export const routes: readonly LayoutRouteProps<any>[] = [
     {
         path: '/android',
         render: props => <RepogroupPage {...props} repogroupMetadata={android} />,
+        condition: props => window.context.sourcegraphDotComMode,
+    },
+    {
+        path: '/stanford',
+        render: props => <RepogroupPage {...props} repogroupMetadata={stanford} />,
         condition: props => window.context.sourcegraphDotComMode,
     },
     {

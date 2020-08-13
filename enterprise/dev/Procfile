@@ -4,7 +4,7 @@ repo-updater: repo-updater
 searcher: searcher
 symbols: symbols
 github-proxy: github-proxy
-frontend: env CONFIGURATION_MODE=server SITE_CONFIG_ESCAPE_HATCH_PATH=$HOME/.sourcegraph/site-config.json frontend
+frontend: env SOURCEGRAPHDOTCOM_MODE=TRUE CONFIGURATION_MODE=server SITE_CONFIG_ESCAPE_HATCH_PATH=$HOME/.sourcegraph/site-config.json frontend
 watch: ./dev/changewatch.sh
 nginx: nginx -p . -g 'daemon off;' -c $PWD/dev/nginx.conf 2>&1 | grep -v 'could not open error log file'
 caddy: ./dev/caddy.sh run --watch --config=dev/Caddyfile

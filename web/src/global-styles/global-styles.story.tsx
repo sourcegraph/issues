@@ -55,7 +55,7 @@ add('Text', () => (
         </p>
 
         <p>
-            Text can be <em>emphasized</em> or made <strong>strong</strong>.
+            Text can be <em>'emphasized'</em> or made <strong>'strong'</strong>.
         </p>
 
         <p>
@@ -70,6 +70,10 @@ add('Text', () => (
             <small>
                 You can use <code>{'<small>'}</code> to make small text. Use sparingly.
             </small>
+        </p>
+
+        <p>
+            Text can be <span className="text-muted">'muted'</span>
         </p>
 
         <h2>Headings</h2>
@@ -508,13 +512,25 @@ add(
                 sizes, states, and more.{' '}
                 <a href="https://getbootstrap.com/docs/4.5/components/buttons/">Bootstrap documentation</a>
             </p>
+
+            <p>
+                {semanticColors.map(semantic => (
+                    <React.Fragment key={semantic}>
+                        <button type="button" key={semantic} className={classNames('btn', `btn-${semantic}`)}>
+                            {startCase(semantic)}
+                        </button>{' '}
+                    </React.Fragment>
+                ))}
+            </p>
+
+            <h2>Outline</h2>
             <p>
                 {semanticColors.map(semantic => (
                     <React.Fragment key={semantic}>
                         <button
                             type="button"
                             key={semantic}
-                            className={classNames('btn', `btn-${semantic}`)}
+                            className={classNames('btn', `btn-outline-${semantic}`)}
                             onClick={flow(preventDefault, action('button clicked'))}
                         >
                             {startCase(semantic)}
@@ -523,9 +539,37 @@ add(
                 ))}
             </p>
 
+            <h2>Sizes</h2>
+            <p>
+                <code>btn-sm</code> and <code>btn-lg</code> can be combined with all other variations of buttons to make
+                them small or large.
+            </p>
+            <p>
+                <h3>Large</h3>
+                <button type="button" className="btn btn-lg btn-primary">
+                    Large primary button
+                </button>{' '}
+                <button type="button" className="btn btn-lg btn-secondary">
+                    Large secondary button
+                </button>
+            </p>
+
+            <p>
+                <h3>Small</h3>
+                <button type="button" className="btn btn-sm btn-primary">
+                    Small primary button
+                </button>{' '}
+                <button type="button" className="btn btn-sm btn-secondary">
+                    Small secondary button
+                </button>{' '}
+                <button type="button" className="btn btn-sm btn-outline-secondary">
+                    Small secondary outline button
+                </button>
+            </p>
+
             <h2>Disabled</h2>
             <p>
-                <button type="button" className="btn btn-primary" disabled={true}>
+                <button type="button" className="btn btn-primary mr-2" disabled={true}>
                     I am disabled
                 </button>{' '}
                 <button type="button" className="btn btn-secondary" disabled={true}>
@@ -538,6 +582,22 @@ add(
             <a href="https://example.com" className="btn btn-secondary" target="_blank" rel="noopener noreferrer">
                 I am a link
             </a>
+
+            <h2>Button group</h2>
+            <p>
+                A series of arbitrary buttons can be grouped using <code>btn-group</code>.
+            </p>
+            <div className="btn-group mb-2" role="group" aria-label="Button group example">
+                <button type="button" className="btn btn-outline-secondary">
+                    One
+                </button>
+                <button type="button" className="btn btn-outline-secondary">
+                    Two
+                </button>
+                <button type="button" className="btn btn-outline-secondary">
+                    Three
+                </button>
+            </div>
         </>
     ),
     {
@@ -640,6 +700,21 @@ add(
                     </small>
                 </div>
                 <div className="form-group">
+                    <label htmlFor="example-prepend-input">Prepend group</label>
+                    <div className="input-group mb-2">
+                        <div className="input-group-prepend">
+                            <div className="input-group-text">@</div>
+                        </div>
+                        <input
+                            type="email"
+                            className="form-control"
+                            id="example-prepend-input"
+                            aria-describedby="email-help"
+                            placeholder="me@example.com"
+                        />
+                    </div>
+                </div>
+                <div className="form-group">
                     <label htmlFor="example-input-password">Password</label>
                     <input type="password" className="form-control" id="example-input-password" />
                 </div>
@@ -651,16 +726,82 @@ add(
                         <option>Option C</option>
                     </select>
                 </div>
+
                 <div className="form-group">
                     <label htmlFor="example-textarea">Example textarea</label>
                     <textarea className="form-control" id="example-textarea" rows={3} />
                 </div>
+
+                <h3>Checkboxes</h3>
                 <div className="form-group form-check">
-                    <input type="checkbox" className="form-check-input" id="exampleCheck1" />
+                    <input
+                        type="checkbox"
+                        className="form-check-input"
+                        id="exampleCheck1"
+                        checked={false}
+                        aria-checked={false}
+                    />
                     <label className="form-check-label" htmlFor="exampleCheck1">
-                        Check me out
+                        Unchecked
                     </label>
                 </div>
+                <div className="form-group form-check">
+                    <input
+                        type="checkbox"
+                        className="form-check-input"
+                        id="exampleCheck2"
+                        checked={true}
+                        aria-checked={true}
+                    />
+                    <label className="form-check-label" htmlFor="exampleCheck1">
+                        Checked
+                    </label>
+                </div>
+                <div className="form-group">
+                    <div className="form-check">
+                        <input className="form-check-input" type="checkbox" id="disabledCheck" disabled={true} />
+                        <label className="form-check-label" htmlFor="disabledFieldsetCheck">
+                            Disabled
+                        </label>
+                    </div>
+                </div>
+
+                <h3>Radio Buttons</h3>
+                <div className="form-group form-check">
+                    <input
+                        type="radio"
+                        className="form-check-input"
+                        id="exampleRadio1"
+                        value={1}
+                        checked={false}
+                        aria-checked={false}
+                    />
+                    <label className="form-check-label" htmlFor="exampleCheck1">
+                        Unselected
+                    </label>
+                </div>
+                <div className="form-group form-check">
+                    <input
+                        type="radio"
+                        className="form-check-input"
+                        id="exampleRadio2"
+                        value={2}
+                        checked={true}
+                        aria-checked={true}
+                    />
+                    <label className="form-check-label" htmlFor="exampleCheck1">
+                        Selected
+                    </label>
+                </div>
+                <div className="form-group">
+                    <div className="form-check">
+                        <input className="form-check-input" type="radio" id="disabledRadio" value={3} disabled={true} />
+                        <label className="form-check-label" htmlFor="disabledFieldsetCheck">
+                            Disabled
+                        </label>
+                    </div>
+                </div>
+
                 <button type="submit" className="btn btn-primary">
                     Submit
                 </button>
@@ -684,19 +825,7 @@ add(
                             <option>Disabled select</option>
                         </select>
                     </div>
-                    <div className="form-group">
-                        <div className="form-check">
-                            <input
-                                className="form-check-input"
-                                type="checkbox"
-                                id="disabledFieldsetCheck"
-                                disabled={true}
-                            />
-                            <label className="form-check-label" htmlFor="disabledFieldsetCheck">
-                                Can't check this
-                            </label>
-                        </div>
-                    </div>
+
                     <button type="submit" className="btn btn-primary">
                         Submit
                     </button>
