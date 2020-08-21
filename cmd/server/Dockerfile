@@ -21,8 +21,8 @@ RUN apk update && apk add --no-cache \
     # from our *Minimum Supported Version* which alone dictates
     # the features we can depend on. See this link for more information:
     # https://github.com/sourcegraph/sourcegraph/blob/main/doc/dev/postgresql.md#version-requirements
-   'bash=5.0.17-r0' \
-   'redis=5.0.9-r0' bind-tools ca-certificates \
+    'bash=5.0.17-r0' \
+    'redis=5.0.9-r0' bind-tools ca-certificates \
     mailcap 'nginx=1.18.0-r0' openssh-client pcre sqlite-libs su-exec tini 'nodejs-current=14.5.0-r0' curl
 
 # IMPORTANT: If you update the syntect_server version below, you MUST confirm
@@ -43,10 +43,10 @@ RUN wget https://storage.googleapis.com/apktmp/postgres-11-5-for-alpine-3-12-4cc
     rm -rf target/
 
 # install git edge
+# hadolint ignore=DL3022
+COPY --from=sourcegraph/alpine-builder-git:2.28@sha256:7d11a83f0359c6aebc5c9457eda1a8e7199375c7dd879b13e0a36de5dafd9116 /target/main/x86_64/ target/main/x86_64/
 # hadolint ignore=DL3022,DL3003,DL3018,DL3019,SC2035
-RUN wget https://storage.googleapis.com/apktmp/git-edge-for-alpine-3-12-0bd5f13f2f.tar.gz  && \
-    tar -xzf git-edge-for-alpine-3-12-0bd5f13f2f.tar.gz && \
-    cd target/main/x86_64/ && \
+RUN cd target/main/x86_64/ && \
     apk add --allow-untrusted *.apk && \
     cd ../../../ && \
     rm -rf target/
