@@ -5,10 +5,10 @@ import { parseSearchURLQuery } from './search'
 import { lazyComponent } from './util/lazyComponent'
 import { isErrorLike } from '../../shared/src/util/errors'
 import { RepogroupPage } from './repogroups/RepogroupPage'
-import { python2To3Metadata } from './repogroups/Python2To3'
+import { python } from './repogroups/Python'
 import { kubernetes } from './repogroups/Kubernetes'
 import { golang } from './repogroups/Golang'
-import { reactHooks } from './repogroups/ReactHooks'
+import { javascript } from './repogroups/Javascript'
 import { android } from './repogroups/Android'
 import { stanford } from './repogroups/Stanford'
 import { BreadcrumbsProps, BreadcrumbSetters } from './components/Breadcrumbs'
@@ -175,8 +175,8 @@ export const routes: readonly LayoutRouteProps<any>[] = [
         render: lazyComponent(() => import('./views/ViewsArea'), 'ViewsArea'),
     },
     {
-        path: '/refactor-python2-to-3',
-        render: props => <RepogroupPage {...props} repogroupMetadata={python2To3Metadata} />,
+        path: '/python',
+        render: props => <RepogroupPage {...props} repogroupMetadata={python} />,
         condition: props => window.context.sourcegraphDotComMode,
     },
     {
@@ -190,8 +190,8 @@ export const routes: readonly LayoutRouteProps<any>[] = [
         condition: props => window.context.sourcegraphDotComMode,
     },
     {
-        path: '/react-hooks',
-        render: props => <RepogroupPage {...props} repogroupMetadata={reactHooks} />,
+        path: '/javascript',
+        render: props => <RepogroupPage {...props} repogroupMetadata={javascript} />,
         condition: props => window.context.sourcegraphDotComMode,
     },
     {

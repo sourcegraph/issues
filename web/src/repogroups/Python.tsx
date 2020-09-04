@@ -2,12 +2,12 @@ import { RepogroupMetadata } from './types'
 import * as React from 'react'
 import { SearchPatternType } from '../graphql-operations'
 
-export const python2To3Metadata: RepogroupMetadata = {
-    title: 'Refactor Python 2 to 3',
+export const python: RepogroupMetadata = {
+    title: 'Python',
     name: 'python',
-    url: '/refactor-python2-to-3',
+    url: '/python',
     description:
-        'The examples below help you find Python 2 code that requires refactoring, and review examples of the new Python 3 syntax, across popular Python repositories.',
+        'Search popular Python repositories on GitHub. The examples below help you find Python 2 code that requires refactoring, and review examples of the new Python 3 syntax, across popular Python repositories.',
     examples: [
         //         {
         //             title: 'Implicit relative imports in Python 2 and absolute imports:',
@@ -19,6 +19,7 @@ export const python2To3Metadata: RepogroupMetadata = {
         //             patternType: SearchPatternType.regexp,
         //         },
         {
+
             title: 'Python 3 explicit relative imports',
             description:
                 'Python 3 requires you to explicitly specify package location relative to the current folder, and deprecates implicit relative reports. The search below returns usages of explicit relative imports. For example, an import with one leading dot signifies that the package resides in the current folder, and with two leading dots tells Python that the package is one directory up from the current one.',
