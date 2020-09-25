@@ -1,3 +1,7 @@
 module.exports = {
-  plugins: [require('autoprefixer'), require('postcss-focus-visible')],
+  plugins: [
+    require('postcss-preset-env')(),
+    // not included in preset-env: https://github.com/cssnano/cssnano/issues/945
+    require('postcss-normalize-display-values'),
+  ],
 }
