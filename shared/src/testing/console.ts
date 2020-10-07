@@ -1,8 +1,8 @@
 import { ConsoleMessage, ConsoleMessageType } from 'puppeteer'
 import chalk, { Chalk } from 'chalk'
 import * as util from 'util'
-import terminalSize from 'term-size'
-import stringWidth from 'string-width'
+//import terminalSize from 'term-size'
+//import stringWidth from 'string-width'
 import { identity } from 'lodash'
 import { asError } from '../util/errors'
 
@@ -32,13 +32,13 @@ export async function formatPuppeteerConsoleMessage(message: ConsoleMessage): Pr
                 .join(':')
         )
     // Right-align location, like in Chrome dev tools
-    const locationLine = chalk.dim(
+    const locationLine = formattedLocation/*chalk.dim(
         formattedLocation &&
             '\n' +
                 (!process.env.CI
-                    ? ' '.repeat(terminalSize().columns - stringWidth(formattedLocation)) + formattedLocation
+                    ? ' '.repeat(80 - stringWidth(formattedLocation)) + formattedLocation
                     : '\t' + formattedLocation)
-    )
+    )*/
     return [
         chalk.bold('🖥  Browser console:'),
         color(
