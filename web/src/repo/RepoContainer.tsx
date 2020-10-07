@@ -55,6 +55,7 @@ import { displayRepoName, splitPath } from '../../../shared/src/components/RepoF
 import { AuthenticatedUser } from '../auth'
 import { TelemetryProps } from '../../../shared/src/telemetry/telemetryService'
 import { ExternalLinkFields } from '../graphql-operations'
+import SourceRepositoryIcon from 'mdi-react/SourceRepositoryIcon'
 
 /**
  * Props passed to sub-routes of {@link RepoContainer}.
@@ -188,17 +189,7 @@ export const RepoContainer: React.FunctionComponent<RepoContainerProps> = props 
         RepoHeaderContributionsLifecycleProps
     >()
 
-    const repositoryBreadcrumbSetters = props.useBreadcrumb(
-        useMemo(
-            () => ({
-                key: 'repositories',
-                element: <>Repositories</>,
-            }),
-            []
-        )
-    )
-
-    const childBreadcrumbSetters = repositoryBreadcrumbSetters.useBreadcrumb(
+    const childBreadcrumbSetters = props.useBreadcrumb(
         useMemo(() => {
             if (isErrorLike(repoOrError) || !repoOrError) {
                 return
@@ -208,6 +199,8 @@ export const RepoContainer: React.FunctionComponent<RepoContainerProps> = props 
 
             return {
                 key: 'repository',
+                divider: null,
+                noHome: true,
                 element: (
                     <>
                         <Link
@@ -216,8 +209,9 @@ export const RepoContainer: React.FunctionComponent<RepoContainerProps> = props 
                                     ? resolvedRevisionOrError.rootTreeURL
                                     : repoOrError.url
                             }
-                            className="repo-header__repo"
+                            className="h5 mb-0 d-inline-flex align-items-center test-repo-breadcrumb__repo"
                         >
+                            <SourceRepositoryIcon className="icon-inline mr-1" />
                             {repoDirectory ? `${repoDirectory}/` : ''}
                             <span className="font-weight-semibold">{repoBase}</span>
                         </Link>

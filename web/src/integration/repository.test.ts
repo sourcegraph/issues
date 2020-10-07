@@ -388,17 +388,11 @@ describe('Repository', () => {
             const breadcrumbTexts = await driver.page.evaluate(() =>
                 [...document.querySelectorAll('.test-breadcrumb')].map(breadcrumb => breadcrumb.textContent)
             )
-            assert.deepStrictEqual(breadcrumbTexts, [
-                'Home',
-                'Repositories',
-                shortRepositoryName,
-                '@master',
-                clickedFileName,
-            ])
+            assert.deepStrictEqual(breadcrumbTexts, [shortRepositoryName, '@master', clickedFileName])
 
             // Return to repo page
-            await driver.page.waitForSelector('a.repo-header__repo')
-            await driver.page.click('a.repo-header__repo')
+            await driver.page.waitForSelector('a.test-repo-breadcrumb__repo')
+            await driver.page.click('a.test-repo-breadcrumb__repo')
             await driver.page.waitForSelector('h2.tree-page__title')
             await assertSelectorHasText('h2.tree-page__title', ' ' + shortRepositoryName)
             await driver.assertWindowLocation(repositorySourcegraphUrl)
@@ -469,7 +463,7 @@ describe('Repository', () => {
             const breadcrumbTexts = await driver.page.evaluate(() =>
                 [...document.querySelectorAll('.test-breadcrumb')].map(breadcrumb => breadcrumb.textContent)
             )
-            assert.deepStrictEqual(breadcrumbTexts, ['Home', 'Repositories', shortRepositoryName, '@master', filePath])
+            assert.deepStrictEqual(breadcrumbTexts, [shortRepositoryName, '@master', filePath])
 
             // TODO, broken: https://github.com/sourcegraph/sourcegraph/issues/12296
             // await driver.page.waitForSelector('#monaco-query-input .view-lines')

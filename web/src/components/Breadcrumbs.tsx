@@ -21,6 +21,11 @@ interface BaseBreadcrumb {
      * By default a chevron icon `>` is used.
      */
     divider?: React.ReactNode
+
+    /**
+     * Hide the "Home >" prefix from the breadcrumb.
+     */
+    noHome?: boolean
 }
 
 interface ElementBreadcrumb extends BaseBreadcrumb {
@@ -157,6 +162,7 @@ export const Breadcrumbs: React.FC<{ breadcrumbs: BreadcrumbAtDepth[]; location:
         {sortBy(breadcrumbs, 'depth')
             .map(({ breadcrumb }) => breadcrumb)
             .filter(isDefined)
+            .filter((_breadcrumb, index) => index > 0 || !breadcrumbs.some(breadcrumb => breadcrumb.breadcrumb?.noHome))
             .map((breadcrumb, index, validBreadcrumbs) => {
                 const divider =
                     breadcrumb.divider === undefined ? <ChevronRightIcon className="icon-inline" /> : breadcrumb.divider
