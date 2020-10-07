@@ -166,6 +166,7 @@ exports[`NavLinks authed Sourcegraph.com /foo 1`] = `
       class="command-list__popover-button btn btn-link "
       id="command-list-popover-button-7"
       role="button"
+      tabindex="0"
     >
       <svg
         class="mdi-icon icon-inline"
@@ -542,6 +543,7 @@ exports[`NavLinks authed Sourcegraph.com /search 1`] = `
       class="command-list__popover-button btn btn-link "
       id="command-list-popover-button-8"
       role="button"
+      tabindex="0"
     >
       <svg
         class="mdi-icon icon-inline"
@@ -928,6 +930,7 @@ exports[`NavLinks authed self-hosted /foo 1`] = `
       class="command-list__popover-button btn btn-link "
       id="command-list-popover-button-5"
       role="button"
+      tabindex="0"
     >
       <svg
         class="mdi-icon icon-inline"
@@ -1285,6 +1288,7 @@ exports[`NavLinks authed self-hosted /search 1`] = `
       class="command-list__popover-button btn btn-link "
       id="command-list-popover-button-6"
       role="button"
+      tabindex="0"
     >
       <svg
         class="mdi-icon icon-inline"
@@ -1615,6 +1619,7 @@ exports[`NavLinks unauthed Sourcegraph.com /foo 1`] = `
       class="command-list__popover-button btn btn-link "
       id="command-list-popover-button-3"
       role="button"
+      tabindex="0"
     >
       <svg
         class="mdi-icon icon-inline"
@@ -1762,6 +1767,7 @@ exports[`NavLinks unauthed Sourcegraph.com /search 1`] = `
       class="command-list__popover-button btn btn-link "
       id="command-list-popover-button-4"
       role="button"
+      tabindex="0"
     >
       <svg
         class="mdi-icon icon-inline"
@@ -1907,6 +1913,7 @@ exports[`NavLinks unauthed self-hosted /foo 1`] = `
       class="command-list__popover-button btn btn-link "
       id="command-list-popover-button-1"
       role="button"
+      tabindex="0"
     >
       <svg
         class="mdi-icon icon-inline"
@@ -2042,6 +2049,7 @@ exports[`NavLinks unauthed self-hosted /search 1`] = `
       class="command-list__popover-button btn btn-link "
       id="command-list-popover-button-2"
       role="button"
+      tabindex="0"
     >
       <svg
         class="mdi-icon icon-inline"

@@ -5,7 +5,7 @@ import { sortBy, uniq, uniqueId } from 'lodash'
 import MenuDownIcon from 'mdi-react/MenuDownIcon'
 import ConsoleIcon from 'mdi-react/ConsoleIcon'
 import MenuUpIcon from 'mdi-react/MenuUpIcon'
-import React, { useCallback, useMemo, useState } from 'react'
+import React, { useCallback, useMemo, useRef, useState } from 'react'
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore
 import TooltipPopoverWrapper from 'reactstrap/lib/TooltipPopoverWrapper'
@@ -353,12 +353,35 @@ export const CommandListPopoverButton: React.FunctionComponent<CommandListPopove
 
     const id = useMemo(() => uniqueId('command-list-popover-button-'), [])
 
+    const buttonReference = useRef<HTMLAnchorElement | null>(null)
+
+    const onKeyDown: React.KeyboardEventHandler<HTMLAnchorElement> = useCallback(
+        event => {
+            switch (event.key) {
+                case Key.Escape: {
+                    buttonReference.current?.focus()
+                    break
+                }
+                case Key.Enter: {
+                    if (!isOpen) {
+                        setIsOpen(true)
+                    }
+                    break
+                }
+            }
+        },
+        [isOpen]
+    )
+
     return (
         <ButtonElement
             role="button"
             className={`command-list__popover-button ${buttonClassName} ${isOpen ? buttonOpenClassName : ''}`}
             id={id}
             onClick={toggleIsOpen}
+            onKeyDown={onKeyDown}
+            tabIndex={0}
+            ref={buttonReference}
         >
             <ConsoleIcon className="icon-inline" />
             {showCaret && (isOpen ? <MenuUpIcon className="icon-inline" /> : <MenuDownIcon className="icon-inline" />)}
