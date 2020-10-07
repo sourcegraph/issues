@@ -16,6 +16,8 @@
         // The padding should be calculated by the width of an icon width * number of icons + 0. 5rem.
         padding-right: calc(#{$toggle-icon-width} * 4 + 0.5rem);
 
+        resize: none;
+
         &--with-mode-toggle {
             border-top-left-radius: 0;
             border-bottom-left-radius: 0;

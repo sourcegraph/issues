@@ -14,6 +14,7 @@ import {
     delay,
     share,
 } from 'rxjs/operators'
+import { MultilineTextField } from '../../../../shared/src/components/multilineTextField/MultilineTextField'
 import { eventLogger } from '../../tracking/eventLogger'
 import { scrollIntoView } from '../../util'
 import { Suggestion, SuggestionItem, createSuggestion, fuzzySearchFilters } from './Suggestion'
@@ -132,7 +133,7 @@ export class QueryInput extends React.Component<Props, State> {
     private suggestionsHidden = new Subject<void>()
 
     /** Only used for selection and focus management */
-    private inputElement = React.createRef<HTMLInputElement>()
+    private inputElement = React.createRef<HTMLTextAreaElement>()
 
     /** Used for scrolling suggestions into view while scrolling with keyboard */
     private containerElement = React.createRef<HTMLDivElement>()
@@ -360,7 +361,7 @@ export class QueryInput extends React.Component<Props, State> {
                         return (
                             <div className="query-input2">
                                 <div ref={this.containerElement}>
-                                    <input
+                                    <MultilineTextField
                                         onFocus={this.onInputFocus}
                                         onBlur={this.onInputBlur}
                                         className={`form-control query-input2__input test-query-input ${
@@ -370,10 +371,12 @@ export class QueryInput extends React.Component<Props, State> {
                                         }`}
                                         value={this.props.value.query}
                                         autoFocus={this.props.autoFocus === true}
-                                        onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
+                                        // eslint-disable-next-line react/jsx-no-bind
+                                        onChange={(event: React.ChangeEvent<HTMLTextAreaElement>) => {
                                             downshiftChange(event)
                                             this.onInputChange(event)
                                         }}
+                                        // eslint-disable-next-line react/jsx-no-bind
                                         onKeyDown={event => {
                                             this.onInputKeyDown(event)
                                             onKeyDown(event)
@@ -385,7 +388,7 @@ export class QueryInput extends React.Component<Props, State> {
                                                 ? 'Search code...'
                                                 : this.props.placeholder
                                         }
-                                        ref={this.inputElement}
+                                        inputRef={this.inputElement}
                                         name="query"
                                         autoComplete="off"
                                     />
@@ -447,7 +450,7 @@ export class QueryInput extends React.Component<Props, State> {
         this.setState({ showSuggestions }, () => !showSuggestions && this.suggestionsHidden.next())
     }
 
-    private onInputKeyDown = (event: React.KeyboardEvent<HTMLInputElement>): void => {
+    private onInputKeyDown = (event: React.KeyboardEvent<HTMLTextAreaElement>): void => {
         // Ctrl+Space to show all available filter type suggestions
         if (event.ctrlKey && event.key === ' ') {
             this.setState({
@@ -527,7 +530,7 @@ export class QueryInput extends React.Component<Props, State> {
         eventLogger.log('SearchInitiated')
     })
 
-    private onInputChange: React.ChangeEventHandler<HTMLInputElement> = event => {
+    private onInputChange: React.ChangeEventHandler<HTMLTextAreaElement> = event => {
         this.logFirstInput()
         this.inputValues.next({
             fromUserInput: true,

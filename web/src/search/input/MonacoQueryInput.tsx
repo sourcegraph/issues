@@ -125,6 +125,9 @@ const hasKeybindingService = (
     typeof (editor._standaloneKeybindingService as MonacoEditorWithKeybindingsService['_standaloneKeybindingService'])
         .addDynamicKeybinding === 'function'
 
+/** The height (px) of a line in the Monaco editor. */
+const LINE_HEIGHT = 16 // px
+
 /**
  * HACK: this interface and the below type guard are used to add a custom command
  * to the editor. There is no public API to add a command with a specified ID and handler,
@@ -193,6 +196,19 @@ export class MonacoQueryInput extends React.PureComponent<MonacoQueryInputProps>
         )
 
         this.subscriptions.add(
+            this.componentUpdates
+                .pipe(
+                    map(props => props.queryState.query),
+                    withLatestFrom(this.editorRefs)
+                )
+                .subscribe(([, editor]) => {
+                    if (editor) {
+                        editor.layout()
+                    }
+                })
+        )
+
+        this.subscriptions.add(
             this.suggestionTriggers
                 .pipe(
                     withLatestFrom(this.editorRefs),
@@ -221,7 +237,7 @@ export class MonacoQueryInput extends React.PureComponent<MonacoQueryInputProps>
         const options: Monaco.editor.IEditorOptions = {
             readOnly: false,
             lineNumbers: 'off',
-            lineHeight: 16,
+            lineHeight: LINE_HEIGHT,
             // Match the query input's height for suggestion items line height.
             suggestLineHeight: 34,
             minimap: {
@@ -246,16 +262,27 @@ export class MonacoQueryInput extends React.PureComponent<MonacoQueryInputProps>
             // Display the cursor as a 1px line.
             cursorStyle: 'line',
             cursorWidth: 1,
+            automaticLayout: true,
+            scrollBeyondLastLine: false,
         }
+
+        const lines = this.props.queryState.query.split(/\n/g).length
+        const height = lines * LINE_HEIGHT
+
         return (
             <>
-                <div ref={this.containerRefs.next.bind(this.containerRefs)} className="monaco-query-input-container">
+                <div
+                    ref={this.containerRefs.next.bind(this.containerRefs)}
+                    className="monaco-query-input-container"
+                    // style={{ height: `${height + 12}px` }}
+                >
                     <div className="flex-grow-1 flex-shrink-past-contents">
                         <MonacoEditor
                             id="monaco-query-input"
+                            className="my-2"
                             language={SOURCEGRAPH_SEARCH}
                             value={this.props.queryState.query}
-                            height={16}
+                            height={height}
                             isLightTheme={this.props.isLightTheme}
                             editorWillMount={this.editorWillMount}
                             onEditorCreated={this.onEditorCreated}
@@ -268,7 +295,7 @@ export class MonacoQueryInput extends React.PureComponent<MonacoQueryInputProps>
                     <Toggles
                         {...this.props}
                         navbarSearchQuery={this.props.queryState.query}
-                        className="monaco-query-input-container__toggle-container"
+                        className="monaco-query-input-container__toggle-container mt-1"
                     />
                 </div>
             </>
@@ -406,7 +433,8 @@ export class MonacoQueryInput extends React.PureComponent<MonacoQueryInputProps>
         this.subscriptions.add(
             toUnsubscribable(
                 editor.onDidChangeModelContent(() => {
-                    this.onChange(editor, editor.getValue().replace(/[\n\r↵]/g, ''))
+                    // this.onChange(editor, editor.getValue().replace(/[\n\r↵]/g, ''))
+                    this.onChange(editor, editor.getValue())
                 })
             )
         )

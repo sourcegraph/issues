@@ -166,7 +166,7 @@ type Response struct {
 	DeadlineHit bool
 }
 
-// FileMatch is the struct used by vscode to receive search results
+// FileMatch describes search results in a file.
 type FileMatch struct {
 	Path        string
 	LineMatches []LineMatch
@@ -177,13 +177,12 @@ type FileMatch struct {
 	LimitHit bool
 }
 
-// LineMatch is the struct used by vscode to receive search results for a line.
+// LineMatch describes search results for a line.
 type LineMatch struct {
 	// Preview is the matched line.
 	Preview string
 
-	// LineNumber is the 0-based line number. Note: Our editors present
-	// 1-based line numbers, but internally vscode uses 0-based.
+	// LineNumber is the 0-based line number.
 	LineNumber int
 
 	// OffsetAndLengths is a slice of 2-tuples (Offset, Length)

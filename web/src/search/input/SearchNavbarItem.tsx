@@ -86,7 +86,7 @@ export const SearchNavbarItem: React.FunctionComponent<Props> = (props: Props) =
 
     return (
         <Form
-            className="search--navbar-item d-flex align-items-flex-start flex-grow-1 flex-shrink-past-contents"
+            className="search--navbar-item d-flex align-items-start flex-grow-1 flex-shrink-past-contents"
             onSubmit={onSubmit}
         >
             <LazyMonacoQueryInput

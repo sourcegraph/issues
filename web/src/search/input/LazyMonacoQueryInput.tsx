@@ -2,6 +2,7 @@ import React, { Suspense } from 'react'
 import { MonacoQueryInputProps } from './MonacoQueryInput'
 import { lazyComponent } from '../../util/lazyComponent'
 import { Toggles } from './toggles/Toggles'
+import { MultilineTextField } from '../../../../shared/src/components/multilineTextField/MultilineTextField'
 
 const MonacoQueryInput = lazyComponent(() => import('./MonacoQueryInput'), 'MonacoQueryInput')
 
@@ -16,7 +17,7 @@ export const PlainQueryInput: React.FunctionComponent<MonacoQueryInputProps> = (
     ...props
 }) => {
     const onInputChange = React.useCallback(
-        (event: React.ChangeEvent<HTMLInputElement>) => {
+        (event: React.ChangeEvent<HTMLTextAreaElement>) => {
             // cursorPosition is only used for legacy suggestions, it's OK to set it to 0 here.
             onChange({ query: event.target.value, cursorPosition: 0 })
         },
@@ -24,7 +25,7 @@ export const PlainQueryInput: React.FunctionComponent<MonacoQueryInputProps> = (
     )
     return (
         <div className="query-input2 d-flex">
-            <input
+            <MultilineTextField
                 type="text"
                 autoFocus={autoFocus}
                 className="form-control code lazy-monaco-query-input--intermediate-input"
