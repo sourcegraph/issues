@@ -124,7 +124,7 @@ export const SiteAdminRepositoriesPage: React.FunctionComponent<Props> = ({ hist
         <div className="site-admin-repositories-page">
             <PageTitle title="Repositories - Admin" />
             {showRepositoriesAddedBanner && (
-                <p className="alert alert-success">
+                <p className="alert alert-success test-updating-repositories-alert">
                     Updating repositories. It may take a few moments to clone and index each repository. Repository
                     statuses are displayed below.
                 </p>
