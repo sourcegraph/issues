@@ -83,7 +83,7 @@
     "@graphql-codegen/typescript-operations": "1.17.8",
     "@istanbuljs/nyc-config-typescript": "^1.0.1",
     "@mermaid-js/mermaid-cli": "^8.7.0",
-    "@octokit/rest": "^16.36.0",
+    "@octokit/rest": "^16.43.2",
     "@percy/puppeteer": "^1.1.0",
     "@pollyjs/adapter": "^5.0.0",
     "@pollyjs/core": "^5.0.0",
