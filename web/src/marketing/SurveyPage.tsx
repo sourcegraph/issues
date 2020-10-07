@@ -192,7 +192,7 @@ const TweetFeedback: React.FunctionComponent<TweetFeedbackProps> = ({ feedback, 
         return (
             <>
                 <p className="mt-2">
-                    One more favor, could you share your feedback on Twitter? We'd really appreciate it!
+                    Want Sourcegraph swag? Post a tweet with your feedback and we'll send some over to you. 
                 </p>
                 <a
                     className="d-inline-block mt-2 btn btn-primary"
