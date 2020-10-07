@@ -7,7 +7,7 @@ import React, { useState } from 'react'
 import { storiesOf } from '@storybook/react'
 import classNames from 'classnames'
 import { action } from '@storybook/addon-actions'
-import { flow, startCase } from 'lodash'
+import { flow, range, startCase } from 'lodash'
 import { highlightCodeSafe } from '../../../shared/src/util/markdown'
 import { Form } from '../components/Form'
 import openColor from 'open-color'
@@ -23,9 +23,7 @@ const preventDefault = <E extends React.SyntheticEvent>(event: E): E => {
     return event
 }
 
-const { add } = storiesOf('web/Global styles', module).addDecorator(story => (
-    <WebStory>{() => <div className="p-3 container">{story()}</div>}</WebStory>
-))
+const { add } = storiesOf('web/Global styles', module).addDecorator(story => <WebStory>{() => story()}</WebStory>)
 
 const TextStory: React.FunctionComponent = () => (
     <>
@@ -324,96 +322,209 @@ add(
     }
 )
 
-add('Layout', () => (
-    <>
-        <h1>Layout</h1>
+add(
+    'Layout',
+    () => {
+        const [breakpoint, setBreakpoint] = useState<string>('md')
+        return (
+            <>
+                <h1>Layout</h1>
 
-        <h2>Spacing</h2>
-        <p>
-            Use margin <code>m-*</code> and padding <code>p-*</code> utilities to align with the{' '}
-            <a
-                href="https://builttoadapt.io/intro-to-the-8-point-grid-system-d2573cde8632"
-                target="_blank"
-                rel="noopener noreferrer"
-            >
-                8pt grid
-            </a>
-            . When hand-writing CSS, use <code>rem</code> units in multiples of <code>0.25</code>.
-        </p>
+                <h2>Spacing</h2>
+                <p>
+                    Use margin <code>m-*</code> and padding <code>p-*</code> utilities to align with the{' '}
+                    <a
+                        href="https://builttoadapt.io/intro-to-the-8-point-grid-system-d2573cde8632"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                    >
+                        8pt grid
+                    </a>
+                    . When hand-writing CSS, use <code>rem</code> units in multiples of <code>0.25</code>.
+                </p>
 
-        <h2>One-dimensional layout</h2>
-        <p>
-            Use{' '}
-            <a href="https://css-tricks.com/snippets/css/a-guide-to-flexbox/" target="_blank" rel="noopener noreferrer">
-                Flexbox
-            </a>{' '}
-            for one-dimensional layouts (single rows or columns, with optional wrapping). You can use{' '}
-            <a href="https://getbootstrap.com/docs/4.5/utilities/flex/" target="_blank" rel="noopener noreferrer">
-                utility classes
-            </a>{' '}
-            for simple flexbox layouts.
-        </p>
+                <h2>One-dimensional layout</h2>
+                <p>
+                    Use{' '}
+                    <a
+                        href="https://css-tricks.com/snippets/css/a-guide-to-flexbox/"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                    >
+                        Flexbox
+                    </a>{' '}
+                    for one-dimensional layouts (single rows or columns, with optional wrapping). You can use{' '}
+                    <a
+                        href="https://getbootstrap.com/docs/4.5/utilities/flex/"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                    >
+                        utility classes
+                    </a>{' '}
+                    for simple flexbox layouts.
+                </p>
 
-        <h3>Row layout</h3>
-        <h4>Equally distributed</h4>
-        <div
-            className="d-flex p-1 border mb-2 overflow-hidden"
-            style={{ resize: 'both', minWidth: '16rem', minHeight: '3rem' }}
-        >
-            <div className="p-1 m-1 flex-grow-1 d-flex justify-content-center align-items-center border">Column 1</div>
-            <div className="p-1 m-1 flex-grow-1 d-flex justify-content-center align-items-center border">Column 2</div>
-            <div className="p-1 m-1 flex-grow-1 d-flex justify-content-center align-items-center border">Column 3</div>
-        </div>
+                <h3>Row layout</h3>
+                <h4>Equally distributed</h4>
+                <div
+                    className="d-flex p-1 border mb-2 overflow-hidden"
+                    style={{ resize: 'both', minWidth: '16rem', minHeight: '3rem' }}
+                >
+                    <div className="p-1 m-1 flex-grow-1 d-flex justify-content-center align-items-center border">
+                        Column 1
+                    </div>
+                    <div className="p-1 m-1 flex-grow-1 d-flex justify-content-center align-items-center border">
+                        Column 2
+                    </div>
+                    <div className="p-1 m-1 flex-grow-1 d-flex justify-content-center align-items-center border">
+                        Column 3
+                    </div>
+                </div>
 
-        <h4>Middle column growing</h4>
-        <div
-            className="d-flex p-1 border mb-2 overflow-hidden"
-            style={{ resize: 'both', minWidth: '16rem', minHeight: '3rem' }}
-        >
-            <div className="p-1 m-1 d-flex justify-content-center align-items-center border border">Column 1</div>
-            <div className="p-1 m-1 d-flex justify-content-center align-items-center border flex-grow-1 border">
-                Column 2
-            </div>
-            <div className="p-1 m-1 d-flex justify-content-center align-items-center border border">Column 3</div>
-        </div>
+                <h4>Middle column growing</h4>
+                <div
+                    className="d-flex p-1 border mb-2 overflow-hidden"
+                    style={{ resize: 'both', minWidth: '16rem', minHeight: '3rem' }}
+                >
+                    <div className="p-1 m-1 d-flex justify-content-center align-items-center border border">
+                        Column 1
+                    </div>
+                    <div className="p-1 m-1 d-flex justify-content-center align-items-center border flex-grow-1 border">
+                        Column 2
+                    </div>
+                    <div className="p-1 m-1 d-flex justify-content-center align-items-center border border">
+                        Column 3
+                    </div>
+                </div>
 
-        <h3>Column layout</h3>
-        <div
-            className="d-flex flex-column p-1 border mb-2 overflow-hidden"
-            style={{ minHeight: '8rem', height: '12rem', minWidth: '6rem', width: '12rem', resize: 'both' }}
-        >
-            <div className="p-1 m-1 flex-grow-1 border d-flex align-items-center justify-content-center">Row 1</div>
-            <div className="p-1 m-1 flex-grow-1 border d-flex align-items-center justify-content-center">Row 2</div>
-            <div className="p-1 m-1 flex-grow-1 border d-flex align-items-center justify-content-center">Row 3</div>
-        </div>
+                <h3>Column layout</h3>
+                <div
+                    className="d-flex flex-column p-1 border mb-2 overflow-hidden"
+                    style={{ minHeight: '8rem', height: '12rem', minWidth: '6rem', width: '12rem', resize: 'both' }}
+                >
+                    <div className="p-1 m-1 flex-grow-1 border d-flex align-items-center justify-content-center">
+                        Row 1
+                    </div>
+                    <div className="p-1 m-1 flex-grow-1 border d-flex align-items-center justify-content-center">
+                        Row 2
+                    </div>
+                    <div className="p-1 m-1 flex-grow-1 border d-flex align-items-center justify-content-center">
+                        Row 3
+                    </div>
+                </div>
 
-        <h2>Two-dimensional layout</h2>
-        <p>
-            Use <a href="https://learncssgrid.com/">CSS Grid</a> for complex two-dimensional layouts.
-        </p>
-        <div
-            className="p-2 border overflow-hidden"
-            style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(3, 1fr)',
-                gridAutoRows: '1fr',
-                gridGap: '0.5rem',
-                resize: 'both',
-                minWidth: '16rem',
-                height: '16rem',
-                minHeight: '6rem',
-                marginBottom: '16rem',
-            }}
-        >
-            <div className="border d-flex align-items-center justify-content-center">Cell 1</div>
-            <div className="border d-flex align-items-center justify-content-center">Cell 2</div>
-            <div className="border d-flex align-items-center justify-content-center">Cell 3</div>
-            <div className="border d-flex align-items-center justify-content-center">Cell 4</div>
-            <div className="border d-flex align-items-center justify-content-center">Cell 5</div>
-            <div className="border d-flex align-items-center justify-content-center">Cell 6</div>
-        </div>
-    </>
-))
+                <h2>Two-dimensional layout</h2>
+                <p>
+                    Use <a href="https://learncssgrid.com/">CSS Grid</a> for complex two-dimensional layouts (where
+                    cells need to match in height and have variable content).
+                </p>
+                <div
+                    className="p-2 border overflow-hidden"
+                    style={{
+                        display: 'grid',
+                        gridTemplateColumns: 'repeat(3, 1fr)',
+                        gridAutoRows: '1fr',
+                        gridGap: '0.5rem',
+                        resize: 'both',
+                        minWidth: '16rem',
+                        minHeight: '6rem',
+                        height: '10rem',
+                    }}
+                >
+                    <div className="border d-flex align-items-center justify-content-center">Cell 1</div>
+                    <div className="border d-flex align-items-center justify-content-center">Cell 2</div>
+                    <div className="border d-flex align-items-center justify-content-center">Cell 3</div>
+                    <div className="border d-flex align-items-center justify-content-center">Cell 4</div>
+                    <div className="border d-flex align-items-center justify-content-center">Cell 5</div>
+                    <div className="border d-flex align-items-center justify-content-center">Cell 6</div>
+                </div>
+
+                <h2>Container</h2>
+                <p>
+                    Bootstrap's <code>container</code> class is a fixed-width container with some padding centered in
+                    the middle of the parent.{' '}
+                    <a href="https://getbootstrap.com/docs/4.5/layout/overview/#containers">Bootstrap documentation</a>
+                </p>
+                <div style={{ background: 'var(--oc-cyan-1)' }}>
+                    <div className="container d-flex" style={{ background: 'var(--oc-cyan-2)' }}>
+                        <div className="flex-1" style={{ background: 'var(--oc-teal-3)' }}>
+                            I am content in a container.{' '}
+                            {'Elit dolore do exercitation cillum mollit ea ad deserunt cupidatat ea ea id aliquip. Dolor cupidatat Lorem ad ex nostrud proident laboris non pariatur adipisicing. Elit quis ex est anim officia qui et officia est aliqua aute velit do. Dolor excepteur velit eiusmod eu nostrud et eu et eiusmod. Pariatur occaecat ad occaecat pariatur aliquip officia commodo laborum dolor qui qui. Minim Lorem adipisicing non pariatur amet do proident do culpa duis. Veniam ipsum labore magna commodo esse elit officia officia irure.'.repeat(
+                                3
+                            )}
+                        </div>
+                    </div>
+                </div>
+                <p>
+                    A <code>container-fluid</code> adds just the padding while staying full width.{' '}
+                    <code>{'container-{breakpoint}'}</code> variants behave like a <code>container-fluid</code> below a
+                    certain screen size breakpoint and like a <code>container</code> above the breakpoint.
+                </p>
+
+                <h2>12-column grid</h2>
+                <p>
+                    Simple one-dimensional, responsive 12-column grid layouts can be built using Bootstrap's{' '}
+                    <code>row</code> and <code>col-*</code> classes. Note that cells will not stretch to match each
+                    other's height like with CSS grid above and will not grow and shrink depending on their content.
+                    Cells can instead span a different amount of columns depending on container size breakpoints. Rows
+                    must always be inside a container or fluid container.{' '}
+                    <a href="https://getbootstrap.com/docs/4.5/layout/grid/">Bootstrap documentation</a>
+                </p>
+
+                <div>
+                    Layout as a grid when container size is{' '}
+                    <select
+                        className="form-control d-inline-block w-auto"
+                        value={breakpoint}
+                        onChange={event => setBreakpoint(event.target.value)}
+                    >
+                        <option value="xs">xs ({'<'}576px)</option>
+                        <option value="sm">sm (≥576px)</option>
+                        <option value="md">md (≥768px)</option>
+                        <option value="lg">lg (≥992px)</option>
+                        <option value="xl">xl (≥1200px)</option>
+                    </select>
+                </div>
+                {['container', 'container-fluid'].map(container => (
+                    <React.Fragment key={container}>
+                        <h3>
+                            In a <code>{container}</code>
+                        </h3>
+                        <div style={{ background: 'var(--oc-cyan-1)' }}>
+                            <div className={container} style={{ background: 'var(--oc-cyan-2)' }}>
+                                {[1, 3, 4, 6].map(size => (
+                                    <div className="row mt-3" key={size}>
+                                        {range(1, 12 / size + 1).map(number => (
+                                            <div
+                                                className={`col${
+                                                    breakpoint === 'xs' ? '' : '-' + breakpoint
+                                                }-${size} d-flex`}
+                                                key={number}
+                                                style={{ background: 'var(--oc-red-2)' }}
+                                            >
+                                                <span
+                                                    className="p-2 flex-1 d-flex align-items-center justify-content-center"
+                                                    style={{ background: 'var(--oc-red-3)' }}
+                                                >
+                                                    {number}
+                                                </span>
+                                            </div>
+                                        ))}
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    </React.Fragment>
+                ))}
+            </>
+        )
+    },
+    {
+        chromatic: {
+            disable: true,
+        },
+    }
+)
 
 add(
     'Alerts',
