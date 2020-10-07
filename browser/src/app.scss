@@ -39,6 +39,11 @@ $theme-colors-light: (
     background-color: rgba(255, 192, 120, 0.5);
 }
 
+body {
+    // Needed to position the HoverOverlay
+    position: relative;
+}
+
 @import 'bootstrap/scss/functions';
 @import 'bootstrap/scss/variables';
 @import 'bootstrap/scss/mixins';
