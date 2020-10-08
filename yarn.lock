@@ -8934,10 +8934,10 @@ dom-accessibility-api@^0.4.5:
   resolved "https://registry.npmjs.org/dom-accessibility-api/-/dom-accessibility-api-0.4.5.tgz#d9c1cefa89f509d8cf132ab5d250004d755e76e3"
   integrity sha512-HcPDilI95nKztbVikaN2vzwvmv0sE8Y2ZJFODy/m15n7mGXLeOKGiys9qWVbFbh+aq/KYj2lqMLybBOkYAEXqg==
 
-dom-confetti@0.1.1:
-  version "0.1.1"
-  resolved "https://registry.npmjs.org/dom-confetti/-/dom-confetti-0.1.1.tgz#f53c355301286430e9f500567adac5041c827468"
-  integrity sha512-cyTs35FOqOlm+9rC8C5p0BFo0aHR2t6VWHdXmvgUEFHsF/P7tZeS5nw71oX6NifJrlxOmZ6VcmCH/hn99mqaAA==
+dom-confetti@0.2.2:
+  version "0.2.2"
+  resolved "https://registry.npmjs.org/dom-confetti/-/dom-confetti-0.2.2.tgz#bdf2e7652d37b5cffb532c0a3263d108dd8a2363"
+  integrity sha512-+UVH9Y85qmpTnbmFURwLWjqLIykyIrsNSRkPX/eFlBuOURz9RDX8JoZHnajZHyFuCV0w/K3+tZK0ztfoTw6ejg==
 
 dom-converter@~0.2:
   version "0.2.0"
@@ -18720,12 +18720,12 @@ react-docgen@^5.0.0:
     node-dir "^0.1.10"
     strip-indent "^3.0.0"
 
-react-dom-confetti@^0.1.4:
-  version "0.1.4"
-  resolved "https://registry.npmjs.org/react-dom-confetti/-/react-dom-confetti-0.1.4.tgz#64025805f58eecd58ee8184e3d0ad3fc25ff3aee"
-  integrity sha512-YNhYUlxbvdQKe6qdMVSZeoFg3Vm9Sz/4JYF2uMVzAZGi7752X+k/9Zj1NJW9dfDhCjsmWb1bF8jxsVSbu9AX3w==
+react-dom-confetti@^0.2.0:
+  version "0.2.0"
+  resolved "https://registry.npmjs.org/react-dom-confetti/-/react-dom-confetti-0.2.0.tgz#76df26762da532057d5b1fbe38a8096f9dc33d40"
+  integrity sha512-+XRTi+WlCrcRN2dTjdEopOaPFtS7hpaHRRQ0sHiVRGqpchKz4QVh3i+6eLEEpNHYpN2VgPmhjvJ/vnjmUYhlIQ==
   dependencies:
-    dom-confetti "0.1.1"
+    dom-confetti "0.2.2"
 
 react-dom@^16.8.3:
   version "16.9.0"

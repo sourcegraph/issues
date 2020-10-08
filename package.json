@@ -298,7 +298,7 @@
     "react": "^16.13.1",
     "react-circular-progressbar": "^2.0.3",
     "react-dom": "npm:@hot-loader/react-dom@^16.13.0",
-    "react-dom-confetti": "^0.1.4",
+    "react-dom-confetti": "^0.2.0",
     "react-grid-layout": "^0.18.3",
     "react-router": "^5.2.0",
     "react-router-dom": "^5.2.0",
