@@ -1,4 +1,4 @@
-# Tutorial: Adding LSIF to many repositories
+# How-to: Add LSIF to many repositories
 
 ## Prerequisites
 

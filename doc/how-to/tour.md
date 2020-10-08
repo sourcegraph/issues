@@ -12,6 +12,8 @@ As a developer who is reviewing a pull request or diff, I need to understand the
 
 Using Sourcegraph makes you a more effective code reviewer because code intelligence makes it much easier to drill down into the implementation (to verify correctness of the change) and enumerate call sites (to verify completeness of the change).
 
+You will need to install Sourcegraph to search your own code and walk through the example below. If you'd rather try Sourcegraph out before installing it, use [Sourcegraph Cloud](https://sourcegraph.com/search) and search public code.
+
 Requirements:
 
 - [Install Sourcegraph](../admin/install/index.md) and add repositories

@@ -4,7 +4,7 @@ Sourcegraph integrates with your other tools to help you search, navigate, and r
 
 - [Browser extension](browser_extension.md): go-to-definitions and hovers in your code host and code reviews
   - [Google Workspace (formerly known as G Suite) and Chrome Enterprise](google_workspace.md)
-- Code hosts
+- [Code hosts](code-hosts/index.md)
   - [GitHub](github.md)
   - [GitLab](gitlab.md)
   - [Bitbucket Cloud](bitbucket_cloud.md)
