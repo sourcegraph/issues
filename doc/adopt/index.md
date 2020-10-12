@@ -9,3 +9,5 @@
   1. [Share with a wide trial team](trial/index.md#3-share-with-the-trial-team) (25–500 developers, one full organization or team, to start)
   1. [Deploy integrations](trial/index.md#4-deploy-integrations)
   1. [Measure success](trial/index.md#5-measure-success) (i.e., track usage, survey the team, etc.)
+
+- [Managed Sourcegraph instances](managed.md)

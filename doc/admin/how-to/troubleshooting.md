@@ -1,6 +1,6 @@
 # Administration troubleshooting
 
-### Docker Toolbox on Windows: `New state of 'nil' is invalid`
+## Docker Toolbox on Windows: `New state of 'nil' is invalid`
 
 If you are using Docker Toolbox on Windows to run Sourcegraph, you may see an error in the `frontend` log output:
 
@@ -21,13 +21,13 @@ docker container run -e LOGO=false ... sourcegraph/server
 
 See [sourcegraph/sourcegraph#398](https://github.com/sourcegraph/sourcegraph/issues/398) for more information.
 
-### Submitting a metrics dump
+## Submitting a metrics dump
 
 If you encounter performance or instability issues with Sourcegraph, we may ask you to submit a metrics dump to us. This allows us to inspect the performance and health of various parts of your Sourcegraph instance in the past and can often be the most effective way for us to identify the cause of your issue.
 
 The metrics dump includes non-sensitive aggregate statistics of Sourcegraph like CPU & memory usage, number of successful and error requests between Sourcegraph services, and more. It does NOT contain sensitive information like code, repository names, user names, etc.
 
-#### Docker Compose deployments
+### Docker Compose deployments
 
 To create a metrics dump from a docker-compose deployment, follow these steps:
 
@@ -63,7 +63,7 @@ docker cp prometheus:/tmp/sourcegraph-metrics-dump.tgz sourcegraph-metrics-dump.
 
 Please then upload the `sourcegraph-metrics-dump.tgz` file to Sourcegraph support so we can inspect it.
 
-#### Single-container `sourcegraph/server` deployments
+### Single-container `sourcegraph/server` deployments
 
 To create a metrics dump from a single-container `sourcegraph/server` deployment, follow these steps:
 
@@ -90,7 +90,7 @@ scp -r username@hostname:/tmp/sourcegraph-metrics-dump.tgz .
 
 Please then upload the `sourcegraph-metrics-dump.tgz` for Sourcegraph support to access it. If desired, we can send you a shared private Google Drive folder for the upload as it can sometimes be a few gigabytes.
 
-### Kubernetes deployments
+## Kubernetes deployments
 
 If you're using the [Kubernetes cluster deployment option](https://github.com/sourcegraph/deploy-sourcegraph),  
 you can create a metrics dump as follows:
@@ -119,6 +119,6 @@ kubectl cp <podname>:/tmp/sourcegraph-metrics-dump.tgz /tmp/sourcegraph-metrics-
 
 Again please then upload the `sourcegraph-metrics-dump.tgz` for Sourcegraph support to access it.
 
-### Generating pprof profiles
+## Generating pprof profiles
 
 Please follow [these instructions](pprof.md) to generate pprof profiles.

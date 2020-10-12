@@ -1,8 +1,4 @@
-# Search configuration
-
-See "[Code search overview](../user/search/index.md)" for general information about Sourcegraph's code search.
-
-## Indexed search
+# Indexed search
 
 Sourcegraph can index the code on the default branch of each repository. This speeds up searches that hit many repositories at once.
 

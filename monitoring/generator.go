@@ -896,7 +896,7 @@ func main() {
 	}
 	docSolutionsFile, ok := os.LookupEnv("DOC_SOLUTIONS_FILE")
 	if !ok {
-		docSolutionsFile = "../doc/admin/observability/alert_solutions.md"
+		docSolutionsFile = "../doc/admin/background-information/observability/alert_solutions.md"
 	}
 
 	reloadValue, ok := os.LookupEnv("RELOAD")

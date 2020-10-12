@@ -132,4 +132,4 @@
 /dev/documentation	/dev/how-to/documentation_implementation 308
 /dev/zoekt	/dev/how-to/zoekt_local_dev 308
 
-
+/admin/observability/alert_solutions.md /admin/background-information/observability/alert_solutions.md 308

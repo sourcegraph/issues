@@ -13,8 +13,9 @@ Site administrators are able to access all GraphQL APIs of the Sourcegraph insta
 ## Impersonate regular users
 
 Site administrators are able to impersonate regular users in two ways:
+
 1. View and update the settings of any user.
-2. Initiate GraphQL API calls on behalf of any other user.
+1. Initiate GraphQL API calls on behalf of any other user.
 
 ## Receive site alerts
 
