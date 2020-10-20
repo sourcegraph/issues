@@ -3,7 +3,6 @@ import * as React from 'react'
 import { fromEvent, Subject, Subscription } from 'rxjs'
 import { filter } from 'rxjs/operators'
 import { WrapDisabledIcon } from '../../../../../shared/src/components/icons'
-import { ButtonLink } from '../../../../../shared/src/components/LinkOrButton'
 import { Tooltip } from '../../../../../branded/src/components/tooltip/Tooltip'
 import { eventLogger } from '../../../tracking/eventLogger'
 
@@ -69,13 +68,17 @@ export class ToggleLineWrap extends React.PureComponent<
     }
 
     public render(): JSX.Element | null {
+        const label = `${this.state.value ? 'Disable' : 'Enable'} wrapping long lines (Alt+Z/Opt+Z)`
         return (
-            <ButtonLink
-                onSelect={this.onClick}
-                data-tooltip={`${this.state.value ? 'Disable' : 'Enable'} wrapping long lines (Alt+Z/Opt+Z)`}
+            <button
+                type="button"
+                className="btn nav-link"
+                onClick={this.onClick}
+                data-tooltip={label}
+                aria-label={label}
             >
                 {this.state.value ? <WrapDisabledIcon className="icon-inline" /> : <WrapIcon className="icon-inline" />}
-            </ButtonLink>
+            </button>
         )
     }
 

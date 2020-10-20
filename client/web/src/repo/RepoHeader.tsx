@@ -2,7 +2,6 @@ import * as H from 'history'
 import SettingsIcon from 'mdi-react/SettingsIcon'
 import React, { useState, useMemo, useEffect } from 'react'
 import { ContributableMenu } from '../../../shared/src/api/protocol'
-import { ButtonLink } from '../../../shared/src/components/LinkOrButton'
 import { ExtensionsControllerProps } from '../../../shared/src/extensions/controller'
 import * as GQL from '../../../shared/src/graphql/schema'
 import { PlatformContextProps } from '../../../shared/src/platform/context'
@@ -16,6 +15,7 @@ import { TelemetryProps } from '../../../shared/src/telemetry/telemetryService'
 import { SettingsCascadeOrError } from '../../../shared/src/settings/settings'
 import { AuthenticatedUser } from '../auth'
 import classNames from 'classnames'
+import { Link } from '../../../shared/src/components/Link'
 
 /**
  * Stores the list of RepoHeaderContributions, manages addition/deletion, and ensures they are sorted.
@@ -216,9 +216,9 @@ export const RepoHeader: React.FunctionComponent<Props> = ({
             <div className="repo-header__spacer" />
             <div className="d-flex align-items-center">
                 {determineShowAddExtensions(props) && (
-                    <ButtonLink to="/extensions" className="btn btn-outline-secondary btn-sm mx-2">
+                    <Link to="/extensions" className="btn btn-outline-secondary btn-sm mx-2">
                         Add extensions
-                    </ButtonLink>
+                    </Link>
                 )}
             </div>
             <ul className="navbar-nav">
@@ -234,10 +234,10 @@ export const RepoHeader: React.FunctionComponent<Props> = ({
                     ({ condition = () => true, label, tooltip, icon: Icon, to }) =>
                         condition(context) && (
                             <li className="nav-item repo-header__action-list-item" key={label}>
-                                <ButtonLink to={to(context)} data-tooltip={tooltip}>
+                                <Link className="nav-link" to={to(context)} data-tooltip={tooltip}>
                                     {Icon && <Icon className="icon-inline" />}{' '}
                                     <span className="d-none d-lg-inline">{label}</span>
-                                </ButtonLink>
+                                </Link>
                             </li>
                         )
                 )}
@@ -248,10 +248,10 @@ export const RepoHeader: React.FunctionComponent<Props> = ({
                 ))}
                 {repo.viewerCanAdminister && (
                     <li className="nav-item repo-header__action-list-item">
-                        <ButtonLink to={`/${repo.name}/-/settings`} data-tooltip="Repository settings">
+                        <Link className="nav-link" to={`/${repo.name}/-/settings`} data-tooltip="Repository settings">
                             <SettingsIcon className="icon-inline" />{' '}
                             <span className="d-none d-lg-inline">Settings</span>
-                        </ButtonLink>
+                        </Link>
                     </li>
                 )}
             </ul>

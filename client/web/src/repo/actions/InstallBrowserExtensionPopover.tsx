@@ -2,10 +2,10 @@ import ExportIcon from 'mdi-react/ExportIcon'
 import PlusThickIcon from 'mdi-react/PlusThickIcon'
 import React, { useMemo } from 'react'
 import { Popover } from 'reactstrap'
-import { ButtonLink } from '../../../../shared/src/components/LinkOrButton'
 import { SourcegraphIcon } from '../../auth/icons'
 import { serviceTypeDisplayNameAndIcon } from './GoToCodeHostAction'
 import FocusLock from 'react-focus-lock'
+import { Link } from '../../../../shared/src/components/Link'
 
 interface Props {
     url: string
@@ -74,32 +74,28 @@ export const InstallBrowserExtensionPopover: React.FunctionComponent<Props> = ({
                         </div>
 
                         <div className="d-flex justify-content-end">
-                            <ButtonLink
+                            <Link
                                 className="btn btn-outline-secondary mr-2"
-                                onSelect={onRejection}
+                                onClick={onRejection}
                                 to={url}
                                 {...linkProps}
                             >
                                 No, thanks
-                            </ButtonLink>
+                            </Link>
 
-                            <ButtonLink
-                                className="btn btn-outline-secondary mr-2"
-                                onSelect={onClose}
-                                to={url}
-                                {...linkProps}
-                            >
+                            <Link className="btn btn-outline-secondary mr-2" onClick={onClose} to={url} {...linkProps}>
                                 Remind me later
-                            </ButtonLink>
+                            </Link>
 
-                            <ButtonLink
+                            <Link
                                 className="btn btn-primary mr-2"
-                                onSelect={onClickInstall}
+                                onClick={onClickInstall}
+                                onAuxClick={onClickInstall}
                                 to="/help/integration/browser_extension"
                                 {...linkProps}
                             >
                                 Install browser extension
-                            </ButtonLink>
+                            </Link>
                         </div>
                     </div>
                 </FocusLock>
