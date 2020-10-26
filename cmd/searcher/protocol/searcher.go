@@ -6,7 +6,6 @@ import (
 	"strings"
 
 	"github.com/sourcegraph/sourcegraph/internal/api"
-	"github.com/sourcegraph/sourcegraph/internal/gitserver"
 )
 
 // Request represents a request to searcher
@@ -44,15 +43,16 @@ type Request struct {
 	Deadline string
 }
 
-// GitserverRepo returns the repository information necessary to perform gitserver requests.
-func (r Request) GitserverRepo() gitserver.Repo { return gitserver.Repo{Name: r.Repo} }
-
 // PatternInfo describes a search request on a repo. Most of the fields
 // are based on PatternInfo used in vscode.
 type PatternInfo struct {
 	// Pattern is the search query. It is a regular expression if IsRegExp
 	// is true, otherwise a fixed string. eg "route variable"
 	Pattern string
+
+	// IsNegated if true will invert the matching logic for regexp searches. IsNegated=true is
+	// not supported for structural searches.
+	IsNegated bool
 
 	// IsRegExp if true will treat the Pattern as a regular expression.
 	IsRegExp bool

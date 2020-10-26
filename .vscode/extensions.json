@@ -4,7 +4,7 @@
   "recommendations": [
     "EditorConfig.editorconfig",
     "esbenp.prettier-vscode",
-    "prisma.vscode-graphql",
+    "graphql.vscode-graphql",
     "golang.go",
     "exiasr.hadolint",
     "bierner.markdown-mermaid",
@@ -13,6 +13,7 @@
     "dbaeumer.vscode-eslint",
     "foxundermoon.shell-format",
     "timonwong.shellcheck",
+    "felixfbecker.css-stacking-contexts",
   ],
   "unwantedRecommendations": ["ms-vscode.vscode-typescript-tslint-plugin", "eg2.tslint"],
 }

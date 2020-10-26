@@ -1,0 +1,125 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`ChangesetLastSynced ViewerCanAdminister: false renders not scheduled 1`] = `
+<ChangesetLastSynced
+  _now={2020-03-01T00:00:00.000Z}
+  changeset={
+    Object {
+      "id": "123",
+      "nextSyncAt": null,
+      "updatedAt": "2020-02-29T23:50:00.000Z",
+    }
+  }
+  viewerCanAdminister={false}
+>
+  <small
+    className="text-muted"
+  >
+    Last synced 
+    10 minutes
+     ago.
+     
+    <span
+      data-tooltip="Not scheduled for syncing."
+    >
+      <Memo(InfoCircleOutlineIcon)
+        className="icon-inline"
+        onClick={[Function]}
+      />
+    </span>
+  </small>
+</ChangesetLastSynced>
+`;
+
+exports[`ChangesetLastSynced ViewerCanAdminister: false renders scheduled 1`] = `
+<ChangesetLastSynced
+  _now={2020-03-01T00:00:00.000Z}
+  changeset={
+    Object {
+      "id": "123",
+      "nextSyncAt": "2020-03-02T00:00:00.000Z",
+      "updatedAt": "2020-02-29T23:50:00.000Z",
+    }
+  }
+  viewerCanAdminister={false}
+>
+  <small
+    className="text-muted"
+  >
+    Last synced 
+    10 minutes
+     ago.
+     
+    <span
+      data-tooltip="Next refresh in 1 day."
+    >
+      <Memo(InfoCircleOutlineIcon)
+        className="icon-inline"
+        onClick={[Function]}
+      />
+    </span>
+  </small>
+</ChangesetLastSynced>
+`;
+
+exports[`ChangesetLastSynced ViewerCanAdminister: true renders not scheduled 1`] = `
+<ChangesetLastSynced
+  _now={2020-03-01T00:00:00.000Z}
+  changeset={
+    Object {
+      "id": "123",
+      "nextSyncAt": null,
+      "updatedAt": "2020-02-29T23:50:00.000Z",
+    }
+  }
+  viewerCanAdminister={true}
+>
+  <small
+    className="text-muted"
+  >
+    Last synced 
+    10 minutes
+     ago.
+     
+    <span
+      data-tooltip="Not scheduled for syncing. Click to prioritize refresh"
+    >
+      <Memo(SyncIcon)
+        className="icon-inline cursor-pointer"
+        onClick={[Function]}
+      />
+    </span>
+  </small>
+</ChangesetLastSynced>
+`;
+
+exports[`ChangesetLastSynced ViewerCanAdminister: true renders scheduled 1`] = `
+<ChangesetLastSynced
+  _now={2020-03-01T00:00:00.000Z}
+  changeset={
+    Object {
+      "id": "123",
+      "nextSyncAt": "2020-03-02T00:00:00.000Z",
+      "updatedAt": "2020-02-29T23:50:00.000Z",
+    }
+  }
+  viewerCanAdminister={true}
+>
+  <small
+    className="text-muted"
+  >
+    Last synced 
+    10 minutes
+     ago.
+     
+    <span
+      data-tooltip="Next refresh in 1 day. Click to prioritize refresh"
+    >
+      <Memo(SyncIcon)
+        className="icon-inline cursor-pointer"
+        onClick={[Function]}
+      />
+    </span>
+  </small>
+</ChangesetLastSynced>
+`;

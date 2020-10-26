@@ -6,7 +6,7 @@
 # This will install binaries into the `.bin` directory under the repository root.
 #
 
-all_oss_commands=" gitserver query-runner github-proxy searcher replacer frontend repo-updater symbols "
+all_oss_commands=" gitserver query-runner github-proxy searcher frontend repo-updater symbols "
 all_commands="${all_oss_commands}${ENTERPRISE_ONLY_COMMANDS}"
 
 # handle options
@@ -49,20 +49,6 @@ mkdir -p .bin
 export GOBIN="${PWD}/.bin"
 export GO111MODULE=on
 
-INSTALL_GO_TOOLS=(
-  "github.com/mattn/goreman@v0.3.4"
-)
-
-# Need to go to a temp directory for tools or we update our go.mod. We use
-# GOPROXY=direct to avoid always consulting a proxy for dlv.
-pushd "${TMPDIR:-/tmp}" >/dev/null || exit 1
-if ! GOPROXY=direct go get -v "${INSTALL_GO_TOOLS[@]}" 2>go-install.log; then
-  cat go-install.log
-  echo >&2 "failed to install prerequisite tools, aborting."
-  exit 1
-fi
-popd >/dev/null || exit 1
-
 INSTALL_GO_PKGS=(
   "github.com/google/zoekt/cmd/zoekt-archive-index"
   "github.com/google/zoekt/cmd/zoekt-git-index"
@@ -83,7 +69,7 @@ export GOBIN="$tmpdir"
 
 TAGS='dev'
 if [ -n "$DELVE" ]; then
-  echo >&2 'Building with optimizations disabled (for debugging). Make sure you have at least go1.10 installed.'
+  echo -e "Building Go code with optimizations disabled (for debugging)." >&2
   GCFLAGS='all=-N -l'
   TAGS="$TAGS delve"
 fi

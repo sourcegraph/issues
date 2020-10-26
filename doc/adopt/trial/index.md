@@ -69,7 +69,7 @@ A typical message to the team looks like:
 
 Sourcegraph is most useful when it's at your fingertips. Our [integrations](../../integration/index.md), including our [Chrome and Firefox extensions](../../integration/browser_extension.md) which provide code intelligence in GitHub, GitLab, Bitbucket, Phabricator, and more, and also provide a search shortcut from the browser URL bar:
 
-![Sourcegraph browser extension](https://storage.googleapis.com/sourcegraph-assets/BrowserExtension.gif)
+![Sourcegraph browser extension](https://sourcegraphstatic.com/BrowserExtension.gif)
 
 For short trials, however, companies often choose to only set up our search shortcut (or "omnibox") integration (though it provides less functionality, it may require fewer internal approvals). See [our guide for setting up search shortcuts](../../integration/browser_search_engine.md).
 

@@ -1,0 +1,71 @@
+.tabs {
+    display: flex;
+    flex-direction: column;
+
+    &__toolbar {
+        flex: 0 0 auto;
+        display: flex;
+        overflow-x: auto;
+    }
+}
+
+.tab-bar {
+    flex: 0 0 auto;
+    display: flex;
+    overflow-x: auto;
+
+    &__tab,
+    &__spacer,
+    &__end-fragment-other-element {
+        border-color: transparent;
+        border-top-width: 0;
+        border-left-width: 0;
+        border-right-width: 0;
+        border-bottom-width: 3px;
+        border-bottom-style: solid;
+        border-radius: 0;
+    }
+    &:not(&--empty) &__spacer,
+    &:not(&--empty) &__end-fragment-other-element {
+        border-bottom-color: var(--border-color);
+    }
+
+    &__spacer,
+    &__tab--inactive,
+    &__end-fragment-other-element {
+        opacity: 0.6;
+    }
+
+    &__tab {
+        &--flex-grow {
+            flex: 1;
+        }
+
+        &--inactive {
+            border-bottom-color: var(--border-color);
+        }
+        &,
+        &:hover {
+            text-decoration: none !important; // override .btn-link:focus
+        }
+        &:hover {
+            opacity: 1;
+            border-bottom-color: var(--link-color);
+        }
+        &--active {
+            border-bottom-color: var(--primary) !important; // override .btn-link:focus
+        }
+
+        &--h5like {
+            // Mimic h5 style.
+            font-size: 12px;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            color: var(--body-color);
+        }
+    }
+
+    &__spacer {
+        flex: 1;
+    }
+}

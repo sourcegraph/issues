@@ -17,7 +17,7 @@ process.env.LANG = 'en_US.UTF-8'
 const config = {
   // uses latest jsdom and exposes jsdom as a global,
   // for example to change the URL in window.location
-  testEnvironment: __dirname + '/shared/dev/jest-environment.js',
+  testEnvironment: __dirname + '/client/shared/dev/jest-environment.js',
 
   collectCoverage: !!process.env.CI,
   collectCoverageFrom: ['<rootDir>/src/**/*.{ts,tsx}'],
@@ -36,11 +36,12 @@ const config = {
 
   moduleNameMapper: {
     '\\.s?css$': 'identity-obj-proxy',
+    '\\.ya?ml$': 'identity-obj-proxy',
     '^worker-loader': 'identity-obj-proxy',
     // monaco-editor uses the "module" field in package.json, which isn't supported by Jest
     // https://github.com/facebook/jest/issues/2702
     // https://github.com/Microsoft/monaco-editor/issues/996
-    '^monaco-editor': '<rootDir>/../node_modules/monaco-editor/esm/vs/editor/editor.main.js',
+    '^monaco-editor': 'monaco-editor/esm/vs/editor/editor.main.js',
   },
 
   // By default, don't clutter `yarn test --watch` output with the full coverage table. To see it, use the
@@ -48,19 +49,18 @@ const config = {
   coverageReporters: ['json', 'lcov', 'text-summary'],
 
   setupFiles: [
-    path.join(__dirname, 'shared/dev/mockDate.js'),
-    path.join(__dirname, 'shared/dev/globalThis.js'),
+    path.join(__dirname, 'client/shared/dev/mockDate.js'),
     // Needed for reusing API functions that use fetch
     // Neither NodeJS nor JSDOM have fetch + AbortController yet
     require.resolve('abort-controller/polyfill'),
-    path.join(__dirname, 'shared/dev/fetch'),
-    path.join(__dirname, 'shared/dev/setLinkComponentForTest.ts'),
+    path.join(__dirname, 'client/shared/dev/fetch'),
+    path.join(__dirname, 'client/shared/dev/setLinkComponentForTest.ts'),
     // Enzyme setup file
-    path.join(__dirname, 'shared/dev/enzymeSetup.js'),
+    path.join(__dirname, 'client/shared/dev/enzymeSetup.js'),
   ],
   setupFilesAfterEnv: [require.resolve('core-js/stable'), require.resolve('regenerator-runtime/runtime')],
-  globalSetup: path.join(__dirname, 'shared/dev/jestGlobalSetup.js'),
-  snapshotSerializers: [path.join(__dirname, 'shared/dev/enzymeSerializer.js')],
+  globalSetup: path.join(__dirname, 'client/shared/dev/jestGlobalSetup.js'),
+  snapshotSerializers: [path.join(__dirname, 'client/shared/dev/enzymeSerializer.js')],
 }
 
 module.exports = config

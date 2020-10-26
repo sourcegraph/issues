@@ -16,6 +16,14 @@ Settings can be set at the global level (by site admins), the organization level
 
 Global settings are found in **Site admin > Global settings** while links to organization and user settings are found in the user dropdown menu.
 
+After setting or changing certain values in **Site admin > Global settings** the frontend will restart automatically or
+you might be asked to restart the frontend for the changes to take effect.
+In case of a Kubernetes deployment this can be done as follows:
+
+```shell script
+kubectl delete pods -l app=sourcegraph-frontend
+``` 
+
 ## Reference
 
 Settings options and their default values are shown below.

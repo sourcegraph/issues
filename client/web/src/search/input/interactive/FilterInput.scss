@@ -1,0 +1,90 @@
+$filter-input-margin-y: 0.125rem;
+$filter-input-padding: 0.25rem;
+
+.filter-input {
+    margin: $filter-input-margin-y 0.25rem $filter-input-margin-y 0;
+    border: 1px solid var(--border-color);
+    padding: $filter-input-padding;
+    border-radius: 2px;
+    background-color: var(--color-bg-2);
+
+    &--active {
+        min-width: 35%;
+    }
+
+    &--uneditable {
+        width: max-content;
+    }
+
+    &__form {
+        display: inline-flex;
+        vertical-align: middle;
+        align-items: center;
+        width: 100%;
+    }
+
+    &__input-wrapper {
+        display: block;
+        position: relative;
+        width: 100%;
+        flex: 1 1 auto;
+    }
+
+    &__label {
+        padding-right: 0.25rem;
+    }
+
+    &__input-field {
+        width: 100%;
+        border-top-right-radius: 0;
+        border-bottom-right-radius: 0;
+    }
+
+    &__close {
+        padding: 0.25rem;
+    }
+
+    &__button-text {
+        padding: 0;
+    }
+
+    &__suggestions {
+        position: absolute;
+        width: inherit;
+        max-width: 100%;
+        z-index: 1;
+        max-height: 25rem;
+        margin: 0;
+        overflow-x: hidden;
+        overflow-y: auto;
+        overflow-y: overlay;
+        background-color: #1c2736;
+        border: solid 1px #1b548a;
+        border-top: none;
+        padding: 0;
+    }
+
+    &__radio {
+        padding: 0 0.25rem;
+    }
+
+    &__radio-label {
+        padding: 0 0.25rem;
+    }
+
+    &__radio-button-container {
+        display: flex;
+        align-self: flex-end;
+    }
+
+    &__negation-button {
+        border: 1px solid transparent;
+        margin-right: 0.25rem;
+
+        &--active {
+            border: 1px solid var(--primary);
+            border-radius: 2px;
+            background-color: var(--color-bg-3);
+        }
+    }
+}

@@ -1,9 +1,41 @@
 # Updating a pure-Docker Sourcegraph cluster
 
 This document describes the exact changes needed to update a [pure-Docker Sourcegraph cluster](https://github.com/sourcegraph/deploy-sourcegraph-docker).
-
 Each section comprehensively describes the changes needed in Docker images, environment variables, and added/removed services.
 
+A new version of Sourcegraph is released every month (with patch releases in between, released as needed). Check the [Sourcegraph blog](https://about.sourcegraph.com/blog) or the site admin updates page to learn about updates. We actively maintain the two most recent monthly releases of Sourcegraph.
+
+Upgrades should happen across consecutive minor versions of Sourcegraph. For example, if you are running Sourcegraph 3.1 and want to upgrade to 3.3, you should upgrade to 3.2 and then 3.3.
+
+**Always refer to this page before upgrading Sourcegraph,** as it comprehensively describes the steps needed to upgrade, and any manual migration steps you must perform.
+
+## 3.18.0 -> 3.19.1
+
+To upgrade, please perform the changes in the following diff:
+
+https://github.com/sourcegraph/deploy-sourcegraph-docker/commit/a1648452c6f7c16637b0e069776df12604c27f73
+
+### Confirm file permissions
+
+Confirm that `lsif-server-disk` has the correct file permissions:
+
+```
+sudo chown -R 100:101 ~/sourcegraph-docker/lsif-server-disk/ ~/sourcegraph-docker/lsif-server-disk/ 
+```
+
+## 3.17.2 -> 3.18.0 changes
+
+To upgrade, please perform the changes in the following diff:
+
+https://github.com/sourcegraph/deploy-sourcegraph-docker/commit/7e6b23cdfead3be639048c5fa7fffe07441610f2
+
+Note: `deploy-grafana.sh` and `deploy-prometheus.sh` had environment variables changed, otherwise only image tags have changed.
+
+## v3.16.0 -> v3.17.2 changes
+
+To upgrade, please perform the changes in the following diff:
+
+https://github.com/sourcegraph/deploy-sourcegraph-docker/commit/2895236661de3ff633ee56fe0b87e9a0f530cc60
 
 ## v3.15.1 → v3.16.0 changes
 

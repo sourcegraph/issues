@@ -1,29 +1,24 @@
 {
-  "ID": "MDExOlB1bGxSZXF1ZXN0Mzg3OTQ5NTE3",
+  "ID": "MDExOlB1bGxSZXF1ZXN0NTA2MzUzMDIx",
   "Title": "This is a test PR, feel free to ignore",
   "Body": "I'm opening this PR to test something. Please ignore.",
   "State": "OPEN",
-  "URL": "https://github.com/sourcegraph/automation-testing/pull/277",
-  "HeadRefOid": "05e562cc5d8ab50b5fcab8dfd5dfa5db13a48e80",
-  "BaseRefOid": "be64870b4721794dcdada10f49a2741c09f33a69",
+  "URL": "https://github.com/sourcegraph/automation-testing/pull/365",
+  "HeadRefOid": "74097e5da1cf90978bcd25689fa76bd87bde8006",
+  "BaseRefOid": "6274d04b734de9f057bb5f196a5046a9e86ba992",
   "HeadRefName": "test-pr-3",
   "BaseRefName": "master",
-  "Number": 277,
+  "Number": 365,
   "Author": {
-   "AvatarURL": "https://avatars3.githubusercontent.com/u/25610?u=416aa7bd7c7a97c714ea0a503c90a0e7e21c5e56\u0026v=4",
-   "Login": "ryanslade",
-   "URL": "https://github.com/ryanslade"
+   "AvatarURL": "https://avatars0.githubusercontent.com/u/19534377?v=4",
+   "Login": "eseliger",
+   "URL": "https://github.com/eseliger"
   },
   "Participants": [
    {
-    "AvatarURL": "https://avatars3.githubusercontent.com/u/25610?u=416aa7bd7c7a97c714ea0a503c90a0e7e21c5e56\u0026v=4",
-    "Login": "ryanslade",
-    "URL": "https://github.com/ryanslade"
-   },
-   {
-    "AvatarURL": "https://avatars1.githubusercontent.com/u/1185253?u=35f048c505007991433b46c9c0616ccbcfbd4bff\u0026v=4",
-    "Login": "mrnugget",
-    "URL": "https://github.com/mrnugget"
+    "AvatarURL": "https://avatars0.githubusercontent.com/u/19534377?v=4",
+    "Login": "eseliger",
+    "URL": "https://github.com/eseliger"
    }
   ],
   "Labels": {
@@ -34,22 +29,17 @@
     "Type": "PullRequestCommit",
     "Item": {
      "Commit": {
-      "OID": "05e562cc5d8ab50b5fcab8dfd5dfa5db13a48e80",
-      "Message": "Add foobar.md file",
-      "MessageHeadline": "Add foobar.md file",
-      "URL": "https://github.com/sourcegraph/automation-testing/commit/05e562cc5d8ab50b5fcab8dfd5dfa5db13a48e80",
+      "OID": "74097e5da1cf90978bcd25689fa76bd87bde8006",
+      "Message": "Update README.md",
+      "MessageHeadline": "Update README.md",
+      "URL": "https://github.com/sourcegraph/automation-testing/commit/74097e5da1cf90978bcd25689fa76bd87bde8006",
       "Committer": {
-       "AvatarURL": "https://avatars3.githubusercontent.com/u/1185253?v=4",
-       "Email": "mrnugget@gmail.com",
-       "Name": "Thorsten Ball",
-       "User": {
-        "AvatarURL": "https://avatars1.githubusercontent.com/u/1185253?u=35f048c505007991433b46c9c0616ccbcfbd4bff\u0026v=4",
-        "Login": "mrnugget",
-        "URL": "https://github.com/mrnugget"
-       }
+       "AvatarURL": "https://avatars3.githubusercontent.com/u/19864447?v=4",
+       "Email": "noreply@github.com",
+       "Name": "GitHub"
       },
-      "CommittedDate": "2019-11-12T12:57:33Z",
-      "PushedDate": "2019-11-12T13:00:07Z"
+      "CommittedDate": "2020-10-19T15:45:22Z",
+      "PushedDate": "2020-10-19T15:45:24Z"
      }
     }
    }
@@ -58,11 +48,11 @@
    "Nodes": [
     {
      "Commit": {
-      "OID": "05e562cc5d8ab50b5fcab8dfd5dfa5db13a48e80",
+      "OID": "74097e5da1cf90978bcd25689fa76bd87bde8006",
       "CheckSuites": {
        "Nodes": [
         {
-         "ID": "MDEwOkNoZWNrU3VpdGUzMDY5MDkzMzM=",
+         "ID": "MDEwOkNoZWNrU3VpdGUxMzYzNjUyMzc3",
          "Status": "QUEUED",
          "Conclusion": "",
          "ReceivedAt": "0001-01-01T00:00:00Z",
@@ -71,7 +61,7 @@
          }
         },
         {
-         "ID": "MDEwOkNoZWNrU3VpdGUzMDY5MDkzMzY=",
+         "ID": "MDEwOkNoZWNrU3VpdGUxMzYzNjUyMzgx",
          "Status": "QUEUED",
          "Conclusion": "",
          "ReceivedAt": "0001-01-01T00:00:00Z",
@@ -85,11 +75,12 @@
        "State": "",
        "Contexts": null
       },
-      "CommittedDate": "2019-11-12T12:57:33Z"
+      "CommittedDate": "2020-10-19T15:45:22Z"
      }
     }
    ]
   },
-  "CreatedAt": "2020-03-13T19:54:19Z",
-  "UpdatedAt": "2020-03-13T19:54:19Z"
+  "IsDraft": false,
+  "CreatedAt": "2020-10-19T23:58:39Z",
+  "UpdatedAt": "2020-10-19T23:58:39Z"
  }

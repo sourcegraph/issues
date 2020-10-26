@@ -236,7 +236,7 @@ src-expose will default to serving ~/.sourcegraph/src-expose-repos`,
 See "src-expose -h" for the flags that can be passed.
 
 For more advanced uses specify --config pointing to a yaml file.
-See https://github.com/sourcegraph/sourcegraph/tree/master/dev/src-expose/examples`,
+See https://github.com/sourcegraph/sourcegraph/tree/main/dev/src-expose/examples`,
 		Subcommands: []*ffcli.Command{serve, sync},
 		FlagSet:     globalFlags,
 		Exec: func(args []string) error {

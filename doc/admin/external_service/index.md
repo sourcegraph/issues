@@ -2,6 +2,8 @@
 
 Sourcegraph can sync repositories from code hosts and other similar services.
 
+**Site admins** can configure the following code hosts:
+
 - [GitHub](github.md)
 - [GitLab](gitlab.md)
 - [Bitbucket Cloud](bitbucket_cloud.md)
@@ -12,3 +14,11 @@ Sourcegraph can sync repositories from code hosts and other similar services.
 - [Other Git code hosts (using a Git URL)](other.md)
 - [Non-Git code hosts](non-git.md)
   - [Perforce](../repo/perforce.md)
+
+**Users** can configure the following public code hosts:
+
+- [GitHub](github.md)
+- [GitLab](gitlab.md)
+- [Bitbucket Cloud](bitbucket_cloud.md)
+
+The feature is currently in private beta.

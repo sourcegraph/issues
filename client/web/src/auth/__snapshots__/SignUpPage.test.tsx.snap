@@ -1,0 +1,392 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`SignUpPage renders redirect when user is authenticated 1`] = `null`;
+
+exports[`SignUpPage renders sign up page (cloud) 1`] = `
+<div
+  className="signin-signup-page sign-up-page web-content"
+>
+  <div
+    className="hero-page hero-page__less-padding"
+  >
+    <div
+      className="hero-page__icon bg-transparent"
+    >
+      <a
+        href="/search"
+        onClick={[Function]}
+      >
+        <svg
+          fill="none"
+          height="64"
+          viewBox="0 0 65 64"
+          width="65"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <path
+            clipRule="evenodd"
+            d="M19.5809 8.42498L33.4692 59.2756C34.4044 62.6921 37.9254 64.7045 41.3365 63.772C44.7477 62.8342 46.7547 59.3051 45.8222 55.8886L31.9312 5.03529C30.996 1.61881 27.475 -0.393568 24.0639 0.541611C20.6554 1.47679 18.6457 5.00582 19.5809 8.42498Z"
+            fill="#F96216"
+            fillRule="evenodd"
+          />
+          <path
+            clipRule="evenodd"
+            d="M45.2995 8.23211L10.5184 47.5659C8.17375 50.2187 8.41759 54.2756 11.065 56.6256C13.7125 58.9756 17.7587 58.7291 20.1033 56.0763L54.8845 16.7425C57.2291 14.0897 56.9853 10.0355 54.3378 7.68548C51.6904 5.33547 47.6469 5.57931 45.2995 8.23211Z"
+            fill="#B200F8"
+            fillRule="evenodd"
+          />
+          <path
+            clipRule="evenodd"
+            d="M5.89199 30.0308L55.494 46.4621C58.8515 47.5768 62.4716 45.7493 63.5837 42.3864C64.6957 39.0208 62.8709 35.3927 59.516 34.2833L9.91138 17.844C6.55385 16.7346 2.93372 18.5568 1.82437 21.9223C0.712335 25.2879 2.53446 28.9161 5.89199 30.0308Z"
+            fill="#00B4F2"
+            fillRule="evenodd"
+          />
+        </svg>
+      </a>
+    </div>
+    <div
+      className="hero-page__title"
+    >
+      Sign up for Sourcegraph Cloud
+    </div>
+    <div
+      className="signup-page__container pb-5"
+    >
+      <p
+        className="pt-1 pb-2"
+      >
+        Start searching public code now
+      </p>
+      <form
+        className="signin-signup-form signup-form test-signup-form rounded p-4 text-left mt-3"
+        noValidate={true}
+        onSubmit={[Function]}
+      >
+        <div
+          className="form-group d-flex flex-column align-content-start"
+        >
+          <label
+            className="align-self-start"
+            htmlFor="email"
+          >
+            Email
+          </label>
+          <div
+            className="loader-input__container"
+          >
+            <input
+              autoComplete="email"
+              autoFocus={true}
+              className="form-control signin-signup-form__input"
+              disabled={false}
+              id="email"
+              name="email"
+              onChange={[Function]}
+              placeholder=" "
+              required={true}
+              spellCheck={false}
+              type="email"
+              value=""
+            />
+          </div>
+        </div>
+        <div
+          className="form-group d-flex flex-column align-content-start"
+        >
+          <label
+            className="align-self-start"
+            htmlFor="username"
+          >
+            Username
+          </label>
+          <div
+            className="loader-input__container"
+          >
+            <input
+              autoCapitalize="off"
+              autoComplete="username"
+              className="form-control signin-signup-form__input"
+              disabled={false}
+              id="username"
+              maxLength={255}
+              name="username"
+              onChange={[Function]}
+              pattern="^[\\\\dA-Za-z](?:[\\\\dA-Za-z]|[.-](?=[\\\\dA-Za-z]))*-?$"
+              placeholder=" "
+              required={true}
+              spellCheck={false}
+              type="text"
+              value=""
+            />
+          </div>
+        </div>
+        <div
+          className="form-group d-flex flex-column align-content-start"
+        >
+          <label
+            className="align-self-start"
+            htmlFor="password"
+          >
+            Password
+          </label>
+          <div
+            className="loader-input__container"
+          >
+            <input
+              autoComplete="new-password"
+              className="form-control signin-signup-form__input"
+              disabled={false}
+              formNoValidate={true}
+              id="password"
+              minLength={12}
+              name="password"
+              onChange={[Function]}
+              onInvalid={[Function]}
+              placeholder=" "
+              required={true}
+              type="password"
+              value=""
+            />
+          </div>
+          <small
+            className="form-text text-muted"
+          >
+            At least 12 characters
+          </small>
+        </div>
+        <div
+          className="form-group mb-0"
+        >
+          <button
+            className="btn btn-primary btn-block"
+            disabled={true}
+            type="submit"
+          >
+            Register
+          </button>
+        </div>
+        <div
+          className="my-4 d-flex align-items-center"
+        >
+          <div
+            className="w-100 or-divider__border"
+          />
+          <small
+            className="px-2 text-muted "
+          >
+            OR
+          </small>
+          <div
+            className="w-100 or-divider__border"
+          />
+        </div>
+        <div
+          className="mb-2"
+        >
+          <a
+            className="btn btn-secondary btn-block"
+          >
+            <svg
+              className="mdi-icon icon-inline"
+              fill="currentColor"
+              height={24}
+              viewBox="0 0 24 24"
+              width={24}
+            >
+              <path
+                d="M12,2A10,10 0 0,0 2,12C2,16.42 4.87,20.17 8.84,21.5C9.34,21.58 9.5,21.27 9.5,21C9.5,20.77 9.5,20.14 9.5,19.31C6.73,19.91 6.14,17.97 6.14,17.97C5.68,16.81 5.03,16.5 5.03,16.5C4.12,15.88 5.1,15.9 5.1,15.9C6.1,15.97 6.63,16.93 6.63,16.93C7.5,18.45 8.97,18 9.54,17.76C9.63,17.11 9.89,16.67 10.17,16.42C7.95,16.17 5.62,15.31 5.62,11.5C5.62,10.39 6,9.5 6.65,8.79C6.55,8.54 6.2,7.5 6.75,6.15C6.75,6.15 7.59,5.88 9.5,7.17C10.29,6.95 11.15,6.84 12,6.84C12.85,6.84 13.71,6.95 14.5,7.17C16.41,5.88 17.25,6.15 17.25,6.15C17.8,7.5 17.45,8.54 17.35,8.79C18,9.5 18.38,10.39 18.38,11.5C18.38,15.32 16.04,16.16 13.81,16.41C14.17,16.72 14.5,17.33 14.5,18.26C14.5,19.6 14.5,20.68 14.5,21C14.5,21.27 14.66,21.59 15.17,21.5C19.14,20.16 22,16.42 22,12A10,10 0 0,0 12,2Z"
+              />
+            </svg>
+             
+            Continue with 
+            GitHub
+          </a>
+        </div>
+      </form>
+      <p
+        className="mt-3"
+      >
+        Already have an account?
+         
+        <a
+          href="/sign-in"
+          onClick={[Function]}
+        >
+          Sign in
+        </a>
+      </p>
+    </div>
+  </div>
+</div>
+`;
+
+exports[`SignUpPage renders sign up page (server) 1`] = `
+<div
+  className="signin-signup-page sign-up-page web-content"
+>
+  <div
+    className="hero-page hero-page__less-padding"
+  >
+    <div
+      className="hero-page__icon bg-transparent"
+    >
+      <svg
+        fill="none"
+        height="64"
+        viewBox="0 0 65 64"
+        width="65"
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        <path
+          clipRule="evenodd"
+          d="M19.5809 8.42498L33.4692 59.2756C34.4044 62.6921 37.9254 64.7045 41.3365 63.772C44.7477 62.8342 46.7547 59.3051 45.8222 55.8886L31.9312 5.03529C30.996 1.61881 27.475 -0.393568 24.0639 0.541611C20.6554 1.47679 18.6457 5.00582 19.5809 8.42498Z"
+          fill="#F96216"
+          fillRule="evenodd"
+        />
+        <path
+          clipRule="evenodd"
+          d="M45.2995 8.23211L10.5184 47.5659C8.17375 50.2187 8.41759 54.2756 11.065 56.6256C13.7125 58.9756 17.7587 58.7291 20.1033 56.0763L54.8845 16.7425C57.2291 14.0897 56.9853 10.0355 54.3378 7.68548C51.6904 5.33547 47.6469 5.57931 45.2995 8.23211Z"
+          fill="#B200F8"
+          fillRule="evenodd"
+        />
+        <path
+          clipRule="evenodd"
+          d="M5.89199 30.0308L55.494 46.4621C58.8515 47.5768 62.4716 45.7493 63.5837 42.3864C64.6957 39.0208 62.8709 35.3927 59.516 34.2833L9.91138 17.844C6.55385 16.7346 2.93372 18.5568 1.82437 21.9223C0.712335 25.2879 2.53446 28.9161 5.89199 30.0308Z"
+          fill="#00B4F2"
+          fillRule="evenodd"
+        />
+      </svg>
+    </div>
+    <div
+      className="hero-page__title"
+    >
+      Sign up for Sourcegraph Server
+    </div>
+    <div
+      className="signup-page__container pb-5"
+    >
+      <form
+        className="signin-signup-form signup-form test-signup-form rounded p-4 text-left mt-4"
+        noValidate={true}
+        onSubmit={[Function]}
+      >
+        <div
+          className="form-group d-flex flex-column align-content-start"
+        >
+          <label
+            className="align-self-start"
+            htmlFor="email"
+          >
+            Email
+          </label>
+          <div
+            className="loader-input__container"
+          >
+            <input
+              autoComplete="email"
+              autoFocus={true}
+              className="form-control signin-signup-form__input"
+              disabled={false}
+              id="email"
+              name="email"
+              onChange={[Function]}
+              placeholder=" "
+              required={true}
+              spellCheck={false}
+              type="email"
+              value=""
+            />
+          </div>
+        </div>
+        <div
+          className="form-group d-flex flex-column align-content-start"
+        >
+          <label
+            className="align-self-start"
+            htmlFor="username"
+          >
+            Username
+          </label>
+          <div
+            className="loader-input__container"
+          >
+            <input
+              autoCapitalize="off"
+              autoComplete="username"
+              className="form-control signin-signup-form__input"
+              disabled={false}
+              id="username"
+              maxLength={255}
+              name="username"
+              onChange={[Function]}
+              pattern="^[\\\\dA-Za-z](?:[\\\\dA-Za-z]|[.-](?=[\\\\dA-Za-z]))*-?$"
+              placeholder=" "
+              required={true}
+              spellCheck={false}
+              type="text"
+              value=""
+            />
+          </div>
+        </div>
+        <div
+          className="form-group d-flex flex-column align-content-start"
+        >
+          <label
+            className="align-self-start"
+            htmlFor="password"
+          >
+            Password
+          </label>
+          <div
+            className="loader-input__container"
+          >
+            <input
+              autoComplete="new-password"
+              className="form-control signin-signup-form__input"
+              disabled={false}
+              formNoValidate={true}
+              id="password"
+              minLength={12}
+              name="password"
+              onChange={[Function]}
+              onInvalid={[Function]}
+              placeholder=" "
+              required={true}
+              type="password"
+              value=""
+            />
+          </div>
+          <small
+            className="form-text text-muted"
+          >
+            At least 12 characters
+          </small>
+        </div>
+        <div
+          className="form-group mb-0"
+        >
+          <button
+            className="btn btn-primary btn-block"
+            disabled={true}
+            type="submit"
+          >
+            Register
+          </button>
+        </div>
+      </form>
+      <p
+        className="mt-3"
+      >
+        Already have an account?
+         
+        <a
+          href="/sign-in"
+          onClick={[Function]}
+        >
+          Sign in
+        </a>
+      </p>
+    </div>
+  </div>
+</div>
+`;

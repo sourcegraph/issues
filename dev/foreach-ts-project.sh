@@ -11,11 +11,12 @@ parallel_run() {
 export ARGS=$*
 
 DIRS=(
-  web
-  shared
-  browser
-  packages/sourcegraph-extension-api
-  packages/@sourcegraph/extension-api-types
+  client/web
+  client/shared
+  client/branded
+  client/browser
+  client/packages/sourcegraph-extension-api
+  client/packages/@sourcegraph/extension-api-types
   dev/release
   dev/ts-morph
 )

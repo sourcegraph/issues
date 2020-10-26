@@ -6,6 +6,9 @@ import (
 	"github.com/sourcegraph/sourcegraph/enterprise/internal/codeintel/bundles/types"
 )
 
+// DoneFunc is the function type of store's Done method.
+type DoneFunc func(err error) error
+
 // ReferencePager holds state for a reference result within a SQL transaction so that
 // each page requested has a consistent view into the underlying database.
 type ReferencePager interface {

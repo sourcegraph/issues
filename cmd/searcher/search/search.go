@@ -23,6 +23,7 @@ import (
 	"github.com/inconshreveable/log15"
 
 	"github.com/sourcegraph/sourcegraph/cmd/searcher/protocol"
+	"github.com/sourcegraph/sourcegraph/internal/gitserver"
 	"github.com/sourcegraph/sourcegraph/internal/store"
 	"github.com/sourcegraph/sourcegraph/internal/trace/ot"
 	nettrace "golang.org/x/net/trace"
@@ -188,6 +189,15 @@ func (s *Service) search(ctx context.Context, p *protocol.Request) (matches []pr
 		}
 	}(time.Now())
 
+	// Compile pattern before fetching from store incase it is bad.
+	var rg *readerGrep
+	if !p.IsStructuralPat {
+		rg, err = compile(&p.PatternInfo)
+		if err != nil {
+			return nil, false, false, badRequestError{err.Error()}
+		}
+	}
+
 	if p.FetchTimeout == "" {
 		p.FetchTimeout = "500ms"
 	}
@@ -199,7 +209,7 @@ func (s *Service) search(ctx context.Context, p *protocol.Request) (matches []pr
 	defer cancel()
 
 	getZf := func() (string, *store.ZipFile, error) {
-		path, err := s.Store.PrepareZip(prepareCtx, p.GitserverRepo(), p.Commit)
+		path, err := s.Store.PrepareZip(prepareCtx, gitserver.Repo{Name: p.Repo}, p.Commit)
 		if err != nil {
 			return "", nil, err
 		}
@@ -225,11 +235,7 @@ func (s *Service) search(ctx context.Context, p *protocol.Request) (matches []pr
 	if p.IsStructuralPat {
 		matches, limitHit, err = structuralSearch(ctx, zipPath, p.Pattern, p.CombyRule, p.Languages, p.IncludePatterns, p.Repo)
 	} else {
-		rg, err := compile(&p.PatternInfo)
-		if err != nil {
-			return nil, false, false, badRequestError{err.Error()}
-		}
-		matches, limitHit, err = regexSearch(ctx, rg, zf, p.FileMatchLimit, p.PatternMatchesContent, p.PatternMatchesPath)
+		matches, limitHit, err = regexSearch(ctx, rg, zf, p.FileMatchLimit, p.PatternMatchesContent, p.PatternMatchesPath, p.IsNegated)
 	}
 	return matches, limitHit, false, err
 }
@@ -244,6 +250,9 @@ func validateParams(p *protocol.Request) error {
 	}
 	if p.Pattern == "" && p.ExcludePattern == "" && len(p.IncludePatterns) == 0 {
 		return errors.New("At least one of pattern and include/exclude pattners must be non-empty")
+	}
+	if p.IsNegated && p.IsStructuralPat {
+		return errors.New("Negated patterns are not supported for structural searches")
 	}
 	return nil
 }

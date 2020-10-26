@@ -1,9 +1,3 @@
-// Package goroutine provides a goroutine runner that recovers from all panics.
-//
-// This prevents a single panicking goroutine from crashing the entire binary,
-// which is undesirable for services with many different components, like our
-// frontend service, where one location of code panicking could be
-// catastrophic.
 package goroutine
 
 import (
@@ -11,8 +5,13 @@ import (
 	"runtime/debug"
 )
 
-// Go runs the given function in a goroutine and catches + logs panics. More
-// advanced use cases should copy this implementation and modify it.
+// Go runs the given function in a goroutine and catches and logs panics.
+//
+// This prevents a single panicking goroutine from crashing the entire binary,
+// which is undesirable for services with many different components, like our
+// frontend service, where one location of code panicking could be catastrophic.
+//
+// More advanced use cases should copy this implementation and modify it.
 func Go(f func()) {
 	go func() {
 		defer func() {
@@ -21,6 +20,7 @@ func Go(f func()) {
 				log.Printf("goroutine panic: %v\n%s", err, stack)
 			}
 		}()
+
 		f()
 	}()
 }

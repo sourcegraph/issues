@@ -9,6 +9,7 @@ import (
 	"net/url"
 	"os"
 	"strconv"
+	"strings"
 	"time"
 
 	// Register driver
@@ -17,12 +18,13 @@ import (
 	"github.com/golang-migrate/migrate/v4"
 	"github.com/golang-migrate/migrate/v4/database/postgres"
 	bindata "github.com/golang-migrate/migrate/v4/source/go_bindata"
-	multierror "github.com/hashicorp/go-multierror"
+	"github.com/hashicorp/go-multierror"
 	"github.com/inconshreveable/log15"
 	"github.com/opentracing/opentracing-go/ext"
 	"github.com/pkg/errors"
 	"github.com/sourcegraph/sourcegraph/internal/trace/ot"
-	"github.com/sourcegraph/sourcegraph/migrations"
+	codeintelMigrations "github.com/sourcegraph/sourcegraph/migrations/codeintel"
+	frontendMigrations "github.com/sourcegraph/sourcegraph/migrations/frontend"
 )
 
 // Transaction calls f within a transaction, rolling back if any error is
@@ -58,6 +60,8 @@ func Transaction(ctx context.Context, db *sql.DB, f func(tx *sql.Tx) error) (err
 // A DB captures the essential method of a sql.DB: QueryContext.
 type DB interface {
 	QueryContext(ctx context.Context, q string, args ...interface{}) (*sql.Rows, error)
+	ExecContext(ctx context.Context, query string, args ...interface{}) (sql.Result, error)
+	QueryRowContext(ctx context.Context, query string, args ...interface{}) *sql.Row
 }
 
 // A Tx captures the essential methods of a sql.Tx.
@@ -110,18 +114,60 @@ func NewDB(dsn, app string) (*sql.DB, error) {
 	return db, nil
 }
 
-func NewMigrationSourceLoader(dataSource string) *bindata.AssetSource {
-	return bindata.Resource(migrations.AssetNames(), migrations.Asset)
+// databases configures the migrations we want based on a database name. This
+// configuration includes the name of the migration version table as well as
+// the raw migration assets to run to migrate the target schema to a new version.
+var databases = map[string]struct {
+	MigrationsTable string
+	Resource        *bindata.AssetSource
+}{
+	"frontend": {
+		MigrationsTable: "schema_migrations",
+		Resource:        bindata.Resource(frontendMigrations.AssetNames(), frontendMigrations.Asset),
+	},
+	"codeintel": {
+		MigrationsTable: "codeintel_schema_migrations",
+		Resource:        bindata.Resource(codeintelMigrations.AssetNames(), codeintelMigrations.Asset),
+	},
 }
 
-func NewMigrate(db *sql.DB, dataSource string) (*migrate.Migrate, error) {
-	var cfg postgres.Config
-	driver, err := postgres.WithInstance(db, &cfg)
+// DatabaseNames returns the list of database names (configured via `dbutil.databases`)..
+var DatabaseNames = func() []string {
+	var names []string
+	for databaseName := range databases {
+		names = append(names, databaseName)
+	}
+
+	return names
+}()
+
+// MigrationTables returns the list of migration table names (configured via `dbutil.databases`).
+var MigrationTables = func() []string {
+	var migrationTables []string
+	for _, db := range databases {
+		migrationTables = append(migrationTables, db.MigrationsTable)
+	}
+
+	return migrationTables
+}()
+
+// NewMigrate returns a new configured migration object for the given database name. This database
+// name must be present in the `dbutil.databases` map. This migration can be subsequently run by
+// invoking `dbutil.DoMigrate`.
+func NewMigrate(db *sql.DB, databaseName string) (*migrate.Migrate, error) {
+	schemaData, ok := databases[databaseName]
+	if !ok {
+		return nil, fmt.Errorf("unknown database '%s'", databaseName)
+	}
+
+	driver, err := postgres.WithInstance(db, &postgres.Config{
+		MigrationsTable: schemaData.MigrationsTable,
+	})
 	if err != nil {
 		return nil, err
 	}
 
-	d, err := bindata.WithInstance(NewMigrationSourceLoader(dataSource))
+	d, err := bindata.WithInstance(schemaData.Resource)
 	if err != nil {
 		return nil, err
 	}
@@ -317,9 +363,45 @@ func (n JSONInt64Set) Value() (driver.Value, error) {
 	return *n.Set, nil
 }
 
-func PostgresDSN(currentUser string, getenv func(string) string) string {
+// NullJSONRawMessage represents a json.RawMessage that may be null. NullJSONRawMessage implements the
+// sql.Scanner interface so it can be used as a scan destination, similar to
+// sql.NullString. When the scanned value is null, Raw is left as nil.
+type NullJSONRawMessage struct {
+	Raw json.RawMessage
+}
+
+// Scan implements the Scanner interface.
+func (n *NullJSONRawMessage) Scan(value interface{}) error {
+	switch value := value.(type) {
+	case nil:
+	case []byte:
+		// We make a copy here because the given value could be reused by
+		// the SQL driver
+		n.Raw = make([]byte, len(value))
+		copy(n.Raw, value)
+	default:
+		return fmt.Errorf("value is not []byte: %T", value)
+	}
+
+	return nil
+}
+
+// Value implements the driver Valuer interface.
+func (n *NullJSONRawMessage) Value() (driver.Value, error) {
+	return n.Raw, nil
+}
+
+func PostgresDSN(prefix, currentUser string, getenv func(string) string) string {
+	if prefix != "" {
+		prefix = fmt.Sprintf("%s_", strings.ToUpper(prefix))
+	}
+
+	env := func(name string) string {
+		return getenv(prefix + name)
+	}
+
 	// PGDATASOURCE is a sourcegraph specific variable for just setting the DSN
-	if dsn := getenv("PGDATASOURCE"); dsn != "" {
+	if dsn := env("PGDATASOURCE"); dsn != "" {
 		return dsn
 	}
 
@@ -335,29 +417,29 @@ func PostgresDSN(currentUser string, getenv func(string) string) string {
 	if currentUser != "" {
 		username = currentUser
 	}
-	if user := getenv("PGUSER"); user != "" {
+	if user := env("PGUSER"); user != "" {
 		username = user
 	}
 
-	if password := getenv("PGPASSWORD"); password != "" {
+	if password := env("PGPASSWORD"); password != "" {
 		dsn.User = url.UserPassword(username, password)
 	} else {
 		dsn.User = url.User(username)
 	}
 
-	if host := getenv("PGHOST"); host != "" {
+	if host := env("PGHOST"); host != "" {
 		dsn.Host = host
 	}
 
-	if port := getenv("PGPORT"); port != "" {
+	if port := env("PGPORT"); port != "" {
 		dsn.Host += ":" + port
 	}
 
-	if db := getenv("PGDATABASE"); db != "" {
+	if db := env("PGDATABASE"); db != "" {
 		dsn.Path = db
 	}
 
-	if sslmode := getenv("PGSSLMODE"); sslmode != "" {
+	if sslmode := env("PGSSLMODE"); sslmode != "" {
 		qry := dsn.Query()
 		qry.Set("sslmode", sslmode)
 		dsn.RawQuery = qry.Encode()

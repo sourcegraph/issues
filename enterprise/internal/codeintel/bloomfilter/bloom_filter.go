@@ -105,7 +105,7 @@ func encodeFilter(buckets []int32, numHashFunctions int32) ([]byte, error) {
 func addToFilter(buckets []int32, numHashFunctions int32, identifier string) {
 	for _, b := range hashLocations(identifier, int32(len(buckets))*32, numHashFunctions) {
 		bucketIndex, indexInBucket := index(b)
-		buckets[bucketIndex] |= (1 << indexInBucket)
+		buckets[bucketIndex] |= 1 << indexInBucket
 	}
 }
 
@@ -132,7 +132,7 @@ func testFilter(buckets []int32, numHashFunctions int32, identifier string) bool
 // order to set or check a single bit in this bitstring, we find the bucket that contains the
 // target bit and the index within that bucket.
 func index(b int32) (int32, int32) {
-	return int32(math.Floor(float64(b) / 32)), (b % 32)
+	return int32(math.Floor(float64(b) / 32)), b % 32
 }
 
 // Original notes:
@@ -166,7 +166,7 @@ func fowlerNollVo1a(v string, seed int32) int32 {
 	for _, r := range utf16Runes(v) {
 		c := int64(r)
 		if d := c & 0xff00; d != 0 {
-			a = (fowlerNollVoMultiply(int32(a ^ int64(d>>8))))
+			a = fowlerNollVoMultiply(int32(a ^ int64(d>>8)))
 		}
 		a = fowlerNollVoMultiply(int32(a) ^ int32(c&0xff))
 	}
@@ -177,7 +177,7 @@ func fowlerNollVo1a(v string, seed int32) int32 {
 // Original notes:
 // Equivalent to `a * 16777619 mod 2**32`.
 func fowlerNollVoMultiply(a int32) int64 {
-	return (int64(a) + int64(a<<1) + int64(a<<4) + int64(a<<7) + int64(a<<8) + int64(a<<24))
+	return int64(a) + int64(a<<1) + int64(a<<4) + int64(a<<7) + int64(a<<8) + int64(a<<24)
 }
 
 // Original notes:

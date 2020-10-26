@@ -16,13 +16,14 @@ import (
 
 	"github.com/inconshreveable/log15"
 
-	"github.com/sourcegraph/sourcegraph/cmd/symbols/internal/pkg/ctags"
 	"github.com/sourcegraph/sourcegraph/cmd/symbols/internal/symbols"
 	"github.com/sourcegraph/sourcegraph/internal/api"
 	"github.com/sourcegraph/sourcegraph/internal/debugserver"
 	"github.com/sourcegraph/sourcegraph/internal/env"
 	"github.com/sourcegraph/sourcegraph/internal/gitserver"
+	"github.com/sourcegraph/sourcegraph/internal/logging"
 	"github.com/sourcegraph/sourcegraph/internal/sqliteutil"
+	"github.com/sourcegraph/sourcegraph/internal/trace"
 	"github.com/sourcegraph/sourcegraph/internal/trace/ot"
 	"github.com/sourcegraph/sourcegraph/internal/tracer"
 )
@@ -39,7 +40,9 @@ func main() {
 	env.Lock()
 	env.HandleHelpFlag()
 	log.SetFlags(0)
+	logging.Init()
 	tracer.Init()
+	trace.Init(true)
 
 	sqliteutil.MustRegisterSqlite3WithPcre()
 
@@ -49,7 +52,7 @@ func main() {
 		FetchTar: func(ctx context.Context, repo gitserver.Repo, commit api.CommitID) (io.ReadCloser, error) {
 			return gitserver.DefaultClient.Archive(ctx, repo, gitserver.ArchiveOptions{Treeish: string(commit), Format: "tar"})
 		},
-		NewParser: ctags.New,
+		NewParser: symbols.NewParser,
 		Path:      cacheDir,
 	}
 	if mb, err := strconv.ParseInt(cacheSizeMB, 10, 64); err != nil {

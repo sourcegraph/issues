@@ -1,79 +1,55 @@
 {
-  "ID": "MDExOlB1bGxSZXF1ZXN0MzYwNTI5NzI0",
+  "ID": "MDExOlB1bGxSZXF1ZXN0NTA0NDU4Njg1",
   "Title": "This is a new title",
   "Body": "This is a new body",
   "State": "OPEN",
-  "URL": "https://github.com/sourcegraph/automation-testing/pull/91",
-  "HeadRefOid": "2ee6f96506c75f1851a6d6be8f4b11e6bd3fd6a1",
-  "BaseRefOid": "97f8a75319760990c187710c50a957358f663366",
-  "HeadRefName": "sourcegraph/campaign-1578499147",
+  "URL": "https://github.com/sourcegraph/automation-testing/pull/358",
+  "HeadRefOid": "05e562cc5d8ab50b5fcab8dfd5dfa5db13a48e80",
+  "BaseRefOid": "6274d04b734de9f057bb5f196a5046a9e86ba992",
+  "HeadRefName": "test-pr-6",
   "BaseRefName": "master",
-  "Number": 91,
+  "Number": 358,
   "Author": {
-   "AvatarURL": "https://avatars1.githubusercontent.com/u/1185253?u=35f048c505007991433b46c9c0616ccbcfbd4bff\u0026v=4",
-   "Login": "mrnugget",
-   "URL": "https://github.com/mrnugget"
+   "AvatarURL": "https://avatars0.githubusercontent.com/u/19534377?v=4",
+   "Login": "eseliger",
+   "URL": "https://github.com/eseliger"
   },
   "Participants": [
-   {
-    "AvatarURL": "https://avatars1.githubusercontent.com/u/1185253?u=35f048c505007991433b46c9c0616ccbcfbd4bff\u0026v=4",
-    "Login": "mrnugget",
-    "URL": "https://github.com/mrnugget"
-   },
-   {
-    "AvatarURL": "https://avatars3.githubusercontent.com/u/25610?u=416aa7bd7c7a97c714ea0a503c90a0e7e21c5e56\u0026v=4",
-    "Login": "ryanslade",
-    "URL": "https://github.com/ryanslade"
-   },
    {
     "AvatarURL": "https://avatars0.githubusercontent.com/u/19534377?v=4",
     "Login": "eseliger",
     "URL": "https://github.com/eseliger"
    },
    {
-    "AvatarURL": "https://avatars3.githubusercontent.com/u/40544396?u=fbd0a7c41d014ee0892e21e845165ce6d6db1c0b\u0026v=4",
-    "Login": "imtommyroberts",
-    "URL": "https://github.com/imtommyroberts"
+    "AvatarURL": "https://avatars1.githubusercontent.com/u/1185253?u=35f048c505007991433b46c9c0616ccbcfbd4bff\u0026v=4",
+    "Login": "mrnugget",
+    "URL": "https://github.com/mrnugget"
    }
   ],
   "Labels": {
-   "Nodes": [
-    {
-     "ID": "MDU6TGFiZWwxNjcxNTU2OTI5",
-     "Color": "a2eeef",
-     "Description": "New feature or request",
-     "Name": "enhancement"
-    },
-    {
-     "ID": "MDU6TGFiZWwxNjcxNTU2OTMw",
-     "Color": "7057ff",
-     "Description": "Good for newcomers",
-     "Name": "good first issue"
-    },
-    {
-     "ID": "MDU6TGFiZWwxNjcxNTU2OTMx",
-     "Color": "008672",
-     "Description": "Extra attention is needed",
-     "Name": "help wanted"
-    }
-   ]
+   "Nodes": []
   },
   "TimelineItems": [
    {
     "Type": "PullRequestCommit",
     "Item": {
      "Commit": {
-      "OID": "2ee6f96506c75f1851a6d6be8f4b11e6bd3fd6a1",
-      "Message": "AMAZING NAME!",
-      "MessageHeadline": "AMAZING NAME!",
-      "URL": "https://github.com/sourcegraph/automation-testing/commit/2ee6f96506c75f1851a6d6be8f4b11e6bd3fd6a1",
+      "OID": "05e562cc5d8ab50b5fcab8dfd5dfa5db13a48e80",
+      "Message": "Add foobar.md file",
+      "MessageHeadline": "Add foobar.md file",
+      "URL": "https://github.com/sourcegraph/automation-testing/commit/05e562cc5d8ab50b5fcab8dfd5dfa5db13a48e80",
       "Committer": {
-       "AvatarURL": "https://camo.githubusercontent.com/97f6ffc1c0b03232b87028c819835b02845716d7/68747470733a2f2f302e67726176617461722e636f6d2f6176617461722f30643331613261376238376230333666386532626332623138663165356436393f643d68747470732533412532462532466769746875622e6769746875626173736574732e636f6d253246696d6167657325324667726176617461727325324667726176617461722d757365722d3432302e706e6726723d67",
-       "Email": "support@sourcegraph.com",
-       "Name": "sourcegraph-committer"
+       "AvatarURL": "https://avatars3.githubusercontent.com/u/1185253?v=4",
+       "Email": "mrnugget@gmail.com",
+       "Name": "Thorsten Ball",
+       "User": {
+        "AvatarURL": "https://avatars1.githubusercontent.com/u/1185253?u=35f048c505007991433b46c9c0616ccbcfbd4bff\u0026v=4",
+        "Login": "mrnugget",
+        "URL": "https://github.com/mrnugget"
+       }
       },
-      "CommittedDate": "2020-01-08T15:59:07Z",
-      "PushedDate": "2020-01-08T16:00:34Z"
+      "CommittedDate": "2019-11-12T12:57:33Z",
+      "PushedDate": "2019-11-12T13:00:07Z"
      }
     }
    },
@@ -81,103 +57,13 @@
     "Type": "RenamedTitleEvent",
     "Item": {
      "Actor": {
-      "AvatarURL": "https://avatars1.githubusercontent.com/u/1185253?u=35f048c505007991433b46c9c0616ccbcfbd4bff\u0026v=4",
-      "Login": "mrnugget",
-      "URL": "https://github.com/mrnugget"
+      "AvatarURL": "https://avatars0.githubusercontent.com/u/19534377?v=4",
+      "Login": "eseliger",
+      "URL": "https://github.com/eseliger"
      },
-     "PreviousTitle": "boring title",
-     "CurrentTitle": "AMAZING NAME!",
-     "CreatedAt": "2020-01-08T16:00:35Z"
-    }
-   },
-   {
-    "Type": "RenamedTitleEvent",
-    "Item": {
-     "Actor": {
-      "AvatarURL": "https://avatars1.githubusercontent.com/u/1185253?u=35f048c505007991433b46c9c0616ccbcfbd4bff\u0026v=4",
-      "Login": "mrnugget",
-      "URL": "https://github.com/mrnugget"
-     },
-     "PreviousTitle": "AMAZING NAME!",
+     "PreviousTitle": "This is a test PR",
      "CurrentTitle": "This is a new title",
-     "CreatedAt": "2020-01-08T16:24:43Z"
-    }
-   },
-   {
-    "Type": "LabeledEvent",
-    "Item": {
-     "Actor": {
-      "AvatarURL": "https://avatars0.githubusercontent.com/u/19534377?v=4",
-      "Login": "eseliger",
-      "URL": "https://github.com/eseliger"
-     },
-     "Label": {
-      "ID": "MDU6TGFiZWwxNjcxNTU2OTI5",
-      "Color": "a2eeef",
-      "Description": "New feature or request",
-      "Name": "enhancement"
-     },
-     "CreatedAt": "2020-02-01T22:33:58Z",
-     "Removed": false
-    }
-   },
-   {
-    "Type": "LabeledEvent",
-    "Item": {
-     "Actor": {
-      "AvatarURL": "https://avatars0.githubusercontent.com/u/19534377?v=4",
-      "Login": "eseliger",
-      "URL": "https://github.com/eseliger"
-     },
-     "Label": {
-      "ID": "MDU6TGFiZWwxNjcxNTU2OTMw",
-      "Color": "7057ff",
-      "Description": "Good for newcomers",
-      "Name": "good first issue"
-     },
-     "CreatedAt": "2020-02-01T22:33:58Z",
-     "Removed": false
-    }
-   },
-   {
-    "Type": "LabeledEvent",
-    "Item": {
-     "Actor": {
-      "AvatarURL": "https://avatars0.githubusercontent.com/u/19534377?v=4",
-      "Login": "eseliger",
-      "URL": "https://github.com/eseliger"
-     },
-     "Label": {
-      "ID": "MDU6TGFiZWwxNjcxNTU2OTMx",
-      "Color": "008672",
-      "Description": "Extra attention is needed",
-      "Name": "help wanted"
-     },
-     "CreatedAt": "2020-02-01T22:33:58Z",
-     "Removed": false
-    }
-   },
-   {
-    "Type": "ClosedEvent",
-    "Item": {
-     "Actor": {
-      "AvatarURL": "https://avatars3.githubusercontent.com/u/40544396?u=fbd0a7c41d014ee0892e21e845165ce6d6db1c0b\u0026v=4",
-      "Login": "imtommyroberts",
-      "URL": "https://github.com/imtommyroberts"
-     },
-     "CreatedAt": "2020-03-13T13:00:19Z",
-     "URL": "https://github.com/sourcegraph/automation-testing/pull/91#event-3126634205"
-    }
-   },
-   {
-    "Type": "ReopenedEvent",
-    "Item": {
-     "Actor": {
-      "AvatarURL": "https://avatars3.githubusercontent.com/u/25610?u=416aa7bd7c7a97c714ea0a503c90a0e7e21c5e56\u0026v=4",
-      "Login": "ryanslade",
-      "URL": "https://github.com/ryanslade"
-     },
-     "CreatedAt": "2020-03-13T20:27:03Z"
+     "CreatedAt": "2020-10-15T23:57:12Z"
     }
    }
   ],
@@ -185,11 +71,11 @@
    "Nodes": [
     {
      "Commit": {
-      "OID": "2ee6f96506c75f1851a6d6be8f4b11e6bd3fd6a1",
+      "OID": "05e562cc5d8ab50b5fcab8dfd5dfa5db13a48e80",
       "CheckSuites": {
        "Nodes": [
         {
-         "ID": "MDEwOkNoZWNrU3VpdGUzOTAzMDI4MzY=",
+         "ID": "MDEwOkNoZWNrU3VpdGUzMDY5MDkzMzM=",
          "Status": "QUEUED",
          "Conclusion": "",
          "ReceivedAt": "0001-01-01T00:00:00Z",
@@ -198,7 +84,7 @@
          }
         },
         {
-         "ID": "MDEwOkNoZWNrU3VpdGUzOTAzMDI4Mzc=",
+         "ID": "MDEwOkNoZWNrU3VpdGUzMDY5MDkzMzY=",
          "Status": "QUEUED",
          "Conclusion": "",
          "ReceivedAt": "0001-01-01T00:00:00Z",
@@ -212,11 +98,12 @@
        "State": "",
        "Contexts": null
       },
-      "CommittedDate": "2020-01-08T15:59:07Z"
+      "CommittedDate": "2019-11-12T12:57:33Z"
      }
     }
    ]
   },
-  "CreatedAt": "2020-01-08T15:59:11Z",
-  "UpdatedAt": "2020-03-13T20:27:27Z"
+  "IsDraft": false,
+  "CreatedAt": "2020-10-15T23:47:12Z",
+  "UpdatedAt": "2020-10-15T23:57:13Z"
  }

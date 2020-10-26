@@ -1,0 +1,8 @@
+.or-divider {
+    height: 0.75rem;
+    font-size: 0.75rem; /* stylelint-disable-line declaration-property-unit-whitelist */
+
+    &__border {
+        border-bottom: 1px solid var(--border-color-2);
+    }
+}

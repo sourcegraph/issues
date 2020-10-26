@@ -117,6 +117,31 @@ const (
 	TypeOther = "other"
 )
 
+// KindToType returns a Type constants given a Kind
+// It will panic when given an unknown kind
+func KindToType(kind string) string {
+	switch kind {
+	case KindAWSCodeCommit:
+		return TypeAWSCodeCommit
+	case KindBitbucketServer:
+		return TypeBitbucketServer
+	case KindBitbucketCloud:
+		return TypeBitbucketCloud
+	case KindGitHub:
+		return TypeGitHub
+	case KindGitLab:
+		return TypeGitLab
+	case KindGitolite:
+		return TypeGitolite
+	case KindPhabricator:
+		return TypePhabricator
+	case KindOther:
+		return TypeOther
+	default:
+		panic(fmt.Sprintf("unknown kind: %q", kind))
+	}
+}
+
 var (
 	// Precompute these for use in ParseServiceType below since the constants are mixed case
 	bbsLower = strings.ToLower(TypeBitbucketServer)
@@ -192,6 +217,8 @@ func WebhookURL(kind string, externalServiceID int64, externalURL string) string
 		path = "github-webhooks"
 	case KindBitbucketServer:
 		path = "bitbucket-server-webhooks"
+	case KindGitLab:
+		path = "gitlab-webhooks"
 	default:
 		return ""
 	}
@@ -214,6 +241,42 @@ func ExtractRateLimitConfig(config, kind, displayName string) (RateLimitConfig, 
 	rlc.DisplayName = displayName
 
 	return rlc, nil
+}
+
+// ExtractBaseURL will extract the normalised base URL from the given config
+// based on the vale of kind
+func ExtractBaseURL(kind, config string) (*url.URL, error) {
+	cfg, err := ParseConfig(kind, config)
+	if err != nil {
+		return nil, errors.Wrap(err, "parsing config")
+	}
+
+	var rawURL string
+	switch c := cfg.(type) {
+	case *schema.AWSCodeCommitConnection:
+		return nil, errors.New("BaseURL unavailable for AWSCodeCommit")
+	case *schema.BitbucketServerConnection:
+		rawURL = c.Url
+	case *schema.GitHubConnection:
+		rawURL = c.Url
+	case *schema.GitLabConnection:
+		rawURL = c.Url
+	case *schema.GitoliteConnection:
+		rawURL = c.Host
+	case *schema.PhabricatorConnection:
+		rawURL = c.Url
+	case *schema.OtherExternalServiceConnection:
+		rawURL = c.Url
+	default:
+		return nil, fmt.Errorf("unknown external service type %T", config)
+	}
+
+	parsed, err := url.Parse(rawURL)
+	if err != nil {
+		return nil, errors.Wrap(err, "parsing service URL")
+	}
+
+	return NormalizeBaseURL(parsed), nil
 }
 
 // RateLimitConfig represents the internal rate limit configured for an external service

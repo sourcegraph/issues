@@ -10,7 +10,7 @@ We made Sourcegraph extensions centrally managed by your Sourcegraph instance, n
 
 ## What can I do?
 
-We know that Sourcegraph users are a very technical audience, so we hope the information on this page will help you make an informed decision on whether to keep using the Sourcegraph Firefox add-on. Additionally, our add-on is [fully open source](https://github.com/sourcegraph/sourcegraph/tree/master/browser), and you should feel free to inspect the source code if you have any other concerns.
+We know that Sourcegraph users are a very technical audience, so we hope the information on this page will help you make an informed decision on whether to keep using the Sourcegraph Firefox add-on. Additionally, our add-on is [fully open source](https://github.com/sourcegraph/sourcegraph/tree/main/client/browser), and you should feel free to inspect the source code if you have any other concerns.
 
 If you decide that you are comfortable trusting the Sourcegraph Mozilla Firefox add-on:
 

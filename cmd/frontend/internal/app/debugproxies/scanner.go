@@ -89,18 +89,22 @@ func StartClusterScanner(consumer ScanConsumer) error {
 func (cs *clusterScanner) runEventLoop() {
 	cs.scanCluster()
 	for {
-		err := cs.watchEndpointEvents()
-		log15.Debug("failed to watch kubernetes endpoints", "error", err)
+		ok, err := cs.watchEndpointEvents()
+		if ok {
+			log15.Debug("ephemeral kubernetes endpoint watch error. Will start loop again in 5s", "endpoint", "/-/debug", "error", err)
+		} else {
+			log15.Warn("failed to connect to kubernetes endpoint watcher. Will retry in 5s.", "endpoint", "/-/debug", "error", err)
+		}
 		time.Sleep(time.Second * 5)
 	}
 }
 
 // watchEndpointEvents uses the k8s watch API operation to watch for endpoint events. Spins forever unless an error
 // occurs that would necessitate creating a new watcher. The caller will then call again creating the new watcher.
-func (cs *clusterScanner) watchEndpointEvents() error {
+func (cs *clusterScanner) watchEndpointEvents() (bool, error) {
 	watcher, err := cs.client.Watch(context.Background(), cs.client.Namespace(), new(corev1.Endpoints))
 	if err != nil {
-		return fmt.Errorf("k8s client.Watch error: %w", err)
+		return false, fmt.Errorf("k8s client.Watch error: %w", err)
 	}
 	defer watcher.Close()
 
@@ -109,12 +113,12 @@ func (cs *clusterScanner) watchEndpointEvents() error {
 		eventType, err := watcher.Next(&eps)
 		if err != nil {
 			// we need a new watcher
-			return fmt.Errorf("k8s watcher.Next error: %w", err)
+			return true, fmt.Errorf("k8s watcher.Next error: %w", err)
 		}
 
 		if eventType == k8s.EventError {
 			// we need a new watcher
-			return errors.New("error event")
+			return true, errors.New("error event")
 		}
 
 		cs.scanCluster()

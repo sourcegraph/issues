@@ -479,6 +479,152 @@ func TestRemoveBadRefs(t *testing.T) {
 	}
 }
 
+func TestCloneRepo_EnsureValidity(t *testing.T) {
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	t.Run("with no remote HEAD file", func(t *testing.T) {
+		var (
+			remote   = tmpDir(t)
+			reposDir = tmpDir(t)
+			cmd      = func(name string, arg ...string) string {
+				t.Helper()
+				return runCmd(t, remote, name, arg...)
+			}
+		)
+
+		cmd("git", "init", ".")
+		cmd("rm", ".git/HEAD")
+
+		server := &Server{
+			ReposDir:         reposDir,
+			ctx:              ctx,
+			locker:           &RepositoryLocker{},
+			cloneLimiter:     mutablelimiter.New(1),
+			cloneableLimiter: mutablelimiter.New(1),
+		}
+		if _, err := server.cloneRepo(ctx, "example.com/foo/bar", remote, nil); err == nil {
+			t.Fatal("expected an error, got none")
+		}
+	})
+	t.Run("with an empty remote HEAD file", func(t *testing.T) {
+		var (
+			remote   = tmpDir(t)
+			reposDir = tmpDir(t)
+			cmd      = func(name string, arg ...string) string {
+				t.Helper()
+				return runCmd(t, remote, name, arg...)
+			}
+		)
+
+		cmd("git", "init", ".")
+		cmd("sh", "-c", ": > .git/HEAD")
+
+		server := &Server{
+			ReposDir:         reposDir,
+			ctx:              ctx,
+			locker:           &RepositoryLocker{},
+			cloneLimiter:     mutablelimiter.New(1),
+			cloneableLimiter: mutablelimiter.New(1),
+		}
+		if _, err := server.cloneRepo(ctx, "example.com/foo/bar", remote, nil); err == nil {
+			t.Fatal("expected an error, got none")
+		}
+	})
+	t.Run("with no local HEAD file", func(t *testing.T) {
+		var (
+			remote   = tmpDir(t)
+			reposDir = tmpDir(t)
+			cmd      = func(name string, arg ...string) string {
+				t.Helper()
+				return runCmd(t, remote, name, arg...)
+			}
+		)
+
+		cmd("git", "init", ".")
+		cmd("sh", "-c", "echo hello world > hello.txt")
+		cmd("git", "add", "hello.txt")
+		cmd("git", "commit", "-m", "hello")
+
+		s := &Server{
+			ReposDir:         reposDir,
+			ctx:              ctx,
+			locker:           &RepositoryLocker{},
+			cloneLimiter:     mutablelimiter.New(1),
+			cloneableLimiter: mutablelimiter.New(1),
+		}
+		testRepoCorrupter = func(_ context.Context, tmpDir GitDir) {
+			cmd("sh", "-c", fmt.Sprintf("rm %s/HEAD", tmpDir))
+		}
+		if _, err := s.cloneRepo(ctx, "example.com/foo/bar", remote, nil); err != nil {
+			t.Fatalf("expected no error, got %v", err)
+		}
+
+		dst := s.dir(api.RepoName("example.com/foo/bar"))
+		for i := 0; i < 1000; i++ {
+			_, cloning := s.locker.Status(dst)
+			if !cloning {
+				break
+			}
+			time.Sleep(10 * time.Millisecond)
+		}
+
+		head, err := ioutil.ReadFile(fmt.Sprintf("%s/HEAD", dst))
+		if os.IsNotExist(err) {
+			t.Fatal("expected a reconstituted HEAD, but no file exists")
+		}
+		if head == nil {
+			t.Fatal("expected a reconstituted HEAD, but the file is empty")
+		}
+	})
+	t.Run("with an empty local HEAD file", func(t *testing.T) {
+		var (
+			remote   = tmpDir(t)
+			reposDir = tmpDir(t)
+			cmd      = func(name string, arg ...string) string {
+				t.Helper()
+				return runCmd(t, remote, name, arg...)
+			}
+		)
+
+		cmd("git", "init", ".")
+		cmd("sh", "-c", "echo hello world > hello.txt")
+		cmd("git", "add", "hello.txt")
+		cmd("git", "commit", "-m", "hello")
+
+		s := &Server{
+			ReposDir:         reposDir,
+			ctx:              ctx,
+			locker:           &RepositoryLocker{},
+			cloneLimiter:     mutablelimiter.New(1),
+			cloneableLimiter: mutablelimiter.New(1),
+		}
+		testRepoCorrupter = func(_ context.Context, tmpDir GitDir) {
+			cmd("sh", "-c", fmt.Sprintf(": > %s/HEAD", tmpDir))
+		}
+		if _, err := s.cloneRepo(ctx, "example.com/foo/bar", remote, nil); err != nil {
+			t.Fatalf("expected no error, got %v", err)
+		}
+
+		dst := s.dir(api.RepoName("example.com/foo/bar"))
+		for i := 0; i < 1000; i++ {
+			_, cloning := s.locker.Status(dst)
+			if !cloning {
+				break
+			}
+			time.Sleep(10 * time.Millisecond)
+		}
+
+		head, err := ioutil.ReadFile(fmt.Sprintf("%s/HEAD", dst))
+		if os.IsNotExist(err) {
+			t.Fatal("expected a reconstituted HEAD, but no file exists")
+		}
+		if head == nil {
+			t.Fatal("expected a reconstituted HEAD, but the file is empty")
+		}
+	})
+}
+
 func TestMain(m *testing.M) {
 	flag.Parse()
 	if !testing.Verbose() {

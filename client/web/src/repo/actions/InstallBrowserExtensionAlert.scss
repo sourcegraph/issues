@@ -1,0 +1,53 @@
+.install-browser-extension-alert {
+    &__text {
+        max-width: 42rem;
+        // stylelint-disable-next-line declaration-property-unit-whitelist
+        margin-left: calc(0.75rem - 2px);
+    }
+
+    &__icon {
+        height: 1.5rem;
+        width: 1.5rem;
+    }
+
+    &__icon-flash {
+        position: absolute;
+        animation: 3.2s pulsate ease-in-out infinite;
+        top: 0;
+        left: 0;
+        opacity: 0;
+        height: 1.5rem;
+        width: 1.5rem;
+        border-radius: 50%;
+        background: rgba(56, 117, 127, 0.2);
+        filter: blur(1px);
+    }
+
+    &__close-icon {
+        height: 1.5rem;
+        width: 1.5rem;
+    }
+}
+
+@keyframes pulsate {
+    0% {
+        transform: scale(1, 1);
+        opacity: 0;
+    }
+    25% {
+        transform: scale(1.2, 1.2);
+        opacity: 1;
+    }
+    50% {
+        transform: scale(1.2, 1.2);
+        opacity: 1;
+    }
+    75% {
+        transform: scale(1, 1);
+        opacity: 0;
+    }
+    100% {
+        transform: scale(1, 1);
+        opacity: 0;
+    }
+}

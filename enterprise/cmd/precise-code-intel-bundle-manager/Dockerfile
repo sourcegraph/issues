@@ -1,9 +1,11 @@
-FROM alpine:3.10@sha256:e4355b66995c96b4b468159fc5c7e3540fcef961189ca13fee877798649f531a as libsqlite3-pcre
+FROM sourcegraph/alpine:3.12@sha256:133a0a767b836cf86a011101995641cf1b5cbefb3dd212d78d7be145adde636d as libsqlite3-pcre
+# hadolint ignore=DL3002
+USER root
 
 COPY libsqlite3-pcre-install-alpine.sh /libsqlite3-pcre-install-alpine.sh
 RUN /libsqlite3-pcre-install-alpine.sh
 
-FROM sourcegraph/alpine:3.10@sha256:4d05cd5669726fc38823e92320659a6d1ef7879e62268adec5df658a0bacf65c
+FROM sourcegraph/alpine:3.12@sha256:133a0a767b836cf86a011101995641cf1b5cbefb3dd212d78d7be145adde636d
 
 ARG COMMIT_SHA="unknown"
 ARG DATE="unknown"
@@ -29,6 +31,7 @@ RUN apk --no-cache add pcre-dev
 # then one of the precise-code-intel processes would be unable to create the `/lsif-storage` because it
 # would  be trying to do so in a directory owned by `root` as the user `sourcegraph`. And no, this is not
 # dumb, this is just Docker: https://github.com/docker/compose/issues/3270#issuecomment-363478501.
+# hadolint ignore=DL3002
 USER root
 RUN mkdir -p /lsif-storage && chown -R sourcegraph:sourcegraph /lsif-storage
 

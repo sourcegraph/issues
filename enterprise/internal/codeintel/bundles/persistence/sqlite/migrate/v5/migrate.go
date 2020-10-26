@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/keegancsmith/sqlf"
+	"github.com/sourcegraph/sourcegraph/enterprise/internal/codeintel/bundles/persistence"
 	"github.com/sourcegraph/sourcegraph/enterprise/internal/codeintel/bundles/persistence/serialization"
 	jsonserializer "github.com/sourcegraph/sourcegraph/enterprise/internal/codeintel/bundles/persistence/serialization/json"
 	"github.com/sourcegraph/sourcegraph/enterprise/internal/codeintel/bundles/persistence/sqlite/batch"
@@ -65,7 +66,7 @@ func createTempTables(ctx context.Context, s *store.Store, _, _ serialization.Se
 
 // reencodeDocuments pulls data from the old document table and inserts the re-encoded data into the temporary table.
 func reencodeDocuments(ctx context.Context, s *store.Store, deserializer, serializer serialization.Serializer) error {
-	ch := make(chan batch.KeyedDocument)
+	ch := make(chan persistence.KeyedDocumentData)
 
 	return util.InvokeAll(
 		func() error { return readDocuments(ctx, s, deserializer, ch) },
@@ -75,7 +76,7 @@ func reencodeDocuments(ctx context.Context, s *store.Store, deserializer, serial
 
 // reencodeResultChunks pulls data from the old result chunks table and inserts the re-encoded data into the temporary table.
 func reencodeResultChunks(ctx context.Context, s *store.Store, deserializer, serializer serialization.Serializer) error {
-	ch := make(chan batch.IndexedResultChunk)
+	ch := make(chan persistence.IndexedResultChunkData)
 
 	return util.InvokeAll(
 		func() error { return readResultChunks(ctx, s, deserializer, ch) },
@@ -129,7 +130,7 @@ func swapTables(ctx context.Context, s *store.Store, _, _ serialization.Serializ
 // readDocuments reads all documents from the original documents table and writes the scanned results onto the
 // given channel. If an error occurs during query or scanning, that error is returned and no future writes to
 // the channel will be performed. The given channel is closed when the function exits.
-func readDocuments(ctx context.Context, s *store.Store, serializer serialization.Serializer, ch chan<- batch.KeyedDocument) (err error) {
+func readDocuments(ctx context.Context, s *store.Store, serializer serialization.Serializer, ch chan<- persistence.KeyedDocumentData) (err error) {
 	defer close(ch)
 
 	rows, err := s.Query(ctx, sqlf.Sprintf("SELECT path, data FROM documents"))
@@ -150,7 +151,7 @@ func readDocuments(ctx context.Context, s *store.Store, serializer serialization
 			return err
 		}
 
-		ch <- batch.KeyedDocument{
+		ch <- persistence.KeyedDocumentData{
 			Path:     path,
 			Document: document,
 		}
@@ -162,7 +163,7 @@ func readDocuments(ctx context.Context, s *store.Store, serializer serialization
 // readResultChunks reads all result chunks from the original result chunks table and writes the scanned results
 // onto the given channel. If an error occurs during query or scanning, that error is returned and no future writes
 // to the channel will be performed. The given channel is closed when the function exits.
-func readResultChunks(ctx context.Context, s *store.Store, serializer serialization.Serializer, ch chan<- batch.IndexedResultChunk) (err error) {
+func readResultChunks(ctx context.Context, s *store.Store, serializer serialization.Serializer, ch chan<- persistence.IndexedResultChunkData) (err error) {
 	defer close(ch)
 
 	rows, err := s.Query(ctx, sqlf.Sprintf("SELECT id, data FROM result_chunks"))
@@ -183,7 +184,7 @@ func readResultChunks(ctx context.Context, s *store.Store, serializer serializat
 			return err
 		}
 
-		ch <- batch.IndexedResultChunk{
+		ch <- persistence.IndexedResultChunkData{
 			Index:       id,
 			ResultChunk: resultChunk,
 		}

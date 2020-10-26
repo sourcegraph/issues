@@ -1,0 +1,89 @@
+# -*- mode: ruby -*-
+# # vi: set ft=ruby :
+# Specify minimum Vagrant version and Vagrant API version
+Vagrant.require_version '>= 1.6.0'
+VAGRANTFILE_API_VERSION = '2'.freeze
+# Require YAML module
+require 'yaml'
+
+# Read YAML file with box details
+servers = YAML.load_file('servers.yaml')
+# Create boxes
+Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
+  # Iterate through entries in YAML file
+  servers.each do |server|
+    config.env.enable
+    config.vm.define server['name'] do |srv|
+      srv.vm.box = server['box']
+      srv.vm.synced_folder '../', '/sourcegraph', type: "rsync", rsync__args: ["--verbose", "--archive", "--delete", "-z"]
+      srv.vm.boot_timeout = 600
+
+      # Setup for CI or Local
+      case ENV['VAGRANT_RUN_ENV']
+      when 'CI'
+        project_id = server['project_id']
+        external_ip = server['external_ip']
+        use_private_ip = server['use_private_ip']
+        username = server['username']
+        ssh_key_path = server['ssh_key_path']
+      else
+        project_id = ENV['VAGRANT_GCP_PROJECT_ID'] || 'sourcegraph-server'
+        external_ip = nil
+        use_private_ip = false
+        username = ENV['VAGRANT_SSH_USER'] || ENV['USER']
+        ssh_key_path = ENV['VAGRANT_SSH_KEY'] || '~/.ssh/id_rsa'
+      end
+
+      srv.vm.provider :google do |g, o|
+        g.machine_type = server['machine_type']
+        g.image = 'e2e-1e5a682e-2020-09-25t14-38-03z'
+        g.image_project_id = 'sourcegraph-ci'
+        g.google_project_id = project_id
+        g.name = "#{server['name']}-"+"#{Time.now.to_i}"
+        g.network = server['network']
+        g.external_ip = external_ip
+        g.use_private_ip = use_private_ip
+        g.disk_size = 20
+        g.disk_type = 'pd-ssd'
+        o.ssh.username = username
+        o.ssh.private_key_path = ssh_key_path
+      end
+      srv.vm.provision 'shell', inline: <<-SHELL
+        #!/usr/bin/env bash
+        apt-get update -y
+        cat << EOF >> /root/.profile
+export ENTERPRISE=#{ENV['ENTERPRISE']}
+export DOCKER_BUILDKIT=#{ENV['DOCKER_BUILDKIT']}
+export FORCE_COLOR=#{ENV['FORCE_COLOR']}
+export GO111MODULE=#{ENV['GO111MODULE']}
+export IMAGE=#{ENV['IMAGE']}
+export TAG=#{ENV['TAG']}
+export COVERAGE_INSTRUMENT=#{ENV['COVERAGE_INSTRUMENT']}
+export TEST_USER_PASSWORD=#{ENV['TEST_USER_PASSWORD']}
+export VERSION=#{ENV['VERSION']}
+export PGUSER=#{ENV['PGUSER']}
+export PGDATABASE=#{ENV['PGDATABASE']}
+export PGSSLMODE=#{ENV['PGSSLMODE']}
+export PERCY_TOKEN=#{ENV['PERCY_TOKEN']}
+export GITHUB_TOKEN=#{ENV['GITHUB_TOKEN']}
+export AWS_ACCESS_KEY_ID=#{ENV['AWS_ACCESS_KEY_ID']}
+export AWS_SECRET_ACCESS_KEY=#{ENV['AWS_SECRET_ACCESS_KEY']}
+export AWS_CODE_COMMIT_USERNAME=#{ENV['AWS_CODE_COMMIT_USERNAME']}
+export AWS_CODE_COMMIT_PASSWORD=#{ENV['AWS_CODE_COMMIT_PASSWORD']}
+export BITBUCKET_SERVER_URL=#{ENV['BITBUCKET_SERVER_URL']}
+export BITBUCKET_SERVER_TOKEN=#{ENV['BITBUCKET_SERVER_TOKEN']}
+export BITBUCKET_SERVER_USERNAME=#{ENV['BITBUCKET_SERVER_USERNAME']}
+export DISPLAY=":99"
+export CI=#{ENV['CI']}
+export CI_DEBUG_PROFILE=#{ENV['CI_DEBUG_PROFILE']}
+export SGDEV_OVERRIDE_AUTH_SECRET=#{ENV['SGDEV_OVERRIDE_AUTH_SECRET']}
+
+EOF
+      SHELL
+
+        server['shell_commands'].each do |sh|
+          srv.vm.provision 'shell', inline: sh
+        end
+    end
+  end
+end

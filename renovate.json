@@ -9,15 +9,6 @@
   },
   "packageRules": [
     {
-      "packageNames": ["typescript"],
-      "ignoreUnstable": false,
-      "followTag": "next",
-      "schedule": null,
-      "reviewers": [],
-      "automerge": false,
-      "labels": ["bot", "npm", "nightly"]
-    },
-    {
       "packageNames": ["@octokit/rest", "@slack/web-api", "googleapis"],
       "reviewers": ["beyang"]
     }

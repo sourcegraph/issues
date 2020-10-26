@@ -2,6 +2,7 @@ package server
 
 import (
 	"context"
+	"encoding/json"
 	"io"
 	"io/ioutil"
 	"log"
@@ -15,13 +16,73 @@ import (
 	"testing/quick"
 	"time"
 
+	"github.com/google/go-cmp/cmp"
 	"github.com/pkg/errors"
+	"github.com/sourcegraph/sourcegraph/internal/gitserver/protocol"
 )
 
 const (
 	testRepoA = "testrepo-A"
 	testRepoC = "testrepo-C"
 )
+
+func TestCleanup_computeStats(t *testing.T) {
+	root, err := ioutil.TempDir("", "gitserver-test-")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer os.RemoveAll(root)
+
+	for _, name := range []string{"a", "b/d", "c"} {
+		p := path.Join(root, name, ".git")
+		if err := os.MkdirAll(p, 0755); err != nil {
+			t.Fatal(err)
+		}
+		cmd := exec.Command("git", "--bare", "init", p)
+		if err := cmd.Run(); err != nil {
+			t.Fatal(err)
+		}
+	}
+
+	want := protocol.ReposStats{
+		UpdatedAt: time.Now(),
+
+		// This may be different in practice, but the way we setup the tests
+		// we only have .git dirs to measure so this is correct.
+		GitDirBytes: dirSize(root),
+	}
+
+	// We run cleanupRepos because we want to test as a side-effect it creates
+	// the correct file in the correct place.
+	s := &Server{ReposDir: root}
+	s.Handler() // Handler as a side-effect sets up Server
+	s.cleanupRepos()
+
+	// we hardcode the name here so the tests break if someone changes the
+	// value of reposStatsName. We don't want it to change without good reason
+	// since it will temporarily break the repo-stats endpoint.
+	b, err := ioutil.ReadFile(filepath.Join(root, "repos-stats.json"))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	var got protocol.ReposStats
+	if err := json.Unmarshal(b, &got); err != nil {
+		t.Fatal(err)
+	}
+
+	if got.UpdatedAt.Before(want.UpdatedAt) {
+		t.Fatal("want should have been computed after we called cleanupRepos")
+	}
+	if got.UpdatedAt.After(time.Now()) {
+		t.Fatal("want.UpdatedAt is in the future")
+	}
+	got.UpdatedAt = want.UpdatedAt
+
+	if d := cmp.Diff(want, got); d != "" {
+		t.Fatalf("mismatch for (-want +got):\n%s", d)
+	}
+}
 
 func TestCleanupInactive(t *testing.T) {
 	root, err := ioutil.TempDir("", "gitserver-test-")
@@ -205,6 +266,8 @@ func TestCleanupOldLocks(t *testing.T) {
 	s.cleanupRepos()
 
 	assertPaths(t, root,
+		"repos-stats.json",
+
 		"github.com/foo/empty/.git/HEAD",
 		"github.com/foo/empty/.git/info/attributes",
 
@@ -558,10 +621,7 @@ func TestFreeUpSpace(t *testing.T) {
 			".tmp",
 			"repo2/.git/HEAD",
 			"repo2/.git/space_eater")
-		rds, err := dirSize(rd)
-		if err != nil {
-			t.Fatal(err)
-		}
+		rds := dirSize(rd)
 		wantSize := int64(1000)
 		if rds > wantSize {
 			t.Errorf("repo dir size is %d, want no more than %d", rds, wantSize)

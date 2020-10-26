@@ -4,16 +4,14 @@ import (
 	"context"
 	"fmt"
 	"net/http"
-	"net/url"
-	"path"
 	"strconv"
 
 	"github.com/pkg/errors"
 	"github.com/sourcegraph/sourcegraph/cmd/frontend/auth"
 	"github.com/sourcegraph/sourcegraph/cmd/frontend/auth/providers"
-	"github.com/sourcegraph/sourcegraph/cmd/frontend/db"
 	"github.com/sourcegraph/sourcegraph/enterprise/cmd/frontend/auth/oauth"
 	"github.com/sourcegraph/sourcegraph/internal/actor"
+	"github.com/sourcegraph/sourcegraph/internal/db"
 	"github.com/sourcegraph/sourcegraph/internal/extsvc"
 	"github.com/sourcegraph/sourcegraph/internal/extsvc/gitlab"
 	"golang.org/x/oauth2"
@@ -80,16 +78,4 @@ func (s *sessionIssuerHelper) SessionData(token *oauth2.Token) oauth.SessionData
 		TokenType:   token.Type(),
 		// TODO(beyang): store and use refresh token to auto-refresh sessions
 	}
-}
-
-func SignOutURL(gitlabURL string) (string, error) {
-	if gitlabURL == "" {
-		gitlabURL = "https://gitlab.com"
-	}
-	ghURL, err := url.Parse(gitlabURL)
-	if err != nil {
-		return "", err
-	}
-	ghURL.Path = path.Join(ghURL.Path, "users/sign_out")
-	return ghURL.String(), nil
 }

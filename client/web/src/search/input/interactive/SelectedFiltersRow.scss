@@ -1,0 +1,14 @@
+.selected-filters-row {
+    display: flex;
+    flex: 0 0 auto;
+    flex-wrap: wrap;
+    align-items: center;
+
+    &:not(:empty) {
+        // Prevents jitter when editing or adding a new filter by having a minimum height of
+        // the input plus associated margins and padding of the filter input.
+        min-height: calc(
+            #{$input-height-sm} + #{$input-padding-y} + (#{$filter-input-margin-y} * 2) + (#{$filter-input-padding} * 2)
+        );
+    }
+}

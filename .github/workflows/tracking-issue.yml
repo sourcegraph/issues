@@ -1,7 +1,7 @@
 name: Tracking Issue Syncer
 on:
   schedule:
-    - cron:  '*/15 * * * *'
+  - cron: '*/15 * * * *'
   issues:
     types:
     - opened
@@ -15,6 +15,16 @@ on:
     - unlabeled
     - milestoned
     - demilestoned
+  pull_request:
+    types:
+    - opened
+    - edited
+    - closed
+    - reopened
+    - assigned
+    - unassigned
+    - labeled
+    - unlabeled
 jobs:
   sync-tracking-issues:
     runs-on: ubuntu-latest

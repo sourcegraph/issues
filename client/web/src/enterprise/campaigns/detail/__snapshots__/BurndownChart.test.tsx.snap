@@ -1,0 +1,4417 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`CampaignBurndownChart renders an alert when data for less than 2 days is present 1`] = `
+<CampaignBurndownChart
+  campaignID="123"
+  history="[History]"
+  queryChangesetCountsOverTime={[Function]}
+  width={500}
+>
+  <div
+    className="col-md-8 offset-md-2 col-sm-12 card mt-5"
+  >
+    <div
+      className="card-body p-5"
+    >
+      <h2
+        className="text-center mb-4"
+      >
+        The burndown chart requires 2 days of data
+      </h2>
+      <p>
+        Come back in a few days and we'll be able to show you data on how your campaign is progressing!
+      </p>
+    </div>
+  </div>
+</CampaignBurndownChart>
+`;
+
+exports[`CampaignBurndownChart renders an alert when no datapoints are in a set of more than 1 day of data 1`] = `
+<CampaignBurndownChart
+  campaignID="123"
+  history="[History]"
+  queryChangesetCountsOverTime={[Function]}
+  width={500}
+>
+  <div
+    className="col-md-8 offset-md-2 col-sm-12 card mt-5"
+  >
+    <div
+      className="card-body p-5"
+    >
+      <h2
+        className="text-center mb-4"
+      >
+        Burndown chart is not available
+      </h2>
+      <p>
+        The burndown chart will be shown when data is available.
+      </p>
+    </div>
+  </div>
+</CampaignBurndownChart>
+`;
+
+exports[`CampaignBurndownChart renders the chart 1`] = `
+<CampaignBurndownChart
+  campaignID="123"
+  history="[History]"
+  queryChangesetCountsOverTime={[Function]}
+  width={500}
+>
+  <ResponsiveContainer
+    className="test-campaigns-chart"
+    debounce={0}
+    height={300}
+    width={500}
+  >
+    <div
+      className="recharts-responsive-container test-campaigns-chart"
+      style={
+        Object {
+          "height": 300,
+          "maxHeight": undefined,
+          "minHeight": undefined,
+          "minWidth": undefined,
+          "width": 500,
+        }
+      }
+    >
+      <ComposedChart
+        barCategoryGap="10%"
+        barGap={4}
+        data={
+          Array [
+            Object {
+              "closed": 1,
+              "date": 1573646400000,
+              "draft": 0,
+              "merged": 1,
+              "openApproved": 1,
+              "openChangesRequested": 1,
+              "openPending": 1,
+              "total": 10,
+            },
+            Object {
+              "closed": 1,
+              "date": 1573732800000,
+              "draft": 0,
+              "merged": 5,
+              "openApproved": 1,
+              "openChangesRequested": 1,
+              "openPending": 1,
+              "total": 10,
+            },
+          ]
+        }
+        height={300}
+        layout="horizontal"
+        margin={
+          Object {
+            "bottom": 5,
+            "left": 5,
+            "right": 5,
+            "top": 5,
+          }
+        }
+        reverseStackOrder={false}
+        stackOffset="none"
+        width={500}
+      >
+        <div
+          className="recharts-wrapper"
+          onMouseEnter={[Function]}
+          onMouseLeave={[Function]}
+          onMouseMove={[Function]}
+          onTouchEnd={[Function]}
+          onTouchMove={[Function]}
+          onTouchStart={[Function]}
+          style={
+            Object {
+              "cursor": "default",
+              "height": 300,
+              "position": "relative",
+              "width": 500,
+            }
+          }
+        >
+          <Surface
+            height={300}
+            width={500}
+          >
+            <svg
+              className="recharts-surface"
+              height={300}
+              version="1.1"
+              viewBox="0 0 500 300"
+              width={500}
+            >
+              <defs>
+                <clipPath
+                  id="recharts1-clip"
+                >
+                  <rect
+                    height={260}
+                    width={430}
+                    x={65}
+                    y={5}
+                  />
+                </clipPath>
+              </defs>
+              <CartesianAxis
+                allowDataOverflow={false}
+                allowDecimals={true}
+                allowDuplicatedCategory={true}
+                axisLine={true}
+                axisType="xAxis"
+                bandSize={0}
+                categoricalDomain={
+                  Array [
+                    1573646400000,
+                    1573732800000,
+                  ]
+                }
+                className="recharts-xAxis xAxis"
+                dataKey="date"
+                domain={
+                  Array [
+                    1573646400000,
+                    1573732800000,
+                  ]
+                }
+                height={30}
+                hide={false}
+                interval="preserveEnd"
+                isCategorial={true}
+                key="XAxis-1"
+                layout="horizontal"
+                minTickGap={5}
+                mirror={false}
+                name="Time"
+                orientation="bottom"
+                originalDomain={
+                  Array [
+                    "2019-11-13T12:00:00Z",
+                    "2019-11-14T12:00:00Z",
+                  ]
+                }
+                padding={
+                  Object {
+                    "left": 0,
+                    "right": 0,
+                  }
+                }
+                realScaleType="scaleTime"
+                reversed={false}
+                scale={[Function]}
+                stroke="var(--text-muted)"
+                tick={true}
+                tickCount={5}
+                tickFormatter={[Function]}
+                tickLine={true}
+                tickMargin={2}
+                tickSize={6}
+                ticks={Array []}
+                ticksGenerator={[Function]}
+                type="number"
+                viewBox={
+                  Object {
+                    "height": 300,
+                    "width": 500,
+                    "x": 0,
+                    "y": 0,
+                  }
+                }
+                width={430}
+                x={65}
+                xAxisId={0}
+                y={265}
+              >
+                <Layer
+                  className="recharts-cartesian-axis recharts-xAxis xAxis"
+                >
+                  <g
+                    className="recharts-layer recharts-cartesian-axis recharts-xAxis xAxis"
+                  >
+                    <line
+                      className="recharts-cartesian-axis-line"
+                      fill="none"
+                      height={30}
+                      stroke="var(--text-muted)"
+                      width={430}
+                      x={65}
+                      x1={65}
+                      x2={495}
+                      y={265}
+                      y1={265}
+                      y2={265}
+                    />
+                    <g
+                      className="recharts-cartesian-axis-ticks"
+                    >
+                      <Layer
+                        className="recharts-cartesian-axis-tick"
+                        key="tick-0"
+                      >
+                        <g
+                          className="recharts-layer recharts-cartesian-axis-tick"
+                        >
+                          <line
+                            className="recharts-cartesian-axis-tick-line"
+                            fill="none"
+                            height={30}
+                            stroke="var(--text-muted)"
+                            width={430}
+                            x={65}
+                            x1={65}
+                            x2={65}
+                            y={265}
+                            y1={271}
+                            y2={265}
+                          />
+                          <Text
+                            capHeight="0.71em"
+                            className="recharts-cartesian-axis-tick-value"
+                            fill="var(--text-muted)"
+                            height={30}
+                            index={0}
+                            lineHeight="1em"
+                            payload={
+                              Object {
+                                "coordinate": 65,
+                                "index": 0,
+                                "isShow": true,
+                                "offset": 0,
+                                "tickCoord": 65,
+                                "value": 1573646400000,
+                              }
+                            }
+                            scaleToFit={false}
+                            stroke="none"
+                            textAnchor="middle"
+                            verticalAnchor="start"
+                            visibleTicksCount={2}
+                            width={430}
+                            x={65}
+                            y={273}
+                          >
+                            <text
+                              className="recharts-text recharts-cartesian-axis-tick-value"
+                              fill="var(--text-muted)"
+                              height={30}
+                              stroke="none"
+                              textAnchor="middle"
+                              width={430}
+                              x={65}
+                              y={273}
+                            >
+                              <tspan
+                                dy="0.71em"
+                                key="0"
+                                x={65}
+                              >
+                                November 13
+                              </tspan>
+                            </text>
+                          </Text>
+                        </g>
+                      </Layer>
+                      <Layer
+                        className="recharts-cartesian-axis-tick"
+                        key="tick-1"
+                      >
+                        <g
+                          className="recharts-layer recharts-cartesian-axis-tick"
+                        >
+                          <line
+                            className="recharts-cartesian-axis-tick-line"
+                            fill="none"
+                            height={30}
+                            stroke="var(--text-muted)"
+                            width={430}
+                            x={65}
+                            x1={495}
+                            x2={495}
+                            y={265}
+                            y1={271}
+                            y2={265}
+                          />
+                          <Text
+                            capHeight="0.71em"
+                            className="recharts-cartesian-axis-tick-value"
+                            fill="var(--text-muted)"
+                            height={30}
+                            index={1}
+                            lineHeight="1em"
+                            payload={
+                              Object {
+                                "coordinate": 495,
+                                "index": 1,
+                                "isShow": true,
+                                "offset": 0,
+                                "tickCoord": 495,
+                                "value": 1573732800000,
+                              }
+                            }
+                            scaleToFit={false}
+                            stroke="none"
+                            textAnchor="middle"
+                            verticalAnchor="start"
+                            visibleTicksCount={2}
+                            width={430}
+                            x={495}
+                            y={273}
+                          >
+                            <text
+                              className="recharts-text recharts-cartesian-axis-tick-value"
+                              fill="var(--text-muted)"
+                              height={30}
+                              stroke="none"
+                              textAnchor="middle"
+                              width={430}
+                              x={495}
+                              y={273}
+                            >
+                              <tspan
+                                dy="0.71em"
+                                key="0"
+                                x={495}
+                              >
+                                November 14
+                              </tspan>
+                            </text>
+                          </Text>
+                        </g>
+                      </Layer>
+                    </g>
+                  </g>
+                </Layer>
+              </CartesianAxis>
+              <CartesianAxis
+                allowDataOverflow={false}
+                allowDecimals={false}
+                allowDuplicatedCategory={true}
+                axisLine={true}
+                axisType="yAxis"
+                bandSize={0}
+                className="recharts-yAxis yAxis"
+                domain={
+                  Array [
+                    0,
+                    9,
+                  ]
+                }
+                height={260}
+                hide={false}
+                interval="preserveEnd"
+                isCategorial={false}
+                key="YAxis-2"
+                layout="horizontal"
+                minTickGap={5}
+                mirror={false}
+                niceTicks={
+                  Array [
+                    0,
+                    3,
+                    6,
+                    9,
+                  ]
+                }
+                orientation="left"
+                originalDomain={
+                  Array [
+                    0,
+                    "dataMax",
+                  ]
+                }
+                padding={
+                  Object {
+                    "bottom": 0,
+                    "top": 0,
+                  }
+                }
+                realScaleType="linear"
+                reversed={false}
+                scale={[Function]}
+                stroke="var(--text-muted)"
+                tick={true}
+                tickCount={5}
+                tickFormatter={[Function]}
+                tickLine={true}
+                tickMargin={2}
+                tickSize={6}
+                ticks={Array []}
+                ticksGenerator={[Function]}
+                type="number"
+                viewBox={
+                  Object {
+                    "height": 300,
+                    "width": 500,
+                    "x": 0,
+                    "y": 0,
+                  }
+                }
+                width={60}
+                x={5}
+                y={5}
+                yAxisId={0}
+              >
+                <Layer
+                  className="recharts-cartesian-axis recharts-yAxis yAxis"
+                >
+                  <g
+                    className="recharts-layer recharts-cartesian-axis recharts-yAxis yAxis"
+                  >
+                    <line
+                      className="recharts-cartesian-axis-line"
+                      fill="none"
+                      height={260}
+                      stroke="var(--text-muted)"
+                      width={60}
+                      x={5}
+                      x1={65}
+                      x2={65}
+                      y={5}
+                      y1={5}
+                      y2={265}
+                    />
+                    <g
+                      className="recharts-cartesian-axis-ticks"
+                    >
+                      <Layer
+                        className="recharts-cartesian-axis-tick"
+                        key="tick-0"
+                      >
+                        <g
+                          className="recharts-layer recharts-cartesian-axis-tick"
+                        >
+                          <line
+                            className="recharts-cartesian-axis-tick-line"
+                            fill="none"
+                            height={260}
+                            stroke="var(--text-muted)"
+                            width={60}
+                            x={5}
+                            x1={59}
+                            x2={65}
+                            y={5}
+                            y1={265}
+                            y2={265}
+                          />
+                          <Text
+                            capHeight="0.71em"
+                            className="recharts-cartesian-axis-tick-value"
+                            fill="var(--text-muted)"
+                            height={260}
+                            index={0}
+                            lineHeight="1em"
+                            payload={
+                              Object {
+                                "coordinate": 265,
+                                "isShow": true,
+                                "offset": 0,
+                                "tickCoord": 265,
+                                "value": 0,
+                              }
+                            }
+                            scaleToFit={false}
+                            stroke="none"
+                            textAnchor="end"
+                            verticalAnchor="middle"
+                            visibleTicksCount={4}
+                            width={60}
+                            x={57}
+                            y={265}
+                          >
+                            <text
+                              className="recharts-text recharts-cartesian-axis-tick-value"
+                              fill="var(--text-muted)"
+                              height={260}
+                              stroke="none"
+                              textAnchor="end"
+                              width={60}
+                              x={57}
+                              y={265}
+                            >
+                              <tspan
+                                dy="0.355em"
+                                key="0"
+                                x={57}
+                              >
+                                0
+                              </tspan>
+                            </text>
+                          </Text>
+                        </g>
+                      </Layer>
+                      <Layer
+                        className="recharts-cartesian-axis-tick"
+                        key="tick-1"
+                      >
+                        <g
+                          className="recharts-layer recharts-cartesian-axis-tick"
+                        >
+                          <line
+                            className="recharts-cartesian-axis-tick-line"
+                            fill="none"
+                            height={260}
+                            stroke="var(--text-muted)"
+                            width={60}
+                            x={5}
+                            x1={59}
+                            x2={65}
+                            y={5}
+                            y1={178.33333333333334}
+                            y2={178.33333333333334}
+                          />
+                          <Text
+                            capHeight="0.71em"
+                            className="recharts-cartesian-axis-tick-value"
+                            fill="var(--text-muted)"
+                            height={260}
+                            index={1}
+                            lineHeight="1em"
+                            payload={
+                              Object {
+                                "coordinate": 178.33333333333334,
+                                "isShow": true,
+                                "offset": 0,
+                                "tickCoord": 178.33333333333334,
+                                "value": 3,
+                              }
+                            }
+                            scaleToFit={false}
+                            stroke="none"
+                            textAnchor="end"
+                            verticalAnchor="middle"
+                            visibleTicksCount={4}
+                            width={60}
+                            x={57}
+                            y={178.33333333333334}
+                          >
+                            <text
+                              className="recharts-text recharts-cartesian-axis-tick-value"
+                              fill="var(--text-muted)"
+                              height={260}
+                              stroke="none"
+                              textAnchor="end"
+                              width={60}
+                              x={57}
+                              y={178.33333333333334}
+                            >
+                              <tspan
+                                dy="0.355em"
+                                key="0"
+                                x={57}
+                              >
+                                3
+                              </tspan>
+                            </text>
+                          </Text>
+                        </g>
+                      </Layer>
+                      <Layer
+                        className="recharts-cartesian-axis-tick"
+                        key="tick-2"
+                      >
+                        <g
+                          className="recharts-layer recharts-cartesian-axis-tick"
+                        >
+                          <line
+                            className="recharts-cartesian-axis-tick-line"
+                            fill="none"
+                            height={260}
+                            stroke="var(--text-muted)"
+                            width={60}
+                            x={5}
+                            x1={59}
+                            x2={65}
+                            y={5}
+                            y1={91.66666666666667}
+                            y2={91.66666666666667}
+                          />
+                          <Text
+                            capHeight="0.71em"
+                            className="recharts-cartesian-axis-tick-value"
+                            fill="var(--text-muted)"
+                            height={260}
+                            index={2}
+                            lineHeight="1em"
+                            payload={
+                              Object {
+                                "coordinate": 91.66666666666667,
+                                "isShow": true,
+                                "offset": 0,
+                                "tickCoord": 91.66666666666667,
+                                "value": 6,
+                              }
+                            }
+                            scaleToFit={false}
+                            stroke="none"
+                            textAnchor="end"
+                            verticalAnchor="middle"
+                            visibleTicksCount={4}
+                            width={60}
+                            x={57}
+                            y={91.66666666666667}
+                          >
+                            <text
+                              className="recharts-text recharts-cartesian-axis-tick-value"
+                              fill="var(--text-muted)"
+                              height={260}
+                              stroke="none"
+                              textAnchor="end"
+                              width={60}
+                              x={57}
+                              y={91.66666666666667}
+                            >
+                              <tspan
+                                dy="0.355em"
+                                key="0"
+                                x={57}
+                              >
+                                6
+                              </tspan>
+                            </text>
+                          </Text>
+                        </g>
+                      </Layer>
+                      <Layer
+                        className="recharts-cartesian-axis-tick"
+                        key="tick-3"
+                      >
+                        <g
+                          className="recharts-layer recharts-cartesian-axis-tick"
+                        >
+                          <line
+                            className="recharts-cartesian-axis-tick-line"
+                            fill="none"
+                            height={260}
+                            stroke="var(--text-muted)"
+                            width={60}
+                            x={5}
+                            x1={59}
+                            x2={65}
+                            y={5}
+                            y1={5}
+                            y2={5}
+                          />
+                          <Text
+                            capHeight="0.71em"
+                            className="recharts-cartesian-axis-tick-value"
+                            fill="var(--text-muted)"
+                            height={260}
+                            index={3}
+                            lineHeight="1em"
+                            payload={
+                              Object {
+                                "coordinate": 5,
+                                "isShow": true,
+                                "offset": 0,
+                                "tickCoord": 5,
+                                "value": 9,
+                              }
+                            }
+                            scaleToFit={false}
+                            stroke="none"
+                            textAnchor="end"
+                            verticalAnchor="middle"
+                            visibleTicksCount={4}
+                            width={60}
+                            x={57}
+                            y={5}
+                          >
+                            <text
+                              className="recharts-text recharts-cartesian-axis-tick-value"
+                              fill="var(--text-muted)"
+                              height={260}
+                              stroke="none"
+                              textAnchor="end"
+                              width={60}
+                              x={57}
+                              y={5}
+                            >
+                              <tspan
+                                dy="0.355em"
+                                key="0"
+                                x={57}
+                              >
+                                9
+                              </tspan>
+                            </text>
+                          </Text>
+                        </g>
+                      </Layer>
+                    </g>
+                  </g>
+                </Layer>
+              </CartesianAxis>
+              <Area
+                activeDot={true}
+                animationBegin={0}
+                animationDuration={1500}
+                animationEasing="ease"
+                animationId={0}
+                baseLine={
+                  Array [
+                    Object {
+                      "x": 65,
+                      "y": 265,
+                    },
+                    Object {
+                      "x": 495,
+                      "y": 265,
+                    },
+                  ]
+                }
+                bottom={35}
+                brushBottom={35}
+                connectNulls={false}
+                dataKey="draft"
+                dot={false}
+                fill="var(--text-muted)"
+                fillOpacity={0.6}
+                height={260}
+                hide={false}
+                isAnimationActive={false}
+                isRange={false}
+                key="5"
+                layout="horizontal"
+                left={65}
+                legendType="line"
+                name="Draft"
+                points={
+                  Array [
+                    Object {
+                      "payload": Object {
+                        "closed": 1,
+                        "date": 1573646400000,
+                        "draft": 0,
+                        "merged": 1,
+                        "openApproved": 1,
+                        "openChangesRequested": 1,
+                        "openPending": 1,
+                        "total": 10,
+                      },
+                      "value": Array [
+                        0,
+                        0,
+                      ],
+                      "x": 65,
+                      "y": 265,
+                    },
+                    Object {
+                      "payload": Object {
+                        "closed": 1,
+                        "date": 1573732800000,
+                        "draft": 0,
+                        "merged": 5,
+                        "openApproved": 1,
+                        "openChangesRequested": 1,
+                        "openPending": 1,
+                        "total": 10,
+                      },
+                      "value": Array [
+                        0,
+                        0,
+                      ],
+                      "x": 495,
+                      "y": 265,
+                    },
+                  ]
+                }
+                right={5}
+                stackId="stack"
+                stroke="var(--text-muted)"
+                strokeWidth={0}
+                top={5}
+                type="stepBefore"
+                width={430}
+                xAxis={
+                  Object {
+                    "allowDataOverflow": false,
+                    "allowDecimals": true,
+                    "allowDuplicatedCategory": true,
+                    "axisType": "xAxis",
+                    "bandSize": 0,
+                    "categoricalDomain": Array [
+                      1573646400000,
+                      1573732800000,
+                    ],
+                    "dataKey": "date",
+                    "domain": Array [
+                      1573646400000,
+                      1573732800000,
+                    ],
+                    "duplicateDomain": undefined,
+                    "height": 30,
+                    "hide": false,
+                    "isCategorial": true,
+                    "layout": "horizontal",
+                    "mirror": false,
+                    "name": "Time",
+                    "orientation": "bottom",
+                    "originalDomain": Array [
+                      "2019-11-13T12:00:00Z",
+                      "2019-11-14T12:00:00Z",
+                    ],
+                    "padding": Object {
+                      "left": 0,
+                      "right": 0,
+                    },
+                    "realScaleType": "scaleTime",
+                    "reversed": false,
+                    "scale": [Function],
+                    "stroke": "var(--text-muted)",
+                    "tickCount": 5,
+                    "tickFormatter": [Function],
+                    "type": "number",
+                    "width": 430,
+                    "x": 65,
+                    "xAxisId": 0,
+                    "y": 265,
+                  }
+                }
+                xAxisId={0}
+                yAxis={
+                  Object {
+                    "allowDataOverflow": false,
+                    "allowDecimals": false,
+                    "allowDuplicatedCategory": true,
+                    "axisType": "yAxis",
+                    "bandSize": 0,
+                    "categoricalDomain": undefined,
+                    "domain": Array [
+                      0,
+                      9,
+                    ],
+                    "duplicateDomain": undefined,
+                    "height": 260,
+                    "hide": false,
+                    "isCategorial": false,
+                    "layout": "horizontal",
+                    "mirror": false,
+                    "niceTicks": Array [
+                      0,
+                      3,
+                      6,
+                      9,
+                    ],
+                    "orientation": "left",
+                    "originalDomain": Array [
+                      0,
+                      "dataMax",
+                    ],
+                    "padding": Object {
+                      "bottom": 0,
+                      "top": 0,
+                    },
+                    "realScaleType": "linear",
+                    "reversed": false,
+                    "scale": [Function],
+                    "stroke": "var(--text-muted)",
+                    "tickCount": 5,
+                    "tickFormatter": [Function],
+                    "type": "number",
+                    "width": 60,
+                    "x": 5,
+                    "y": 5,
+                    "yAxisId": 0,
+                  }
+                }
+                yAxisId={0}
+              >
+                <Layer
+                  className="recharts-area"
+                >
+                  <g
+                    className="recharts-layer recharts-area"
+                  >
+                    <Layer
+                      clipPath={null}
+                    >
+                      <g
+                        className="recharts-layer"
+                        clipPath={null}
+                      >
+                        <Curve
+                          activeDot={true}
+                          animationBegin={0}
+                          animationDuration={1500}
+                          animationEasing="ease"
+                          animationId={0}
+                          baseLine={
+                            Array [
+                              Object {
+                                "x": 65,
+                                "y": 265,
+                              },
+                              Object {
+                                "x": 495,
+                                "y": 265,
+                              },
+                            ]
+                          }
+                          bottom={35}
+                          brushBottom={35}
+                          className="recharts-area-area"
+                          connectNulls={false}
+                          dataKey="draft"
+                          dot={false}
+                          fill="var(--text-muted)"
+                          fillOpacity={0.6}
+                          height={260}
+                          hide={false}
+                          isAnimationActive={false}
+                          isRange={false}
+                          layout="horizontal"
+                          left={65}
+                          legendType="line"
+                          name="Draft"
+                          points={
+                            Array [
+                              Object {
+                                "payload": Object {
+                                  "closed": 1,
+                                  "date": 1573646400000,
+                                  "draft": 0,
+                                  "merged": 1,
+                                  "openApproved": 1,
+                                  "openChangesRequested": 1,
+                                  "openPending": 1,
+                                  "total": 10,
+                                },
+                                "value": Array [
+                                  0,
+                                  0,
+                                ],
+                                "x": 65,
+                                "y": 265,
+                              },
+                              Object {
+                                "payload": Object {
+                                  "closed": 1,
+                                  "date": 1573732800000,
+                                  "draft": 0,
+                                  "merged": 5,
+                                  "openApproved": 1,
+                                  "openChangesRequested": 1,
+                                  "openPending": 1,
+                                  "total": 10,
+                                },
+                                "value": Array [
+                                  0,
+                                  0,
+                                ],
+                                "x": 495,
+                                "y": 265,
+                              },
+                            ]
+                          }
+                          right={5}
+                          stackId="stack"
+                          stroke="none"
+                          strokeWidth={0}
+                          top={5}
+                          type="stepBefore"
+                          width={430}
+                          xAxis={
+                            Object {
+                              "allowDataOverflow": false,
+                              "allowDecimals": true,
+                              "allowDuplicatedCategory": true,
+                              "axisType": "xAxis",
+                              "bandSize": 0,
+                              "categoricalDomain": Array [
+                                1573646400000,
+                                1573732800000,
+                              ],
+                              "dataKey": "date",
+                              "domain": Array [
+                                1573646400000,
+                                1573732800000,
+                              ],
+                              "duplicateDomain": undefined,
+                              "height": 30,
+                              "hide": false,
+                              "isCategorial": true,
+                              "layout": "horizontal",
+                              "mirror": false,
+                              "name": "Time",
+                              "orientation": "bottom",
+                              "originalDomain": Array [
+                                "2019-11-13T12:00:00Z",
+                                "2019-11-14T12:00:00Z",
+                              ],
+                              "padding": Object {
+                                "left": 0,
+                                "right": 0,
+                              },
+                              "realScaleType": "scaleTime",
+                              "reversed": false,
+                              "scale": [Function],
+                              "stroke": "var(--text-muted)",
+                              "tickCount": 5,
+                              "tickFormatter": [Function],
+                              "type": "number",
+                              "width": 430,
+                              "x": 65,
+                              "xAxisId": 0,
+                              "y": 265,
+                            }
+                          }
+                          xAxisId={0}
+                          yAxis={
+                            Object {
+                              "allowDataOverflow": false,
+                              "allowDecimals": false,
+                              "allowDuplicatedCategory": true,
+                              "axisType": "yAxis",
+                              "bandSize": 0,
+                              "categoricalDomain": undefined,
+                              "domain": Array [
+                                0,
+                                9,
+                              ],
+                              "duplicateDomain": undefined,
+                              "height": 260,
+                              "hide": false,
+                              "isCategorial": false,
+                              "layout": "horizontal",
+                              "mirror": false,
+                              "niceTicks": Array [
+                                0,
+                                3,
+                                6,
+                                9,
+                              ],
+                              "orientation": "left",
+                              "originalDomain": Array [
+                                0,
+                                "dataMax",
+                              ],
+                              "padding": Object {
+                                "bottom": 0,
+                                "top": 0,
+                              },
+                              "realScaleType": "linear",
+                              "reversed": false,
+                              "scale": [Function],
+                              "stroke": "var(--text-muted)",
+                              "tickCount": 5,
+                              "tickFormatter": [Function],
+                              "type": "number",
+                              "width": 60,
+                              "x": 5,
+                              "y": 5,
+                              "yAxisId": 0,
+                            }
+                          }
+                          yAxisId={0}
+                        >
+                          <path
+                            className="recharts-curve recharts-area-area"
+                            d="M65,265L65,265L495,265L495,265L65,265L65,265Z"
+                            fill="var(--text-muted)"
+                            fillOpacity={0.6}
+                            height={260}
+                            stroke="none"
+                            strokeWidth={0}
+                            width={430}
+                          />
+                        </Curve>
+                        <Curve
+                          className="recharts-area-curve"
+                          connectNulls={false}
+                          fill="none"
+                          fillOpacity={0.6}
+                          height={260}
+                          layout="horizontal"
+                          points={
+                            Array [
+                              Object {
+                                "payload": Object {
+                                  "closed": 1,
+                                  "date": 1573646400000,
+                                  "draft": 0,
+                                  "merged": 1,
+                                  "openApproved": 1,
+                                  "openChangesRequested": 1,
+                                  "openPending": 1,
+                                  "total": 10,
+                                },
+                                "value": Array [
+                                  0,
+                                  0,
+                                ],
+                                "x": 65,
+                                "y": 265,
+                              },
+                              Object {
+                                "payload": Object {
+                                  "closed": 1,
+                                  "date": 1573732800000,
+                                  "draft": 0,
+                                  "merged": 5,
+                                  "openApproved": 1,
+                                  "openChangesRequested": 1,
+                                  "openPending": 1,
+                                  "total": 10,
+                                },
+                                "value": Array [
+                                  0,
+                                  0,
+                                ],
+                                "x": 495,
+                                "y": 265,
+                              },
+                            ]
+                          }
+                          stroke="var(--text-muted)"
+                          strokeWidth={0}
+                          type="stepBefore"
+                          width={430}
+                        >
+                          <path
+                            className="recharts-curve recharts-area-curve"
+                            d="M65,265L65,265L495,265"
+                            fill="none"
+                            fillOpacity={0.6}
+                            height={260}
+                            stroke="var(--text-muted)"
+                            strokeWidth={0}
+                            width={430}
+                          />
+                        </Curve>
+                      </g>
+                    </Layer>
+                  </g>
+                </Layer>
+              </Area>
+              <Area
+                activeDot={true}
+                animationBegin={0}
+                animationDuration={1500}
+                animationEasing="ease"
+                animationId={0}
+                baseLine={
+                  Array [
+                    Object {
+                      "x": 65,
+                      "y": 265,
+                    },
+                    Object {
+                      "x": 495,
+                      "y": 265,
+                    },
+                  ]
+                }
+                bottom={35}
+                brushBottom={35}
+                connectNulls={false}
+                dataKey="openPending"
+                dot={false}
+                fill="var(--warning)"
+                fillOpacity={0.6}
+                height={260}
+                hide={false}
+                isAnimationActive={false}
+                isRange={false}
+                key="4"
+                layout="horizontal"
+                left={65}
+                legendType="line"
+                name="Open & awaiting review"
+                points={
+                  Array [
+                    Object {
+                      "payload": Object {
+                        "closed": 1,
+                        "date": 1573646400000,
+                        "draft": 0,
+                        "merged": 1,
+                        "openApproved": 1,
+                        "openChangesRequested": 1,
+                        "openPending": 1,
+                        "total": 10,
+                      },
+                      "value": Array [
+                        0,
+                        1,
+                      ],
+                      "x": 65,
+                      "y": 236.1111111111111,
+                    },
+                    Object {
+                      "payload": Object {
+                        "closed": 1,
+                        "date": 1573732800000,
+                        "draft": 0,
+                        "merged": 5,
+                        "openApproved": 1,
+                        "openChangesRequested": 1,
+                        "openPending": 1,
+                        "total": 10,
+                      },
+                      "value": Array [
+                        0,
+                        1,
+                      ],
+                      "x": 495,
+                      "y": 236.1111111111111,
+                    },
+                  ]
+                }
+                right={5}
+                stackId="stack"
+                stroke="var(--warning)"
+                strokeWidth={0}
+                top={5}
+                type="stepBefore"
+                width={430}
+                xAxis={
+                  Object {
+                    "allowDataOverflow": false,
+                    "allowDecimals": true,
+                    "allowDuplicatedCategory": true,
+                    "axisType": "xAxis",
+                    "bandSize": 0,
+                    "categoricalDomain": Array [
+                      1573646400000,
+                      1573732800000,
+                    ],
+                    "dataKey": "date",
+                    "domain": Array [
+                      1573646400000,
+                      1573732800000,
+                    ],
+                    "duplicateDomain": undefined,
+                    "height": 30,
+                    "hide": false,
+                    "isCategorial": true,
+                    "layout": "horizontal",
+                    "mirror": false,
+                    "name": "Time",
+                    "orientation": "bottom",
+                    "originalDomain": Array [
+                      "2019-11-13T12:00:00Z",
+                      "2019-11-14T12:00:00Z",
+                    ],
+                    "padding": Object {
+                      "left": 0,
+                      "right": 0,
+                    },
+                    "realScaleType": "scaleTime",
+                    "reversed": false,
+                    "scale": [Function],
+                    "stroke": "var(--text-muted)",
+                    "tickCount": 5,
+                    "tickFormatter": [Function],
+                    "type": "number",
+                    "width": 430,
+                    "x": 65,
+                    "xAxisId": 0,
+                    "y": 265,
+                  }
+                }
+                xAxisId={0}
+                yAxis={
+                  Object {
+                    "allowDataOverflow": false,
+                    "allowDecimals": false,
+                    "allowDuplicatedCategory": true,
+                    "axisType": "yAxis",
+                    "bandSize": 0,
+                    "categoricalDomain": undefined,
+                    "domain": Array [
+                      0,
+                      9,
+                    ],
+                    "duplicateDomain": undefined,
+                    "height": 260,
+                    "hide": false,
+                    "isCategorial": false,
+                    "layout": "horizontal",
+                    "mirror": false,
+                    "niceTicks": Array [
+                      0,
+                      3,
+                      6,
+                      9,
+                    ],
+                    "orientation": "left",
+                    "originalDomain": Array [
+                      0,
+                      "dataMax",
+                    ],
+                    "padding": Object {
+                      "bottom": 0,
+                      "top": 0,
+                    },
+                    "realScaleType": "linear",
+                    "reversed": false,
+                    "scale": [Function],
+                    "stroke": "var(--text-muted)",
+                    "tickCount": 5,
+                    "tickFormatter": [Function],
+                    "type": "number",
+                    "width": 60,
+                    "x": 5,
+                    "y": 5,
+                    "yAxisId": 0,
+                  }
+                }
+                yAxisId={0}
+              >
+                <Layer
+                  className="recharts-area"
+                >
+                  <g
+                    className="recharts-layer recharts-area"
+                  >
+                    <Layer
+                      clipPath={null}
+                    >
+                      <g
+                        className="recharts-layer"
+                        clipPath={null}
+                      >
+                        <Curve
+                          activeDot={true}
+                          animationBegin={0}
+                          animationDuration={1500}
+                          animationEasing="ease"
+                          animationId={0}
+                          baseLine={
+                            Array [
+                              Object {
+                                "x": 65,
+                                "y": 265,
+                              },
+                              Object {
+                                "x": 495,
+                                "y": 265,
+                              },
+                            ]
+                          }
+                          bottom={35}
+                          brushBottom={35}
+                          className="recharts-area-area"
+                          connectNulls={false}
+                          dataKey="openPending"
+                          dot={false}
+                          fill="var(--warning)"
+                          fillOpacity={0.6}
+                          height={260}
+                          hide={false}
+                          isAnimationActive={false}
+                          isRange={false}
+                          layout="horizontal"
+                          left={65}
+                          legendType="line"
+                          name="Open & awaiting review"
+                          points={
+                            Array [
+                              Object {
+                                "payload": Object {
+                                  "closed": 1,
+                                  "date": 1573646400000,
+                                  "draft": 0,
+                                  "merged": 1,
+                                  "openApproved": 1,
+                                  "openChangesRequested": 1,
+                                  "openPending": 1,
+                                  "total": 10,
+                                },
+                                "value": Array [
+                                  0,
+                                  1,
+                                ],
+                                "x": 65,
+                                "y": 236.1111111111111,
+                              },
+                              Object {
+                                "payload": Object {
+                                  "closed": 1,
+                                  "date": 1573732800000,
+                                  "draft": 0,
+                                  "merged": 5,
+                                  "openApproved": 1,
+                                  "openChangesRequested": 1,
+                                  "openPending": 1,
+                                  "total": 10,
+                                },
+                                "value": Array [
+                                  0,
+                                  1,
+                                ],
+                                "x": 495,
+                                "y": 236.1111111111111,
+                              },
+                            ]
+                          }
+                          right={5}
+                          stackId="stack"
+                          stroke="none"
+                          strokeWidth={0}
+                          top={5}
+                          type="stepBefore"
+                          width={430}
+                          xAxis={
+                            Object {
+                              "allowDataOverflow": false,
+                              "allowDecimals": true,
+                              "allowDuplicatedCategory": true,
+                              "axisType": "xAxis",
+                              "bandSize": 0,
+                              "categoricalDomain": Array [
+                                1573646400000,
+                                1573732800000,
+                              ],
+                              "dataKey": "date",
+                              "domain": Array [
+                                1573646400000,
+                                1573732800000,
+                              ],
+                              "duplicateDomain": undefined,
+                              "height": 30,
+                              "hide": false,
+                              "isCategorial": true,
+                              "layout": "horizontal",
+                              "mirror": false,
+                              "name": "Time",
+                              "orientation": "bottom",
+                              "originalDomain": Array [
+                                "2019-11-13T12:00:00Z",
+                                "2019-11-14T12:00:00Z",
+                              ],
+                              "padding": Object {
+                                "left": 0,
+                                "right": 0,
+                              },
+                              "realScaleType": "scaleTime",
+                              "reversed": false,
+                              "scale": [Function],
+                              "stroke": "var(--text-muted)",
+                              "tickCount": 5,
+                              "tickFormatter": [Function],
+                              "type": "number",
+                              "width": 430,
+                              "x": 65,
+                              "xAxisId": 0,
+                              "y": 265,
+                            }
+                          }
+                          xAxisId={0}
+                          yAxis={
+                            Object {
+                              "allowDataOverflow": false,
+                              "allowDecimals": false,
+                              "allowDuplicatedCategory": true,
+                              "axisType": "yAxis",
+                              "bandSize": 0,
+                              "categoricalDomain": undefined,
+                              "domain": Array [
+                                0,
+                                9,
+                              ],
+                              "duplicateDomain": undefined,
+                              "height": 260,
+                              "hide": false,
+                              "isCategorial": false,
+                              "layout": "horizontal",
+                              "mirror": false,
+                              "niceTicks": Array [
+                                0,
+                                3,
+                                6,
+                                9,
+                              ],
+                              "orientation": "left",
+                              "originalDomain": Array [
+                                0,
+                                "dataMax",
+                              ],
+                              "padding": Object {
+                                "bottom": 0,
+                                "top": 0,
+                              },
+                              "realScaleType": "linear",
+                              "reversed": false,
+                              "scale": [Function],
+                              "stroke": "var(--text-muted)",
+                              "tickCount": 5,
+                              "tickFormatter": [Function],
+                              "type": "number",
+                              "width": 60,
+                              "x": 5,
+                              "y": 5,
+                              "yAxisId": 0,
+                            }
+                          }
+                          yAxisId={0}
+                        >
+                          <path
+                            className="recharts-curve recharts-area-area"
+                            d="M65,236.1111111111111L65,236.1111111111111L495,236.1111111111111L495,265L65,265L65,265Z"
+                            fill="var(--warning)"
+                            fillOpacity={0.6}
+                            height={260}
+                            stroke="none"
+                            strokeWidth={0}
+                            width={430}
+                          />
+                        </Curve>
+                        <Curve
+                          className="recharts-area-curve"
+                          connectNulls={false}
+                          fill="none"
+                          fillOpacity={0.6}
+                          height={260}
+                          layout="horizontal"
+                          points={
+                            Array [
+                              Object {
+                                "payload": Object {
+                                  "closed": 1,
+                                  "date": 1573646400000,
+                                  "draft": 0,
+                                  "merged": 1,
+                                  "openApproved": 1,
+                                  "openChangesRequested": 1,
+                                  "openPending": 1,
+                                  "total": 10,
+                                },
+                                "value": Array [
+                                  0,
+                                  1,
+                                ],
+                                "x": 65,
+                                "y": 236.1111111111111,
+                              },
+                              Object {
+                                "payload": Object {
+                                  "closed": 1,
+                                  "date": 1573732800000,
+                                  "draft": 0,
+                                  "merged": 5,
+                                  "openApproved": 1,
+                                  "openChangesRequested": 1,
+                                  "openPending": 1,
+                                  "total": 10,
+                                },
+                                "value": Array [
+                                  0,
+                                  1,
+                                ],
+                                "x": 495,
+                                "y": 236.1111111111111,
+                              },
+                            ]
+                          }
+                          stroke="var(--warning)"
+                          strokeWidth={0}
+                          type="stepBefore"
+                          width={430}
+                        >
+                          <path
+                            className="recharts-curve recharts-area-curve"
+                            d="M65,236.1111111111111L65,236.1111111111111L495,236.1111111111111"
+                            fill="none"
+                            fillOpacity={0.6}
+                            height={260}
+                            stroke="var(--warning)"
+                            strokeWidth={0}
+                            width={430}
+                          />
+                        </Curve>
+                      </g>
+                    </Layer>
+                  </g>
+                </Layer>
+              </Area>
+              <Area
+                activeDot={true}
+                animationBegin={0}
+                animationDuration={1500}
+                animationEasing="ease"
+                animationId={0}
+                baseLine={
+                  Array [
+                    Object {
+                      "x": 65,
+                      "y": 236.1111111111111,
+                    },
+                    Object {
+                      "x": 495,
+                      "y": 236.1111111111111,
+                    },
+                  ]
+                }
+                bottom={35}
+                brushBottom={35}
+                connectNulls={false}
+                dataKey="openChangesRequested"
+                dot={false}
+                fill="var(--danger)"
+                fillOpacity={0.6}
+                height={260}
+                hide={false}
+                isAnimationActive={false}
+                isRange={false}
+                key="3"
+                layout="horizontal"
+                left={65}
+                legendType="line"
+                name="Open & changes requested"
+                points={
+                  Array [
+                    Object {
+                      "payload": Object {
+                        "closed": 1,
+                        "date": 1573646400000,
+                        "draft": 0,
+                        "merged": 1,
+                        "openApproved": 1,
+                        "openChangesRequested": 1,
+                        "openPending": 1,
+                        "total": 10,
+                      },
+                      "value": Array [
+                        1,
+                        2,
+                      ],
+                      "x": 65,
+                      "y": 207.22222222222223,
+                    },
+                    Object {
+                      "payload": Object {
+                        "closed": 1,
+                        "date": 1573732800000,
+                        "draft": 0,
+                        "merged": 5,
+                        "openApproved": 1,
+                        "openChangesRequested": 1,
+                        "openPending": 1,
+                        "total": 10,
+                      },
+                      "value": Array [
+                        1,
+                        2,
+                      ],
+                      "x": 495,
+                      "y": 207.22222222222223,
+                    },
+                  ]
+                }
+                right={5}
+                stackId="stack"
+                stroke="var(--danger)"
+                strokeWidth={0}
+                top={5}
+                type="stepBefore"
+                width={430}
+                xAxis={
+                  Object {
+                    "allowDataOverflow": false,
+                    "allowDecimals": true,
+                    "allowDuplicatedCategory": true,
+                    "axisType": "xAxis",
+                    "bandSize": 0,
+                    "categoricalDomain": Array [
+                      1573646400000,
+                      1573732800000,
+                    ],
+                    "dataKey": "date",
+                    "domain": Array [
+                      1573646400000,
+                      1573732800000,
+                    ],
+                    "duplicateDomain": undefined,
+                    "height": 30,
+                    "hide": false,
+                    "isCategorial": true,
+                    "layout": "horizontal",
+                    "mirror": false,
+                    "name": "Time",
+                    "orientation": "bottom",
+                    "originalDomain": Array [
+                      "2019-11-13T12:00:00Z",
+                      "2019-11-14T12:00:00Z",
+                    ],
+                    "padding": Object {
+                      "left": 0,
+                      "right": 0,
+                    },
+                    "realScaleType": "scaleTime",
+                    "reversed": false,
+                    "scale": [Function],
+                    "stroke": "var(--text-muted)",
+                    "tickCount": 5,
+                    "tickFormatter": [Function],
+                    "type": "number",
+                    "width": 430,
+                    "x": 65,
+                    "xAxisId": 0,
+                    "y": 265,
+                  }
+                }
+                xAxisId={0}
+                yAxis={
+                  Object {
+                    "allowDataOverflow": false,
+                    "allowDecimals": false,
+                    "allowDuplicatedCategory": true,
+                    "axisType": "yAxis",
+                    "bandSize": 0,
+                    "categoricalDomain": undefined,
+                    "domain": Array [
+                      0,
+                      9,
+                    ],
+                    "duplicateDomain": undefined,
+                    "height": 260,
+                    "hide": false,
+                    "isCategorial": false,
+                    "layout": "horizontal",
+                    "mirror": false,
+                    "niceTicks": Array [
+                      0,
+                      3,
+                      6,
+                      9,
+                    ],
+                    "orientation": "left",
+                    "originalDomain": Array [
+                      0,
+                      "dataMax",
+                    ],
+                    "padding": Object {
+                      "bottom": 0,
+                      "top": 0,
+                    },
+                    "realScaleType": "linear",
+                    "reversed": false,
+                    "scale": [Function],
+                    "stroke": "var(--text-muted)",
+                    "tickCount": 5,
+                    "tickFormatter": [Function],
+                    "type": "number",
+                    "width": 60,
+                    "x": 5,
+                    "y": 5,
+                    "yAxisId": 0,
+                  }
+                }
+                yAxisId={0}
+              >
+                <Layer
+                  className="recharts-area"
+                >
+                  <g
+                    className="recharts-layer recharts-area"
+                  >
+                    <Layer
+                      clipPath={null}
+                    >
+                      <g
+                        className="recharts-layer"
+                        clipPath={null}
+                      >
+                        <Curve
+                          activeDot={true}
+                          animationBegin={0}
+                          animationDuration={1500}
+                          animationEasing="ease"
+                          animationId={0}
+                          baseLine={
+                            Array [
+                              Object {
+                                "x": 65,
+                                "y": 236.1111111111111,
+                              },
+                              Object {
+                                "x": 495,
+                                "y": 236.1111111111111,
+                              },
+                            ]
+                          }
+                          bottom={35}
+                          brushBottom={35}
+                          className="recharts-area-area"
+                          connectNulls={false}
+                          dataKey="openChangesRequested"
+                          dot={false}
+                          fill="var(--danger)"
+                          fillOpacity={0.6}
+                          height={260}
+                          hide={false}
+                          isAnimationActive={false}
+                          isRange={false}
+                          layout="horizontal"
+                          left={65}
+                          legendType="line"
+                          name="Open & changes requested"
+                          points={
+                            Array [
+                              Object {
+                                "payload": Object {
+                                  "closed": 1,
+                                  "date": 1573646400000,
+                                  "draft": 0,
+                                  "merged": 1,
+                                  "openApproved": 1,
+                                  "openChangesRequested": 1,
+                                  "openPending": 1,
+                                  "total": 10,
+                                },
+                                "value": Array [
+                                  1,
+                                  2,
+                                ],
+                                "x": 65,
+                                "y": 207.22222222222223,
+                              },
+                              Object {
+                                "payload": Object {
+                                  "closed": 1,
+                                  "date": 1573732800000,
+                                  "draft": 0,
+                                  "merged": 5,
+                                  "openApproved": 1,
+                                  "openChangesRequested": 1,
+                                  "openPending": 1,
+                                  "total": 10,
+                                },
+                                "value": Array [
+                                  1,
+                                  2,
+                                ],
+                                "x": 495,
+                                "y": 207.22222222222223,
+                              },
+                            ]
+                          }
+                          right={5}
+                          stackId="stack"
+                          stroke="none"
+                          strokeWidth={0}
+                          top={5}
+                          type="stepBefore"
+                          width={430}
+                          xAxis={
+                            Object {
+                              "allowDataOverflow": false,
+                              "allowDecimals": true,
+                              "allowDuplicatedCategory": true,
+                              "axisType": "xAxis",
+                              "bandSize": 0,
+                              "categoricalDomain": Array [
+                                1573646400000,
+                                1573732800000,
+                              ],
+                              "dataKey": "date",
+                              "domain": Array [
+                                1573646400000,
+                                1573732800000,
+                              ],
+                              "duplicateDomain": undefined,
+                              "height": 30,
+                              "hide": false,
+                              "isCategorial": true,
+                              "layout": "horizontal",
+                              "mirror": false,
+                              "name": "Time",
+                              "orientation": "bottom",
+                              "originalDomain": Array [
+                                "2019-11-13T12:00:00Z",
+                                "2019-11-14T12:00:00Z",
+                              ],
+                              "padding": Object {
+                                "left": 0,
+                                "right": 0,
+                              },
+                              "realScaleType": "scaleTime",
+                              "reversed": false,
+                              "scale": [Function],
+                              "stroke": "var(--text-muted)",
+                              "tickCount": 5,
+                              "tickFormatter": [Function],
+                              "type": "number",
+                              "width": 430,
+                              "x": 65,
+                              "xAxisId": 0,
+                              "y": 265,
+                            }
+                          }
+                          xAxisId={0}
+                          yAxis={
+                            Object {
+                              "allowDataOverflow": false,
+                              "allowDecimals": false,
+                              "allowDuplicatedCategory": true,
+                              "axisType": "yAxis",
+                              "bandSize": 0,
+                              "categoricalDomain": undefined,
+                              "domain": Array [
+                                0,
+                                9,
+                              ],
+                              "duplicateDomain": undefined,
+                              "height": 260,
+                              "hide": false,
+                              "isCategorial": false,
+                              "layout": "horizontal",
+                              "mirror": false,
+                              "niceTicks": Array [
+                                0,
+                                3,
+                                6,
+                                9,
+                              ],
+                              "orientation": "left",
+                              "originalDomain": Array [
+                                0,
+                                "dataMax",
+                              ],
+                              "padding": Object {
+                                "bottom": 0,
+                                "top": 0,
+                              },
+                              "realScaleType": "linear",
+                              "reversed": false,
+                              "scale": [Function],
+                              "stroke": "var(--text-muted)",
+                              "tickCount": 5,
+                              "tickFormatter": [Function],
+                              "type": "number",
+                              "width": 60,
+                              "x": 5,
+                              "y": 5,
+                              "yAxisId": 0,
+                            }
+                          }
+                          yAxisId={0}
+                        >
+                          <path
+                            className="recharts-curve recharts-area-area"
+                            d="M65,207.22222222222223L65,207.22222222222223L495,207.22222222222223L495,236.1111111111111L65,236.1111111111111L65,236.1111111111111Z"
+                            fill="var(--danger)"
+                            fillOpacity={0.6}
+                            height={260}
+                            stroke="none"
+                            strokeWidth={0}
+                            width={430}
+                          />
+                        </Curve>
+                        <Curve
+                          className="recharts-area-curve"
+                          connectNulls={false}
+                          fill="none"
+                          fillOpacity={0.6}
+                          height={260}
+                          layout="horizontal"
+                          points={
+                            Array [
+                              Object {
+                                "payload": Object {
+                                  "closed": 1,
+                                  "date": 1573646400000,
+                                  "draft": 0,
+                                  "merged": 1,
+                                  "openApproved": 1,
+                                  "openChangesRequested": 1,
+                                  "openPending": 1,
+                                  "total": 10,
+                                },
+                                "value": Array [
+                                  1,
+                                  2,
+                                ],
+                                "x": 65,
+                                "y": 207.22222222222223,
+                              },
+                              Object {
+                                "payload": Object {
+                                  "closed": 1,
+                                  "date": 1573732800000,
+                                  "draft": 0,
+                                  "merged": 5,
+                                  "openApproved": 1,
+                                  "openChangesRequested": 1,
+                                  "openPending": 1,
+                                  "total": 10,
+                                },
+                                "value": Array [
+                                  1,
+                                  2,
+                                ],
+                                "x": 495,
+                                "y": 207.22222222222223,
+                              },
+                            ]
+                          }
+                          stroke="var(--danger)"
+                          strokeWidth={0}
+                          type="stepBefore"
+                          width={430}
+                        >
+                          <path
+                            className="recharts-curve recharts-area-curve"
+                            d="M65,207.22222222222223L65,207.22222222222223L495,207.22222222222223"
+                            fill="none"
+                            fillOpacity={0.6}
+                            height={260}
+                            stroke="var(--danger)"
+                            strokeWidth={0}
+                            width={430}
+                          />
+                        </Curve>
+                      </g>
+                    </Layer>
+                  </g>
+                </Layer>
+              </Area>
+              <Area
+                activeDot={true}
+                animationBegin={0}
+                animationDuration={1500}
+                animationEasing="ease"
+                animationId={0}
+                baseLine={
+                  Array [
+                    Object {
+                      "x": 65,
+                      "y": 207.22222222222223,
+                    },
+                    Object {
+                      "x": 495,
+                      "y": 207.22222222222223,
+                    },
+                  ]
+                }
+                bottom={35}
+                brushBottom={35}
+                connectNulls={false}
+                dataKey="openApproved"
+                dot={false}
+                fill="var(--success)"
+                fillOpacity={0.6}
+                height={260}
+                hide={false}
+                isAnimationActive={false}
+                isRange={false}
+                key="2"
+                layout="horizontal"
+                left={65}
+                legendType="line"
+                name="Open & approved"
+                points={
+                  Array [
+                    Object {
+                      "payload": Object {
+                        "closed": 1,
+                        "date": 1573646400000,
+                        "draft": 0,
+                        "merged": 1,
+                        "openApproved": 1,
+                        "openChangesRequested": 1,
+                        "openPending": 1,
+                        "total": 10,
+                      },
+                      "value": Array [
+                        2,
+                        3,
+                      ],
+                      "x": 65,
+                      "y": 178.33333333333334,
+                    },
+                    Object {
+                      "payload": Object {
+                        "closed": 1,
+                        "date": 1573732800000,
+                        "draft": 0,
+                        "merged": 5,
+                        "openApproved": 1,
+                        "openChangesRequested": 1,
+                        "openPending": 1,
+                        "total": 10,
+                      },
+                      "value": Array [
+                        2,
+                        3,
+                      ],
+                      "x": 495,
+                      "y": 178.33333333333334,
+                    },
+                  ]
+                }
+                right={5}
+                stackId="stack"
+                stroke="var(--success)"
+                strokeWidth={0}
+                top={5}
+                type="stepBefore"
+                width={430}
+                xAxis={
+                  Object {
+                    "allowDataOverflow": false,
+                    "allowDecimals": true,
+                    "allowDuplicatedCategory": true,
+                    "axisType": "xAxis",
+                    "bandSize": 0,
+                    "categoricalDomain": Array [
+                      1573646400000,
+                      1573732800000,
+                    ],
+                    "dataKey": "date",
+                    "domain": Array [
+                      1573646400000,
+                      1573732800000,
+                    ],
+                    "duplicateDomain": undefined,
+                    "height": 30,
+                    "hide": false,
+                    "isCategorial": true,
+                    "layout": "horizontal",
+                    "mirror": false,
+                    "name": "Time",
+                    "orientation": "bottom",
+                    "originalDomain": Array [
+                      "2019-11-13T12:00:00Z",
+                      "2019-11-14T12:00:00Z",
+                    ],
+                    "padding": Object {
+                      "left": 0,
+                      "right": 0,
+                    },
+                    "realScaleType": "scaleTime",
+                    "reversed": false,
+                    "scale": [Function],
+                    "stroke": "var(--text-muted)",
+                    "tickCount": 5,
+                    "tickFormatter": [Function],
+                    "type": "number",
+                    "width": 430,
+                    "x": 65,
+                    "xAxisId": 0,
+                    "y": 265,
+                  }
+                }
+                xAxisId={0}
+                yAxis={
+                  Object {
+                    "allowDataOverflow": false,
+                    "allowDecimals": false,
+                    "allowDuplicatedCategory": true,
+                    "axisType": "yAxis",
+                    "bandSize": 0,
+                    "categoricalDomain": undefined,
+                    "domain": Array [
+                      0,
+                      9,
+                    ],
+                    "duplicateDomain": undefined,
+                    "height": 260,
+                    "hide": false,
+                    "isCategorial": false,
+                    "layout": "horizontal",
+                    "mirror": false,
+                    "niceTicks": Array [
+                      0,
+                      3,
+                      6,
+                      9,
+                    ],
+                    "orientation": "left",
+                    "originalDomain": Array [
+                      0,
+                      "dataMax",
+                    ],
+                    "padding": Object {
+                      "bottom": 0,
+                      "top": 0,
+                    },
+                    "realScaleType": "linear",
+                    "reversed": false,
+                    "scale": [Function],
+                    "stroke": "var(--text-muted)",
+                    "tickCount": 5,
+                    "tickFormatter": [Function],
+                    "type": "number",
+                    "width": 60,
+                    "x": 5,
+                    "y": 5,
+                    "yAxisId": 0,
+                  }
+                }
+                yAxisId={0}
+              >
+                <Layer
+                  className="recharts-area"
+                >
+                  <g
+                    className="recharts-layer recharts-area"
+                  >
+                    <Layer
+                      clipPath={null}
+                    >
+                      <g
+                        className="recharts-layer"
+                        clipPath={null}
+                      >
+                        <Curve
+                          activeDot={true}
+                          animationBegin={0}
+                          animationDuration={1500}
+                          animationEasing="ease"
+                          animationId={0}
+                          baseLine={
+                            Array [
+                              Object {
+                                "x": 65,
+                                "y": 207.22222222222223,
+                              },
+                              Object {
+                                "x": 495,
+                                "y": 207.22222222222223,
+                              },
+                            ]
+                          }
+                          bottom={35}
+                          brushBottom={35}
+                          className="recharts-area-area"
+                          connectNulls={false}
+                          dataKey="openApproved"
+                          dot={false}
+                          fill="var(--success)"
+                          fillOpacity={0.6}
+                          height={260}
+                          hide={false}
+                          isAnimationActive={false}
+                          isRange={false}
+                          layout="horizontal"
+                          left={65}
+                          legendType="line"
+                          name="Open & approved"
+                          points={
+                            Array [
+                              Object {
+                                "payload": Object {
+                                  "closed": 1,
+                                  "date": 1573646400000,
+                                  "draft": 0,
+                                  "merged": 1,
+                                  "openApproved": 1,
+                                  "openChangesRequested": 1,
+                                  "openPending": 1,
+                                  "total": 10,
+                                },
+                                "value": Array [
+                                  2,
+                                  3,
+                                ],
+                                "x": 65,
+                                "y": 178.33333333333334,
+                              },
+                              Object {
+                                "payload": Object {
+                                  "closed": 1,
+                                  "date": 1573732800000,
+                                  "draft": 0,
+                                  "merged": 5,
+                                  "openApproved": 1,
+                                  "openChangesRequested": 1,
+                                  "openPending": 1,
+                                  "total": 10,
+                                },
+                                "value": Array [
+                                  2,
+                                  3,
+                                ],
+                                "x": 495,
+                                "y": 178.33333333333334,
+                              },
+                            ]
+                          }
+                          right={5}
+                          stackId="stack"
+                          stroke="none"
+                          strokeWidth={0}
+                          top={5}
+                          type="stepBefore"
+                          width={430}
+                          xAxis={
+                            Object {
+                              "allowDataOverflow": false,
+                              "allowDecimals": true,
+                              "allowDuplicatedCategory": true,
+                              "axisType": "xAxis",
+                              "bandSize": 0,
+                              "categoricalDomain": Array [
+                                1573646400000,
+                                1573732800000,
+                              ],
+                              "dataKey": "date",
+                              "domain": Array [
+                                1573646400000,
+                                1573732800000,
+                              ],
+                              "duplicateDomain": undefined,
+                              "height": 30,
+                              "hide": false,
+                              "isCategorial": true,
+                              "layout": "horizontal",
+                              "mirror": false,
+                              "name": "Time",
+                              "orientation": "bottom",
+                              "originalDomain": Array [
+                                "2019-11-13T12:00:00Z",
+                                "2019-11-14T12:00:00Z",
+                              ],
+                              "padding": Object {
+                                "left": 0,
+                                "right": 0,
+                              },
+                              "realScaleType": "scaleTime",
+                              "reversed": false,
+                              "scale": [Function],
+                              "stroke": "var(--text-muted)",
+                              "tickCount": 5,
+                              "tickFormatter": [Function],
+                              "type": "number",
+                              "width": 430,
+                              "x": 65,
+                              "xAxisId": 0,
+                              "y": 265,
+                            }
+                          }
+                          xAxisId={0}
+                          yAxis={
+                            Object {
+                              "allowDataOverflow": false,
+                              "allowDecimals": false,
+                              "allowDuplicatedCategory": true,
+                              "axisType": "yAxis",
+                              "bandSize": 0,
+                              "categoricalDomain": undefined,
+                              "domain": Array [
+                                0,
+                                9,
+                              ],
+                              "duplicateDomain": undefined,
+                              "height": 260,
+                              "hide": false,
+                              "isCategorial": false,
+                              "layout": "horizontal",
+                              "mirror": false,
+                              "niceTicks": Array [
+                                0,
+                                3,
+                                6,
+                                9,
+                              ],
+                              "orientation": "left",
+                              "originalDomain": Array [
+                                0,
+                                "dataMax",
+                              ],
+                              "padding": Object {
+                                "bottom": 0,
+                                "top": 0,
+                              },
+                              "realScaleType": "linear",
+                              "reversed": false,
+                              "scale": [Function],
+                              "stroke": "var(--text-muted)",
+                              "tickCount": 5,
+                              "tickFormatter": [Function],
+                              "type": "number",
+                              "width": 60,
+                              "x": 5,
+                              "y": 5,
+                              "yAxisId": 0,
+                            }
+                          }
+                          yAxisId={0}
+                        >
+                          <path
+                            className="recharts-curve recharts-area-area"
+                            d="M65,178.33333333333334L65,178.33333333333334L495,178.33333333333334L495,207.22222222222223L65,207.22222222222223L65,207.22222222222223Z"
+                            fill="var(--success)"
+                            fillOpacity={0.6}
+                            height={260}
+                            stroke="none"
+                            strokeWidth={0}
+                            width={430}
+                          />
+                        </Curve>
+                        <Curve
+                          className="recharts-area-curve"
+                          connectNulls={false}
+                          fill="none"
+                          fillOpacity={0.6}
+                          height={260}
+                          layout="horizontal"
+                          points={
+                            Array [
+                              Object {
+                                "payload": Object {
+                                  "closed": 1,
+                                  "date": 1573646400000,
+                                  "draft": 0,
+                                  "merged": 1,
+                                  "openApproved": 1,
+                                  "openChangesRequested": 1,
+                                  "openPending": 1,
+                                  "total": 10,
+                                },
+                                "value": Array [
+                                  2,
+                                  3,
+                                ],
+                                "x": 65,
+                                "y": 178.33333333333334,
+                              },
+                              Object {
+                                "payload": Object {
+                                  "closed": 1,
+                                  "date": 1573732800000,
+                                  "draft": 0,
+                                  "merged": 5,
+                                  "openApproved": 1,
+                                  "openChangesRequested": 1,
+                                  "openPending": 1,
+                                  "total": 10,
+                                },
+                                "value": Array [
+                                  2,
+                                  3,
+                                ],
+                                "x": 495,
+                                "y": 178.33333333333334,
+                              },
+                            ]
+                          }
+                          stroke="var(--success)"
+                          strokeWidth={0}
+                          type="stepBefore"
+                          width={430}
+                        >
+                          <path
+                            className="recharts-curve recharts-area-curve"
+                            d="M65,178.33333333333334L65,178.33333333333334L495,178.33333333333334"
+                            fill="none"
+                            fillOpacity={0.6}
+                            height={260}
+                            stroke="var(--success)"
+                            strokeWidth={0}
+                            width={430}
+                          />
+                        </Curve>
+                      </g>
+                    </Layer>
+                  </g>
+                </Layer>
+              </Area>
+              <Area
+                activeDot={true}
+                animationBegin={0}
+                animationDuration={1500}
+                animationEasing="ease"
+                animationId={0}
+                baseLine={
+                  Array [
+                    Object {
+                      "x": 65,
+                      "y": 178.33333333333334,
+                    },
+                    Object {
+                      "x": 495,
+                      "y": 178.33333333333334,
+                    },
+                  ]
+                }
+                bottom={35}
+                brushBottom={35}
+                connectNulls={false}
+                dataKey="closed"
+                dot={false}
+                fill="var(--secondary)"
+                fillOpacity={0.6}
+                height={260}
+                hide={false}
+                isAnimationActive={false}
+                isRange={false}
+                key="1"
+                layout="horizontal"
+                left={65}
+                legendType="line"
+                name="Closed"
+                points={
+                  Array [
+                    Object {
+                      "payload": Object {
+                        "closed": 1,
+                        "date": 1573646400000,
+                        "draft": 0,
+                        "merged": 1,
+                        "openApproved": 1,
+                        "openChangesRequested": 1,
+                        "openPending": 1,
+                        "total": 10,
+                      },
+                      "value": Array [
+                        3,
+                        4,
+                      ],
+                      "x": 65,
+                      "y": 149.44444444444446,
+                    },
+                    Object {
+                      "payload": Object {
+                        "closed": 1,
+                        "date": 1573732800000,
+                        "draft": 0,
+                        "merged": 5,
+                        "openApproved": 1,
+                        "openChangesRequested": 1,
+                        "openPending": 1,
+                        "total": 10,
+                      },
+                      "value": Array [
+                        3,
+                        4,
+                      ],
+                      "x": 495,
+                      "y": 149.44444444444446,
+                    },
+                  ]
+                }
+                right={5}
+                stackId="stack"
+                stroke="var(--secondary)"
+                strokeWidth={0}
+                top={5}
+                type="stepBefore"
+                width={430}
+                xAxis={
+                  Object {
+                    "allowDataOverflow": false,
+                    "allowDecimals": true,
+                    "allowDuplicatedCategory": true,
+                    "axisType": "xAxis",
+                    "bandSize": 0,
+                    "categoricalDomain": Array [
+                      1573646400000,
+                      1573732800000,
+                    ],
+                    "dataKey": "date",
+                    "domain": Array [
+                      1573646400000,
+                      1573732800000,
+                    ],
+                    "duplicateDomain": undefined,
+                    "height": 30,
+                    "hide": false,
+                    "isCategorial": true,
+                    "layout": "horizontal",
+                    "mirror": false,
+                    "name": "Time",
+                    "orientation": "bottom",
+                    "originalDomain": Array [
+                      "2019-11-13T12:00:00Z",
+                      "2019-11-14T12:00:00Z",
+                    ],
+                    "padding": Object {
+                      "left": 0,
+                      "right": 0,
+                    },
+                    "realScaleType": "scaleTime",
+                    "reversed": false,
+                    "scale": [Function],
+                    "stroke": "var(--text-muted)",
+                    "tickCount": 5,
+                    "tickFormatter": [Function],
+                    "type": "number",
+                    "width": 430,
+                    "x": 65,
+                    "xAxisId": 0,
+                    "y": 265,
+                  }
+                }
+                xAxisId={0}
+                yAxis={
+                  Object {
+                    "allowDataOverflow": false,
+                    "allowDecimals": false,
+                    "allowDuplicatedCategory": true,
+                    "axisType": "yAxis",
+                    "bandSize": 0,
+                    "categoricalDomain": undefined,
+                    "domain": Array [
+                      0,
+                      9,
+                    ],
+                    "duplicateDomain": undefined,
+                    "height": 260,
+                    "hide": false,
+                    "isCategorial": false,
+                    "layout": "horizontal",
+                    "mirror": false,
+                    "niceTicks": Array [
+                      0,
+                      3,
+                      6,
+                      9,
+                    ],
+                    "orientation": "left",
+                    "originalDomain": Array [
+                      0,
+                      "dataMax",
+                    ],
+                    "padding": Object {
+                      "bottom": 0,
+                      "top": 0,
+                    },
+                    "realScaleType": "linear",
+                    "reversed": false,
+                    "scale": [Function],
+                    "stroke": "var(--text-muted)",
+                    "tickCount": 5,
+                    "tickFormatter": [Function],
+                    "type": "number",
+                    "width": 60,
+                    "x": 5,
+                    "y": 5,
+                    "yAxisId": 0,
+                  }
+                }
+                yAxisId={0}
+              >
+                <Layer
+                  className="recharts-area"
+                >
+                  <g
+                    className="recharts-layer recharts-area"
+                  >
+                    <Layer
+                      clipPath={null}
+                    >
+                      <g
+                        className="recharts-layer"
+                        clipPath={null}
+                      >
+                        <Curve
+                          activeDot={true}
+                          animationBegin={0}
+                          animationDuration={1500}
+                          animationEasing="ease"
+                          animationId={0}
+                          baseLine={
+                            Array [
+                              Object {
+                                "x": 65,
+                                "y": 178.33333333333334,
+                              },
+                              Object {
+                                "x": 495,
+                                "y": 178.33333333333334,
+                              },
+                            ]
+                          }
+                          bottom={35}
+                          brushBottom={35}
+                          className="recharts-area-area"
+                          connectNulls={false}
+                          dataKey="closed"
+                          dot={false}
+                          fill="var(--secondary)"
+                          fillOpacity={0.6}
+                          height={260}
+                          hide={false}
+                          isAnimationActive={false}
+                          isRange={false}
+                          layout="horizontal"
+                          left={65}
+                          legendType="line"
+                          name="Closed"
+                          points={
+                            Array [
+                              Object {
+                                "payload": Object {
+                                  "closed": 1,
+                                  "date": 1573646400000,
+                                  "draft": 0,
+                                  "merged": 1,
+                                  "openApproved": 1,
+                                  "openChangesRequested": 1,
+                                  "openPending": 1,
+                                  "total": 10,
+                                },
+                                "value": Array [
+                                  3,
+                                  4,
+                                ],
+                                "x": 65,
+                                "y": 149.44444444444446,
+                              },
+                              Object {
+                                "payload": Object {
+                                  "closed": 1,
+                                  "date": 1573732800000,
+                                  "draft": 0,
+                                  "merged": 5,
+                                  "openApproved": 1,
+                                  "openChangesRequested": 1,
+                                  "openPending": 1,
+                                  "total": 10,
+                                },
+                                "value": Array [
+                                  3,
+                                  4,
+                                ],
+                                "x": 495,
+                                "y": 149.44444444444446,
+                              },
+                            ]
+                          }
+                          right={5}
+                          stackId="stack"
+                          stroke="none"
+                          strokeWidth={0}
+                          top={5}
+                          type="stepBefore"
+                          width={430}
+                          xAxis={
+                            Object {
+                              "allowDataOverflow": false,
+                              "allowDecimals": true,
+                              "allowDuplicatedCategory": true,
+                              "axisType": "xAxis",
+                              "bandSize": 0,
+                              "categoricalDomain": Array [
+                                1573646400000,
+                                1573732800000,
+                              ],
+                              "dataKey": "date",
+                              "domain": Array [
+                                1573646400000,
+                                1573732800000,
+                              ],
+                              "duplicateDomain": undefined,
+                              "height": 30,
+                              "hide": false,
+                              "isCategorial": true,
+                              "layout": "horizontal",
+                              "mirror": false,
+                              "name": "Time",
+                              "orientation": "bottom",
+                              "originalDomain": Array [
+                                "2019-11-13T12:00:00Z",
+                                "2019-11-14T12:00:00Z",
+                              ],
+                              "padding": Object {
+                                "left": 0,
+                                "right": 0,
+                              },
+                              "realScaleType": "scaleTime",
+                              "reversed": false,
+                              "scale": [Function],
+                              "stroke": "var(--text-muted)",
+                              "tickCount": 5,
+                              "tickFormatter": [Function],
+                              "type": "number",
+                              "width": 430,
+                              "x": 65,
+                              "xAxisId": 0,
+                              "y": 265,
+                            }
+                          }
+                          xAxisId={0}
+                          yAxis={
+                            Object {
+                              "allowDataOverflow": false,
+                              "allowDecimals": false,
+                              "allowDuplicatedCategory": true,
+                              "axisType": "yAxis",
+                              "bandSize": 0,
+                              "categoricalDomain": undefined,
+                              "domain": Array [
+                                0,
+                                9,
+                              ],
+                              "duplicateDomain": undefined,
+                              "height": 260,
+                              "hide": false,
+                              "isCategorial": false,
+                              "layout": "horizontal",
+                              "mirror": false,
+                              "niceTicks": Array [
+                                0,
+                                3,
+                                6,
+                                9,
+                              ],
+                              "orientation": "left",
+                              "originalDomain": Array [
+                                0,
+                                "dataMax",
+                              ],
+                              "padding": Object {
+                                "bottom": 0,
+                                "top": 0,
+                              },
+                              "realScaleType": "linear",
+                              "reversed": false,
+                              "scale": [Function],
+                              "stroke": "var(--text-muted)",
+                              "tickCount": 5,
+                              "tickFormatter": [Function],
+                              "type": "number",
+                              "width": 60,
+                              "x": 5,
+                              "y": 5,
+                              "yAxisId": 0,
+                            }
+                          }
+                          yAxisId={0}
+                        >
+                          <path
+                            className="recharts-curve recharts-area-area"
+                            d="M65,149.44444444444446L65,149.44444444444446L495,149.44444444444446L495,178.33333333333334L65,178.33333333333334L65,178.33333333333334Z"
+                            fill="var(--secondary)"
+                            fillOpacity={0.6}
+                            height={260}
+                            stroke="none"
+                            strokeWidth={0}
+                            width={430}
+                          />
+                        </Curve>
+                        <Curve
+                          className="recharts-area-curve"
+                          connectNulls={false}
+                          fill="none"
+                          fillOpacity={0.6}
+                          height={260}
+                          layout="horizontal"
+                          points={
+                            Array [
+                              Object {
+                                "payload": Object {
+                                  "closed": 1,
+                                  "date": 1573646400000,
+                                  "draft": 0,
+                                  "merged": 1,
+                                  "openApproved": 1,
+                                  "openChangesRequested": 1,
+                                  "openPending": 1,
+                                  "total": 10,
+                                },
+                                "value": Array [
+                                  3,
+                                  4,
+                                ],
+                                "x": 65,
+                                "y": 149.44444444444446,
+                              },
+                              Object {
+                                "payload": Object {
+                                  "closed": 1,
+                                  "date": 1573732800000,
+                                  "draft": 0,
+                                  "merged": 5,
+                                  "openApproved": 1,
+                                  "openChangesRequested": 1,
+                                  "openPending": 1,
+                                  "total": 10,
+                                },
+                                "value": Array [
+                                  3,
+                                  4,
+                                ],
+                                "x": 495,
+                                "y": 149.44444444444446,
+                              },
+                            ]
+                          }
+                          stroke="var(--secondary)"
+                          strokeWidth={0}
+                          type="stepBefore"
+                          width={430}
+                        >
+                          <path
+                            className="recharts-curve recharts-area-curve"
+                            d="M65,149.44444444444446L65,149.44444444444446L495,149.44444444444446"
+                            fill="none"
+                            fillOpacity={0.6}
+                            height={260}
+                            stroke="var(--secondary)"
+                            strokeWidth={0}
+                            width={430}
+                          />
+                        </Curve>
+                      </g>
+                    </Layer>
+                  </g>
+                </Layer>
+              </Area>
+              <Area
+                activeDot={true}
+                animationBegin={0}
+                animationDuration={1500}
+                animationEasing="ease"
+                animationId={0}
+                baseLine={
+                  Array [
+                    Object {
+                      "x": 65,
+                      "y": 149.44444444444446,
+                    },
+                    Object {
+                      "x": 495,
+                      "y": 149.44444444444446,
+                    },
+                  ]
+                }
+                bottom={35}
+                brushBottom={35}
+                connectNulls={false}
+                dataKey="merged"
+                dot={false}
+                fill="var(--merged)"
+                fillOpacity={0.6}
+                height={260}
+                hide={false}
+                isAnimationActive={false}
+                isRange={false}
+                key="0"
+                layout="horizontal"
+                left={65}
+                legendType="line"
+                name="Merged"
+                points={
+                  Array [
+                    Object {
+                      "payload": Object {
+                        "closed": 1,
+                        "date": 1573646400000,
+                        "draft": 0,
+                        "merged": 1,
+                        "openApproved": 1,
+                        "openChangesRequested": 1,
+                        "openPending": 1,
+                        "total": 10,
+                      },
+                      "value": Array [
+                        4,
+                        5,
+                      ],
+                      "x": 65,
+                      "y": 120.55555555555554,
+                    },
+                    Object {
+                      "payload": Object {
+                        "closed": 1,
+                        "date": 1573732800000,
+                        "draft": 0,
+                        "merged": 5,
+                        "openApproved": 1,
+                        "openChangesRequested": 1,
+                        "openPending": 1,
+                        "total": 10,
+                      },
+                      "value": Array [
+                        4,
+                        9,
+                      ],
+                      "x": 495,
+                      "y": 5,
+                    },
+                  ]
+                }
+                right={5}
+                stackId="stack"
+                stroke="var(--merged)"
+                strokeWidth={0}
+                top={5}
+                type="stepBefore"
+                width={430}
+                xAxis={
+                  Object {
+                    "allowDataOverflow": false,
+                    "allowDecimals": true,
+                    "allowDuplicatedCategory": true,
+                    "axisType": "xAxis",
+                    "bandSize": 0,
+                    "categoricalDomain": Array [
+                      1573646400000,
+                      1573732800000,
+                    ],
+                    "dataKey": "date",
+                    "domain": Array [
+                      1573646400000,
+                      1573732800000,
+                    ],
+                    "duplicateDomain": undefined,
+                    "height": 30,
+                    "hide": false,
+                    "isCategorial": true,
+                    "layout": "horizontal",
+                    "mirror": false,
+                    "name": "Time",
+                    "orientation": "bottom",
+                    "originalDomain": Array [
+                      "2019-11-13T12:00:00Z",
+                      "2019-11-14T12:00:00Z",
+                    ],
+                    "padding": Object {
+                      "left": 0,
+                      "right": 0,
+                    },
+                    "realScaleType": "scaleTime",
+                    "reversed": false,
+                    "scale": [Function],
+                    "stroke": "var(--text-muted)",
+                    "tickCount": 5,
+                    "tickFormatter": [Function],
+                    "type": "number",
+                    "width": 430,
+                    "x": 65,
+                    "xAxisId": 0,
+                    "y": 265,
+                  }
+                }
+                xAxisId={0}
+                yAxis={
+                  Object {
+                    "allowDataOverflow": false,
+                    "allowDecimals": false,
+                    "allowDuplicatedCategory": true,
+                    "axisType": "yAxis",
+                    "bandSize": 0,
+                    "categoricalDomain": undefined,
+                    "domain": Array [
+                      0,
+                      9,
+                    ],
+                    "duplicateDomain": undefined,
+                    "height": 260,
+                    "hide": false,
+                    "isCategorial": false,
+                    "layout": "horizontal",
+                    "mirror": false,
+                    "niceTicks": Array [
+                      0,
+                      3,
+                      6,
+                      9,
+                    ],
+                    "orientation": "left",
+                    "originalDomain": Array [
+                      0,
+                      "dataMax",
+                    ],
+                    "padding": Object {
+                      "bottom": 0,
+                      "top": 0,
+                    },
+                    "realScaleType": "linear",
+                    "reversed": false,
+                    "scale": [Function],
+                    "stroke": "var(--text-muted)",
+                    "tickCount": 5,
+                    "tickFormatter": [Function],
+                    "type": "number",
+                    "width": 60,
+                    "x": 5,
+                    "y": 5,
+                    "yAxisId": 0,
+                  }
+                }
+                yAxisId={0}
+              >
+                <Layer
+                  className="recharts-area"
+                >
+                  <g
+                    className="recharts-layer recharts-area"
+                  >
+                    <Layer
+                      clipPath={null}
+                    >
+                      <g
+                        className="recharts-layer"
+                        clipPath={null}
+                      >
+                        <Curve
+                          activeDot={true}
+                          animationBegin={0}
+                          animationDuration={1500}
+                          animationEasing="ease"
+                          animationId={0}
+                          baseLine={
+                            Array [
+                              Object {
+                                "x": 65,
+                                "y": 149.44444444444446,
+                              },
+                              Object {
+                                "x": 495,
+                                "y": 149.44444444444446,
+                              },
+                            ]
+                          }
+                          bottom={35}
+                          brushBottom={35}
+                          className="recharts-area-area"
+                          connectNulls={false}
+                          dataKey="merged"
+                          dot={false}
+                          fill="var(--merged)"
+                          fillOpacity={0.6}
+                          height={260}
+                          hide={false}
+                          isAnimationActive={false}
+                          isRange={false}
+                          layout="horizontal"
+                          left={65}
+                          legendType="line"
+                          name="Merged"
+                          points={
+                            Array [
+                              Object {
+                                "payload": Object {
+                                  "closed": 1,
+                                  "date": 1573646400000,
+                                  "draft": 0,
+                                  "merged": 1,
+                                  "openApproved": 1,
+                                  "openChangesRequested": 1,
+                                  "openPending": 1,
+                                  "total": 10,
+                                },
+                                "value": Array [
+                                  4,
+                                  5,
+                                ],
+                                "x": 65,
+                                "y": 120.55555555555554,
+                              },
+                              Object {
+                                "payload": Object {
+                                  "closed": 1,
+                                  "date": 1573732800000,
+                                  "draft": 0,
+                                  "merged": 5,
+                                  "openApproved": 1,
+                                  "openChangesRequested": 1,
+                                  "openPending": 1,
+                                  "total": 10,
+                                },
+                                "value": Array [
+                                  4,
+                                  9,
+                                ],
+                                "x": 495,
+                                "y": 5,
+                              },
+                            ]
+                          }
+                          right={5}
+                          stackId="stack"
+                          stroke="none"
+                          strokeWidth={0}
+                          top={5}
+                          type="stepBefore"
+                          width={430}
+                          xAxis={
+                            Object {
+                              "allowDataOverflow": false,
+                              "allowDecimals": true,
+                              "allowDuplicatedCategory": true,
+                              "axisType": "xAxis",
+                              "bandSize": 0,
+                              "categoricalDomain": Array [
+                                1573646400000,
+                                1573732800000,
+                              ],
+                              "dataKey": "date",
+                              "domain": Array [
+                                1573646400000,
+                                1573732800000,
+                              ],
+                              "duplicateDomain": undefined,
+                              "height": 30,
+                              "hide": false,
+                              "isCategorial": true,
+                              "layout": "horizontal",
+                              "mirror": false,
+                              "name": "Time",
+                              "orientation": "bottom",
+                              "originalDomain": Array [
+                                "2019-11-13T12:00:00Z",
+                                "2019-11-14T12:00:00Z",
+                              ],
+                              "padding": Object {
+                                "left": 0,
+                                "right": 0,
+                              },
+                              "realScaleType": "scaleTime",
+                              "reversed": false,
+                              "scale": [Function],
+                              "stroke": "var(--text-muted)",
+                              "tickCount": 5,
+                              "tickFormatter": [Function],
+                              "type": "number",
+                              "width": 430,
+                              "x": 65,
+                              "xAxisId": 0,
+                              "y": 265,
+                            }
+                          }
+                          xAxisId={0}
+                          yAxis={
+                            Object {
+                              "allowDataOverflow": false,
+                              "allowDecimals": false,
+                              "allowDuplicatedCategory": true,
+                              "axisType": "yAxis",
+                              "bandSize": 0,
+                              "categoricalDomain": undefined,
+                              "domain": Array [
+                                0,
+                                9,
+                              ],
+                              "duplicateDomain": undefined,
+                              "height": 260,
+                              "hide": false,
+                              "isCategorial": false,
+                              "layout": "horizontal",
+                              "mirror": false,
+                              "niceTicks": Array [
+                                0,
+                                3,
+                                6,
+                                9,
+                              ],
+                              "orientation": "left",
+                              "originalDomain": Array [
+                                0,
+                                "dataMax",
+                              ],
+                              "padding": Object {
+                                "bottom": 0,
+                                "top": 0,
+                              },
+                              "realScaleType": "linear",
+                              "reversed": false,
+                              "scale": [Function],
+                              "stroke": "var(--text-muted)",
+                              "tickCount": 5,
+                              "tickFormatter": [Function],
+                              "type": "number",
+                              "width": 60,
+                              "x": 5,
+                              "y": 5,
+                              "yAxisId": 0,
+                            }
+                          }
+                          yAxisId={0}
+                        >
+                          <path
+                            className="recharts-curve recharts-area-area"
+                            d="M65,120.55555555555554L65,5L495,5L495,149.44444444444446L65,149.44444444444446L65,149.44444444444446Z"
+                            fill="var(--merged)"
+                            fillOpacity={0.6}
+                            height={260}
+                            stroke="none"
+                            strokeWidth={0}
+                            width={430}
+                          />
+                        </Curve>
+                        <Curve
+                          className="recharts-area-curve"
+                          connectNulls={false}
+                          fill="none"
+                          fillOpacity={0.6}
+                          height={260}
+                          layout="horizontal"
+                          points={
+                            Array [
+                              Object {
+                                "payload": Object {
+                                  "closed": 1,
+                                  "date": 1573646400000,
+                                  "draft": 0,
+                                  "merged": 1,
+                                  "openApproved": 1,
+                                  "openChangesRequested": 1,
+                                  "openPending": 1,
+                                  "total": 10,
+                                },
+                                "value": Array [
+                                  4,
+                                  5,
+                                ],
+                                "x": 65,
+                                "y": 120.55555555555554,
+                              },
+                              Object {
+                                "payload": Object {
+                                  "closed": 1,
+                                  "date": 1573732800000,
+                                  "draft": 0,
+                                  "merged": 5,
+                                  "openApproved": 1,
+                                  "openChangesRequested": 1,
+                                  "openPending": 1,
+                                  "total": 10,
+                                },
+                                "value": Array [
+                                  4,
+                                  9,
+                                ],
+                                "x": 495,
+                                "y": 5,
+                              },
+                            ]
+                          }
+                          stroke="var(--merged)"
+                          strokeWidth={0}
+                          type="stepBefore"
+                          width={430}
+                        >
+                          <path
+                            className="recharts-curve recharts-area-curve"
+                            d="M65,120.55555555555554L65,5L495,5"
+                            fill="none"
+                            fillOpacity={0.6}
+                            height={260}
+                            stroke="var(--merged)"
+                            strokeWidth={0}
+                            width={430}
+                          />
+                        </Curve>
+                      </g>
+                    </Layer>
+                  </g>
+                </Layer>
+              </Area>
+            </svg>
+          </Surface>
+          <Legend
+            align="center"
+            chartHeight={300}
+            chartWidth={500}
+            iconSize={14}
+            iconType="square"
+            layout="horizontal"
+            margin={
+              Object {
+                "bottom": 5,
+                "left": 5,
+                "right": 5,
+                "top": 5,
+              }
+            }
+            onBBoxUpdate={[Function]}
+            payload={
+              Array [
+                Object {
+                  "color": "var(--text-muted)",
+                  "dataKey": "draft",
+                  "inactive": false,
+                  "payload": Object {
+                    "activeDot": true,
+                    "animationBegin": 0,
+                    "animationDuration": 1500,
+                    "animationEasing": "ease",
+                    "connectNulls": false,
+                    "dataKey": "draft",
+                    "dot": false,
+                    "fill": "var(--text-muted)",
+                    "fillOpacity": 0.6,
+                    "hide": false,
+                    "isAnimationActive": false,
+                    "legendType": "line",
+                    "name": "Draft",
+                    "points": Array [],
+                    "stackId": "stack",
+                    "stroke": "var(--text-muted)",
+                    "strokeWidth": 0,
+                    "type": "stepBefore",
+                    "xAxisId": 0,
+                    "yAxisId": 0,
+                  },
+                  "type": "square",
+                  "value": "Draft",
+                },
+                Object {
+                  "color": "var(--warning)",
+                  "dataKey": "openPending",
+                  "inactive": false,
+                  "payload": Object {
+                    "activeDot": true,
+                    "animationBegin": 0,
+                    "animationDuration": 1500,
+                    "animationEasing": "ease",
+                    "connectNulls": false,
+                    "dataKey": "openPending",
+                    "dot": false,
+                    "fill": "var(--warning)",
+                    "fillOpacity": 0.6,
+                    "hide": false,
+                    "isAnimationActive": false,
+                    "legendType": "line",
+                    "name": "Open & awaiting review",
+                    "points": Array [],
+                    "stackId": "stack",
+                    "stroke": "var(--warning)",
+                    "strokeWidth": 0,
+                    "type": "stepBefore",
+                    "xAxisId": 0,
+                    "yAxisId": 0,
+                  },
+                  "type": "square",
+                  "value": "Open & awaiting review",
+                },
+                Object {
+                  "color": "var(--danger)",
+                  "dataKey": "openChangesRequested",
+                  "inactive": false,
+                  "payload": Object {
+                    "activeDot": true,
+                    "animationBegin": 0,
+                    "animationDuration": 1500,
+                    "animationEasing": "ease",
+                    "connectNulls": false,
+                    "dataKey": "openChangesRequested",
+                    "dot": false,
+                    "fill": "var(--danger)",
+                    "fillOpacity": 0.6,
+                    "hide": false,
+                    "isAnimationActive": false,
+                    "legendType": "line",
+                    "name": "Open & changes requested",
+                    "points": Array [],
+                    "stackId": "stack",
+                    "stroke": "var(--danger)",
+                    "strokeWidth": 0,
+                    "type": "stepBefore",
+                    "xAxisId": 0,
+                    "yAxisId": 0,
+                  },
+                  "type": "square",
+                  "value": "Open & changes requested",
+                },
+                Object {
+                  "color": "var(--success)",
+                  "dataKey": "openApproved",
+                  "inactive": false,
+                  "payload": Object {
+                    "activeDot": true,
+                    "animationBegin": 0,
+                    "animationDuration": 1500,
+                    "animationEasing": "ease",
+                    "connectNulls": false,
+                    "dataKey": "openApproved",
+                    "dot": false,
+                    "fill": "var(--success)",
+                    "fillOpacity": 0.6,
+                    "hide": false,
+                    "isAnimationActive": false,
+                    "legendType": "line",
+                    "name": "Open & approved",
+                    "points": Array [],
+                    "stackId": "stack",
+                    "stroke": "var(--success)",
+                    "strokeWidth": 0,
+                    "type": "stepBefore",
+                    "xAxisId": 0,
+                    "yAxisId": 0,
+                  },
+                  "type": "square",
+                  "value": "Open & approved",
+                },
+                Object {
+                  "color": "var(--secondary)",
+                  "dataKey": "closed",
+                  "inactive": false,
+                  "payload": Object {
+                    "activeDot": true,
+                    "animationBegin": 0,
+                    "animationDuration": 1500,
+                    "animationEasing": "ease",
+                    "connectNulls": false,
+                    "dataKey": "closed",
+                    "dot": false,
+                    "fill": "var(--secondary)",
+                    "fillOpacity": 0.6,
+                    "hide": false,
+                    "isAnimationActive": false,
+                    "legendType": "line",
+                    "name": "Closed",
+                    "points": Array [],
+                    "stackId": "stack",
+                    "stroke": "var(--secondary)",
+                    "strokeWidth": 0,
+                    "type": "stepBefore",
+                    "xAxisId": 0,
+                    "yAxisId": 0,
+                  },
+                  "type": "square",
+                  "value": "Closed",
+                },
+                Object {
+                  "color": "var(--merged)",
+                  "dataKey": "merged",
+                  "inactive": false,
+                  "payload": Object {
+                    "activeDot": true,
+                    "animationBegin": 0,
+                    "animationDuration": 1500,
+                    "animationEasing": "ease",
+                    "connectNulls": false,
+                    "dataKey": "merged",
+                    "dot": false,
+                    "fill": "var(--merged)",
+                    "fillOpacity": 0.6,
+                    "hide": false,
+                    "isAnimationActive": false,
+                    "legendType": "line",
+                    "name": "Merged",
+                    "points": Array [],
+                    "stackId": "stack",
+                    "stroke": "var(--merged)",
+                    "strokeWidth": 0,
+                    "type": "stepBefore",
+                    "xAxisId": 0,
+                    "yAxisId": 0,
+                  },
+                  "type": "square",
+                  "value": "Merged",
+                },
+              ]
+            }
+            verticalAlign="bottom"
+            width={490}
+          >
+            <div
+              className="recharts-legend-wrapper"
+              style={
+                Object {
+                  "bottom": 5,
+                  "height": "auto",
+                  "left": 5,
+                  "position": "absolute",
+                  "width": 490,
+                }
+              }
+            >
+              <Legend
+                align="center"
+                chartHeight={300}
+                chartWidth={500}
+                iconSize={14}
+                iconType="square"
+                inactiveColor="#ccc"
+                layout="horizontal"
+                margin={
+                  Object {
+                    "bottom": 5,
+                    "left": 5,
+                    "right": 5,
+                    "top": 5,
+                  }
+                }
+                onBBoxUpdate={[Function]}
+                payload={
+                  Array [
+                    Object {
+                      "color": "var(--text-muted)",
+                      "dataKey": "draft",
+                      "inactive": false,
+                      "payload": Object {
+                        "activeDot": true,
+                        "animationBegin": 0,
+                        "animationDuration": 1500,
+                        "animationEasing": "ease",
+                        "connectNulls": false,
+                        "dataKey": "draft",
+                        "dot": false,
+                        "fill": "var(--text-muted)",
+                        "fillOpacity": 0.6,
+                        "hide": false,
+                        "isAnimationActive": false,
+                        "legendType": "line",
+                        "name": "Draft",
+                        "points": Array [],
+                        "stackId": "stack",
+                        "stroke": "var(--text-muted)",
+                        "strokeWidth": 0,
+                        "type": "stepBefore",
+                        "xAxisId": 0,
+                        "yAxisId": 0,
+                      },
+                      "type": "square",
+                      "value": "Draft",
+                    },
+                    Object {
+                      "color": "var(--warning)",
+                      "dataKey": "openPending",
+                      "inactive": false,
+                      "payload": Object {
+                        "activeDot": true,
+                        "animationBegin": 0,
+                        "animationDuration": 1500,
+                        "animationEasing": "ease",
+                        "connectNulls": false,
+                        "dataKey": "openPending",
+                        "dot": false,
+                        "fill": "var(--warning)",
+                        "fillOpacity": 0.6,
+                        "hide": false,
+                        "isAnimationActive": false,
+                        "legendType": "line",
+                        "name": "Open & awaiting review",
+                        "points": Array [],
+                        "stackId": "stack",
+                        "stroke": "var(--warning)",
+                        "strokeWidth": 0,
+                        "type": "stepBefore",
+                        "xAxisId": 0,
+                        "yAxisId": 0,
+                      },
+                      "type": "square",
+                      "value": "Open & awaiting review",
+                    },
+                    Object {
+                      "color": "var(--danger)",
+                      "dataKey": "openChangesRequested",
+                      "inactive": false,
+                      "payload": Object {
+                        "activeDot": true,
+                        "animationBegin": 0,
+                        "animationDuration": 1500,
+                        "animationEasing": "ease",
+                        "connectNulls": false,
+                        "dataKey": "openChangesRequested",
+                        "dot": false,
+                        "fill": "var(--danger)",
+                        "fillOpacity": 0.6,
+                        "hide": false,
+                        "isAnimationActive": false,
+                        "legendType": "line",
+                        "name": "Open & changes requested",
+                        "points": Array [],
+                        "stackId": "stack",
+                        "stroke": "var(--danger)",
+                        "strokeWidth": 0,
+                        "type": "stepBefore",
+                        "xAxisId": 0,
+                        "yAxisId": 0,
+                      },
+                      "type": "square",
+                      "value": "Open & changes requested",
+                    },
+                    Object {
+                      "color": "var(--success)",
+                      "dataKey": "openApproved",
+                      "inactive": false,
+                      "payload": Object {
+                        "activeDot": true,
+                        "animationBegin": 0,
+                        "animationDuration": 1500,
+                        "animationEasing": "ease",
+                        "connectNulls": false,
+                        "dataKey": "openApproved",
+                        "dot": false,
+                        "fill": "var(--success)",
+                        "fillOpacity": 0.6,
+                        "hide": false,
+                        "isAnimationActive": false,
+                        "legendType": "line",
+                        "name": "Open & approved",
+                        "points": Array [],
+                        "stackId": "stack",
+                        "stroke": "var(--success)",
+                        "strokeWidth": 0,
+                        "type": "stepBefore",
+                        "xAxisId": 0,
+                        "yAxisId": 0,
+                      },
+                      "type": "square",
+                      "value": "Open & approved",
+                    },
+                    Object {
+                      "color": "var(--secondary)",
+                      "dataKey": "closed",
+                      "inactive": false,
+                      "payload": Object {
+                        "activeDot": true,
+                        "animationBegin": 0,
+                        "animationDuration": 1500,
+                        "animationEasing": "ease",
+                        "connectNulls": false,
+                        "dataKey": "closed",
+                        "dot": false,
+                        "fill": "var(--secondary)",
+                        "fillOpacity": 0.6,
+                        "hide": false,
+                        "isAnimationActive": false,
+                        "legendType": "line",
+                        "name": "Closed",
+                        "points": Array [],
+                        "stackId": "stack",
+                        "stroke": "var(--secondary)",
+                        "strokeWidth": 0,
+                        "type": "stepBefore",
+                        "xAxisId": 0,
+                        "yAxisId": 0,
+                      },
+                      "type": "square",
+                      "value": "Closed",
+                    },
+                    Object {
+                      "color": "var(--merged)",
+                      "dataKey": "merged",
+                      "inactive": false,
+                      "payload": Object {
+                        "activeDot": true,
+                        "animationBegin": 0,
+                        "animationDuration": 1500,
+                        "animationEasing": "ease",
+                        "connectNulls": false,
+                        "dataKey": "merged",
+                        "dot": false,
+                        "fill": "var(--merged)",
+                        "fillOpacity": 0.6,
+                        "hide": false,
+                        "isAnimationActive": false,
+                        "legendType": "line",
+                        "name": "Merged",
+                        "points": Array [],
+                        "stackId": "stack",
+                        "stroke": "var(--merged)",
+                        "strokeWidth": 0,
+                        "type": "stepBefore",
+                        "xAxisId": 0,
+                        "yAxisId": 0,
+                      },
+                      "type": "square",
+                      "value": "Merged",
+                    },
+                  ]
+                }
+                verticalAlign="bottom"
+                width={490}
+              >
+                <ul
+                  className="recharts-default-legend"
+                  style={
+                    Object {
+                      "margin": 0,
+                      "padding": 0,
+                      "textAlign": "center",
+                    }
+                  }
+                >
+                  <li
+                    className="recharts-legend-item legend-item-0"
+                    key="legend-item-0"
+                    style={
+                      Object {
+                        "display": "inline-block",
+                        "marginRight": 10,
+                      }
+                    }
+                  >
+                    <Surface
+                      height={14}
+                      style={
+                        Object {
+                          "display": "inline-block",
+                          "marginRight": 4,
+                          "verticalAlign": "middle",
+                        }
+                      }
+                      viewBox={
+                        Object {
+                          "height": 32,
+                          "width": 32,
+                          "x": 0,
+                          "y": 0,
+                        }
+                      }
+                      width={14}
+                    >
+                      <svg
+                        className="recharts-surface"
+                        height={14}
+                        style={
+                          Object {
+                            "display": "inline-block",
+                            "marginRight": 4,
+                            "verticalAlign": "middle",
+                          }
+                        }
+                        version="1.1"
+                        viewBox="0 0 32 32"
+                        width={14}
+                      >
+                        <Symbols
+                          cx={16}
+                          cy={16}
+                          fill="var(--text-muted)"
+                          size={32}
+                          sizeType="diameter"
+                          type="square"
+                        >
+                          <path
+                            className="recharts-symbols"
+                            d="M-16,-16h32v32h-32Z"
+                            fill="var(--text-muted)"
+                            transform="translate(16, 16)"
+                          />
+                        </Symbols>
+                      </svg>
+                    </Surface>
+                    <span
+                      className="recharts-legend-item-text"
+                    >
+                      Draft
+                    </span>
+                  </li>
+                  <li
+                    className="recharts-legend-item legend-item-1"
+                    key="legend-item-1"
+                    style={
+                      Object {
+                        "display": "inline-block",
+                        "marginRight": 10,
+                      }
+                    }
+                  >
+                    <Surface
+                      height={14}
+                      style={
+                        Object {
+                          "display": "inline-block",
+                          "marginRight": 4,
+                          "verticalAlign": "middle",
+                        }
+                      }
+                      viewBox={
+                        Object {
+                          "height": 32,
+                          "width": 32,
+                          "x": 0,
+                          "y": 0,
+                        }
+                      }
+                      width={14}
+                    >
+                      <svg
+                        className="recharts-surface"
+                        height={14}
+                        style={
+                          Object {
+                            "display": "inline-block",
+                            "marginRight": 4,
+                            "verticalAlign": "middle",
+                          }
+                        }
+                        version="1.1"
+                        viewBox="0 0 32 32"
+                        width={14}
+                      >
+                        <Symbols
+                          cx={16}
+                          cy={16}
+                          fill="var(--warning)"
+                          size={32}
+                          sizeType="diameter"
+                          type="square"
+                        >
+                          <path
+                            className="recharts-symbols"
+                            d="M-16,-16h32v32h-32Z"
+                            fill="var(--warning)"
+                            transform="translate(16, 16)"
+                          />
+                        </Symbols>
+                      </svg>
+                    </Surface>
+                    <span
+                      className="recharts-legend-item-text"
+                    >
+                      Open & awaiting review
+                    </span>
+                  </li>
+                  <li
+                    className="recharts-legend-item legend-item-2"
+                    key="legend-item-2"
+                    style={
+                      Object {
+                        "display": "inline-block",
+                        "marginRight": 10,
+                      }
+                    }
+                  >
+                    <Surface
+                      height={14}
+                      style={
+                        Object {
+                          "display": "inline-block",
+                          "marginRight": 4,
+                          "verticalAlign": "middle",
+                        }
+                      }
+                      viewBox={
+                        Object {
+                          "height": 32,
+                          "width": 32,
+                          "x": 0,
+                          "y": 0,
+                        }
+                      }
+                      width={14}
+                    >
+                      <svg
+                        className="recharts-surface"
+                        height={14}
+                        style={
+                          Object {
+                            "display": "inline-block",
+                            "marginRight": 4,
+                            "verticalAlign": "middle",
+                          }
+                        }
+                        version="1.1"
+                        viewBox="0 0 32 32"
+                        width={14}
+                      >
+                        <Symbols
+                          cx={16}
+                          cy={16}
+                          fill="var(--danger)"
+                          size={32}
+                          sizeType="diameter"
+                          type="square"
+                        >
+                          <path
+                            className="recharts-symbols"
+                            d="M-16,-16h32v32h-32Z"
+                            fill="var(--danger)"
+                            transform="translate(16, 16)"
+                          />
+                        </Symbols>
+                      </svg>
+                    </Surface>
+                    <span
+                      className="recharts-legend-item-text"
+                    >
+                      Open & changes requested
+                    </span>
+                  </li>
+                  <li
+                    className="recharts-legend-item legend-item-3"
+                    key="legend-item-3"
+                    style={
+                      Object {
+                        "display": "inline-block",
+                        "marginRight": 10,
+                      }
+                    }
+                  >
+                    <Surface
+                      height={14}
+                      style={
+                        Object {
+                          "display": "inline-block",
+                          "marginRight": 4,
+                          "verticalAlign": "middle",
+                        }
+                      }
+                      viewBox={
+                        Object {
+                          "height": 32,
+                          "width": 32,
+                          "x": 0,
+                          "y": 0,
+                        }
+                      }
+                      width={14}
+                    >
+                      <svg
+                        className="recharts-surface"
+                        height={14}
+                        style={
+                          Object {
+                            "display": "inline-block",
+                            "marginRight": 4,
+                            "verticalAlign": "middle",
+                          }
+                        }
+                        version="1.1"
+                        viewBox="0 0 32 32"
+                        width={14}
+                      >
+                        <Symbols
+                          cx={16}
+                          cy={16}
+                          fill="var(--success)"
+                          size={32}
+                          sizeType="diameter"
+                          type="square"
+                        >
+                          <path
+                            className="recharts-symbols"
+                            d="M-16,-16h32v32h-32Z"
+                            fill="var(--success)"
+                            transform="translate(16, 16)"
+                          />
+                        </Symbols>
+                      </svg>
+                    </Surface>
+                    <span
+                      className="recharts-legend-item-text"
+                    >
+                      Open & approved
+                    </span>
+                  </li>
+                  <li
+                    className="recharts-legend-item legend-item-4"
+                    key="legend-item-4"
+                    style={
+                      Object {
+                        "display": "inline-block",
+                        "marginRight": 10,
+                      }
+                    }
+                  >
+                    <Surface
+                      height={14}
+                      style={
+                        Object {
+                          "display": "inline-block",
+                          "marginRight": 4,
+                          "verticalAlign": "middle",
+                        }
+                      }
+                      viewBox={
+                        Object {
+                          "height": 32,
+                          "width": 32,
+                          "x": 0,
+                          "y": 0,
+                        }
+                      }
+                      width={14}
+                    >
+                      <svg
+                        className="recharts-surface"
+                        height={14}
+                        style={
+                          Object {
+                            "display": "inline-block",
+                            "marginRight": 4,
+                            "verticalAlign": "middle",
+                          }
+                        }
+                        version="1.1"
+                        viewBox="0 0 32 32"
+                        width={14}
+                      >
+                        <Symbols
+                          cx={16}
+                          cy={16}
+                          fill="var(--secondary)"
+                          size={32}
+                          sizeType="diameter"
+                          type="square"
+                        >
+                          <path
+                            className="recharts-symbols"
+                            d="M-16,-16h32v32h-32Z"
+                            fill="var(--secondary)"
+                            transform="translate(16, 16)"
+                          />
+                        </Symbols>
+                      </svg>
+                    </Surface>
+                    <span
+                      className="recharts-legend-item-text"
+                    >
+                      Closed
+                    </span>
+                  </li>
+                  <li
+                    className="recharts-legend-item legend-item-5"
+                    key="legend-item-5"
+                    style={
+                      Object {
+                        "display": "inline-block",
+                        "marginRight": 10,
+                      }
+                    }
+                  >
+                    <Surface
+                      height={14}
+                      style={
+                        Object {
+                          "display": "inline-block",
+                          "marginRight": 4,
+                          "verticalAlign": "middle",
+                        }
+                      }
+                      viewBox={
+                        Object {
+                          "height": 32,
+                          "width": 32,
+                          "x": 0,
+                          "y": 0,
+                        }
+                      }
+                      width={14}
+                    >
+                      <svg
+                        className="recharts-surface"
+                        height={14}
+                        style={
+                          Object {
+                            "display": "inline-block",
+                            "marginRight": 4,
+                            "verticalAlign": "middle",
+                          }
+                        }
+                        version="1.1"
+                        viewBox="0 0 32 32"
+                        width={14}
+                      >
+                        <Symbols
+                          cx={16}
+                          cy={16}
+                          fill="var(--merged)"
+                          size={32}
+                          sizeType="diameter"
+                          type="square"
+                        >
+                          <path
+                            className="recharts-symbols"
+                            d="M-16,-16h32v32h-32Z"
+                            fill="var(--merged)"
+                            transform="translate(16, 16)"
+                          />
+                        </Symbols>
+                      </svg>
+                    </Surface>
+                    <span
+                      className="recharts-legend-item-text"
+                    >
+                      Merged
+                    </span>
+                  </li>
+                </ul>
+              </Legend>
+            </div>
+          </Legend>
+          <Tooltip
+            active={false}
+            allowEscapeViewBox={
+              Object {
+                "x": false,
+                "y": false,
+              }
+            }
+            animationDuration={400}
+            animationEasing="ease"
+            contentStyle={
+              Object {
+                "background": "var(--body-bg)",
+                "border": "none",
+                "color": "var(--body-color)",
+              }
+            }
+            coordinate={
+              Object {
+                "x": 0,
+                "y": 0,
+              }
+            }
+            cursor={true}
+            cursorStyle={Object {}}
+            filterNull={true}
+            isAnimationActive={false}
+            itemSorter={[Function]}
+            itemStyle={
+              Object {
+                "background": "var(--body-bg)",
+                "border": "none",
+                "color": "var(--body-color)",
+              }
+            }
+            labelFormatter={[Function]}
+            labelStyle={
+              Object {
+                "fontWeight": "bold",
+              }
+            }
+            offset={10}
+            payload={Array []}
+            separator=" : "
+            useTranslate3d={false}
+            viewBox={
+              Object {
+                "bottom": 35,
+                "brushBottom": 35,
+                "height": 260,
+                "left": 65,
+                "right": 5,
+                "top": 5,
+                "width": 430,
+                "x": 65,
+                "y": 5,
+              }
+            }
+            wrapperStyle={
+              Object {
+                "border": "1px solid var(--border-color)",
+              }
+            }
+          >
+            <div
+              className="recharts-tooltip-wrapper"
+              style={
+                Object {
+                  "MozTransform": "translate(undefinedpx, undefinedpx)",
+                  "OTransform": "translate(undefinedpx, undefinedpx)",
+                  "WebkitTransform": "translate(undefinedpx, undefinedpx)",
+                  "border": "1px solid var(--border-color)",
+                  "msTransform": "translate(undefinedpx, undefinedpx)",
+                  "pointerEvents": "none",
+                  "position": "absolute",
+                  "top": 0,
+                  "transform": "translate(undefinedpx, undefinedpx)",
+                  "visibility": "hidden",
+                }
+              }
+            >
+              <DefaultTooltipContent
+                active={false}
+                allowEscapeViewBox={
+                  Object {
+                    "x": false,
+                    "y": false,
+                  }
+                }
+                animationDuration={400}
+                animationEasing="ease"
+                contentStyle={
+                  Object {
+                    "background": "var(--body-bg)",
+                    "border": "none",
+                    "color": "var(--body-color)",
+                  }
+                }
+                coordinate={
+                  Object {
+                    "x": 0,
+                    "y": 0,
+                  }
+                }
+                cursor={true}
+                cursorStyle={Object {}}
+                filterNull={true}
+                isAnimationActive={false}
+                itemSorter={[Function]}
+                itemStyle={
+                  Object {
+                    "background": "var(--body-bg)",
+                    "border": "none",
+                    "color": "var(--body-color)",
+                  }
+                }
+                labelFormatter={[Function]}
+                labelStyle={
+                  Object {
+                    "fontWeight": "bold",
+                  }
+                }
+                offset={10}
+                payload={Array []}
+                separator=" : "
+                useTranslate3d={false}
+                viewBox={
+                  Object {
+                    "bottom": 35,
+                    "brushBottom": 35,
+                    "height": 260,
+                    "left": 65,
+                    "right": 5,
+                    "top": 5,
+                    "width": 430,
+                    "x": 65,
+                    "y": 5,
+                  }
+                }
+                wrapperStyle={
+                  Object {
+                    "border": "1px solid var(--border-color)",
+                  }
+                }
+              >
+                <div
+                  className="recharts-default-tooltip"
+                  style={
+                    Object {
+                      "background": "var(--body-bg)",
+                      "backgroundColor": "#fff",
+                      "border": "none",
+                      "color": "var(--body-color)",
+                      "margin": 0,
+                      "padding": 10,
+                      "whiteSpace": "nowrap",
+                    }
+                  }
+                >
+                  <p
+                    className="recharts-tooltip-label"
+                    style={
+                      Object {
+                        "fontWeight": "bold",
+                        "margin": 0,
+                      }
+                    }
+                  />
+                </div>
+              </DefaultTooltipContent>
+            </div>
+          </Tooltip>
+        </div>
+      </ComposedChart>
+      <ResizeDetector
+        handleHeight={true}
+        handleWidth={true}
+        onResize={[Function]}
+        refreshRate={1000}
+        resizableElementId=""
+        skipOnMount={false}
+      >
+        <div
+          style={
+            Object {
+              "display": "none",
+              "height": 0,
+              "position": "absolute",
+              "visibility": "hidden",
+              "width": 0,
+            }
+          }
+        />
+      </ResizeDetector>
+    </div>
+  </ResponsiveContainer>
+</CampaignBurndownChart>
+`;

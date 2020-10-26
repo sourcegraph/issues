@@ -12,7 +12,8 @@ type Mapper interface {
 
 // The BaseMapper is a mapper that recursively visits each node in a query and
 // maps it to itself. A BaseMapper's methods may be overriden by embedding it a
-// custom mapper's definition. See ParameterMapper for an example.
+// custom mapper's definition. See ParameterMapper for an example. If the
+// methods return nil, the respective node is removed.
 type BaseMapper struct{}
 
 func (*BaseMapper) MapNodes(mapper Mapper, nodes []Node) []Node {
@@ -20,11 +21,17 @@ func (*BaseMapper) MapNodes(mapper Mapper, nodes []Node) []Node {
 	for _, node := range nodes {
 		switch v := node.(type) {
 		case Pattern:
-			mapped = append(mapped, mapper.MapPattern(mapper, v.Value, v.Negated, v.Annotation))
+			if result := mapper.MapPattern(mapper, v.Value, v.Negated, v.Annotation); result != nil {
+				mapped = append(mapped, result)
+			}
 		case Parameter:
-			mapped = append(mapped, mapper.MapParameter(mapper, v.Field, v.Value, v.Negated, v.Annotation))
+			if result := mapper.MapParameter(mapper, v.Field, v.Value, v.Negated, v.Annotation); result != nil {
+				mapped = append(mapped, result)
+			}
 		case Operator:
-			mapped = append(mapped, mapper.MapOperator(mapper, v.Kind, v.Operands)...)
+			if result := mapper.MapOperator(mapper, v.Kind, v.Operands); result != nil {
+				mapped = append(mapped, result...)
+			}
 		}
 	}
 	return mapped

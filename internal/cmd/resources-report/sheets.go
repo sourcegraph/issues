@@ -7,7 +7,7 @@ import (
 	"strconv"
 	"time"
 
-	sheets "google.golang.org/api/sheets/v4"
+	"google.golang.org/api/sheets/v4"
 )
 
 var reportSheetHeaders = []interface{}{"Platform", "Type", "ID", "Location", "Owner", "Created", "Meta"}

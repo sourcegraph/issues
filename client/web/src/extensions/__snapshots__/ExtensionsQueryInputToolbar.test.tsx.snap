@@ -1,0 +1,233 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`ExtensionsQueryInputToolbar renders 1`] = `
+<div
+  className="d-flex flex-wrap justify-content-between mb-2"
+>
+  <div>
+    <button
+      className="btn btn-sm mr-2 btn-outline-secondary"
+      data-test-extension-category="Reports and stats"
+      onClick={[Function]}
+      type="button"
+    >
+      Reports and stats
+    </button>
+    <button
+      className="btn btn-sm mr-2 btn-outline-secondary"
+      data-test-extension-category="External services"
+      onClick={[Function]}
+      type="button"
+    >
+      External services
+    </button>
+    <button
+      className="btn btn-sm mr-2 btn-outline-secondary"
+      data-test-extension-category="Linters"
+      onClick={[Function]}
+      type="button"
+    >
+      Linters
+    </button>
+    <button
+      className="btn btn-sm mr-2 btn-outline-secondary"
+      data-test-extension-category="Code editors"
+      onClick={[Function]}
+      type="button"
+    >
+      Code editors
+    </button>
+    <button
+      className="btn btn-sm mr-2 btn-outline-secondary"
+      data-test-extension-category="Code analysis"
+      onClick={[Function]}
+      type="button"
+    >
+      Code analysis
+    </button>
+    <button
+      className="btn btn-sm mr-2 btn-outline-secondary"
+      data-test-extension-category="Programming languages"
+      onClick={[Function]}
+      type="button"
+    >
+      Programming languages
+    </button>
+    <button
+      className="btn btn-sm mr-2 btn-outline-secondary"
+      data-test-extension-category="Other"
+      onClick={[Function]}
+      type="button"
+    >
+      Other
+    </button>
+  </div>
+  <div
+    className="btn-group"
+    onKeyDown={[Function]}
+  >
+    <button
+      aria-expanded={false}
+      aria-haspopup={true}
+      aria-label={null}
+      className="btn-sm dropdown-toggle btn btn-outline-secondary"
+      onClick={[Function]}
+      type="button"
+    >
+      Show all
+    </button>
+    <div
+      aria-hidden={true}
+      className="dropdown-menu dropdown-menu-right"
+      role="menu"
+      tabIndex="-1"
+    >
+      <button
+        className="disabled dropdown-item"
+        disabled={true}
+        onClick={[Function]}
+        tabIndex="-1"
+        type="button"
+      >
+        Show all
+      </button>
+      <button
+        className="dropdown-item"
+        disabled={false}
+        onClick={[Function]}
+        role="menuitem"
+        tabIndex="0"
+        type="button"
+      >
+        Show enabled extensions
+      </button>
+      <button
+        className="dropdown-item"
+        disabled={false}
+        onClick={[Function]}
+        role="menuitem"
+        tabIndex="0"
+        type="button"
+      >
+        Show disabled extensions
+      </button>
+    </div>
+  </div>
+</div>
+`;
+
+exports[`ExtensionsQueryInputToolbar shows category in query as selected 1`] = `
+<div
+  className="d-flex flex-wrap justify-content-between mb-2"
+>
+  <div>
+    <button
+      className="btn btn-sm mr-2 btn-outline-secondary"
+      data-test-extension-category="Reports and stats"
+      onClick={[Function]}
+      type="button"
+    >
+      Reports and stats
+    </button>
+    <button
+      className="btn btn-sm mr-2 btn-outline-secondary"
+      data-test-extension-category="External services"
+      onClick={[Function]}
+      type="button"
+    >
+      External services
+    </button>
+    <button
+      className="btn btn-sm mr-2 btn-outline-secondary"
+      data-test-extension-category="Linters"
+      onClick={[Function]}
+      type="button"
+    >
+      Linters
+    </button>
+    <button
+      className="btn btn-sm mr-2 btn-outline-secondary"
+      data-test-extension-category="Code editors"
+      onClick={[Function]}
+      type="button"
+    >
+      Code editors
+    </button>
+    <button
+      className="btn btn-sm mr-2 btn-outline-secondary"
+      data-test-extension-category="Code analysis"
+      onClick={[Function]}
+      type="button"
+    >
+      Code analysis
+    </button>
+    <button
+      className="btn btn-sm mr-2 btn-outline-secondary"
+      data-test-extension-category="Programming languages"
+      onClick={[Function]}
+      type="button"
+    >
+      Programming languages
+    </button>
+    <button
+      className="btn btn-sm mr-2 btn-outline-secondary"
+      data-test-extension-category="Other"
+      onClick={[Function]}
+      type="button"
+    >
+      Other
+    </button>
+  </div>
+  <div
+    className="btn-group"
+    onKeyDown={[Function]}
+  >
+    <button
+      aria-expanded={false}
+      aria-haspopup={true}
+      aria-label={null}
+      className="btn-sm dropdown-toggle btn btn-outline-secondary"
+      onClick={[Function]}
+      type="button"
+    >
+      Show all
+    </button>
+    <div
+      aria-hidden={true}
+      className="dropdown-menu dropdown-menu-right"
+      role="menu"
+      tabIndex="-1"
+    >
+      <button
+        className="disabled dropdown-item"
+        disabled={true}
+        onClick={[Function]}
+        tabIndex="-1"
+        type="button"
+      >
+        Show all
+      </button>
+      <button
+        className="dropdown-item"
+        disabled={false}
+        onClick={[Function]}
+        role="menuitem"
+        tabIndex="0"
+        type="button"
+      >
+        Show enabled extensions
+      </button>
+      <button
+        className="dropdown-item"
+        disabled={false}
+        onClick={[Function]}
+        role="menuitem"
+        tabIndex="0"
+        type="button"
+      >
+        Show disabled extensions
+      </button>
+    </div>
+  </div>
+</div>
+`;

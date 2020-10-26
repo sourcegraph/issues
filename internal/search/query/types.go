@@ -84,7 +84,7 @@ func (q OrdinaryQuery) IsCaseSensitive() bool {
 
 // AndOrQuery satisfies the interface for QueryInfo close to that of OrdinaryQuery.
 func (q AndOrQuery) RegexpPatterns(field string) (values, negatedValues []string) {
-	VisitField(q.Query, field, func(visitedValue string, negated bool) {
+	VisitField(q.Query, field, func(visitedValue string, negated bool, _ Annotation) {
 		if negated {
 			negatedValues = append(negatedValues, visitedValue)
 		} else {
@@ -95,7 +95,7 @@ func (q AndOrQuery) RegexpPatterns(field string) (values, negatedValues []string
 }
 
 func (q AndOrQuery) StringValues(field string) (values, negatedValues []string) {
-	VisitField(q.Query, field, func(visitedValue string, negated bool) {
+	VisitField(q.Query, field, func(visitedValue string, negated bool, _ Annotation) {
 		if negated {
 			negatedValues = append(negatedValues, visitedValue)
 		} else {
@@ -106,7 +106,7 @@ func (q AndOrQuery) StringValues(field string) (values, negatedValues []string) 
 }
 
 func (q AndOrQuery) StringValue(field string) (value, negatedValue string) {
-	VisitField(q.Query, field, func(visitedValue string, negated bool) {
+	VisitField(q.Query, field, func(visitedValue string, negated bool, _ Annotation) {
 		if negated {
 			negatedValue = visitedValue
 		} else {
@@ -123,7 +123,7 @@ func (q AndOrQuery) Values(field string) []*types.Value {
 			values = append(values, q.valueToTypedValue(field, value, annotation.Labels)...)
 		})
 	} else {
-		VisitField(q.Query, field, func(value string, _ bool) {
+		VisitField(q.Query, field, func(value string, _ bool, _ Annotation) {
 			values = append(values, q.valueToTypedValue(field, value, None)...)
 		})
 	}
@@ -135,7 +135,7 @@ func (q AndOrQuery) Fields() map[string][]*types.Value {
 	VisitPattern(q.Query, func(value string, _ bool, _ Annotation) {
 		fields[""] = q.Values("")
 	})
-	VisitParameter(q.Query, func(field, _ string, _ bool) {
+	VisitParameter(q.Query, func(field, _ string, _ bool, _ Annotation) {
 		fields[field] = q.Values(field)
 	})
 	return fields
@@ -154,7 +154,7 @@ func (q AndOrQuery) ParseTree() syntax.ParseTree {
 		}
 		tree = append(tree, expr)
 	})
-	VisitParameter(q.Query, func(field, value string, negated bool) {
+	VisitParameter(q.Query, func(field, value string, negated bool, _ Annotation) {
 		expr := &syntax.Expr{
 			Field: field,
 			Value: value,
@@ -167,7 +167,7 @@ func (q AndOrQuery) ParseTree() syntax.ParseTree {
 
 func (q AndOrQuery) BoolValue(field string) bool {
 	result := false
-	VisitField(q.Query, field, func(value string, _ bool) {
+	VisitField(q.Query, field, func(value string, _ bool, _ Annotation) {
 		result, _ = parseBool(value) // err was checked during parsing and validation.
 	})
 	return result
@@ -189,24 +189,20 @@ func parseRegexpOrPanic(field, value string) *regexp.Regexp {
 // OrdinaryQuery processing. It does not check the validity of field negation or
 // if the same field is specified more than once.
 func (q AndOrQuery) valueToTypedValue(field, value string, label labels) []*types.Value {
-
-	// Can't call the above parameter "labels" because then Go complains the
-	// type annotation here is "not a type".
-	isSet := func(l, label labels) bool { return l&label != 0 }
-
 	switch field {
 	case
 		FieldDefault:
-		// If a pattern is quoted, or we applied heuristics to interpret
-		// valid regexp metasyntax literally instead, this pattern is a
-		// string.
-		if isSet(label, Quoted) || isSet(label, HeuristicParensAsPatterns) || isSet(label, Literal) {
+		if label.isSet(Literal) {
 			return []*types.Value{{String: &value}}
 		}
-		if regexp, err := regexp.Compile(value); err == nil {
+		if label.isSet(Regexp) {
+			regexp, err := regexp.Compile(value)
+			if err != nil {
+				panic(fmt.Sprintf("Invariant broken: value must have been checked to be valid regexp. Error: %s", err))
+			}
 			return []*types.Value{{Regexp: regexp}}
 		}
-		// If the regexp does not compile, treat it as a string.
+		// All patterns should have a label after parsing, but if not, treat the pattern as a string literal.
 		return []*types.Value{{String: &value}}
 
 	case
@@ -255,7 +251,6 @@ func (q AndOrQuery) valueToTypedValue(field, value string, label labels) []*type
 		FieldCount,
 		FieldMax,
 		FieldTimeout,
-		FieldReplace,
 		FieldCombyRule:
 		return []*types.Value{{String: &value}}
 	}

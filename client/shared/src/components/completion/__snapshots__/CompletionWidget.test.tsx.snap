@@ -1,0 +1,45 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`CompletionWidgetDropdown simple 1`] = `
+Object {
+  "children": <div
+    className="completion-widget__container widget-container-class-name"
+    style={
+      Object {
+        "left": 1,
+        "top": 1,
+      }
+    }
+  >
+    <CompletionWidgetDropdown
+      completionListOrError={
+        Object {
+          "items": Array [
+            Object {
+              "label": "a",
+            },
+            Object {
+              "label": "b",
+            },
+          ],
+        }
+      }
+      highlightedIndex={0}
+      listClassName="list-class-name"
+      listItemClassName="list-item-class-name"
+      loadingClassName="loading-class-name"
+      noResultsClassName="no-results-class-name"
+      onClickOutside={[Function]}
+      onDownshiftStateChange={[Function]}
+      onItemSelected={[Function]}
+      onSelectItem={[Function]}
+      selectedItem={null}
+      selectedListItemClassName="selected-list-item-class-name"
+      textArea={<textarea />}
+      widgetClassName="widget-class-name"
+      widgetContainerClassName="widget-container-class-name"
+    />
+  </div>,
+  "className": "completion-widget widget-class-name",
+}
+`;

@@ -78,6 +78,8 @@ func extractExternalServiceID(extSvc *repos.ExternalService) (string, error) {
 		serviceID = c.Url
 	case *schema.BitbucketServerConnection:
 		serviceID = c.Url
+	case *schema.GitLabConnection:
+		serviceID = c.Url
 	}
 	if serviceID == "" {
 		return "", errors.New("could not determine service id")
@@ -105,7 +107,7 @@ func (h Webhook) upsertChangesetEvent(
 	if tx, err = h.Store.Transact(ctx); err != nil {
 		return err
 	}
-	defer tx.Done(&err)
+	defer func() { err = tx.Done(err) }()
 
 	r, err := h.getRepoForPR(ctx, tx, pr, externalServiceID)
 	if err != nil {
@@ -151,7 +153,9 @@ func (h Webhook) upsertChangesetEvent(
 		// encoded in Update. This is because some webhooks payloads don't contain
 		// all the information that we can get from the API, so we only update the
 		// bits that we know are more up to date and leave the others as they were.
-		existing.Update(event)
+		if err := existing.Update(event); err != nil {
+			return err
+		}
 		event = existing
 	}
 
@@ -165,10 +169,9 @@ func (h Webhook) upsertChangesetEvent(
 	// event we are currently handling
 	events, _, err := tx.ListChangesetEvents(ctx, ListChangesetEventsOpts{
 		ChangesetIDs: []int64{cs.ID},
-		Limit:        -1,
 	})
 	SetDerivedState(ctx, cs, events)
-	if err := tx.UpdateChangesets(ctx, cs); err != nil {
+	if err := tx.UpdateChangeset(ctx, cs); err != nil {
 		return err
 	}
 
@@ -316,6 +319,10 @@ func (h *GitHubWebhook) convertEvent(ctx context.Context, externalServiceID stri
 		prs = append(prs, pr)
 
 		switch *e.Action {
+		case "ready_for_review":
+			ours = h.readyForReviewEvent(e)
+		case "converted_to_draft":
+			ours = h.convertToDraftEvent(e)
 		case "assigned":
 			ours = h.assignedEvent(e)
 		case "unassigned":
@@ -509,6 +516,38 @@ func (*GitHubWebhook) labeledEvent(e *gh.PullRequestEvent) *github.LabelEvent {
 	}
 
 	return labelEvent
+}
+
+func (*GitHubWebhook) readyForReviewEvent(e *gh.PullRequestEvent) *github.ReadyForReviewEvent {
+	readyForReviewEvent := &github.ReadyForReviewEvent{}
+
+	if pr := e.GetPullRequest(); pr != nil {
+		readyForReviewEvent.CreatedAt = pr.GetUpdatedAt()
+	}
+
+	if s := e.GetSender(); s != nil {
+		readyForReviewEvent.Actor.AvatarURL = s.GetAvatarURL()
+		readyForReviewEvent.Actor.Login = s.GetLogin()
+		readyForReviewEvent.Actor.URL = s.GetURL()
+	}
+
+	return readyForReviewEvent
+}
+
+func (*GitHubWebhook) convertToDraftEvent(e *gh.PullRequestEvent) *github.ConvertToDraftEvent {
+	convertToDraftEvent := &github.ConvertToDraftEvent{}
+
+	if pr := e.GetPullRequest(); pr != nil {
+		convertToDraftEvent.CreatedAt = pr.GetUpdatedAt()
+	}
+
+	if s := e.GetSender(); s != nil {
+		convertToDraftEvent.Actor.AvatarURL = s.GetAvatarURL()
+		convertToDraftEvent.Actor.Login = s.GetLogin()
+		convertToDraftEvent.Actor.URL = s.GetURL()
+	}
+
+	return convertToDraftEvent
 }
 
 func (*GitHubWebhook) assignedEvent(e *gh.PullRequestEvent) *github.AssignedEvent {

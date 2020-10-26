@@ -219,25 +219,11 @@ func SearchIndexEnabled() bool {
 	return DeployType() != DeploySingleDocker
 }
 
-func SymbolIndexEnabled() bool {
-	enabled := SearchIndexEnabled()
-	if v := Get().SearchIndexSymbolsEnabled; v != nil {
-		enabled = enabled && *v
+func CampaignsEnabled() bool {
+	if enabled := Get().CampaignsEnabled; enabled != nil {
+		return *enabled
 	}
-	return enabled
-}
-
-func CampaignsReadAccessEnabled() bool {
-	if v := Get().CampaignsReadAccessEnabled; v != nil {
-		return *v
-	}
-
-	// DEPRECATED property name.
-	if v := Get().AutomationReadAccessEnabled; v != nil {
-		return *v
-	}
-
-	return false
+	return true
 }
 
 func ExternalURL() string {
@@ -263,24 +249,6 @@ func IsBuiltinSignupAllowed() bool {
 	return false
 }
 
-func Branding() *schema.Branding {
-	branding := Get().Branding
-	if branding != nil && branding.BrandName == "" {
-		bcopy := *branding
-		bcopy.BrandName = "Sourcegraph"
-		branding = &bcopy
-	}
-	return branding
-}
-
-func BrandName() string {
-	branding := Branding()
-	if branding == nil || branding.BrandName == "" {
-		return "Sourcegraph"
-	}
-	return branding.BrandName
-}
-
 // SearchSymbolsParallelism returns 20, or the site config
 // "debug.search.symbolsParallelism" value if configured.
 func SearchSymbolsParallelism() int {
@@ -289,14 +257,6 @@ func SearchSymbolsParallelism() int {
 		return 20
 	}
 	return val
-}
-
-func PermissionsBackgroundSyncEnabled() bool {
-	val := Get().PermissionsBackgroundSync
-	if val == nil {
-		return false
-	}
-	return val.Enabled
 }
 
 func BitbucketServerPluginPerm() bool {
@@ -344,4 +304,11 @@ func AuthMinPasswordLength() int {
 		return 12
 	}
 	return val
+}
+
+// ExternalServiceUserMode returns true if users are allowed to add external services
+// for public repositories.
+func ExternalServiceUserMode() bool {
+	val := Get().ExternalServiceUserMode
+	return val == "public"
 }

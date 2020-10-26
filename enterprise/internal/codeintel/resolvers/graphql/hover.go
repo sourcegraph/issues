@@ -17,5 +17,5 @@ func NewHoverResolver(text string, lspRange lsp.Range) gql.HoverResolver {
 	}
 }
 
-func (r *HoverResolver) Markdown() gql.MarkdownResolver { return gql.NewMarkdownResolver(r.text) }
-func (r *HoverResolver) Range() gql.RangeResolver       { return gql.NewRangeResolver(r.lspRange) }
+func (r *HoverResolver) Markdown() gql.Markdown   { return gql.Markdown(r.text) }
+func (r *HoverResolver) Range() gql.RangeResolver { return gql.NewRangeResolver(r.lspRange) }

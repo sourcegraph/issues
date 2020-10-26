@@ -13,6 +13,8 @@ import (
 	"github.com/goware/urlx"
 	"github.com/hashicorp/go-multierror"
 	"github.com/pkg/errors"
+	"github.com/xeipuuv/gojsonschema"
+
 	"github.com/sourcegraph/sourcegraph/internal/api"
 	"github.com/sourcegraph/sourcegraph/internal/campaigns"
 	"github.com/sourcegraph/sourcegraph/internal/extsvc"
@@ -23,8 +25,8 @@ import (
 	"github.com/sourcegraph/sourcegraph/internal/extsvc/gitolite"
 	"github.com/sourcegraph/sourcegraph/internal/jsonc"
 	"github.com/sourcegraph/sourcegraph/internal/ratelimit"
+	"github.com/sourcegraph/sourcegraph/internal/vcs/git"
 	"github.com/sourcegraph/sourcegraph/schema"
-	"github.com/xeipuuv/gojsonschema"
 )
 
 // A Changeset of an existing Repo.
@@ -38,15 +40,52 @@ type Changeset struct {
 	*Repo
 }
 
+// IsOutdated returns true when the attributes of the nested
+// campaigns.Changeset do not match the attributes (title, body, ...) set on
+// the Changeset.
+func (c *Changeset) IsOutdated() (bool, error) {
+	currentTitle, err := c.Changeset.Title()
+	if err != nil {
+		return false, err
+	}
+
+	if currentTitle != c.Title {
+		return true, nil
+	}
+
+	currentBody, err := c.Changeset.Body()
+	if err != nil {
+		return false, err
+	}
+
+	if currentBody != c.Body {
+		return true, nil
+	}
+
+	currentBaseRef, err := c.Changeset.BaseRef()
+	if err != nil {
+		return false, err
+	}
+
+	if git.EnsureRefPrefix(currentBaseRef) != git.EnsureRefPrefix(c.BaseRef) {
+		return true, nil
+	}
+
+	return false, nil
+}
+
 // An ExternalService defines a Source that yields Repos.
 type ExternalService struct {
-	ID          int64
-	Kind        string
-	DisplayName string
-	Config      string
-	CreatedAt   time.Time
-	UpdatedAt   time.Time
-	DeletedAt   time.Time
+	ID              int64
+	Kind            string
+	DisplayName     string
+	Config          string
+	CreatedAt       time.Time
+	UpdatedAt       time.Time
+	DeletedAt       time.Time
+	LastSyncAt      time.Time
+	NextSyncAt      time.Time
+	NamespaceUserID int32
 }
 
 // URN returns a unique resource identifier of this external service,
@@ -91,42 +130,6 @@ func (e *ExternalService) Update(n *ExternalService) (modified bool) {
 // Configuration returns the external service config.
 func (e ExternalService) Configuration() (cfg interface{}, _ error) {
 	return extsvc.ParseConfig(e.Kind, e.Config)
-}
-
-// BaseURL will fetch the normalised base URL from the service if
-// supported.
-func (e ExternalService) BaseURL() (*url.URL, error) {
-	config, err := extsvc.ParseConfig(e.Kind, e.Config)
-	if err != nil {
-		return nil, errors.Wrap(err, "parsing config")
-	}
-
-	var rawURL string
-	switch c := config.(type) {
-	case *schema.AWSCodeCommitConnection:
-		return nil, errors.New("BaseURL unavailable for AWSCodeCommit")
-	case *schema.BitbucketServerConnection:
-		rawURL = c.Url
-	case *schema.GitHubConnection:
-		rawURL = c.Url
-	case *schema.GitLabConnection:
-		rawURL = c.Url
-	case *schema.GitoliteConnection:
-		rawURL = c.Host
-	case *schema.PhabricatorConnection:
-		rawURL = c.Url
-	case *schema.OtherExternalServiceConnection:
-		rawURL = c.Url
-	default:
-		return nil, fmt.Errorf("unknown external service type %T", config)
-	}
-
-	parsed, err := url.Parse(rawURL)
-	if err != nil {
-		return nil, errors.Wrap(err, "parsing service URL")
-	}
-
-	return extsvc.NormalizeBaseURL(parsed), nil
 }
 
 // Exclude changes the configuration of an external service to exclude the given
@@ -564,14 +567,14 @@ type Repo struct {
 	URI string
 	// Description is a brief description of the repository.
 	Description string
-	// Language is the primary programming language used in this repository.
-	Language string
 	// Fork is whether this repository is a fork of another repository.
 	Fork bool
 	// Archived is whether the repository has been archived.
 	Archived bool
 	// Private is whether the repository is private.
 	Private bool
+	// Cloned is whether the repository is cloned.
+	Cloned bool
 	// CreatedAt is when this repository was created on Sourcegraph.
 	CreatedAt time.Time
 	// UpdatedAt is when this repository's metadata was last updated on Sourcegraph.
@@ -582,6 +585,7 @@ type Repo struct {
 	// service itself).
 	ExternalRepo api.ExternalRepoSpec
 	// Sources identifies all the repo sources this Repo belongs to.
+	// The key is a URN created by extsvc.URN
 	Sources map[string]*SourceInfo
 	// Metadata contains the raw source code host JSON metadata.
 	Metadata interface{}
@@ -648,10 +652,6 @@ func (r *Repo) Update(n *Repo) (modified bool) {
 		r.Description, modified = n.Description, true
 	}
 
-	if r.Language != n.Language {
-		r.Language, modified = n.Language, true
-	}
-
 	if n.ExternalRepo != (api.ExternalRepoSpec{}) &&
 		!r.ExternalRepo.Equal(&n.ExternalRepo) {
 		r.ExternalRepo, modified = n.ExternalRepo, true
@@ -671,6 +671,20 @@ func (r *Repo) Update(n *Repo) (modified bool) {
 
 	if !reflect.DeepEqual(r.Sources, n.Sources) {
 		r.Sources, modified = n.Sources, true
+	}
+
+	// As a special case, we clear out the value of ViewerPermission for GitHub repos as
+	// the value is dependent on the token used to fetch it. We don't want to store this in the DB as it will
+	// flip flop as we fetch the same repo from different external services.
+	switch x := n.Metadata.(type) {
+	case *github.Repository:
+		cp := *x
+		cp.ViewerPermission = ""
+		n = n.With(func(clone *Repo) {
+			// Repo.Clone does not currently clone metadata for any types as they could contain hard to clone
+			// items such as maps. However, we know that copying github.Repository is safe as it only contains values.
+			clone.Metadata = &cp
+		})
 	}
 
 	if !reflect.DeepEqual(r.Metadata, n.Metadata) {
@@ -722,7 +736,7 @@ func (r *Repo) With(opts ...func(*Repo)) *Repo {
 //
 // Context on using other fields such as timestamps to order/resolve
 // conflicts: We only want to rely on values that have constraints in our
-// database. Tmestamps have the following downsides:
+// database. Timestamps have the following downsides:
 //
 //   - We need to assume the upstream codehost has reasonable values for them
 //   - Not all codehosts set them to relevant values (eg gitolite or other)
@@ -768,7 +782,7 @@ func sortedSliceLess(a, b []string) bool {
 			return v < b[i]
 		}
 	}
-	return true
+	return len(a) != len(b)
 }
 
 // pick deterministically chooses between a and b a repo to keep and
@@ -832,6 +846,18 @@ func (rs Repos) ExternalRepos() []api.ExternalRepoSpec {
 	return specs
 }
 
+// Sources returns a map of all the sources per repo id.
+func (rs Repos) Sources() map[api.RepoID][]SourceInfo {
+	sources := make(map[api.RepoID][]SourceInfo)
+	for i := range rs {
+		for _, info := range rs[i].Sources {
+			sources[rs[i].ID] = append(sources[rs[i].ID], *info)
+		}
+	}
+
+	return sources
+}
+
 func (rs Repos) Len() int {
 	return len(rs)
 }
@@ -887,6 +913,15 @@ func (rs Repos) Filter(pred func(*Repo) bool) (fs Repos) {
 // ExternalServices is an utility type with
 // convenience methods for operating on lists of ExternalServices.
 type ExternalServices []*ExternalService
+
+// IDs returns the list of ids from all ExternalServices.
+func (es ExternalServices) IDs() []int64 {
+	ids := make([]int64, len(es))
+	for i := range es {
+		ids[i] = es[i].ID
+	}
+	return ids
+}
 
 // DisplayNames returns the list of display names from all ExternalServices.
 func (es ExternalServices) DisplayNames() []string {
@@ -957,56 +992,69 @@ type externalServiceLister interface {
 	ListExternalServices(context.Context, StoreListExternalServicesArgs) ([]*ExternalService, error)
 }
 
-// NewRateLimitSyncer returns a new syncer and attempts to perform an initial sync it. On error, an
-// empty syncer is returned which can still to handle syncs.
-func NewRateLimitSyncer(ctx context.Context, registry *ratelimit.Registry, serviceLister externalServiceLister) (*RateLimitSyncer, error) {
-	r := &RateLimitSyncer{
-		registry:      registry,
-		serviceLister: serviceLister,
-	}
-
-	// We'll return r either way as we'll try again if a service is added or updated
-	return r, r.SyncRateLimiters(ctx)
-}
-
 // RateLimitSyncer syncs rate limits based on external service configuration
 type RateLimitSyncer struct {
 	registry      *ratelimit.Registry
 	serviceLister externalServiceLister
+	// How many services to fetch in each DB call
+	limit int64
+}
+
+// NewRateLimitSyncer returns a new syncer
+func NewRateLimitSyncer(registry *ratelimit.Registry, serviceLister externalServiceLister) *RateLimitSyncer {
+	r := &RateLimitSyncer{
+		registry:      registry,
+		serviceLister: serviceLister,
+		limit:         500,
+	}
+	return r
 }
 
 // SyncRateLimiters syncs all rate limiters using current config.
 // We sync them all as we need to pick the most restrictive configured limit per code host
 // and rate limits can be defined in multiple external services for the same host.
 func (r *RateLimitSyncer) SyncRateLimiters(ctx context.Context) error {
-	services, err := r.serviceLister.ListExternalServices(ctx, StoreListExternalServicesArgs{})
-	if err != nil {
-		return errors.Wrap(err, "listing external services")
-	}
+	var cursor int64
+	byURL := make(map[string]extsvc.RateLimitConfig)
 
-	var limits []extsvc.RateLimitConfig
-	for _, svc := range services {
-		rlc, err := extsvc.ExtractRateLimitConfig(svc.Config, svc.Kind, svc.DisplayName)
+	for {
+		services, err := r.serviceLister.ListExternalServices(ctx, StoreListExternalServicesArgs{
+			Cursor: cursor,
+			Limit:  r.limit,
+		})
 		if err != nil {
-			if _, ok := err.(extsvc.ErrRateLimitUnsupported); ok {
+			return errors.Wrap(err, "listing external services")
+		}
+
+		if len(services) == 0 {
+			break
+		}
+
+		cursor = services[len(services)-1].ID
+
+		for _, svc := range services {
+			rlc, err := extsvc.ExtractRateLimitConfig(svc.Config, svc.Kind, svc.DisplayName)
+			if err != nil {
+				if _, ok := err.(extsvc.ErrRateLimitUnsupported); ok {
+					continue
+				}
+				return errors.Wrap(err, "getting rate limit configuration")
+			}
+
+			current, ok := byURL[rlc.BaseURL]
+			if !ok || (ok && current.IsDefault) {
+				byURL[rlc.BaseURL] = rlc
 				continue
 			}
-			return errors.Wrap(err, "getting rate limit configuration")
+			// Use the lower limit, but a default value should not override
+			// a limit that has been configured
+			if rlc.Limit < current.Limit && !rlc.IsDefault {
+				byURL[rlc.BaseURL] = rlc
+			}
 		}
-		limits = append(limits, rlc)
-	}
 
-	byURL := make(map[string]extsvc.RateLimitConfig)
-	for _, rlc := range limits {
-		current, ok := byURL[rlc.BaseURL]
-		if !ok || (ok && current.IsDefault) {
-			byURL[rlc.BaseURL] = rlc
-			continue
-		}
-		// Use the lower limit, but a default value should not override
-		// a limit that has been configured
-		if rlc.Limit < current.Limit && !rlc.IsDefault {
-			byURL[rlc.BaseURL] = rlc
+		if len(services) < int(r.limit) {
+			break
 		}
 	}
 

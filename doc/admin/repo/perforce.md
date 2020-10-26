@@ -1,10 +1,10 @@
 # Using Perforce repositories with Sourcegraph
 
-You can use [Perforce](https://perforce.com) repositories with Sourcegraph by using the [git p4](https://git-scm.com/docs/git-p4) adapter, which creates an equivalent Git repository from a Perforce repository, and [`src-expose`](../external_service/non-git.md), Sourcegraph's tool for serving local directories.
+You can use [Perforce](https://perforce.com) repositories with Sourcegraph by using the [git p4](https://git-scm.com/docs/git-p4) adapter, which creates an equivalent Git repository from a Perforce repository, and [`src serve-git`](../external_service/src_serve_git.md), Sourcegraph's tool for serving local directories.
 
 Screenshot of using Sourcegraph for code navigation in a Perforce repository:
 
-![Viewing a Perforce repository on Sourcegraph](https://storage.googleapis.com/sourcegraph-assets/git-p4-example.png)
+![Viewing a Perforce repository on Sourcegraph](https://sourcegraphstatic.com/git-p4-example.png)
 
 ## Instructions
 
@@ -13,25 +13,25 @@ Screenshot of using Sourcegraph for code navigation in a Perforce repository:
 - Git
 - Perforce `p4` CLI configured to access your Perforce repository
 - `git p4` (see "[Adding `git p4` to an existing install](https://git.wiki.kernel.org/index.php/GitP4#Adding_git-p4_to_an_existing_install)")
-- [`src-expose`](../external_service/non-git.md)
+- [`src serve-git`](../external_service/src_serve_git.md)
 
 ### Create an equivalent Git repository and serve it to Sourcegraph
 
 For each Perforce repository you want to use with Sourcegraph, follow these steps:
 
 1. Create a local Git repository with the contents of your Perforce repository: `git p4 clone //DEPOT/PATH@all` (replace `//DEPOT/PATH` with the Perforce repository path).
-1. Run `src-expose serve` from the parent directory that holds all of the new local Git repositories.
-1. Follow the instructions in the [`src-expose` Quickstart](../external_service/non-git.md#quickstart) to add the repositories to your Sourcegraph instance.
+1. Run `src serve-git` from the parent directory that holds all of the new local Git repositories.
+1. Follow the instructions in the [`src serve-git` Quickstart](../external_service/src_serve_git.md#quickstart) to add the repositories to your Sourcegraph instance.
 
 ### Updating Perforce repositories
 
-To update the repository after new Perforce commits are made, run `git p4 sync` in the local repository directory. These changes will be automatically reflected in Sourcegraph as long as `src-expose serve` is running.
+To update the repository after new Perforce commits are made, run `git p4 sync` in the local repository directory. These changes will be automatically reflected in Sourcegraph as long as `src serve-git` is running.
 
 We recommend running this command on a periodic basis using a cron job, or some other scheduler. The frequency will dictate how fresh the code is in Sourcegraph, and can range from once every 10s to once per day, depending on how large your codebase is and how long it takes `git p4 sync` to complete.
 
-### Alternative to `src-expose`: push the new Git repository to a code host
+### Alternative to `src serve-git`: push the new Git repository to a code host
 
-If you prefer, you can skip using `src-expose`, and instead push the new local Git repository to a Git-based code host of your choice. For updates, you would run `git p4 sync && git push` periodically.
+If you prefer, you can skip using `src serve-git`, and instead push the new local Git repository to a Git-based code host of your choice. For updates, you would run `git p4 sync && git push` periodically.
 
 If you do this, the repositories you created on your Git host are normal Git repositories, so you can [add the repositories to Sourcegraph](index.md) as you would any other Git repositories.
 

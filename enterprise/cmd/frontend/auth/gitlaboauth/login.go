@@ -1,20 +1,17 @@
 package gitlaboauth
 
 import (
-	"errors"
 	"fmt"
 	"net/http"
 	"net/url"
 
 	"github.com/dghubble/gologin"
 	oauth2Login "github.com/dghubble/gologin/oauth2"
-	"github.com/sourcegraph/sourcegraph/internal/extsvc/gitlab"
+	"github.com/pkg/errors"
 	"golang.org/x/oauth2"
+
+	"github.com/sourcegraph/sourcegraph/internal/extsvc/gitlab"
 )
-
-// GitLab login errors
-
-var ErrUnableToGetGitLabUser = errors.New("github: unable to get GitLab User")
 
 func LoginHandler(config *oauth2.Config, failure http.Handler) http.Handler {
 	return oauth2Login.LoginHandler(config, failure)
@@ -61,10 +58,10 @@ func gitlabHandler(config *oauth2.Config, success, failure http.Handler) http.Ha
 // if they are valid.
 func validateResponse(user *gitlab.User, err error) error {
 	if err != nil {
-		return ErrUnableToGetGitLabUser
+		return errors.Wrap(err, "unable to get GitLab user")
 	}
 	if user == nil || user.ID == 0 {
-		return ErrUnableToGetGitLabUser
+		return errors.Errorf("unable to get GitLab user: bad user info %#+v", user)
 	}
 	return nil
 }

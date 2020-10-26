@@ -2,7 +2,7 @@ import initStoryshots from '@storybook/addon-storyshots'
 import { puppeteerTest } from '@storybook/addon-storyshots-puppeteer'
 import * as path from 'path'
 import { pathToFileURL } from 'url'
-import { recordCoverage } from '../shared/src/testing/coverage'
+import { recordCoverage } from '../client/shared/src/testing/coverage'
 
 // This test suite does not actually test anything.
 // It just loads up the storybook in Puppeteer and records its coverage,

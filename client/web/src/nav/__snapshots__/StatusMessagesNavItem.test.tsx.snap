@@ -1,0 +1,801 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`StatusMessagesNavItem no messages 1`] = `
+<StatusMessagesNavItem
+  fetchMessages={[Function]}
+  history="[History]"
+  isSiteAdmin={false}
+>
+  <ButtonDropdown
+    className="nav-link py-0 px-0 percy-hide chromatic-ignore"
+    isOpen={false}
+    toggle={[Function]}
+  >
+    <Dropdown
+      a11y={true}
+      active={false}
+      addonType={false}
+      className="nav-link py-0 px-0 percy-hide chromatic-ignore"
+      direction="down"
+      group={true}
+      inNavbar={false}
+      isOpen={false}
+      nav={false}
+      setActiveFromChild={false}
+      toggle={[Function]}
+    >
+      <Manager>
+        <div
+          className="nav-link py-0 px-0 percy-hide chromatic-ignore btn-group"
+          onKeyDown={[Function]}
+        >
+          <DropdownToggle
+            aria-haspopup={true}
+            caret={false}
+            className="btn btn-link"
+            color="secondary"
+            nav={true}
+          >
+            <Reference>
+              <InnerReference
+                setReferenceNode={[Function]}
+              >
+                <a
+                  aria-expanded={false}
+                  aria-haspopup={true}
+                  className="btn btn-link nav-link"
+                  href="#"
+                  onClick={[Function]}
+                >
+                  <Memo(CloudCheckIcon)
+                    className="icon-inline"
+                    data-tooltip="Repositories up to date"
+                  />
+                </a>
+              </InnerReference>
+            </Reference>
+          </DropdownToggle>
+          <DropdownMenu
+            className="status-messages-nav-item__dropdown-menu"
+            flip={true}
+            right={true}
+            tag="div"
+          >
+            <div
+              aria-hidden={true}
+              className="status-messages-nav-item__dropdown-menu dropdown-menu dropdown-menu-right"
+              role="menu"
+              tabIndex="-1"
+            >
+              <h3>
+                Code host status
+              </h3>
+              <div
+                className="status-messages-nav-item__dropdown-menu-content"
+              >
+                <StatusMessagesNavItemEntry
+                  entryType="success"
+                  linkOnClick={[Function]}
+                  linkText="Manage repositories"
+                  linkTo="/site-admin/external-services"
+                  showLink={false}
+                  text="All repositories hosted on the configured code hosts are synced."
+                  title="Repositories up to date"
+                >
+                  <div
+                    className="status-messages-nav-item__entry mb-3 status-messages-nav-item__entry--border-success"
+                    key="All repositories hosted on the configured code hosts are synced."
+                  >
+                    <h4>
+                      <Memo(CloudCheckIcon)
+                        className="icon-inline mr-1"
+                      />
+                      Repositories up to date
+                    </h4>
+                    <p>
+                      All repositories hosted on the configured code hosts are synced.
+                    </p>
+                  </div>
+                </StatusMessagesNavItemEntry>
+              </div>
+            </div>
+          </DropdownMenu>
+        </div>
+      </Manager>
+    </Dropdown>
+  </ButtonDropdown>
+</StatusMessagesNavItem>
+`;
+
+exports[`StatusMessagesNavItem one CloningProgress message as non-site admin 1`] = `
+<StatusMessagesNavItem
+  fetchMessages={[Function]}
+  history="[History]"
+  isSiteAdmin={false}
+>
+  <ButtonDropdown
+    className="nav-link py-0 px-0 percy-hide chromatic-ignore"
+    isOpen={false}
+    toggle={[Function]}
+  >
+    <Dropdown
+      a11y={true}
+      active={false}
+      addonType={false}
+      className="nav-link py-0 px-0 percy-hide chromatic-ignore"
+      direction="down"
+      group={true}
+      inNavbar={false}
+      isOpen={false}
+      nav={false}
+      setActiveFromChild={false}
+      toggle={[Function]}
+    >
+      <Manager>
+        <div
+          className="nav-link py-0 px-0 percy-hide chromatic-ignore btn-group"
+          onKeyDown={[Function]}
+        >
+          <DropdownToggle
+            aria-haspopup={true}
+            caret={false}
+            className="btn btn-link"
+            color="secondary"
+            nav={true}
+          >
+            <Reference>
+              <InnerReference
+                setReferenceNode={[Function]}
+              >
+                <a
+                  aria-expanded={false}
+                  aria-haspopup={true}
+                  className="btn btn-link nav-link"
+                  href="#"
+                  onClick={[Function]}
+                >
+                  <Memo(CloudSyncIcon)
+                    className="icon-inline"
+                    data-tooltip="Cloning repositories..."
+                  />
+                </a>
+              </InnerReference>
+            </Reference>
+          </DropdownToggle>
+          <DropdownMenu
+            className="status-messages-nav-item__dropdown-menu"
+            flip={true}
+            right={true}
+            tag="div"
+          >
+            <div
+              aria-hidden={true}
+              className="status-messages-nav-item__dropdown-menu dropdown-menu dropdown-menu-right"
+              role="menu"
+              tabIndex="-1"
+            >
+              <h3>
+                Code host status
+              </h3>
+              <div
+                className="status-messages-nav-item__dropdown-menu-content"
+              >
+                <StatusMessagesNavItemEntry
+                  entryType="progress"
+                  key="0"
+                  linkOnClick={[Function]}
+                  linkText="Configure synced repositories"
+                  linkTo="/site-admin/external-services"
+                  showLink={false}
+                  text="Currently cloning repositories..."
+                  title="Repositories cloning"
+                >
+                  <div
+                    className="status-messages-nav-item__entry mb-3 status-messages-nav-item__entry--border-progress"
+                    key="Currently cloning repositories..."
+                  >
+                    <h4>
+                      <Memo(CloudSyncIcon)
+                        className="icon-inline mr-1"
+                      />
+                      Repositories cloning
+                    </h4>
+                    <p>
+                      Currently cloning repositories...
+                    </p>
+                  </div>
+                </StatusMessagesNavItemEntry>
+              </div>
+            </div>
+          </DropdownMenu>
+        </div>
+      </Manager>
+    </Dropdown>
+  </ButtonDropdown>
+</StatusMessagesNavItem>
+`;
+
+exports[`StatusMessagesNavItem one CloningProgress message as site admin 1`] = `
+<StatusMessagesNavItem
+  fetchMessages={[Function]}
+  history="[History]"
+  isSiteAdmin={true}
+>
+  <ButtonDropdown
+    className="nav-link py-0 px-0 percy-hide chromatic-ignore"
+    isOpen={false}
+    toggle={[Function]}
+  >
+    <Dropdown
+      a11y={true}
+      active={false}
+      addonType={false}
+      className="nav-link py-0 px-0 percy-hide chromatic-ignore"
+      direction="down"
+      group={true}
+      inNavbar={false}
+      isOpen={false}
+      nav={false}
+      setActiveFromChild={false}
+      toggle={[Function]}
+    >
+      <Manager>
+        <div
+          className="nav-link py-0 px-0 percy-hide chromatic-ignore btn-group"
+          onKeyDown={[Function]}
+        >
+          <DropdownToggle
+            aria-haspopup={true}
+            caret={false}
+            className="btn btn-link"
+            color="secondary"
+            nav={true}
+          >
+            <Reference>
+              <InnerReference
+                setReferenceNode={[Function]}
+              >
+                <a
+                  aria-expanded={false}
+                  aria-haspopup={true}
+                  className="btn btn-link nav-link"
+                  href="#"
+                  onClick={[Function]}
+                >
+                  <Memo(CloudSyncIcon)
+                    className="icon-inline"
+                    data-tooltip="Cloning repositories..."
+                  />
+                </a>
+              </InnerReference>
+            </Reference>
+          </DropdownToggle>
+          <DropdownMenu
+            className="status-messages-nav-item__dropdown-menu"
+            flip={true}
+            right={true}
+            tag="div"
+          >
+            <div
+              aria-hidden={true}
+              className="status-messages-nav-item__dropdown-menu dropdown-menu dropdown-menu-right"
+              role="menu"
+              tabIndex="-1"
+            >
+              <h3>
+                Code host status
+              </h3>
+              <div
+                className="status-messages-nav-item__dropdown-menu-content"
+              >
+                <StatusMessagesNavItemEntry
+                  entryType="progress"
+                  key="0"
+                  linkOnClick={[Function]}
+                  linkText="Configure synced repositories"
+                  linkTo="/site-admin/external-services"
+                  showLink={true}
+                  text="Currently cloning repositories..."
+                  title="Repositories cloning"
+                >
+                  <div
+                    className="status-messages-nav-item__entry mb-3 status-messages-nav-item__entry--border-progress"
+                    key="Currently cloning repositories..."
+                  >
+                    <h4>
+                      <Memo(CloudSyncIcon)
+                        className="icon-inline mr-1"
+                      />
+                      Repositories cloning
+                    </h4>
+                    <p>
+                      Currently cloning repositories...
+                    </p>
+                    <p
+                      className="status-messages-nav-item__entry-link"
+                    >
+                      <AnchorLink
+                        onClick={[Function]}
+                        to="/site-admin/external-services"
+                      >
+                        <a
+                          href="/site-admin/external-services"
+                          onClick={[Function]}
+                        >
+                          Configure synced repositories
+                        </a>
+                      </AnchorLink>
+                    </p>
+                  </div>
+                </StatusMessagesNavItemEntry>
+              </div>
+            </div>
+          </DropdownMenu>
+        </div>
+      </Manager>
+    </Dropdown>
+  </ButtonDropdown>
+</StatusMessagesNavItem>
+`;
+
+exports[`StatusMessagesNavItem one ExternalServiceSyncError message as non-site admin 1`] = `
+<StatusMessagesNavItem
+  fetchMessages={[Function]}
+  history="[History]"
+  isSiteAdmin={false}
+>
+  <ButtonDropdown
+    className="nav-link py-0 px-0 percy-hide chromatic-ignore"
+    isOpen={false}
+    toggle={[Function]}
+  >
+    <Dropdown
+      a11y={true}
+      active={false}
+      addonType={false}
+      className="nav-link py-0 px-0 percy-hide chromatic-ignore"
+      direction="down"
+      group={true}
+      inNavbar={false}
+      isOpen={false}
+      nav={false}
+      setActiveFromChild={false}
+      toggle={[Function]}
+    >
+      <Manager>
+        <div
+          className="nav-link py-0 px-0 percy-hide chromatic-ignore btn-group"
+          onKeyDown={[Function]}
+        >
+          <DropdownToggle
+            aria-haspopup={true}
+            caret={false}
+            className="btn btn-link"
+            color="secondary"
+            nav={true}
+          >
+            <Reference>
+              <InnerReference
+                setReferenceNode={[Function]}
+              >
+                <a
+                  aria-expanded={false}
+                  aria-haspopup={true}
+                  className="btn btn-link nav-link"
+                  href="#"
+                  onClick={[Function]}
+                >
+                  <Memo(CloudAlertIcon)
+                    className="icon-inline"
+                    data-tooltip="Syncing repositories failed!"
+                  />
+                </a>
+              </InnerReference>
+            </Reference>
+          </DropdownToggle>
+          <DropdownMenu
+            className="status-messages-nav-item__dropdown-menu"
+            flip={true}
+            right={true}
+            tag="div"
+          >
+            <div
+              aria-hidden={true}
+              className="status-messages-nav-item__dropdown-menu dropdown-menu dropdown-menu-right"
+              role="menu"
+              tabIndex="-1"
+            >
+              <h3>
+                Code host status
+              </h3>
+              <div
+                className="status-messages-nav-item__dropdown-menu-content"
+              >
+                <StatusMessagesNavItemEntry
+                  entryType="warning"
+                  key="0"
+                  linkOnClick={[Function]}
+                  linkText="Edit \\"GitHub.com\\""
+                  linkTo="/site-admin/external-services/abcd"
+                  showLink={false}
+                  text="failed to list organization kubernetes repos: request returned status 404: Not Found"
+                  title="Syncing repositories from external service \\"GitHub.com\\" failed:"
+                >
+                  <div
+                    className="status-messages-nav-item__entry mb-3 status-messages-nav-item__entry--border-warning"
+                    key="failed to list organization kubernetes repos: request returned status 404: Not Found"
+                  >
+                    <h4>
+                      <Memo(CloudAlertIcon)
+                        className="icon-inline mr-1"
+                      />
+                      Syncing repositories from external service "GitHub.com" failed:
+                    </h4>
+                    <p>
+                      failed to list organization kubernetes repos: request returned status 404: Not Found
+                    </p>
+                  </div>
+                </StatusMessagesNavItemEntry>
+              </div>
+            </div>
+          </DropdownMenu>
+        </div>
+      </Manager>
+    </Dropdown>
+  </ButtonDropdown>
+</StatusMessagesNavItem>
+`;
+
+exports[`StatusMessagesNavItem one ExternalServiceSyncError message as site admin 1`] = `
+<StatusMessagesNavItem
+  fetchMessages={[Function]}
+  history="[History]"
+  isSiteAdmin={true}
+>
+  <ButtonDropdown
+    className="nav-link py-0 px-0 percy-hide chromatic-ignore"
+    isOpen={false}
+    toggle={[Function]}
+  >
+    <Dropdown
+      a11y={true}
+      active={false}
+      addonType={false}
+      className="nav-link py-0 px-0 percy-hide chromatic-ignore"
+      direction="down"
+      group={true}
+      inNavbar={false}
+      isOpen={false}
+      nav={false}
+      setActiveFromChild={false}
+      toggle={[Function]}
+    >
+      <Manager>
+        <div
+          className="nav-link py-0 px-0 percy-hide chromatic-ignore btn-group"
+          onKeyDown={[Function]}
+        >
+          <DropdownToggle
+            aria-haspopup={true}
+            caret={false}
+            className="btn btn-link"
+            color="secondary"
+            nav={true}
+          >
+            <Reference>
+              <InnerReference
+                setReferenceNode={[Function]}
+              >
+                <a
+                  aria-expanded={false}
+                  aria-haspopup={true}
+                  className="btn btn-link nav-link"
+                  href="#"
+                  onClick={[Function]}
+                >
+                  <Memo(CloudAlertIcon)
+                    className="icon-inline"
+                    data-tooltip="Syncing repositories failed!"
+                  />
+                </a>
+              </InnerReference>
+            </Reference>
+          </DropdownToggle>
+          <DropdownMenu
+            className="status-messages-nav-item__dropdown-menu"
+            flip={true}
+            right={true}
+            tag="div"
+          >
+            <div
+              aria-hidden={true}
+              className="status-messages-nav-item__dropdown-menu dropdown-menu dropdown-menu-right"
+              role="menu"
+              tabIndex="-1"
+            >
+              <h3>
+                Code host status
+              </h3>
+              <div
+                className="status-messages-nav-item__dropdown-menu-content"
+              >
+                <StatusMessagesNavItemEntry
+                  entryType="warning"
+                  key="0"
+                  linkOnClick={[Function]}
+                  linkText="Edit \\"GitHub.com\\""
+                  linkTo="/site-admin/external-services/abcd"
+                  showLink={true}
+                  text="failed to list organization kubernetes repos: request returned status 404: Not Found"
+                  title="Syncing repositories from external service \\"GitHub.com\\" failed:"
+                >
+                  <div
+                    className="status-messages-nav-item__entry mb-3 status-messages-nav-item__entry--border-warning"
+                    key="failed to list organization kubernetes repos: request returned status 404: Not Found"
+                  >
+                    <h4>
+                      <Memo(CloudAlertIcon)
+                        className="icon-inline mr-1"
+                      />
+                      Syncing repositories from external service "GitHub.com" failed:
+                    </h4>
+                    <p>
+                      failed to list organization kubernetes repos: request returned status 404: Not Found
+                    </p>
+                    <p
+                      className="status-messages-nav-item__entry-link"
+                    >
+                      <AnchorLink
+                        onClick={[Function]}
+                        to="/site-admin/external-services/abcd"
+                      >
+                        <a
+                          href="/site-admin/external-services/abcd"
+                          onClick={[Function]}
+                        >
+                          Edit "GitHub.com"
+                        </a>
+                      </AnchorLink>
+                    </p>
+                  </div>
+                </StatusMessagesNavItemEntry>
+              </div>
+            </div>
+          </DropdownMenu>
+        </div>
+      </Manager>
+    </Dropdown>
+  </ButtonDropdown>
+</StatusMessagesNavItem>
+`;
+
+exports[`StatusMessagesNavItem one SyncError message as non-site admin 1`] = `
+<StatusMessagesNavItem
+  fetchMessages={[Function]}
+  history="[History]"
+  isSiteAdmin={false}
+>
+  <ButtonDropdown
+    className="nav-link py-0 px-0 percy-hide chromatic-ignore"
+    isOpen={false}
+    toggle={[Function]}
+  >
+    <Dropdown
+      a11y={true}
+      active={false}
+      addonType={false}
+      className="nav-link py-0 px-0 percy-hide chromatic-ignore"
+      direction="down"
+      group={true}
+      inNavbar={false}
+      isOpen={false}
+      nav={false}
+      setActiveFromChild={false}
+      toggle={[Function]}
+    >
+      <Manager>
+        <div
+          className="nav-link py-0 px-0 percy-hide chromatic-ignore btn-group"
+          onKeyDown={[Function]}
+        >
+          <DropdownToggle
+            aria-haspopup={true}
+            caret={false}
+            className="btn btn-link"
+            color="secondary"
+            nav={true}
+          >
+            <Reference>
+              <InnerReference
+                setReferenceNode={[Function]}
+              >
+                <a
+                  aria-expanded={false}
+                  aria-haspopup={true}
+                  className="btn btn-link nav-link"
+                  href="#"
+                  onClick={[Function]}
+                >
+                  <Memo(CloudCheckIcon)
+                    className="icon-inline"
+                    data-tooltip="Repositories up to date"
+                  />
+                </a>
+              </InnerReference>
+            </Reference>
+          </DropdownToggle>
+          <DropdownMenu
+            className="status-messages-nav-item__dropdown-menu"
+            flip={true}
+            right={true}
+            tag="div"
+          >
+            <div
+              aria-hidden={true}
+              className="status-messages-nav-item__dropdown-menu dropdown-menu dropdown-menu-right"
+              role="menu"
+              tabIndex="-1"
+            >
+              <h3>
+                Code host status
+              </h3>
+              <div
+                className="status-messages-nav-item__dropdown-menu-content"
+              >
+                <StatusMessagesNavItemEntry
+                  entryType="warning"
+                  key="0"
+                  linkOnClick={[Function]}
+                  linkText="Configure synced repositories"
+                  linkTo="/site-admin/external-services"
+                  showLink={false}
+                  text="syncer.sync.store.upsert-repos: pg: unique constraint foobar"
+                  title="Syncing repositories failed:"
+                >
+                  <div
+                    className="status-messages-nav-item__entry mb-3 status-messages-nav-item__entry--border-warning"
+                    key="syncer.sync.store.upsert-repos: pg: unique constraint foobar"
+                  >
+                    <h4>
+                      <Memo(CloudAlertIcon)
+                        className="icon-inline mr-1"
+                      />
+                      Syncing repositories failed:
+                    </h4>
+                    <p>
+                      syncer.sync.store.upsert-repos: pg: unique constraint foobar
+                    </p>
+                  </div>
+                </StatusMessagesNavItemEntry>
+              </div>
+            </div>
+          </DropdownMenu>
+        </div>
+      </Manager>
+    </Dropdown>
+  </ButtonDropdown>
+</StatusMessagesNavItem>
+`;
+
+exports[`StatusMessagesNavItem one SyncError message as site admin 1`] = `
+<StatusMessagesNavItem
+  fetchMessages={[Function]}
+  history="[History]"
+  isSiteAdmin={true}
+>
+  <ButtonDropdown
+    className="nav-link py-0 px-0 percy-hide chromatic-ignore"
+    isOpen={false}
+    toggle={[Function]}
+  >
+    <Dropdown
+      a11y={true}
+      active={false}
+      addonType={false}
+      className="nav-link py-0 px-0 percy-hide chromatic-ignore"
+      direction="down"
+      group={true}
+      inNavbar={false}
+      isOpen={false}
+      nav={false}
+      setActiveFromChild={false}
+      toggle={[Function]}
+    >
+      <Manager>
+        <div
+          className="nav-link py-0 px-0 percy-hide chromatic-ignore btn-group"
+          onKeyDown={[Function]}
+        >
+          <DropdownToggle
+            aria-haspopup={true}
+            caret={false}
+            className="btn btn-link"
+            color="secondary"
+            nav={true}
+          >
+            <Reference>
+              <InnerReference
+                setReferenceNode={[Function]}
+              >
+                <a
+                  aria-expanded={false}
+                  aria-haspopup={true}
+                  className="btn btn-link nav-link"
+                  href="#"
+                  onClick={[Function]}
+                >
+                  <Memo(CloudCheckIcon)
+                    className="icon-inline"
+                    data-tooltip="Repositories up to date"
+                  />
+                </a>
+              </InnerReference>
+            </Reference>
+          </DropdownToggle>
+          <DropdownMenu
+            className="status-messages-nav-item__dropdown-menu"
+            flip={true}
+            right={true}
+            tag="div"
+          >
+            <div
+              aria-hidden={true}
+              className="status-messages-nav-item__dropdown-menu dropdown-menu dropdown-menu-right"
+              role="menu"
+              tabIndex="-1"
+            >
+              <h3>
+                Code host status
+              </h3>
+              <div
+                className="status-messages-nav-item__dropdown-menu-content"
+              >
+                <StatusMessagesNavItemEntry
+                  entryType="warning"
+                  key="0"
+                  linkOnClick={[Function]}
+                  linkText="Configure synced repositories"
+                  linkTo="/site-admin/external-services"
+                  showLink={true}
+                  text="syncer.sync.store.upsert-repos: pg: unique constraint foobar"
+                  title="Syncing repositories failed:"
+                >
+                  <div
+                    className="status-messages-nav-item__entry mb-3 status-messages-nav-item__entry--border-warning"
+                    key="syncer.sync.store.upsert-repos: pg: unique constraint foobar"
+                  >
+                    <h4>
+                      <Memo(CloudAlertIcon)
+                        className="icon-inline mr-1"
+                      />
+                      Syncing repositories failed:
+                    </h4>
+                    <p>
+                      syncer.sync.store.upsert-repos: pg: unique constraint foobar
+                    </p>
+                    <p
+                      className="status-messages-nav-item__entry-link"
+                    >
+                      <AnchorLink
+                        onClick={[Function]}
+                        to="/site-admin/external-services"
+                      >
+                        <a
+                          href="/site-admin/external-services"
+                          onClick={[Function]}
+                        >
+                          Configure synced repositories
+                        </a>
+                      </AnchorLink>
+                    </p>
+                  </div>
+                </StatusMessagesNavItemEntry>
+              </div>
+            </div>
+          </DropdownMenu>
+        </div>
+      </Manager>
+    </Dropdown>
+  </ButtonDropdown>
+</StatusMessagesNavItem>
+`;

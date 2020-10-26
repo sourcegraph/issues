@@ -672,6 +672,7 @@ func TestSyncRateLimiters(t *testing.T) {
 			r := &RateLimitSyncer{
 				registry:      reg,
 				serviceLister: makeLister(tc.options...),
+				limit:         10,
 			}
 
 			err := r.SyncRateLimiters(ctx)

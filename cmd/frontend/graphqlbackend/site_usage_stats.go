@@ -4,7 +4,7 @@ import (
 	"context"
 	"time"
 
-	"github.com/sourcegraph/sourcegraph/cmd/frontend/internal/pkg/usagestatsdeprecated"
+	"github.com/sourcegraph/sourcegraph/cmd/frontend/internal/usagestatsdeprecated"
 	"github.com/sourcegraph/sourcegraph/cmd/frontend/types"
 )
 
@@ -79,61 +79,4 @@ func (s *siteUsagePeriodResolver) AnonymousUserCount() int32 {
 
 func (s *siteUsagePeriodResolver) IntegrationUserCount() int32 {
 	return s.siteUsagePeriod.IntegrationUserCount
-}
-
-func (s *siteUsagePeriodResolver) Stages() *siteUsageStagesResolver {
-	if s.siteUsagePeriod.Stages == nil {
-		return nil
-	}
-	return &siteUsageStagesResolver{
-		stages: s.siteUsagePeriod.Stages,
-	}
-}
-
-type siteUsageStagesResolver struct {
-	stages *types.Stages
-}
-
-func (s *siteUsageStagesResolver) Manage() int32 {
-	return s.stages.Manage
-}
-
-func (s *siteUsageStagesResolver) Plan() int32 {
-	return s.stages.Plan
-}
-
-func (s *siteUsageStagesResolver) Code() int32 {
-	return s.stages.Code
-}
-
-func (s *siteUsageStagesResolver) Review() int32 {
-	return s.stages.Review
-}
-
-func (s *siteUsageStagesResolver) Verify() int32 {
-	return s.stages.Verify
-}
-
-func (s *siteUsageStagesResolver) Package() int32 {
-	return s.stages.Package
-}
-
-func (s *siteUsageStagesResolver) Deploy() int32 {
-	return s.stages.Deploy
-}
-
-func (s *siteUsageStagesResolver) Configure() int32 {
-	return s.stages.Configure
-}
-
-func (s *siteUsageStagesResolver) Monitor() int32 {
-	return s.stages.Monitor
-}
-
-func (s *siteUsageStagesResolver) Secure() int32 {
-	return s.stages.Secure
-}
-
-func (s *siteUsageStagesResolver) Automate() int32 {
-	return s.stages.Automate
 }

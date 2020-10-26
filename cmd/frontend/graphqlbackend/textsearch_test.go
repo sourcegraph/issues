@@ -8,9 +8,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/google/zoekt"
 	"github.com/pkg/errors"
 	"github.com/sourcegraph/sourcegraph/cmd/frontend/types"
+	"github.com/sourcegraph/sourcegraph/cmd/searcher/protocol"
 	"github.com/sourcegraph/sourcegraph/internal/api"
 	"github.com/sourcegraph/sourcegraph/internal/conf"
 	"github.com/sourcegraph/sourcegraph/internal/endpoint"
@@ -19,6 +19,7 @@ import (
 	"github.com/sourcegraph/sourcegraph/internal/search"
 	searchbackend "github.com/sourcegraph/sourcegraph/internal/search/backend"
 	"github.com/sourcegraph/sourcegraph/internal/search/query"
+	"github.com/sourcegraph/sourcegraph/internal/search/searcher"
 	"github.com/sourcegraph/sourcegraph/internal/vcs"
 	"github.com/sourcegraph/sourcegraph/internal/vcs/git"
 	"github.com/sourcegraph/sourcegraph/schema"
@@ -58,7 +59,7 @@ func TestSearchFilesInRepos(t *testing.T) {
 	}
 	defer func() { mockSearchFilesInRepo = nil }()
 
-	zoekt := &searchbackend.Zoekt{Client: &fakeSearcher{repos: &zoekt.RepoList{}}}
+	zoekt := &searchbackend.Zoekt{Client: &fakeSearcher{}}
 
 	q, err := query.ParseAndCheck("foo")
 	if err != nil {
@@ -69,7 +70,7 @@ func TestSearchFilesInRepos(t *testing.T) {
 			FileMatchLimit: defaultMaxSearchResults,
 			Pattern:        "foo",
 		},
-		Repos:        makeRepositoryRevisions("foo/one", "foo/two", "foo/empty", "foo/cloning", "foo/missing", "foo/missing-db", "foo/timedout", "foo/no-rev"),
+		RepoPromise:  (&search.Promise{}).Resolve(makeRepositoryRevisions("foo/one", "foo/two", "foo/empty", "foo/cloning", "foo/missing", "foo/missing-db", "foo/timedout", "foo/no-rev")),
 		Query:        q,
 		Zoekt:        zoekt,
 		SearcherURLs: endpoint.Static("test"),
@@ -99,7 +100,7 @@ func TestSearchFilesInRepos(t *testing.T) {
 			FileMatchLimit: defaultMaxSearchResults,
 			Pattern:        "foo",
 		},
-		Repos:        makeRepositoryRevisions("foo/no-rev@dev"),
+		RepoPromise:  (&search.Promise{}).Resolve(makeRepositoryRevisions("foo/no-rev@dev")),
 		Query:        q,
 		Zoekt:        zoekt,
 		SearcherURLs: endpoint.Static("test"),
@@ -133,7 +134,7 @@ func TestSearchFilesInRepos_multipleRevsPerRepo(t *testing.T) {
 	}})
 	defer conf.Mock(nil)
 
-	zoekt := &searchbackend.Zoekt{Client: &fakeSearcher{repos: &zoekt.RepoList{}}}
+	zoekt := &searchbackend.Zoekt{Client: &fakeSearcher{}}
 
 	q, err := query.ParseAndCheck("foo")
 	if err != nil {
@@ -144,12 +145,13 @@ func TestSearchFilesInRepos_multipleRevsPerRepo(t *testing.T) {
 			FileMatchLimit: defaultMaxSearchResults,
 			Pattern:        "foo",
 		},
-		Repos:        makeRepositoryRevisions("foo@master:mybranch:*refs/heads/"),
+		RepoPromise:  (&search.Promise{}).Resolve(makeRepositoryRevisions("foo@master:mybranch:*refs/heads/")),
 		Query:        q,
 		Zoekt:        zoekt,
 		SearcherURLs: endpoint.Static("test"),
 	}
-	args.Repos[0].ListRefs = func(context.Context, gitserver.Repo) ([]git.Ref, error) {
+	repos, _ := getRepos(context.Background(), args.RepoPromise)
+	repos[0].ListRefs = func(context.Context, gitserver.Repo) ([]git.Ref, error) {
 		return []git.Ref{{Name: "refs/heads/branch3"}, {Name: "refs/heads/branch4"}}, nil
 	}
 	results, _, err := searchFilesInRepos(context.Background(), args)
@@ -175,22 +177,18 @@ func TestSearchFilesInRepos_multipleRevsPerRepo(t *testing.T) {
 }
 
 func TestRepoShouldBeSearched(t *testing.T) {
-	mockTextSearch = func(ctx context.Context, repo gitserver.Repo, commit api.CommitID, p *search.TextPatternInfo, fetchTimeout time.Duration) (matches []*FileMatchResolver, limitHit bool, err error) {
+	searcher.MockSearch = func(ctx context.Context, repo gitserver.Repo, commit api.CommitID, p *search.TextPatternInfo, fetchTimeout time.Duration) (matches []*protocol.FileMatch, limitHit bool, err error) {
 		repoName := repo.Name
 		switch repoName {
 		case "foo/one":
-			return []*FileMatchResolver{
-				{
-					uri: "git://" + string(repoName) + "?1a2b3c#" + "main.go",
-				},
-			}, false, nil
+			return []*protocol.FileMatch{{Path: "main.go"}}, false, nil
 		case "foo/no-filematch":
-			return []*FileMatchResolver{}, false, nil
+			return []*protocol.FileMatch{}, false, nil
 		default:
 			return nil, false, errors.New("Unexpected repo")
 		}
 	}
-	defer func() { mockTextSearch = nil }()
+	defer func() { searcher.MockSearch = nil }()
 	info := &search.TextPatternInfo{
 		FileMatchLimit:               defaultMaxSearchResults,
 		Pattern:                      "foo",

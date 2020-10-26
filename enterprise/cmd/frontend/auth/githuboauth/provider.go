@@ -8,6 +8,7 @@ import (
 	"github.com/sourcegraph/sourcegraph/cmd/frontend/envvar"
 	"github.com/sourcegraph/sourcegraph/enterprise/cmd/frontend/auth/oauth"
 	"github.com/sourcegraph/sourcegraph/internal/extsvc"
+	"github.com/sourcegraph/sourcegraph/internal/lazyregexp"
 	"github.com/sourcegraph/sourcegraph/schema"
 	"golang.org/x/oauth2"
 )
@@ -23,6 +24,12 @@ func parseProvider(p *schema.GitHubAuthProvider, sourceCfg schema.AuthProviders)
 	if err != nil {
 		messages = append(messages, fmt.Sprintf("Could not parse GitHub URL %q. You will not be able to login via this GitHub instance.", rawURL))
 		return nil, messages
+	}
+	if !validateClientIDAndSecret(p.ClientID) {
+		messages = append(messages, "GitHub client ID contains unexpected characters, possibly hidden")
+	}
+	if !validateClientIDAndSecret(p.ClientSecret) {
+		messages = append(messages, "GitHub client secret contains unexpected characters, possibly hidden")
 	}
 	codeHost := extsvc.NewCodeHost(parsedURL, extsvc.TypeGitHub)
 	oauth2Cfg := oauth2.Config{
@@ -52,7 +59,13 @@ func parseProvider(p *schema.GitHubAuthProvider, sourceCfg schema.AuthProviders)
 			}, sessionKey),
 			nil,
 		),
-	}), nil
+	}), messages
+}
+
+var clientIDSecretValidator = lazyregexp.New("^[a-z0-9]*$")
+
+func validateClientIDAndSecret(clientIDOrSecret string) (valid bool) {
+	return clientIDSecretValidator.MatchString(clientIDOrSecret)
 }
 
 func requestedScopes(p *schema.GitHubAuthProvider) []string {

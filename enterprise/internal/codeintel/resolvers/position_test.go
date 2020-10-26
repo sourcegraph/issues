@@ -16,7 +16,7 @@ import (
 )
 
 func TestAdjustPath(t *testing.T) {
-	adjuster := NewPositionAdjuster(&types.Repo{ID: 50}, "deadbeef1")
+	adjuster := NewPositionAdjuster(&types.Repo{ID: 50}, "deadbeef1", nil)
 	path, ok, err := adjuster.AdjustPath(context.Background(), "deadbeef2", "/foo/bar.go", false)
 	if err != nil {
 		t.Fatalf("unexpected error: %s", err)
@@ -45,7 +45,7 @@ func TestAdjustPosition(t *testing.T) {
 
 	posIn := bundles.Position{Line: 302, Character: 15}
 
-	adjuster := NewPositionAdjuster(&types.Repo{ID: 50}, "deadbeef1")
+	adjuster := NewPositionAdjuster(&types.Repo{ID: 50}, "deadbeef1", nil)
 	path, posOut, ok, err := adjuster.AdjustPosition(context.Background(), "deadbeef2", "/foo/bar.go", posIn, false)
 	if err != nil {
 		t.Fatalf("unexpected error: %s", err)
@@ -74,7 +74,7 @@ func TestAdjustPositionEmptyDiff(t *testing.T) {
 
 	posIn := bundles.Position{Line: 10, Character: 15}
 
-	adjuster := NewPositionAdjuster(&types.Repo{ID: 50}, "deadbeef1")
+	adjuster := NewPositionAdjuster(&types.Repo{ID: 50}, "deadbeef1", nil)
 	path, posOut, ok, err := adjuster.AdjustPosition(context.Background(), "deadbeef2", "/foo/bar.go", posIn, false)
 	if err != nil {
 		t.Fatalf("unexpected error: %s", err)
@@ -106,7 +106,7 @@ func TestAdjustPositionReverse(t *testing.T) {
 
 	posIn := bundles.Position{Line: 302, Character: 15}
 
-	adjuster := NewPositionAdjuster(&types.Repo{ID: 50}, "deadbeef1")
+	adjuster := NewPositionAdjuster(&types.Repo{ID: 50}, "deadbeef1", nil)
 	path, posOut, ok, err := adjuster.AdjustPosition(context.Background(), "deadbeef2", "/foo/bar.go", posIn, true)
 	if err != nil {
 		t.Fatalf("unexpected error: %s", err)
@@ -143,7 +143,7 @@ func TestAdjustRange(t *testing.T) {
 		End:   bundles.Position{Line: 305, Character: 20},
 	}
 
-	adjuster := NewPositionAdjuster(&types.Repo{ID: 50}, "deadbeef1")
+	adjuster := NewPositionAdjuster(&types.Repo{ID: 50}, "deadbeef1", nil)
 	path, rOut, ok, err := adjuster.AdjustRange(context.Background(), "deadbeef2", "/foo/bar.go", rIn, false)
 	if err != nil {
 		t.Fatalf("unexpected error: %s", err)
@@ -178,7 +178,7 @@ func TestAdjustRangeEmptyDiff(t *testing.T) {
 		End:   bundles.Position{Line: 305, Character: 20},
 	}
 
-	adjuster := NewPositionAdjuster(&types.Repo{ID: 50}, "deadbeef1")
+	adjuster := NewPositionAdjuster(&types.Repo{ID: 50}, "deadbeef1", nil)
 	path, rOut, ok, err := adjuster.AdjustRange(context.Background(), "deadbeef2", "/foo/bar.go", rIn, false)
 	if err != nil {
 		t.Fatalf("unexpected error: %s", err)
@@ -213,7 +213,7 @@ func TestAdjustRangeReverse(t *testing.T) {
 		End:   bundles.Position{Line: 305, Character: 20},
 	}
 
-	adjuster := NewPositionAdjuster(&types.Repo{ID: 50}, "deadbeef1")
+	adjuster := NewPositionAdjuster(&types.Repo{ID: 50}, "deadbeef1", nil)
 	path, rOut, ok, err := adjuster.AdjustRange(context.Background(), "deadbeef2", "/foo/bar.go", rIn, true)
 	if err != nil {
 		t.Fatalf("unexpected error: %s", err)

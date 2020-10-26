@@ -221,7 +221,7 @@ func RunPhabricatorRepositorySyncWorker(ctx context.Context, s Store) {
 			).Set(float64(time.Now().Unix()))
 		}
 
-		time.Sleep(GetUpdateInterval())
+		time.Sleep(ConfRepoListUpdateInterval())
 	}
 }
 

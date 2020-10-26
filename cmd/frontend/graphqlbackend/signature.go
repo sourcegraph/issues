@@ -7,11 +7,11 @@ import (
 )
 
 type signatureResolver struct {
-	person *personResolver
+	person *PersonResolver
 	date   time.Time
 }
 
-func (r signatureResolver) Person() *personResolver {
+func (r signatureResolver) Person() *PersonResolver {
 	return r.person
 }
 
@@ -24,7 +24,7 @@ func toSignatureResolver(sig *git.Signature, includeUserInfo bool) *signatureRes
 		return nil
 	}
 	return &signatureResolver{
-		person: &personResolver{
+		person: &PersonResolver{
 			name:            sig.Name,
 			email:           sig.Email,
 			includeUserInfo: includeUserInfo,

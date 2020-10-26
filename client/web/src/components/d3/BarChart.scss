@@ -1,0 +1,16 @@
+.d3-bar-chart {
+    overflow: visible !important;
+    margin: 4rem 0 4rem 0;
+
+    text,
+    tspan {
+        fill: currentColor;
+        font-size: 9px;
+        font-family: inherit;
+    }
+
+    .axis path,
+    .axis .tick line {
+        stroke: var(--border-color);
+    }
+}

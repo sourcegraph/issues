@@ -1,0 +1,10 @@
+@import './SiteAdminUsageStatisticsPage';
+@import './SiteAdminConfigurationPage';
+@import './SiteAdminCreateUserPage';
+@import './SiteAdminSidebar';
+@import './SiteAdminUpdatesPage';
+@import './SiteAdminSurveyResponsesPage';
+
+.site-admin-area .settings-file {
+    flex: 1;
+}

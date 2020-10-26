@@ -6,16 +6,18 @@ Sourcegraph's metrics include a single high-level metric `alert_count` which ind
 
 ![Overview Grafana dashboard screenshot](https://user-images.githubusercontent.com/3173176/71050700-21912400-2103-11ea-86fb-cf6d2dbd3d0a.png)
 
+To set up notifications for these alerts, see: [alerting](alerting.md).
+
 ### `alert_count`
 
 **Description:** The number of alerts each service has fired and their severity level. The severity levels are defined as follows:
 
-- `critical`: something is _definitively_ wrong with Sourcegraph.
+- `critical`: something is _definitively_ wrong with Sourcegraph. We suggest using a high-visibility notification channel for these alerts.
   - **Examples:** Database inaccessible, running out of disk space, running out of memory.
   - **Suggested action:** Page a site administrator to investigate.
-- `warning`: something _could_ be wrong with Sourcegraph.
+- `warning`: something _could_ be wrong with Sourcegraph. We suggest checking in on these periodically, or using a notification channel that will not bother anyone if it is spammed. Over time, as warning alerts become stable and reliable across many Sourcegraph deployments, they will also be promoted to critical alerts in an update by Sourcegraph.
   - **Examples:** High latency, high search timeouts.
-  - **Suggested action:** Email a site administrator to investigate and monitor when convenient.
+  - **Suggested action:** Email a site administrator to investigate and monitor when convenient, and please let us know so that we can improve them.
 
 **Values:**
 
@@ -30,7 +32,6 @@ Sourcegraph's metrics include a single high-level metric `alert_count` which ind
   - `"gitserver"`
   - `"precise-code-intel"`
   - `"query-runner"`
-  - `"replacer"`
   - `"repo-updater"`
   - `"searcher"`
   - `"symbols"`
@@ -39,7 +40,6 @@ Sourcegraph's metrics include a single high-level metric `alert_count` which ind
   - `"syntect-server"`
 - `name`: the name of the alert that the service fired (chosen by the service)
 - `description`: a human-readable description of the alert
-- `instance`: identifies the Kubernetes pod, Docker container, or host machine from which the alert came.
 
 **Examples:**
 

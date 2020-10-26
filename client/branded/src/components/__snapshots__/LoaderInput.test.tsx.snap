@@ -1,0 +1,24 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`LoaderInput should not render a loading spinner when loading prop is false 1`] = `
+<div
+  className="loader-input__container"
+>
+  <input
+    type="text"
+  />
+</div>
+`;
+
+exports[`LoaderInput should render a loading spinner when loading prop is true 1`] = `
+<div
+  className="loader-input__container"
+>
+  <input
+    type="text"
+  />
+  <LoadingSpinner
+    className="loader-input__spinner"
+  />
+</div>
+`;

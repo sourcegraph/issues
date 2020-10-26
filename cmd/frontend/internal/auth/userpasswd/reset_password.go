@@ -1,14 +1,17 @@
 package userpasswd
 
 import (
+	"context"
 	"encoding/json"
 	"net/http"
 
+	"github.com/inconshreveable/log15"
+	"github.com/pkg/errors"
 	"github.com/sourcegraph/sourcegraph/cmd/frontend/backend"
-	"github.com/sourcegraph/sourcegraph/cmd/frontend/db"
 	"github.com/sourcegraph/sourcegraph/cmd/frontend/globals"
 	"github.com/sourcegraph/sourcegraph/internal/actor"
 	"github.com/sourcegraph/sourcegraph/internal/conf"
+	"github.com/sourcegraph/sourcegraph/internal/db"
 	"github.com/sourcegraph/sourcegraph/internal/errcode"
 	"github.com/sourcegraph/sourcegraph/internal/txemail"
 	"github.com/sourcegraph/sourcegraph/internal/txemail/txtypes"
@@ -76,6 +79,60 @@ func HandleResetPasswordInit(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+var setPasswordEmailTemplates = txemail.MustValidate(txtypes.Templates{
+	Subject: `Set your Sourcegraph password`,
+	Text: `
+Your administrator created an account for you on Sourcegraph.
+
+To set the password for {{.Username}} on Sourcegraph, follow this link:
+
+  {{.URL}}
+`,
+	HTML: `
+<p>
+  Your administrator created an account for you on Sourcegraph.
+</p>
+
+<p><strong><a href="{{.URL}}">Set password for {{.Username}}</a></strong></p>
+`,
+})
+
+// HandleSetPasswordEmail sends the password reset email directly to the user for users created by site admins.
+func HandleSetPasswordEmail(ctx context.Context, id int32) (string, error) {
+	e, _, err := db.UserEmails.GetPrimaryEmail(ctx, id)
+	if err != nil {
+		return "", errors.Wrap(err, "get user primary email")
+	}
+
+	usr, err := db.Users.GetByID(ctx, id)
+	if err != nil {
+		return "", errors.Wrap(err, "get user by ID")
+	}
+
+	ru, err := backend.MakePasswordResetURL(ctx, id)
+	if err == db.ErrPasswordResetRateLimit {
+		return "", err
+	} else if err != nil {
+		return "", errors.Wrap(err, "make password reset URL")
+	}
+
+	rus := globals.ExternalURL().ResolveReference(ru).String()
+	if err := txemail.Send(ctx, txemail.Message{
+		To:       []string{e},
+		Template: setPasswordEmailTemplates,
+		Data: struct {
+			Username string
+			URL      string
+		}{
+			Username: usr.Username,
+			URL:      rus,
+		},
+	}); err != nil {
+		return "", err
+	}
+	return rus, nil
+}
+
 var resetPasswordEmailTemplates = txemail.MustValidate(txtypes.Templates{
 	Subject: `Reset your Sourcegraph password`,
 	Text: `
@@ -115,6 +172,11 @@ func HandleResetPasswordCode(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if err := db.CheckPasswordLength(params.Password); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
 	success, err := db.Users.SetPassword(ctx, params.UserID, params.Code, params.Password)
 	if err != nil {
 		httpLogAndError(w, "Unexpected error", http.StatusInternalServerError, "err", err)
@@ -122,8 +184,14 @@ func HandleResetPasswordCode(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if !success {
-		httpLogAndError(w, "Password reset failed", http.StatusUnauthorized)
+		http.Error(w, "Password reset code was invalid or expired.", http.StatusUnauthorized)
 		return
+	}
+
+	if conf.CanSendEmail() {
+		if err := backend.UserEmails.SendUserEmailOnFieldUpdate(ctx, params.UserID, "reset the password"); err != nil {
+			log15.Warn("Failed to send email to inform user of password reset", "error", err)
+		}
 	}
 }
 

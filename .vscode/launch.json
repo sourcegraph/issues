@@ -6,7 +6,7 @@
       "request": "launch",
       "name": "Browser extension E2E Tests",
       "program": "${workspaceFolder}/node_modules/mocha/bin/_mocha",
-      "args": ["--no-timeouts", "--colors", "${workspaceFolder}/browser/src/e2e/github.test"],
+      "args": ["--no-timeouts", "--colors", "${workspaceFolder}/client/browser/src/e2e/github.test"],
       "internalConsoleOptions": "openOnSessionStart",
       "skipFiles": ["<node_internals>/**"],
       "env": {
@@ -54,7 +54,7 @@
       "args": ["webpack"],
       "env": {
         // prettier-ignore
-        "TS_NODE_COMPILER_OPTIONS": "{\"module\":\"commonjs\"}"
+        "TS_NODE_COMPILER_OPTIONS": "{\"module\":\"commonjs\"}",
       },
       "internalConsoleOptions": "openOnSessionStart",
     },

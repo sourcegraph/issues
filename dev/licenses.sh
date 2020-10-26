@@ -38,5 +38,5 @@ license_finder ignored_dependencies list
 license_finder dependencies list
 
 # run license check
-echo "Running license_finder"
+echo "Running license_finder - if this fails, refer to our handbook: https://about.sourcegraph.com/handbook/engineering/continuous_integration#third-party-licenses"
 license_finder ${COMMAND} --columns=package_manager name version licenses homepage approved

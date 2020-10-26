@@ -18,9 +18,9 @@ import (
 
 	"github.com/inconshreveable/log15"
 	"github.com/sourcegraph/sourcegraph/cmd/frontend/backend"
-	"github.com/sourcegraph/sourcegraph/cmd/frontend/db"
 	"github.com/sourcegraph/sourcegraph/internal/api"
 	"github.com/sourcegraph/sourcegraph/internal/conf"
+	"github.com/sourcegraph/sourcegraph/internal/db"
 	"github.com/sourcegraph/sourcegraph/internal/errcode"
 	sgtrace "github.com/sourcegraph/sourcegraph/internal/trace"
 	"github.com/sourcegraph/sourcegraph/internal/trace/ot"
@@ -117,11 +117,6 @@ VARIABLES
 }
 
 func (prometheusTracer) TraceField(ctx context.Context, label, typeName, fieldName string, trivial bool, args map[string]interface{}) (context.Context, trace.TraceFieldFinishFunc) {
-	var finish trace.TraceFieldFinishFunc
-	if ot.ShouldTrace(ctx) {
-		ctx, finish = trace.OpenTracingTracer{}.TraceField(ctx, label, typeName, fieldName, trivial, args)
-	}
-
 	start := time.Now()
 	return ctx, func(err *gqlerrors.QueryError) {
 		isErrStr := strconv.FormatBool(err != nil)
@@ -137,9 +132,6 @@ func (prometheusTracer) TraceField(ctx context.Context, label, typeName, fieldNa
 		if origin != "unknown" && (fieldName == "search" || fieldName == "lsif") {
 			isExact := strconv.FormatBool(fieldName == "lsif")
 			codeIntelSearchHistogram.WithLabelValues(isExact, isErrStr).Observe(time.Since(start).Seconds())
-		}
-		if finish != nil {
-			finish(err)
 		}
 	}
 }
@@ -340,6 +332,7 @@ func NewSchema(campaigns CampaignsResolver, codeIntel CodeIntelResolver, authz A
 		CodeIntelResolver: defaultCodeIntelResolver{},
 	}
 	if campaigns != nil {
+		EnterpriseResolvers.campaignsResolver = campaigns
 		resolver.CampaignsResolver = campaigns
 	}
 	if codeIntel != nil {
@@ -355,6 +348,7 @@ func NewSchema(campaigns CampaignsResolver, codeIntel CodeIntelResolver, authz A
 		Schema,
 		resolver,
 		graphql.Tracer(prometheusTracer{}),
+		graphql.UseStringDescriptions(),
 	)
 }
 
@@ -386,11 +380,6 @@ func (r *NodeResolver) ToCampaign() (CampaignResolver, bool) {
 	return n, ok
 }
 
-func (r *NodeResolver) ToPatchSet() (PatchSetResolver, bool) {
-	n, ok := r.Node.(PatchSetResolver)
-	return n, ok
-}
-
 func (r *NodeResolver) ToExternalChangeset() (ExternalChangesetResolver, bool) {
 	n, ok := r.Node.(ChangesetResolver)
 	if !ok {
@@ -407,25 +396,30 @@ func (r *NodeResolver) ToHiddenExternalChangeset() (HiddenExternalChangesetResol
 	return n.ToHiddenExternalChangeset()
 }
 
-func (r *NodeResolver) ToPatch() (PatchResolver, bool) {
-	n, ok := r.Node.(PatchInterfaceResolver)
-	if !ok {
-		return nil, false
-	}
-	return n.ToPatch()
-}
-
-func (r *NodeResolver) ToHiddenPatch() (HiddenPatchResolver, bool) {
-	n, ok := r.Node.(PatchInterfaceResolver)
-	if !ok {
-		return nil, false
-	}
-	return n.ToHiddenPatch()
-}
-
 func (r *NodeResolver) ToChangesetEvent() (ChangesetEventResolver, bool) {
 	n, ok := r.Node.(ChangesetEventResolver)
 	return n, ok
+}
+
+func (r *NodeResolver) ToCampaignSpec() (CampaignSpecResolver, bool) {
+	n, ok := r.Node.(CampaignSpecResolver)
+	return n, ok
+}
+
+func (r *NodeResolver) ToHiddenChangesetSpec() (HiddenChangesetSpecResolver, bool) {
+	n, ok := r.Node.(ChangesetSpecResolver)
+	if !ok {
+		return nil, ok
+	}
+	return n.ToHiddenChangesetSpec()
+}
+
+func (r *NodeResolver) ToVisibleChangesetSpec() (VisibleChangesetSpecResolver, bool) {
+	n, ok := r.Node.(ChangesetSpecResolver)
+	if !ok {
+		return nil, ok
+	}
+	return n.ToVisibleChangesetSpec()
 }
 
 func (r *NodeResolver) ToProductLicense() (ProductLicense, bool) {
@@ -505,11 +499,6 @@ func (r *NodeResolver) ToLSIFIndex() (LSIFIndexResolver, bool) {
 	return n, ok
 }
 
-func (r *NodeResolver) ToVersionContext() (*versionContextResolver, bool) {
-	n, ok := r.Node.(*versionContextResolver)
-	return n, ok
-}
-
 // schemaResolver handles all GraphQL queries for Sourcegraph. To do this, it
 // uses subresolvers which are globals. Enterprise-only resolvers are assigned
 // to a field of EnterpriseResolvers.
@@ -524,9 +513,11 @@ type schemaResolver struct {
 var EnterpriseResolvers = struct {
 	codeIntelResolver CodeIntelResolver
 	authzResolver     AuthzResolver
+	campaignsResolver CampaignsResolver
 }{
 	codeIntelResolver: defaultCodeIntelResolver{},
 	authzResolver:     defaultAuthzResolver{},
+	campaignsResolver: defaultCampaignsResolver{},
 }
 
 // DEPRECATED
@@ -551,16 +542,12 @@ func (r *schemaResolver) nodeByID(ctx context.Context, id graphql.ID) (Node, err
 		return accessTokenByID(ctx, id)
 	case "Campaign":
 		return r.CampaignByID(ctx, id)
-	case "PatchSet":
-		return r.PatchSetByID(ctx, id)
-	case "ExternalChangeset":
+	case "CampaignSpec":
+		return r.CampaignSpecByID(ctx, id)
+	case "ChangesetSpec":
+		return r.ChangesetSpecByID(ctx, id)
+	case "Changeset":
 		return r.ChangesetByID(ctx, id)
-	case "HiddenExternalChangeset":
-		return r.ChangesetByID(ctx, id)
-	case "Patch":
-		return r.PatchByID(ctx, id)
-	case "HiddenPatch":
-		return r.PatchByID(ctx, id)
 	case "ProductLicense":
 		if f := ProductLicenseByID; f != nil {
 			return f(ctx, id)

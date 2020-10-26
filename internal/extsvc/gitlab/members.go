@@ -30,7 +30,7 @@ func (c *Client) ListMembers(ctx context.Context, urlStr string) (members []*Mem
 	if err != nil {
 		return nil, nil, err
 	}
-	respHeader, err := c.do(ctx, req, &members)
+	respHeader, _, err := c.do(ctx, req, &members)
 	if err != nil {
 		return nil, nil, err
 	}

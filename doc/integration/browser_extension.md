@@ -1,6 +1,6 @@
 # Sourcegraph browser extension
 
-The [open-source](https://github.com/sourcegraph/sourcegraph/tree/master/browser) Sourcegraph
+The [open-source](https://github.com/sourcegraph/sourcegraph/tree/main/client/browser) Sourcegraph
 browser extension adds code intelligence to files and diffs on GitHub, GitHub
 Enterprise, GitLab, Phabricator, and Bitbucket Server.
 
@@ -18,7 +18,7 @@ Enterprise, GitLab, Phabricator, and Bitbucket Server.
 
 >NOTE: The Firefox extension may need to be manually enabled from `about:addons`, you can find more information in [Firefox add-on security](firefox_security.md).
 
-![Sourcegraph browser extension](https://storage.googleapis.com/sourcegraph-assets/BrowserExtension.gif)
+![Sourcegraph browser extension](https://sourcegraphstatic.com/BrowserExtension.gif)
 
 ## Features
 
@@ -32,7 +32,7 @@ When you hover your mouse over code in files, diffs, pull requests, etc., the So
 
 ### Search shortcut in URL location bar
 
-![Sourcegraph search shortcut](https://storage.googleapis.com/sourcegraph-assets/SearchShortcut2.gif)
+![Sourcegraph search shortcut](https://sourcegraphstatic.com/SearchShortcut2.gif)
 
 The Sourcegraph extension adds a search engine shortcut to your web browser that performs a search on your Sourcegraph instance. After you've installed it (see above), use the search shortcut it provides to perform a search:
 
@@ -44,7 +44,7 @@ To install this search engine shortcut manually, and for more information, see "
 
 ## Configuring the browser extension to use a private Sourcegraph instance
 
-![Sourcegraph search shortcut](https://storage.googleapis.com/sourcegraph-assets/ConfigureSourcegraphInstanceUse.gif)
+![Sourcegraph search shortcut](https://sourcegraphstatic.com/ConfigureSourcegraphInstanceUse.gif)
 
 By default, the browser extension communicates with [Sourcegraph.com](https://sourcegraph.com), which has only public code.
 
@@ -71,7 +71,7 @@ The most common problem is:
 
 ### No code intelligence or buttons ("View repository", "View file", etc.) are displayed on the code host
 
-![Browser extension not working on code host](https://storage.googleapis.com/sourcegraph-assets/BrowserExtensionNotWorkingCodeHost.gif)
+![Browser extension not working on code host](https://sourcegraphstatic.com/BrowserExtensionNotWorkingCodeHost.gif)
 
 Try the following:
 
@@ -84,7 +84,7 @@ Try the following:
 
 In rare cases, Chrome can get into the state where the option to **Enable Sourcegraph on this domain** is not available when right-clicking on the extension icon. One fix we've observed is to toggle the site access from on, to off, then on again (see below).
 
-![Toggle site access for browser extension ](https://storage.googleapis.com/sourcegraph-assets/ToggleSiteAccess.gif)
+![Toggle site access for browser extension ](https://sourcegraphstatic.com/ToggleSiteAccess.gif)
 
 If that still doesn't work, viewing the console and network activity of the extension is the next step.
 
@@ -92,7 +92,7 @@ If that still doesn't work, viewing the console and network activity of the exte
 
 If still experiencing issues, the next step is to inspect the browser extension console output and network activity, often revealing subtle configuration errors.
 
-![Chrome extension console and network activity](https://storage.googleapis.com/sourcegraph-assets/ChromeExtensionConsoleNetworkActivity.gif)
+![Chrome extension console and network activity](https://sourcegraphstatic.com/ChromeExtensionConsoleNetworkActivity.gif)
 
 If that still doesn't help, take a screenshot of the console and network activity and attach it [to a new issue](https://github.com/sourcegraph/sourcegraph/issues/new?assignees=&labels=&template=bug_report.md&title=Browser%20extension%20-%20) so we can investigate further.
 

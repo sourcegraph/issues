@@ -6,29 +6,36 @@ import (
 	"github.com/google/go-cmp/cmp"
 )
 
-func TestDisjointIDSet(t *testing.T) {
-	s := DisjointIDSet{}
-	s.Union("1", "2")
-	s.Union("3", "4")
-	s.Union("1", "3")
-	s.Union("5", "6")
+func TestDisjointIDSetExtract(t *testing.T) {
+	s := NewDisjointIDSet()
+	s.Link(1, 2)
+	s.Link(3, 4)
+	s.Link(1, 3)
+	s.Link(5, 6)
 
-	if diff := cmp.Diff([]string{"1", "2", "3", "4"}, s.ExtractSet("1").Keys()); diff != "" {
-		t.Errorf("unexpected keys (-want +got):\n%s", diff)
+	setA := []int{1, 2, 3, 4}
+	setB := []int{5, 6}
+
+	for _, i := range setA {
+		if diff := cmp.Diff(IDSetWith(setA...), s.ExtractSet(i), Comparers...); diff != "" {
+			t.Errorf("unexpected set (-want +got):\n%s", diff)
+		}
 	}
-	if diff := cmp.Diff([]string{"1", "2", "3", "4"}, s.ExtractSet("2").Keys()); diff != "" {
-		t.Errorf("unexpected keys (-want +got):\n%s", diff)
+
+	for _, i := range setB {
+		if diff := cmp.Diff(IDSetWith(setB...), s.ExtractSet(i), Comparers...); diff != "" {
+			t.Errorf("unexpected set (-want +got):\n%s", diff)
+		}
 	}
-	if diff := cmp.Diff([]string{"1", "2", "3", "4"}, s.ExtractSet("3").Keys()); diff != "" {
-		t.Errorf("unexpected keys (-want +got):\n%s", diff)
-	}
-	if diff := cmp.Diff([]string{"1", "2", "3", "4"}, s.ExtractSet("4").Keys()); diff != "" {
-		t.Errorf("unexpected keys (-want +got):\n%s", diff)
-	}
-	if diff := cmp.Diff([]string{"5", "6"}, s.ExtractSet("5").Keys()); diff != "" {
-		t.Errorf("unexpected keys (-want +got):\n%s", diff)
-	}
-	if diff := cmp.Diff([]string{"5", "6"}, s.ExtractSet("6").Keys()); diff != "" {
-		t.Errorf("unexpected keys (-want +got):\n%s", diff)
+}
+
+func TestDisjointIDSetExtractEmptyReturnsValue(t *testing.T) {
+	s := NewDisjointIDSet()
+	s.Link(1, 2)
+	s.Link(2, 3)
+	s.Link(3, 4)
+
+	if diff := cmp.Diff(IDSetWith(5), s.ExtractSet(5), Comparers...); diff != "" {
+		t.Errorf("unexpected set (-want +got):\n%s", diff)
 	}
 }

@@ -16,7 +16,11 @@ import (
 	"sync"
 	"time"
 
-	opentracing "github.com/opentracing/opentracing-go"
+	"github.com/inconshreveable/log15"
+	"github.com/opentracing/opentracing-go"
+	"github.com/opentracing/opentracing-go/ext"
+	"github.com/pkg/errors"
+	"github.com/prometheus/client_golang/prometheus"
 	"github.com/sourcegraph/sourcegraph/internal/api"
 	"github.com/sourcegraph/sourcegraph/internal/conf"
 	"github.com/sourcegraph/sourcegraph/internal/diskcache"
@@ -24,10 +28,6 @@ import (
 	"github.com/sourcegraph/sourcegraph/internal/metrics"
 	"github.com/sourcegraph/sourcegraph/internal/mutablelimiter"
 	"github.com/sourcegraph/sourcegraph/internal/trace/ot"
-
-	"github.com/opentracing/opentracing-go/ext"
-	"github.com/pkg/errors"
-	"github.com/prometheus/client_golang/prometheus"
 )
 
 // maxFileSize is the limit on file size in bytes. Only files smaller
@@ -56,6 +56,9 @@ type Store struct {
 	// determine if the error is a bad request (eg invalid repo).
 	FetchTar func(ctx context.Context, repo gitserver.Repo, commit api.CommitID) (io.ReadCloser, error)
 
+	// FilterTar returns a FilterFunc that filters out files we don't want to write to disk
+	FilterTar func(ctx context.Context, repo gitserver.Repo, commit api.CommitID) (FilterFunc, error)
+
 	// Path is the directory to store the cache
 	Path string
 
@@ -78,36 +81,27 @@ type Store struct {
 	ZipCache ZipCache
 }
 
-// SetMaxConcurrentFetchTar sets the maximum number of concurrent calls allowed
-// to FetchTar. It defaults to 15.
-func (s *Store) SetMaxConcurrentFetchTar(limit int) {
-	if limit == 0 {
-		limit = 15
-	}
-	if s.fetchLimiter == nil {
-		s.fetchLimiter = mutablelimiter.New(limit)
-	} else {
-		s.fetchLimiter.SetLimit(limit)
-	}
-}
+// FilterFunc filters tar files based on their header.
+// Tar files for which FilterFunc evaluates to true
+// are not stored in the target zip.
+type FilterFunc func(hdr *tar.Header) bool
 
 // Start initializes state and starts background goroutines. It can be called
 // more than once. It is optional to call, but starting it earlier avoids a
 // search request paying the cost of initializing.
 func (s *Store) Start() {
 	s.once.Do(func() {
-		if s.fetchLimiter == nil {
-			s.SetMaxConcurrentFetchTar(0)
-		}
+		s.fetchLimiter = mutablelimiter.New(15)
 		s.cache = &diskcache.Store{
 			Dir:               s.Path,
 			Component:         "store",
-			BackgroundTimeout: 2 * time.Minute,
+			BackgroundTimeout: 10 * time.Minute,
 			BeforeEvict:       s.ZipCache.delete,
 		}
 		_ = os.MkdirAll(s.Path, 0700)
 		metrics.MustRegisterDiskMonitor(s.Path)
 		go s.watchAndEvict()
+		go s.watchConfig()
 	})
 }
 
@@ -148,6 +142,7 @@ func (s *Store) PrepareZip(ctx context.Context, repo gitserver.Repo, commit api.
 	}
 	resC := make(chan result, 1)
 	go func() {
+		start := time.Now()
 		// TODO: consider adding a cache method that doesn't actually bother opening the file,
 		// since we're just going to close it again immediately.
 		bgctx := opentracing.ContextWithSpan(context.Background(), opentracing.SpanFromContext(ctx))
@@ -160,6 +155,9 @@ func (s *Store) PrepareZip(ctx context.Context, repo gitserver.Repo, commit api.
 			if f.File != nil {
 				f.File.Close()
 			}
+		}
+		if err != nil {
+			log15.Error("failed to fetch archive", "repo", repo.Name, "commit", commit, "duration", time.Since(start), "error", err)
 		}
 		resC <- result{path, err}
 	}()
@@ -228,6 +226,14 @@ func (s *Store) fetch(ctx context.Context, repo gitserver.Repo, commit api.Commi
 		return nil, err
 	}
 
+	filter := func(hdr *tar.Header) bool { return false } // default: don't filter
+	if s.FilterTar != nil {
+		filter, err = s.FilterTar(ctx, repo, commit)
+		if err != nil {
+			return nil, fmt.Errorf("error while calling FilterTar: %w", err)
+		}
+	}
+
 	pr, pw := io.Pipe()
 
 	// After this point we are not allowed to return an error. Instead we can
@@ -240,7 +246,7 @@ func (s *Store) fetch(ctx context.Context, repo gitserver.Repo, commit api.Commi
 		defer r.Close()
 		tr := tar.NewReader(r)
 		zw := zip.NewWriter(pw)
-		err := copySearchable(tr, zw, largeFilePatterns)
+		err := copySearchable(tr, zw, largeFilePatterns, filter)
 		if err1 := zw.Close(); err == nil {
 			err = err1
 		}
@@ -253,9 +259,8 @@ func (s *Store) fetch(ctx context.Context, repo gitserver.Repo, commit api.Commi
 }
 
 // copySearchable copies searchable files from tr to zw. A searchable file is
-// any file that is a candidate for being searched (under size limit and
-// non-binary).
-func copySearchable(tr *tar.Reader, zw *zip.Writer, largeFilePatterns []string) error {
+// any file that is under size limit, non-binary, and not matching the filter.
+func copySearchable(tr *tar.Reader, zw *zip.Writer, largeFilePatterns []string, filter FilterFunc) error {
 	// 32*1024 is the same size used by io.Copy
 	buf := make([]byte, 32*1024)
 	for {
@@ -276,6 +281,11 @@ func copySearchable(tr *tar.Reader, zw *zip.Writer, largeFilePatterns []string) 
 
 		// We only care about files
 		if hdr.Typeflag != tar.TypeReg && hdr.Typeflag != tar.TypeRegA {
+			continue
+		}
+
+		// ignore files if they match the filter
+		if filter(hdr) {
 			continue
 		}
 
@@ -339,17 +349,8 @@ func (s *Store) watchAndEvict() {
 		return
 	}
 
-	ctx := context.Background()
-	prevAddrs := len(gitserver.DefaultClient.Addrs(ctx))
 	for {
 		time.Sleep(10 * time.Second)
-
-		// Allow roughly 10 fetches per gitserver
-		addrs := len(gitserver.DefaultClient.Addrs(ctx))
-		if addrs != prevAddrs {
-			prevAddrs = addrs
-			s.SetMaxConcurrentFetchTar(10 * addrs)
-		}
 
 		stats, err := s.cache.Evict(s.MaxCacheSizeBytes)
 		if err != nil {
@@ -358,6 +359,20 @@ func (s *Store) watchAndEvict() {
 		}
 		cacheSizeBytes.Set(float64(stats.CacheSize))
 		evictions.Add(float64(stats.Evicted))
+	}
+}
+
+// watchConfig updates fetchLimiter as the number of gitservers change.
+func (s *Store) watchConfig() {
+	for {
+		// Allow roughly 10 fetches per gitserver
+		limit := 10 * len(gitserver.DefaultClient.Addrs(context.Background()))
+		if limit == 0 {
+			limit = 15
+		}
+		s.fetchLimiter.SetLimit(limit)
+
+		time.Sleep(10 * time.Second)
 	}
 }
 

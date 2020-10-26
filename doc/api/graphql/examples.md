@@ -37,7 +37,7 @@ This page demonstrates a few example GraphQL queries for the [Sourcegraph GraphQ
   </tr>
 	<tr>
 		<td>
-			<a href="https://sourcegraph.com/api/console#%7B%22query%22%3A%22%7B%5Cn%20%20repositories(first%3A%201000%2C%20enabled%3A%20true)%20%7B%5Cn%20%20%20%20nodes%20%7B%5Cn%20%20%20%20%20%20name%5Cn%20%20%20%20%20%20description%5Cn%20%20%20%20%20%20url%5Cn%20%20%20%20%7D%5Cn%20%20%7D%5Cn%7D%5Cn%22%2C%22variables%22%3A%22%22%2C%22operationName%22%3Anull%7D">
+			<a href="https://sourcegraph.com/api/console#%7B%22query%22%3A%22%7B%5Cn%20%20repositories(first%3A%201000)%20%7B%5Cn%20%20%20%20nodes%20%7B%5Cn%20%20%20%20%20%20name%5Cn%20%20%20%20%20%20description%5Cn%20%20%20%20%20%20url%5Cn%20%20%20%20%7D%5Cn%20%20%7D%5Cn%7D%5Cn%22%2C%22variables%22%3A%22%22%2C%22operationName%22%3Anull%7D">
 				List the first 1,000 repositories
 			</a>
 		</td>

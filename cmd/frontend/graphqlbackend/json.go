@@ -22,6 +22,10 @@ func (v JSONValue) MarshalJSON() ([]byte, error) {
 	return json.Marshal(v.Value)
 }
 
+func (v *JSONValue) UnmarshalJSON(data []byte) error {
+	return json.Unmarshal(data, &v.Value)
+}
+
 // JSONCString implements the JSONCString scalar type.
 type JSONCString string
 

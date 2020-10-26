@@ -1,0 +1,43 @@
+name: Renovate downstream
+on:
+  status:
+  workflow_dispatch:
+
+jobs:
+  # This job should trigger rennovate to run on the repositories defined in renovate-downstream.json
+  renovate:
+    runs-on: ubuntu-latest
+    # Run on commit status success on branch main, ignoring bot events
+    if: ${{ contains(github.event.branches.*.name, 'main') && github.event.state == 'success' && github.event.context == 'buildkite/sourcegraph' }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Dump event
+        continue-on-error: true
+        env:
+          EVENT_CONTEXT: ${{ toJson(github) }}
+        run: |
+          echo "$EVENT_CONTEXT"
+
+      # retrieve first pull request attached to this commit
+      - name: Get pull request
+        id: pull_request
+        run: |
+          NUMBER=$(curl \
+            -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+            -H "Accept: application/vnd.github.groot-preview+json" \
+            https://api.github.com/repos/sourcegraph/sourcegraph/commits/${{ github.sha }}/pulls | jq --raw-output '.[0].number' | cat)
+          echo "::set-output name=number::$NUMBER"
+      - name: Update renovate config with PR number
+        run: |
+          sed -i -e 's/PULL_REQUEST/${{ steps.pull_request.outputs.number }}/g' .github/workflows/renovate-downstream.json
+          cat .github/workflows/renovate-downstream.json
+
+      - name: Renovate
+        uses: renovatebot/github-action@v23.27.1
+        with:
+          configurationFile: .github/workflows/renovate-downstream.json
+          # token must be a personal access token for cross-repo access - currently @sourcegraph-bot cross-repo-github-actions in 1password
+          # configure in https://github.com/sourcegraph/sourcegraph/settings/secrets/RENOVATE_TOKEN
+          token: ${{ secrets.RENOVATE_TOKEN }}

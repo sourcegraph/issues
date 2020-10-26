@@ -1,0 +1,107 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`ViewPage renders view 1`] = `
+<div>
+  <h1>
+    t
+  </h1>
+  <div
+    className="view-content"
+  >
+    <div
+      className="view-content__markdown mb-1 markdown"
+      dangerouslySetInnerHTML={
+        Object {
+          "__html": "<p><strong>a</strong></p>
+",
+        }
+      }
+      onClick={[Function]}
+    />
+    *b*
+    <div
+      className="view-content__markdown mb-1 markdown"
+      dangerouslySetInnerHTML={
+        Object {
+          "__html": "<p><em>c</em></p>
+",
+        }
+      }
+      onClick={[Function]}
+    />
+    <QueryInputInViewContent
+      caseSensitive={false}
+      copyQueryButton={false}
+      globbing={false}
+      history={
+        Object {
+          "action": "POP",
+          "block": [Function],
+          "canGo": [Function],
+          "createHref": [Function],
+          "entries": Array [
+            Object {
+              "hash": "",
+              "key": undefined,
+              "pathname": "/",
+              "search": "",
+              "state": undefined,
+            },
+          ],
+          "go": [Function],
+          "goBack": [Function],
+          "goForward": [Function],
+          "index": 0,
+          "length": 1,
+          "listen": [Function],
+          "location": Object {
+            "hash": "",
+            "key": undefined,
+            "pathname": "/",
+            "search": "",
+            "state": undefined,
+          },
+          "push": [Function],
+          "replace": [Function],
+        }
+      }
+      implicitQueryPrefix="x"
+      location={
+        Object {
+          "hash": "",
+          "key": undefined,
+          "pathname": "/",
+          "search": "",
+          "state": undefined,
+        }
+      }
+      patternType="literal"
+      setCaseSensitivity={[Function]}
+      setPatternType={[Function]}
+      settingsCascade={
+        Object {
+          "final": Object {},
+          "subjects": Array [],
+        }
+      }
+    />
+  </div>
+</div>
+`;
+
+exports[`ViewPage view is loading 1`] = `
+<LoadingSpinner
+  className="icon-inline"
+/>
+`;
+
+exports[`ViewPage view not found 1`] = `
+<div
+  className="alert alert-danger"
+>
+  View not found: 
+  <code>
+    v
+  </code>
+</div>
+`;

@@ -23,7 +23,7 @@ func TestHorizontalSearcher(t *testing.T) {
 		Dial: func(endpoint string) zoekt.Searcher {
 			var rle zoekt.RepoListEntry
 			rle.Repository.Name = endpoint
-			return &mockSearcher{
+			client := &mockSearcher{
 				searchResult: &zoekt.SearchResult{
 					Files: []zoekt.FileMatch{{
 						Repository: endpoint,
@@ -32,6 +32,8 @@ func TestHorizontalSearcher(t *testing.T) {
 				},
 				listResult: &zoekt.RepoList{Repos: []*zoekt.RepoListEntry{&rle}},
 			}
+			// Return metered searcher to test that codepath
+			return NewMeteredSearcher(endpoint, client)
 		},
 	}
 	defer searcher.Close()

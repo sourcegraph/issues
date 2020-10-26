@@ -1,6 +1,7 @@
 package usagestats
 
 import (
+	"context"
 	"sync/atomic"
 
 	"github.com/gomodule/redigo/redis"
@@ -42,8 +43,11 @@ func logSiteFindRefsOccurred() error {
 }
 
 // HasSearchOccurred indicates whether a search has ever occurred on this instance.
-func HasSearchOccurred() (bool, error) {
-	c := pool.Get()
+func HasSearchOccurred(ctx context.Context) (bool, error) {
+	c, err := pool.GetContext(ctx)
+	if err != nil {
+		return false, err
+	}
 	defer c.Close()
 	s, err := redis.Bool(c.Do("GET", keyPrefix+fSearchOccurred))
 	if err != nil && err != redis.ErrNil {
@@ -53,8 +57,11 @@ func HasSearchOccurred() (bool, error) {
 }
 
 // HasFindRefsOccurred indicates whether a find-refs has ever occurred on this instance.
-func HasFindRefsOccurred() (bool, error) {
-	c := pool.Get()
+func HasFindRefsOccurred(ctx context.Context) (bool, error) {
+	c, err := pool.GetContext(ctx)
+	if err != nil {
+		return false, err
+	}
 	defer c.Close()
 	r, err := redis.Bool(c.Do("GET", keyPrefix+fFindRefsOccurred))
 	if err != nil && err != redis.ErrNil {

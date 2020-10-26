@@ -1,0 +1,35 @@
+.recent-searches-panel {
+    &__results-table {
+        width: 100%;
+
+        &-row {
+            border-bottom: solid 4px transparent;
+        }
+
+        &-date-col {
+            width: 7rem;
+        }
+
+        &-count-col {
+            width: 3rem;
+        }
+
+        &-count {
+            width: 1.5rem;
+            height: 1.25rem;
+            pointer-events: none;
+        }
+    }
+
+    &__examples-list {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+        align-self: center;
+        text-align: left;
+
+        &-item {
+            margin-bottom: 0.25rem;
+        }
+    }
+}

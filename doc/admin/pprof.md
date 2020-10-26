@@ -23,7 +23,7 @@ kubectl port-forward sourcegraph-frontend-xxxx 6060:6060
 The docker run command for the single-container server needs an additional publish flag to expose the debug port:
 
 ```bash script
-docker run --publish 7080:7080 --publish 127.0.0.1:3370:3370 --publish 127.0.0.1:6060:6060 --rm --volume ~/.sourcegraph/config:/etc/sourcegraph --volume ~/.sourcegraph/data:/var/opt/sourcegraph sourcegraph/server:3.17.3
+docker run --publish 7080:7080 --publish 127.0.0.1:3370:3370 --publish 127.0.0.1:6060:6060 --rm --volume ~/.sourcegraph/config:/etc/sourcegraph --volume ~/.sourcegraph/data:/var/opt/sourcegraph sourcegraph/server:3.21.2
 ```
 
 If Sourcegraph is deployed to a remote server, then access via an SSH tunnel using a tool
@@ -75,7 +75,6 @@ This is a table of Sourcegraph backend debug ports in the two deployment context
 | query-runner      | 6060       | 6067   |
 | zoekt-indexserver | 6060       | 6072   |
 | zoekt-webserver   | 6060       | 3070   |
-| replacer          | 6060       | 6076   |
 
 
 ## Profiling kinds

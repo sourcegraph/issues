@@ -1,0 +1,59 @@
+@import 'bootstrap/scss/buttons';
+@import 'bootstrap/scss/button-group';
+
+// Light theme button variants
+.theme-light {
+    @each $color, $value in $theme-colors-light {
+        .btn-#{$color} {
+            @include button-variant($background: $value, $border: $value);
+        }
+        .btn-outline-#{$color} {
+            @include button-outline-variant($color: $value, $color-hover: $value);
+        }
+    }
+}
+
+// btn-outline-secondary uses a different text color for better contrast.
+// theme classes are necessary because of specifity.
+.theme-dark,
+.theme-light {
+    .btn-outline-secondary {
+        color: #{var(--body-color)};
+        @include hover() {
+            color: #{var(--body-color)};
+        }
+        &.disabled,
+        &:disabled {
+            color: #{var(--body-color)};
+        }
+    }
+}
+
+// This class is meant for clickable icons. It is NOT meant for buttons with icons in it or for nav
+// items.
+.btn-icon {
+    margin: 0;
+    padding: 0;
+    background: transparent;
+    color: inherit;
+    display: flex;
+    align-items: center;
+    border: none;
+    cursor: pointer;
+
+    .icon {
+        @extend .icon-inline;
+    }
+
+    &:focus-visible:not(:disabled):not(.disabled) {
+        box-shadow: 0 0 0 2px rgba($primary, 0.5);
+    }
+
+    &:hover:not(:disabled):not(.disabled) {
+        color: var(--body-color);
+    }
+}
+
+.btn.btn-sm {
+    @extend small;
+}

@@ -1,0 +1,148 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`ToggleBig className 1`] = `
+<ToggleBig
+  className="c"
+>
+  <button
+    className="toggle-big toggle-big__container c"
+    disabled={false}
+    onClick={[Function]}
+    onMouseOver={[Function]}
+    role="switch"
+    type="button"
+    value={0}
+  >
+    <span
+      className="toggle-big__bar"
+    />
+    <span
+      className="toggle-big__bar-shadow"
+    />
+    <span
+      className="toggle-big__knob d-flex flex-column justify-content-center align-items-center"
+    >
+      <Memo(CloseIcon)
+        className="toggle-big__icon"
+        size={16}
+      />
+    </span>
+    <span
+      className="toggle-big__text"
+    >
+      Disabled
+    </span>
+  </button>
+</ToggleBig>
+`;
+
+exports[`ToggleBig disabled 1`] = `
+<ToggleBig
+  disabled={true}
+  onToggle={[Function]}
+>
+  <button
+    className="toggle-big toggle-big__container"
+    disabled={true}
+    onClick={[Function]}
+    onMouseOver={[Function]}
+    role="switch"
+    type="button"
+    value={0}
+  >
+    <span
+      className="toggle-big__bar"
+    />
+    <span
+      className="toggle-big__bar-shadow"
+    />
+    <span
+      className="toggle-big__knob d-flex flex-column justify-content-center align-items-center"
+    >
+      <Memo(CloseIcon)
+        className="toggle-big__icon"
+        size={16}
+      />
+    </span>
+    <span
+      className="toggle-big__text"
+    >
+      Disabled
+    </span>
+  </button>
+</ToggleBig>
+`;
+
+exports[`ToggleBig value is false 1`] = `
+<ToggleBig
+  value={false}
+>
+  <button
+    aria-checked={false}
+    className="toggle-big toggle-big__container"
+    disabled={false}
+    onClick={[Function]}
+    onMouseOver={[Function]}
+    role="switch"
+    type="button"
+    value={0}
+  >
+    <span
+      className="toggle-big__bar"
+    />
+    <span
+      className="toggle-big__bar-shadow"
+    />
+    <span
+      className="toggle-big__knob d-flex flex-column justify-content-center align-items-center"
+    >
+      <Memo(CloseIcon)
+        className="toggle-big__icon"
+        size={16}
+      />
+    </span>
+    <span
+      className="toggle-big__text"
+    >
+      Disabled
+    </span>
+  </button>
+</ToggleBig>
+`;
+
+exports[`ToggleBig value is true 1`] = `
+<ToggleBig
+  value={true}
+>
+  <button
+    aria-checked={true}
+    className="toggle-big toggle-big__container"
+    disabled={false}
+    onClick={[Function]}
+    onMouseOver={[Function]}
+    role="switch"
+    type="button"
+    value={1}
+  >
+    <span
+      className="toggle-big__bar toggle-big__bar--on"
+    />
+    <span
+      className="toggle-big__bar-shadow toggle-big__bar-shadow--on"
+    />
+    <span
+      className="toggle-big__knob d-flex flex-column justify-content-center align-items-center toggle-big__knob--on"
+    >
+      <Memo(CheckIcon)
+        className="toggle-big__icon--on"
+        size={16}
+      />
+    </span>
+    <span
+      className="toggle-big__text toggle-big__text--on"
+    >
+      Enabled
+    </span>
+  </button>
+</ToggleBig>
+`;

@@ -1,0 +1,32 @@
+.external-changeset-node {
+    &__statuses {
+        @include media-breakpoint-down(xs) {
+            // Use up remaining width of the row.
+            grid-column: 1 / -1;
+        }
+        @include media-breakpoint-down(sm) {
+            // Use up remaining width of the row.
+            grid-column: 2 / -1;
+        }
+    }
+    &__expanded-section {
+        background-color: rgba($oc-blue-0, 0.5);
+        // Make it full width in the current row.
+        grid-column: 2 / -1;
+        @include media-breakpoint-down(xs) {
+            grid-column: 1 / -1;
+        }
+    }
+    &__state,
+    &__information {
+        @include media-breakpoint-down(xs) {
+            grid-column: 1 / -1;
+        }
+    }
+    &__show-details {
+        @include media-breakpoint-down(xs) {
+            // Make it full width in the current row.
+            grid-column: 1 / -1;
+        }
+    }
+}

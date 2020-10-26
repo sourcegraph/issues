@@ -58,7 +58,11 @@ func (defaultAuthzResolver) RepositoryPermissionsInfo(ctx context.Context, repoI
 }
 
 func (defaultAuthzResolver) UserPermissionsInfo(ctx context.Context, userID graphql.ID) (PermissionsInfoResolver, error) {
-	return nil, authzInEnterprise
+	// NOTE: Both OSS and enterprise web app use the same GraphQL query to get user information
+	// (including "permissionsInfo" field). Since the web app won't show "Permissions" tab in
+	// OSS version anyway, it is OK to return empty information about user permissions (as if
+	// no permissions available in enterprise version) to not fail the GraphQL query entirely.
+	return nil, nil
 }
 
 type RepositoryIDArgs struct {

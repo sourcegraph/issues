@@ -1,14 +1,11 @@
 package resetter
 
-import "github.com/prometheus/client_golang/prometheus"
+import (
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/sourcegraph/sourcegraph/internal/workerutil/dbworker"
+)
 
-type ResetterMetrics struct {
-	UploadResets        prometheus.Counter
-	UploadResetFailures prometheus.Counter
-	Errors              prometheus.Counter
-}
-
-func NewResetterMetrics(r prometheus.Registerer) ResetterMetrics {
+func NewResetterMetrics(r prometheus.Registerer) dbworker.ResetterMetrics {
 	uploadResets := prometheus.NewCounter(prometheus.CounterOpts{
 		Name: "src_upload_queue_resets_total",
 		Help: "Total number of uploads put back into queued state",
@@ -27,9 +24,9 @@ func NewResetterMetrics(r prometheus.Registerer) ResetterMetrics {
 	})
 	r.MustRegister(errors)
 
-	return ResetterMetrics{
-		UploadResets:        uploadResets,
-		UploadResetFailures: uploadResetFailures,
+	return dbworker.ResetterMetrics{
+		RecordResets:        uploadResets,
+		RecordResetFailures: uploadResetFailures,
 		Errors:              errors,
 	}
 }

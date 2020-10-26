@@ -51,7 +51,7 @@ func handleGetProvider(ctx context.Context, w http.ResponseWriter, pcID string) 
 	p = getProvider(pcID)
 	if p == nil {
 		log15.Error("No SAML auth provider found with ID", "id", pcID)
-		http.Error(w, "Misconfigured SAML auth provider.", http.StatusInternalServerError)
+		http.Error(w, "Misconfigured SAML auth provider", http.StatusInternalServerError)
 		return nil, true
 	}
 	if err := p.Refresh(ctx); err != nil {

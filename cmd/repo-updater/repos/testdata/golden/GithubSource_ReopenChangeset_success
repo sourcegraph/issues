@@ -1,0 +1,114 @@
+{
+  "ID": "MDExOlB1bGxSZXF1ZXN0NDg4MDI2OTk5",
+  "Title": "Replace fmt.Sprintf with equivalent strconv.Itoa",
+  "Body": "This campaign replaces `fmt.Sprintf` with `strconv.Itoa`",
+  "State": "OPEN",
+  "URL": "https://github.com/sourcegraph/automation-testing/pull/353",
+  "HeadRefOid": "d965153c0b869943e935878d23a576928cc8c951",
+  "BaseRefOid": "6274d04b734de9f057bb5f196a5046a9e86ba992",
+  "HeadRefName": "campaigns-screenshare/sprintf-to-itoa",
+  "BaseRefName": "master",
+  "Number": 353,
+  "Author": {
+   "AvatarURL": "https://avatars1.githubusercontent.com/u/1185253?u=35f048c505007991433b46c9c0616ccbcfbd4bff\u0026v=4",
+   "Login": "mrnugget",
+   "URL": "https://github.com/mrnugget"
+  },
+  "Participants": [
+   {
+    "AvatarURL": "https://avatars1.githubusercontent.com/u/1185253?u=35f048c505007991433b46c9c0616ccbcfbd4bff\u0026v=4",
+    "Login": "mrnugget",
+    "URL": "https://github.com/mrnugget"
+   }
+  ],
+  "Labels": {
+   "Nodes": []
+  },
+  "TimelineItems": [
+   {
+    "Type": "PullRequestCommit",
+    "Item": {
+     "Commit": {
+      "OID": "d965153c0b869943e935878d23a576928cc8c951",
+      "Message": "Replacing fmt.Sprintf with strconv.Iota",
+      "MessageHeadline": "Replacing fmt.Sprintf with strconv.Iota",
+      "URL": "https://github.com/sourcegraph/automation-testing/commit/d965153c0b869943e935878d23a576928cc8c951",
+      "Committer": {
+       "AvatarURL": "https://avatars3.githubusercontent.com/u/1185253?v=4",
+       "Email": "thorsten@sourcegraph.com",
+       "Name": "Thorsten Ball",
+       "User": {
+        "AvatarURL": "https://avatars1.githubusercontent.com/u/1185253?u=35f048c505007991433b46c9c0616ccbcfbd4bff\u0026v=4",
+        "Login": "mrnugget",
+        "URL": "https://github.com/mrnugget"
+       }
+      },
+      "CommittedDate": "2020-09-16T14:23:01Z",
+      "PushedDate": "2020-09-16T14:23:07Z"
+     }
+    }
+   },
+   {
+    "Type": "ClosedEvent",
+    "Item": {
+     "Actor": {
+      "AvatarURL": "https://avatars1.githubusercontent.com/u/1185253?u=35f048c505007991433b46c9c0616ccbcfbd4bff\u0026v=4",
+      "Login": "mrnugget",
+      "URL": "https://github.com/mrnugget"
+     },
+     "CreatedAt": "2020-09-24T08:23:38Z",
+     "URL": "https://github.com/sourcegraph/automation-testing/pull/353#event-3801996724"
+    }
+   },
+   {
+    "Type": "ReopenedEvent",
+    "Item": {
+     "Actor": {
+      "AvatarURL": "https://avatars1.githubusercontent.com/u/1185253?u=35f048c505007991433b46c9c0616ccbcfbd4bff\u0026v=4",
+      "Login": "mrnugget",
+      "URL": "https://github.com/mrnugget"
+     },
+     "CreatedAt": "2020-09-24T08:27:54Z"
+    }
+   }
+  ],
+  "Commits": {
+   "Nodes": [
+    {
+     "Commit": {
+      "OID": "d965153c0b869943e935878d23a576928cc8c951",
+      "CheckSuites": {
+       "Nodes": [
+        {
+         "ID": "MDEwOkNoZWNrU3VpdGUxMjAxMzM0OTIz",
+         "Status": "QUEUED",
+         "Conclusion": "",
+         "ReceivedAt": "0001-01-01T00:00:00Z",
+         "CheckRuns": {
+          "Nodes": []
+         }
+        },
+        {
+         "ID": "MDEwOkNoZWNrU3VpdGUxMjAxMzM0OTI2",
+         "Status": "QUEUED",
+         "Conclusion": "",
+         "ReceivedAt": "0001-01-01T00:00:00Z",
+         "CheckRuns": {
+          "Nodes": []
+         }
+        }
+       ]
+      },
+      "Status": {
+       "State": "",
+       "Contexts": null
+      },
+      "CommittedDate": "2020-09-16T14:23:01Z"
+     }
+    }
+   ]
+  },
+  "IsDraft": false,
+  "CreatedAt": "2020-09-16T14:23:08Z",
+  "UpdatedAt": "2020-09-24T08:27:54Z"
+ }

@@ -97,7 +97,7 @@ cmd/indexer/debug
 
 # Web
 node_modules/
-/web
+/client/web
 
 # Extensions
 /packages/sourcegraph-extension-api/dist

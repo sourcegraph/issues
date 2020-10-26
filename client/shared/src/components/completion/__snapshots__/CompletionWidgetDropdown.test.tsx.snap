@@ -1,0 +1,43 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`CompletionWidgetDropdown simple 1`] = `
+<ul
+  aria-expanded={true}
+  aria-haspopup="listbox"
+  aria-labelledby="downshift-0-label"
+  aria-owns="downshift-0-menu"
+  className="completion-widget-dropdown list-class-name"
+  role="combobox"
+>
+  <li
+    aria-selected={false}
+    className=" list-item-class-name"
+    id="downshift-0-item-0"
+    onClick={[Function]}
+    onMouseDown={[Function]}
+    onMouseMove={[Function]}
+    role="option"
+  >
+    <div
+      className="completion-widget-dropdown__item-text"
+    >
+      a
+    </div>
+  </li>
+  <li
+    aria-selected={true}
+    className="selected-list-item-class-name list-item-class-name"
+    id="downshift-0-item-1"
+    onClick={[Function]}
+    onMouseDown={[Function]}
+    onMouseMove={[Function]}
+    role="option"
+  >
+    <div
+      className="completion-widget-dropdown__item-text"
+    >
+      b
+    </div>
+  </li>
+</ul>
+`;

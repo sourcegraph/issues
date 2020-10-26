@@ -58,7 +58,7 @@ func TestPostgresDSN(t *testing.T) {
 
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
-			have := PostgresDSN("testuser", func(e string) string {
+			have := PostgresDSN("", "testuser", func(e string) string {
 				return tc.env[e]
 			})
 			if have != tc.dsn {

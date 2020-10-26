@@ -9,6 +9,8 @@ import (
 
 	"github.com/google/zoekt"
 	zoektquery "github.com/google/zoekt/query"
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promauto"
 )
 
 // Zoekt wraps a zoekt.Searcher.
@@ -140,6 +142,18 @@ func (c *Zoekt) start() {
 		}
 		c.mu.Unlock()
 
+		if err == nil {
+			withID := 0
+			for _, r := range set {
+				if r.RawConfig != nil && r.RawConfig["repoid"] != "" {
+					withID++
+				}
+			}
+			metricListAllCount.Set(float64(len(set)))
+			metricListAllWithID.Set(float64(withID))
+			metricListAllTimestamp.SetToCurrentTime()
+		}
+
 		randSleep(5*time.Second, 2*time.Second)
 	}
 }
@@ -150,3 +164,18 @@ func randSleep(d, jitter time.Duration) {
 	delta := time.Duration(rand.Int63n(int64(jitter))) - (jitter / 2)
 	time.Sleep(d + delta)
 }
+
+var (
+	metricListAllCount = promauto.NewGauge(prometheus.GaugeOpts{
+		Name: "src_zoekt_list_all_count",
+		Help: "The number of indexed repositories.",
+	})
+	metricListAllWithID = promauto.NewGauge(prometheus.GaugeOpts{
+		Name: "src_zoekt_list_all_with_id_count",
+		Help: "The number of indexed repositories which have ID set. Temporary metric to track rollout of ID recording.",
+	})
+	metricListAllTimestamp = promauto.NewGauge(prometheus.GaugeOpts{
+		Name: "src_zoekt_list_all_last_timestamp_seconds",
+		Help: "UNIX timestamp of the last successful call to ListAll.",
+	})
+)

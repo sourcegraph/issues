@@ -8,6 +8,7 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/google/zoekt"
 	"github.com/google/zoekt/query"
 	"github.com/google/zoekt/rpc"
 	"github.com/sourcegraph/sourcegraph/internal/conf"
@@ -42,15 +43,24 @@ func SearcherURLs() *endpoint.Map {
 
 func Indexed() *backend.Zoekt {
 	indexedSearchOnce.Do(func() {
-		indexedSearch = &backend.Zoekt{}
-		if indexers := Indexers(); indexers.Enabled() {
-			indexedSearch.Client = backend.NewMeteredSearcher(&backend.HorizontalSearcher{
-				Map:  indexers.Map,
-				Dial: rpc.Client,
-			})
-		} else if addr := zoektAddr(os.Environ()); addr != "" {
-			indexedSearch.Client = backend.NewMeteredSearcher(rpc.Client(addr))
+		dial := func(endpoint string) zoekt.Searcher {
+			return backend.NewMeteredSearcher(endpoint, rpc.Client(endpoint))
 		}
+
+		var client zoekt.Searcher
+		if indexers := Indexers(); indexers.Enabled() {
+			client = backend.NewMeteredSearcher(
+				"", // no hostname means its the aggregator
+				&backend.HorizontalSearcher{
+					Map:  indexers.Map,
+					Dial: dial,
+				})
+		} else if addr := zoektAddr(os.Environ()); addr != "" {
+			client = dial(addr)
+		}
+
+		indexedSearch = &backend.Zoekt{Client: client}
+
 		conf.Watch(func() {
 			indexedSearch.SetEnabled(conf.SearchIndexEnabled())
 		})

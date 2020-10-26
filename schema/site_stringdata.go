@@ -35,7 +35,7 @@ const SiteSchemaJSON = `{
       "group": "Search"
     },
     "search.largeFiles": {
-      "description": "A list of file glob patterns where matching files will be indexed and searched regardless of their size. The glob pattern syntax can be found here: https://golang.org/pkg/path/filepath/#Match.",
+      "description": "A list of file glob patterns where matching files will be indexed and searched regardless of their size. Files still need to be valid utf-8 to be indexed. The glob pattern syntax can be found here: https://golang.org/pkg/path/filepath/#Match.",
       "type": "array",
       "items": {
         "type": "string"
@@ -73,10 +73,10 @@ const SiteSchemaJSON = `{
           }
         },
         "automation": {
-          "description": "Enables the experimental code change management campaigns feature. NOTE: The automation feature was renamed to campaigns, but this experimental feature flag name was not changed (because the feature flag will go away soon anyway).",
+          "description": "DEPRECATED: Enables the experimental code change management campaigns feature. This field has been deprecated in favour of campaigns.enabled",
           "type": "string",
           "enum": ["enabled", "disabled"],
-          "default": "disabled"
+          "default": "enabled"
         },
         "structuralSearch": {
           "description": "Enables structural search.",
@@ -85,7 +85,7 @@ const SiteSchemaJSON = `{
           "default": "enabled"
         },
         "andOrQuery": {
-          "description": "Interpret a search input query as an and/or query.",
+          "description": "DEPRECATED: Interpret a search input query as an and/or query.",
           "type": "string",
           "enum": ["enabled", "disabled"],
           "default": "enabled"
@@ -157,6 +157,21 @@ const SiteSchemaJSON = `{
             ]
           ]
         },
+        "search.index.branches": {
+          "description": "A map from repository name to a list of extra revs (branch, ref, tag, commit sha, etc) to index for a repository. We always index the default branch (\"HEAD\") and revisions in version contexts. This allows specifying additional revisions. Sourcegraph can index up to 64 branches per repository.",
+          "type": "object",
+          "additionalProperties": {
+            "type": "array",
+            "items": { "type": "string" },
+            "maxItems": 64
+          },
+          "examples": [
+            {
+              "github.com/sourcegraph/sourcegraph": ["3.17", "f6ca985c27486c2df5231ea3526caa4a4108ffb6", "v3.17.1"],
+              "name/of/repo": ["develop"]
+            }
+          ]
+        },
         "versionContexts": {
           "description": "JSON array of version context configuration",
           "type": "array",
@@ -188,7 +203,7 @@ const SiteSchemaJSON = `{
                       "type": "string"
                     },
                     "rev": {
-                      "description": "Branch, tag, or commit hash",
+                      "description": "Branch, tag, or commit hash. \"HEAD\" or \"\" can be used for the default branch.",
                       "type": "string"
                     }
                   }
@@ -243,8 +258,15 @@ const SiteSchemaJSON = `{
       "!go": { "pointer": true },
       "group": "Campaigns"
     },
+    "campaigns.enabled": {
+      "description": "Enables/disables the campaigns feature.",
+      "type": "boolean",
+      "!go": { "pointer": true },
+      "group": "Campaigns",
+      "default": true
+    },
     "campaigns.readAccess.enabled": {
-      "description": "Enables read-only access to campaigns for non-site-admin users. This is a setting for the experimental campaigns feature. These will only have an effect when campaigns is enabled with ` + "`" + `{\"experimentalFeatures\": {\"automation\": \"enabled\"}}` + "`" + `.",
+      "description": "DEPRECATED: Enables read-only access to campaigns for non-site-admin users. This doesn't have an effect anymore.",
       "type": "boolean",
       "!go": { "pointer": true },
       "group": "Campaigns"
@@ -325,11 +347,48 @@ const SiteSchemaJSON = `{
       "default": 1,
       "group": "External services"
     },
+    "repoConcurrentExternalServiceSyncers": {
+      "description": "The number of concurrent external service syncers that can run.",
+      "type": "integer",
+      "default": 3,
+      "group": "External services"
+    },
     "maxReposToSearch": {
-      "description": "The maximum number of repositories to search across. The user is prompted to narrow their query if exceeded. Any value less than or equal to zero means unlimited.",
+      "description": "DEPRECATED: Configure maxRepos in search.limits. The maximum number of repositories to search across. The user is prompted to narrow their query if exceeded. Any value less than or equal to zero means unlimited.",
       "type": "integer",
       "default": -1,
       "group": "Search"
+    },
+    "search.limits": {
+      "description": "Limits that search applies for number of repositories searched and timeouts.",
+      "type": "object",
+      "group": "Search",
+      "additionalProperties": false,
+      "properties": {
+        "maxTimeoutSeconds": {
+          "description": "The maximum value for \"timeout:\" that search will respect. \"timeout:\" values larger than maxTimeoutSeconds are capped at maxTimeoutSeconds. Note: You need to ensure your load balancer / reverse proxy in front of Sourcegraph won't timeout the request for larger values. Note: Too many large rearch requests may harm Soucregraph for other users. Defaults to 1 minute.",
+          "type": "integer",
+          "default": "60",
+          "minimum": 1
+        },
+        "maxRepos": {
+          "description": "The maximum number of repositories to search across. The user is prompted to narrow their query if exceeded. Any value less than or equal to zero means unlimited.",
+          "type": "integer",
+          "default": -1
+        },
+        "commitDiffMaxRepos": {
+          "description": "The maximum number of repositories to search across when doing a \"type:diff\" or \"type:commit\". The user is prompted to narrow their query if the limit is exceeded. There is a separate limit (commitDiffWithTimeFilterMaxRepos) when \"after:\" or \"before:\" is specified because those queries are faster. Defaults to 50.",
+          "type": "integer",
+          "default": 50,
+          "minimum": 1
+        },
+        "commitDiffWithTimeFilterMaxRepos": {
+          "description": "The maximum number of repositories to search across when doing a \"type:diff\" or \"type:commit\" with a \"after:\" or \"before:\" filter. The user is prompted to narrow their query if the limit is exceeded. There is a separate limit (commitDiffMaxRepos) when \"after:\" or \"before:\" is not specified because those queries are slower. Defaults to 10000.",
+          "type": "integer",
+          "default": 10000,
+          "minimum": 1
+        }
+      }
     },
     "parentSourcegraph": {
       "description": "URL to fetch unreachable repository details from. Defaults to \"https://sourcegraph.com\"",
@@ -366,6 +425,12 @@ const SiteSchemaJSON = `{
       ],
       "group": "Security"
     },
+    "externalService.userMode": {
+      "description": "Enable to allow users to add external services for public reposirories to the Sourcegraph instance.",
+      "type": "string",
+      "enum": ["public", "disabled"],
+      "default": "disabled"
+    },
     "permissions.userMapping": {
       "description": "Settings for Sourcegraph permissions, which allow the site admin to explicitly manage repository permissions via the GraphQL API. This setting cannot be enabled if repository permissions for any specific external service are enabled (i.e., when the external service's ` + "`" + `authorization` + "`" + ` field is set).",
       "type": "object",
@@ -388,23 +453,6 @@ const SiteSchemaJSON = `{
         "bindID": "email"
       },
       "examples": [{ "bindID": "email" }, { "bindID": "username" }],
-      "group": "Security"
-    },
-    "permissions.backgroundSync": {
-      "description": "Sync code host repository and user permissions in the background.",
-      "type": "object",
-      "additionalProperties": false,
-      "properties": {
-        "enabled": {
-          "description": "Whether syncing permissions in the background is enabled.",
-          "type": "boolean",
-          "default": true
-        }
-      },
-      "default": {
-        "enabled": true
-      },
-      "examples": [{ "enabled": true }],
       "group": "Security"
     },
     "branding": {
@@ -469,7 +517,7 @@ const SiteSchemaJSON = `{
           "type": "string"
         },
         "password": {
-          "description": "The username to use when communicating with the SMTP server.",
+          "description": "The password to use when communicating with the SMTP server.",
           "type": "string"
         },
         "authentication": {
@@ -480,6 +528,10 @@ const SiteSchemaJSON = `{
         "domain": {
           "description": "The HELO domain to provide to the SMTP server (if needed).",
           "type": "string"
+        },
+        "disableTLS": {
+          "description": "Disable TLS verification",
+          "type": "boolean"
         }
       },
       "default": null,
@@ -575,17 +627,6 @@ const SiteSchemaJSON = `{
       "type": "string",
       "examples": ["https://sourcegraph.example.com"]
     },
-    "lightstepAccessToken": {
-      "description": "DEPRECATED. Use Jaeger (` + "`" + `\"observability.tracing\": { \"sampling\": \"selective\" }` + "`" + `), instead.",
-      "type": "string",
-      "group": "Misc."
-    },
-    "lightstepProject": {
-      "description": "DEPRECATED. Use Jaeger (` + "`" + `\"observability.tracing\": { \"sampling\": \"selective\" }` + "`" + `), instead.",
-      "type": "string",
-      "examples": ["myproject"],
-      "group": "Misc."
-    },
     "useJaeger": {
       "description": "DEPRECATED. Use ` + "`" + `\"observability.tracing\": { \"sampling\": \"all\" }` + "`" + `, instead. Enables Jaeger tracing.",
       "type": "boolean",
@@ -613,36 +654,58 @@ const SiteSchemaJSON = `{
       "type": "array",
       "items": {
         "type": "object",
-        "required": ["level", "id", "notifier"],
+        "required": ["level", "notifier"],
         "properties": {
           "level": {
             "description": "Sourcegraph alert level to subscribe to notifications for.",
             "type": "string",
             "enum": ["warning", "critical"]
           },
-          "id": {
-            "description": "Unique identifier for this alert.",
-            "type": "string"
-          },
           "notifier": {
             "type": "object",
             "properties": {
               "type": {
                 "type": "string",
-                "enum": ["slack", "pagerduty", "webhook"]
+                "enum": ["slack", "pagerduty", "webhook", "email", "opsgenie"]
               }
             },
             "oneOf": [
-              { "$ref": "#/definitions/GrafanaNotifierSlack" },
-              { "$ref": "#/definitions/GrafanaNotifierPagerduty" },
-              { "$ref": "#/definitions/GrafanaNotifierWebhook" },
-              { "$ref": "#/definitions/GrafanaNotifierOpsGenie" }
+              { "$ref": "#/definitions/NotifierSlack" },
+              { "$ref": "#/definitions/NotifierPagerduty" },
+              { "$ref": "#/definitions/NotifierWebhook" },
+              { "$ref": "#/definitions/NotifierEmail" },
+              { "$ref": "#/definitions/NotifierOpsGenie" }
             ],
             "!go": {
               "taggedUnionType": true
             }
+          },
+          "disableSendResolved": {
+            "description": "Disable notifications when alerts resolve themselves.",
+            "type": "boolean",
+            "default": false
+          },
+          "owners": {
+            "description": "Do not use. When set, only receive alerts owned by the specified teams. Used by Sourcegraph internally.",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "default": {
+          "level": "critical",
+          "notifier": {
+            "type": ""
           }
         }
+      }
+    },
+    "observability.silenceAlerts": {
+      "description": "Silence individual Sourcegraph alerts by identifier.",
+      "type": "array",
+      "items": {
+        "type": "string"
       }
     },
     "observability.logSlowSearches": {
@@ -695,7 +758,7 @@ const SiteSchemaJSON = `{
       "group": "Sourcegraph.com"
     },
     "auth.providers": {
-      "description": "The authentication providers to use for identifying and signing in users. See instructions below for configuring SAML, OpenID Connect (including G Suite), and HTTP authentication proxies. Multiple authentication providers are supported (by specifying multiple elements in this array).",
+      "description": "The authentication providers to use for identifying and signing in users. See instructions below for configuring SAML, OpenID Connect (including Google Workspace), and HTTP authentication proxies. Multiple authentication providers are supported (by specifying multiple elements in this array).",
       "type": "array",
       "items": {
         "required": ["type"],
@@ -751,6 +814,18 @@ const SiteSchemaJSON = `{
       "enum": ["release", "none"],
       "default": "release",
       "examples": ["none"],
+      "group": "Misc."
+    },
+    "userRepos.maxPerSite": {
+      "description": "The site wide maximum number of repos that can be added by non site admins",
+      "type": "integer",
+      "default": 200000,
+      "group": "Misc."
+    },
+    "userRepos.maxPerUser": {
+      "description": "The per user maximum number of repos that can be added by non site admins",
+      "type": "integer",
+      "default": 2000,
       "group": "Misc."
     }
   },
@@ -999,8 +1074,8 @@ const SiteSchemaJSON = `{
         }
       }
     },
-    "GrafanaNotifierSlack": {
-      "description": "Slack notifier - see https://grafana.com/docs/grafana/latest/alerting/notifications/#slack",
+    "NotifierSlack": {
+      "description": "Slack notifier",
       "type": "object",
       "required": ["type"],
       "properties": {
@@ -1027,46 +1102,31 @@ const SiteSchemaJSON = `{
         "icon_url": {
           "description": "Provide a URL to an image to use as the icon for the bot’s message.",
           "type": "string"
-        },
-        "mentionUsers": {
-          "description": "Optionally mention one or more users in the Slack notification sent by Grafana. You have to refer to users, comma-separated, via their corresponding Slack IDs (which you can find by clicking the overflow button on each user’s Slack profile).",
-          "type": "string"
-        },
-        "mentionGroups": {
-          "description": "Optionally mention one or more groups in the Slack notification sent by Grafana. You have to refer to groups, comma-separated, via their corresponding Slack IDs (which you can get from each group’s Slack profile URL).",
-          "type": "string"
-        },
-        "mentionChannel": {
-          "description": "Optionally mention either all channel members or just active ones.",
-          "type": "string"
-        },
-        "token": {
-          "description": "If provided, Grafana will upload the generated image via Slack’s file.upload API method, not the external image destination.",
-          "type": "string"
         }
       }
     },
-    "GrafanaNotifierPagerduty": {
-      "description": "Pagerduty notifier - see https://grafana.com/docs/grafana/latest/alerting/notifications/#pagerduty",
+    "NotifierPagerduty": {
+      "description": "PagerDuty notifier",
       "type": "object",
-      "required": ["type", "integrationKey"],
+      "required": ["type", "routingKey"],
       "properties": {
         "type": {
           "type": "string",
           "const": "pagerduty"
         },
         "integrationKey": {
-          "description": "Integration key for PagerDuty.",
+          "description": "Integration key for the PagerDuty Events API v2 - see https://developer.pagerduty.com/docs/events-api-v2/overview",
           "type": "string"
         },
-        "autoResolve": {
-          "description": "Resolve incidents in PagerDuty once the alert goes back to ok",
-          "type": "boolean"
-        }
+        "severity": {
+          "description": "Severity level for PagerDuty alert",
+          "type": "string"
+        },
+        "apiUrl": { "type": "string" }
       }
     },
-    "GrafanaNotifierWebhook": {
-      "description": "Webhook notifier - see https://grafana.com/docs/grafana/latest/alerting/notifications/#webhook",
+    "NotifierWebhook": {
+      "description": "Webhook notifier",
       "type": "object",
       "required": ["type", "url"],
       "properties": {
@@ -1076,13 +1136,29 @@ const SiteSchemaJSON = `{
         },
         "url": { "type": "string" },
         "username": { "type": "string" },
-        "password": { "type": "string" }
+        "password": { "type": "string" },
+        "bearerToken": { "type": "string" }
       }
     },
-    "GrafanaNotifierOpsGenie": {
-      "description": "OpsGenie notifier - see https://docs.opsgenie.com/docs/grafana-integration",
+    "NotifierEmail": {
+      "description": "Email notifier",
       "type": "object",
-      "required": ["type", "apiKey", "apiUrl"],
+      "required": ["type", "address"],
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "email"
+        },
+        "address": {
+          "description": "Address to send email to",
+          "type": "string"
+        }
+      }
+    },
+    "NotifierOpsGenie": {
+      "description": "OpsGenie notifier",
+      "type": "object",
+      "required": ["type", "apiKey"],
       "properties": {
         "type": {
           "type": "string",
@@ -1090,7 +1166,31 @@ const SiteSchemaJSON = `{
         },
         "apiKey": { "type": "string" },
         "apiUrl": { "type": "string" },
-        "autoClose": { "type": "boolean" }
+        "priority": {
+          "type": "string",
+          "enum": ["P1", "P2", "P3", "P4", "P5"]
+        },
+        "responders": {
+          "type": "array",
+          "description": "List of responders responsible for notifications.",
+          "items": {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string",
+                "enum": ["team", "user", "escalation", "schedule"]
+              },
+              "id": { "type": "string" },
+              "name": { "type": "string" },
+              "username": { "type": "string" }
+            },
+            "oneOf": [
+              { "required": ["type", "id"] },
+              { "required": ["type", "name"] },
+              { "required": ["type", "username"] }
+            ]
+          }
+        }
       }
     }
   }

@@ -6,13 +6,14 @@ import (
 	"sort"
 	"testing"
 
-	"github.com/sourcegraph/sourcegraph/cmd/frontend/db"
 	"github.com/sourcegraph/sourcegraph/cmd/frontend/types"
+	"github.com/sourcegraph/sourcegraph/internal/db"
+	"github.com/sourcegraph/sourcegraph/schema"
 )
 
 func TestSearchFilterSuggestions(t *testing.T) {
-	mockResolveRepoGroups = func() (map[string][]*types.Repo, error) {
-		return map[string][]*types.Repo{
+	mockResolveRepoGroups = func() (map[string][]RepoGroupValue, error) {
+		return map[string][]RepoGroupValue{
 			"repogroup1": {},
 			"repogroup2": {},
 		}, nil
@@ -27,19 +28,37 @@ func TestSearchFilterSuggestions(t *testing.T) {
 	}
 	defer func() { db.Mocks.Repos.List = nil }()
 
-	r, err := (&schemaResolver{}).SearchFilterSuggestions(context.Background())
-	if err != nil {
-		t.Fatal("SearchFilterSuggestions:", err)
+	tests := []struct {
+		want     *searchFilterSuggestions
+		globbing bool
+	}{
+		{want: &searchFilterSuggestions{
+			repogroups: []string{"repogroup1", "repogroup2"},
+			repos:      []string{"^bar-repo$", `^github\.com/foo/repo$`}},
+			globbing: false,
+		},
+		{want: &searchFilterSuggestions{
+			repogroups: []string{"repogroup1", "repogroup2"},
+			repos:      []string{"bar-repo", `github.com/foo/repo`}},
+			globbing: true,
+		},
 	}
 
-	want := &searchFilterSuggestions{
-		repogroups: []string{"repogroup1", "repogroup2"},
-		repos:      []string{"^bar-repo$", `^github\.com/foo/repo$`},
-	}
+	mockDecodedViewerFinalSettings = &schema.Settings{}
+	defer func() { mockDecodedViewerFinalSettings = nil }()
 
-	sort.Strings(r.repogroups)
-	sort.Strings(r.repos)
-	if !reflect.DeepEqual(r, want) {
-		t.Errorf("got != want\ngot:  %v\nwant: %v", r, want)
+	for _, tt := range tests {
+		mockDecodedViewerFinalSettings.SearchGlobbing = &tt.globbing
+
+		r, err := (&schemaResolver{}).SearchFilterSuggestions(context.Background())
+		if err != nil {
+			t.Fatal("SearchFilterSuggestions:", err)
+		}
+
+		sort.Strings(r.repogroups)
+		sort.Strings(r.repos)
+		if !reflect.DeepEqual(r, tt.want) {
+			t.Errorf("got != want\ngot:  %v\nwant: %v", r, tt.want)
+		}
 	}
 }

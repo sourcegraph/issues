@@ -5,6 +5,7 @@ import (
 	"runtime"
 
 	"github.com/pkg/errors"
+	"github.com/sourcegraph/sourcegraph/enterprise/internal/codeintel/bundles/persistence"
 	"github.com/sourcegraph/sourcegraph/enterprise/internal/codeintel/bundles/persistence/serialization"
 	"github.com/sourcegraph/sourcegraph/enterprise/internal/codeintel/bundles/persistence/sqlite/util"
 	"github.com/sourcegraph/sourcegraph/enterprise/internal/codeintel/bundles/types"
@@ -14,65 +15,23 @@ import (
 // NumWriterRoutines is the number of goroutines launched to write database records.
 var NumWriterRoutines = runtime.NumCPU() * 2
 
-// KeyedDocument pairs a document with its path.
-type KeyedDocument struct {
-	Path     string
-	Document types.DocumentData
-}
-
-// IndexedResultChunk pairs a result chunk with its index.
-type IndexedResultChunk struct {
-	Index       int
-	ResultChunk types.ResultChunkData
-}
-
 // WriteDocuments serializes the given documents and writes them in batch to the given execable.
-func WriteDocuments(ctx context.Context, s sqliteutil.Execable, tableName string, serializer serialization.Serializer, documents map[string]types.DocumentData) error {
-	ch := make(chan KeyedDocument, len(documents))
-
-	go func() {
-		defer close(ch)
-
-		for k, v := range documents {
-			ch <- KeyedDocument{Path: k, Document: v}
-		}
-	}()
-
+func WriteDocuments(ctx context.Context, s sqliteutil.Execable, tableName string, serializer serialization.Serializer, ch chan persistence.KeyedDocumentData) error {
 	return WriteDocumentsChan(ctx, s, tableName, serializer, ch)
 }
 
 // WriteResultChunks serializes the given result chunks and writes them in batch to the given execable.
-func WriteResultChunks(ctx context.Context, s sqliteutil.Execable, tableName string, serializer serialization.Serializer, resultChunks map[int]types.ResultChunkData) error {
-	ch := make(chan IndexedResultChunk, len(resultChunks))
-
-	go func() {
-		defer close(ch)
-
-		for i, v := range resultChunks {
-			ch <- IndexedResultChunk{Index: i, ResultChunk: v}
-		}
-	}()
-
+func WriteResultChunks(ctx context.Context, s sqliteutil.Execable, tableName string, serializer serialization.Serializer, ch chan persistence.IndexedResultChunkData) error {
 	return WriteResultChunksChan(ctx, s, tableName, serializer, ch)
 }
 
 // WriteMonikerLocations serializes the given moniker locations and writes them in batch to the given execable.
-func WriteMonikerLocations(ctx context.Context, s sqliteutil.Execable, tableName string, serializer serialization.Serializer, monikerLocations []types.MonikerLocations) error {
-	ch := make(chan types.MonikerLocations, len(monikerLocations))
-
-	go func() {
-		defer close(ch)
-
-		for _, ml := range monikerLocations {
-			ch <- ml
-		}
-	}()
-
+func WriteMonikerLocations(ctx context.Context, s sqliteutil.Execable, tableName string, serializer serialization.Serializer, ch chan types.MonikerLocations) error {
 	return WriteMonikerLocationsChan(ctx, s, tableName, serializer, ch)
 }
 
 // WriteDocumentsChan serializes and writes the document data read from the given channel.
-func WriteDocumentsChan(ctx context.Context, s sqliteutil.Execable, tableName string, serializer serialization.Serializer, ch <-chan KeyedDocument) error {
+func WriteDocumentsChan(ctx context.Context, s sqliteutil.Execable, tableName string, serializer serialization.Serializer, ch <-chan persistence.KeyedDocumentData) error {
 	return util.InvokeN(NumWriterRoutines, func() error {
 		inserter := sqliteutil.NewBatchInserter(s, tableName, "path", "data")
 
@@ -96,7 +55,7 @@ func WriteDocumentsChan(ctx context.Context, s sqliteutil.Execable, tableName st
 }
 
 // WriteResultChunksChan serializes and writes the result chunk data read from the given channel.
-func WriteResultChunksChan(ctx context.Context, s sqliteutil.Execable, tableName string, serializer serialization.Serializer, ch <-chan IndexedResultChunk) error {
+func WriteResultChunksChan(ctx context.Context, s sqliteutil.Execable, tableName string, serializer serialization.Serializer, ch <-chan persistence.IndexedResultChunkData) error {
 	return util.InvokeN(NumWriterRoutines, func() error {
 		inserter := sqliteutil.NewBatchInserter(s, tableName, "id", "data")
 

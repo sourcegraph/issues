@@ -6,7 +6,6 @@ import (
 
 	"github.com/inconshreveable/log15"
 	"github.com/pkg/errors"
-	"github.com/sourcegraph/sourcegraph/enterprise/internal/codeintel/bundles/client"
 	bundles "github.com/sourcegraph/sourcegraph/enterprise/internal/codeintel/bundles/client"
 	"github.com/sourcegraph/sourcegraph/enterprise/internal/codeintel/store"
 )
@@ -31,7 +30,7 @@ func (api *codeIntelAPI) Diagnostics(ctx context.Context, prefix string, uploadI
 
 	diagnostics, totalCount, err := bundleClient.Diagnostics(ctx, pathInBundle, offset, limit)
 	if err != nil {
-		if err == client.ErrNotFound {
+		if err == bundles.ErrNotFound {
 			log15.Warn("Bundle does not exist")
 			return nil, 0, nil
 		}

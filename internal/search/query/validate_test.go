@@ -10,8 +10,9 @@ import (
 
 func TestAndOrQuery_Validation(t *testing.T) {
 	cases := []struct {
-		input string
-		want  string
+		input      string
+		searchType SearchType // nil value is regexp
+		want       string
 	}{
 		{
 			input: "case:yes case:no",
@@ -45,10 +46,40 @@ func TestAndOrQuery_Validation(t *testing.T) {
 			input: "count:-1",
 			want:  "field count requires a positive number",
 		},
+		{
+			input: "+",
+			want:  "error parsing regexp: missing argument to repetition operator: `+`",
+		},
+		{
+			input: `\\\`,
+			want:  "error parsing regexp: trailing backslash at end of expression: ``",
+		},
+		{
+			input:      `-content:"foo"`,
+			want:       "the query contains a negated search pattern. Structural search does not support negated search patterns at the moment",
+			searchType: SearchTypeStructural,
+		},
+		{
+			input:      `NOT foo`,
+			want:       "the query contains a negated search pattern. Structural search does not support negated search patterns at the moment",
+			searchType: SearchTypeStructural,
+		},
+		{
+			input: "repo:foo rev:a rev:b",
+			want:  `field "rev" may not be used more than once`,
+		},
+		{
+			input: "repo:foo@a rev:b",
+			want:  "invalid syntax. You specified both @ and rev: for a repo: filter and I don't know how to interpret this. Remove either @ or rev: and try again",
+		},
+		{
+			input: "repo:foo author:rob@saucegraph.com",
+			want:  `your query contains the field 'author', which requires type:commit or type:diff in the query`,
+		},
 	}
 	for _, c := range cases {
 		t.Run("validate and/or query", func(t *testing.T) {
-			_, err := ProcessAndOr(c.input, SearchTypeRegex)
+			_, err := ProcessAndOr(c.input, ParserOptions{c.searchType, false})
 			if err == nil {
 				t.Fatal("expected test to fail")
 			}
@@ -85,7 +116,7 @@ func TestAndOrQuery_IsCaseSensitive(t *testing.T) {
 	}
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {
-			query, err := ProcessAndOr(c.input, SearchTypeRegex)
+			query, err := ProcessAndOr(c.input, ParserOptions{SearchTypeRegex, false})
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -115,7 +146,7 @@ func TestAndOrQuery_RegexpPatterns(t *testing.T) {
 		},
 	}
 	t.Run("for regexp field", func(t *testing.T) {
-		query, err := ProcessAndOr(c.query, SearchTypeRegex)
+		query, err := ProcessAndOr(c.query, ParserOptions{SearchTypeRegex, false})
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -130,7 +161,7 @@ func TestAndOrQuery_RegexpPatterns(t *testing.T) {
 }
 
 func TestAndOrQuery_CaseInsensitiveFields(t *testing.T) {
-	query, err := ProcessAndOr("repoHasFile:foo", SearchTypeRegex)
+	query, err := ProcessAndOr("repoHasFile:foo", ParserOptions{SearchTypeRegex, false})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -177,7 +208,7 @@ func TestPartitionSearchPattern(t *testing.T) {
 		},
 		{
 			input: "file:foo (x y)",
-			want:  `"file:foo" (concat "(x" "y)")`,
+			want:  `"file:foo" "(x y)"`,
 		},
 		{
 			input: "(file:foo x) y",
@@ -218,7 +249,7 @@ func TestPartitionSearchPattern(t *testing.T) {
 	}
 	for _, tt := range cases {
 		t.Run("partition search pattern", func(t *testing.T) {
-			q, _ := ParseAndOr(tt.input)
+			q, _ := ParseAndOr(tt.input, SearchTypeRegex)
 			scopeParameters, pattern, err := PartitionSearchPattern(q)
 			if err != nil {
 				if diff := cmp.Diff(tt.want, err.Error()); diff != "" {

@@ -1,0 +1,1913 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`CampaignDetailsPage viewerCanAdminister: false viewing existing 1`] = `
+<CampaignDetailsPage
+  campaignName="c"
+  deleteCampaign={[Function]}
+  fetchCampaignByNamespace={[Function]}
+  history="[History]"
+  isLightTheme={true}
+  location="[Location path=/]"
+  namespaceID="namespace123"
+  queryChangesetCountsOverTime={[Function]}
+  queryChangesets={[Function]}
+  setBreadcrumb={[Function]}
+  telemetryService={
+    Object {
+      "log": [Function],
+      "logViewEvent": [Function],
+    }
+  }
+  useBreadcrumb={[Function]}
+>
+  <PageTitle
+    title="n"
+  />
+  <CampaignHeader
+    actionSection={
+      <CampaignDetailsActionSection
+        campaignClosed={false}
+        campaignID="c"
+        campaignNamespaceURL="/users/alice"
+        deleteCampaign={[Function]}
+        history="[History]"
+      />
+    }
+    className="test-campaign-details-page"
+    name="n"
+    namespace={
+      Object {
+        "namespaceName": "alice",
+        "url": "/users/alice",
+      }
+    }
+  >
+    <PageHeader
+      actions={
+        <CampaignDetailsActionSection
+          campaignClosed={false}
+          campaignID="c"
+          campaignNamespaceURL="/users/alice"
+          deleteCampaign={[Function]}
+          history="[History]"
+        />
+      }
+      className="justify-content-end test-campaign-details-page"
+      icon={[Function]}
+      title={
+        <React.Fragment>
+          <AnchorLink
+            to="/users/alice/campaigns"
+          >
+            alice
+          </AnchorLink>
+           / 
+          n
+        </React.Fragment>
+      }
+    >
+      <div
+        className="page-header d-flex flex-wrap align-items-center justify-content-end test-campaign-details-page"
+      >
+        <h1
+          className="flex-grow-1"
+        >
+          <CampaignsIconFlushLeft
+            className="icon-inline page-header__icon"
+          >
+            <Memo(BaseCampaignsIcon)
+              className="icon-inline page-header__icon"
+              viewBox="2 0 20 20"
+            />
+          </CampaignsIconFlushLeft>
+           
+          <AnchorLink
+            to="/users/alice/campaigns"
+          >
+            <a
+              href="/users/alice/campaigns"
+            >
+              alice
+            </a>
+          </AnchorLink>
+           / 
+          n
+        </h1>
+        <CampaignDetailsActionSection
+          campaignClosed={false}
+          campaignID="c"
+          campaignNamespaceURL="/users/alice"
+          deleteCampaign={[Function]}
+          history="[History]"
+        >
+          <AnchorLink
+            className="btn btn-outline-danger test-campaigns-close-btn"
+            data-tooltip="View a preview of all changes that will happen when you close this campaign."
+            to="//close"
+          >
+            <a
+              className="btn btn-outline-danger test-campaigns-close-btn"
+              data-tooltip="View a preview of all changes that will happen when you close this campaign."
+              href="//close"
+            >
+              <Memo(DeleteIcon)
+                className="icon-inline"
+              />
+               Close
+            </a>
+          </AnchorLink>
+        </CampaignDetailsActionSection>
+      </div>
+    </PageHeader>
+  </CampaignHeader>
+  <CampaignInfoByline
+    className="mb-3"
+    createdAt="2020-01-01"
+    initialApplier={
+      Object {
+        "url": "/users/alice",
+        "username": "alice",
+      }
+    }
+    lastAppliedAt="2020-01-01"
+    lastApplier={
+      Object {
+        "url": "/users/bob",
+        "username": "bob",
+      }
+    }
+  >
+    <div
+      className="text-muted mb-3"
+    >
+      <AnchorLink
+        to="/users/alice"
+      >
+        <a
+          href="/users/alice"
+        >
+          alice
+        </a>
+      </AnchorLink>
+       
+      <Timestamp
+        date="2020-01-01"
+      >
+        <span
+          className="timestamp"
+          data-tooltip="2020-01-01"
+        >
+          in almost 14 years
+        </span>
+      </Timestamp>
+    </div>
+  </CampaignInfoByline>
+  <UnpublishedNotice
+    className="mb-3"
+    total={10}
+    unpublished={2}
+  />
+  <CampaignStatsCard
+    className="mb-3"
+    closedAt={null}
+    stats={
+      Object {
+        "closed": 0,
+        "deleted": 1,
+        "draft": 0,
+        "merged": 0,
+        "open": 8,
+        "total": 10,
+        "unpublished": 2,
+      }
+    }
+  >
+    <div
+      className="card mb-3"
+    >
+      <div
+        className="card-body p-3"
+      >
+        <div
+          className="d-flex flex-wrap justify-content-between align-items-center"
+        >
+          <div
+            className="d-flex flex-wrap align-items-center flex-grow-1"
+          >
+            <h2
+              className="m-0 mr-3"
+            >
+              <CampaignStateBadge
+                className="campaign-stats-card__state-badge"
+                isClosed={false}
+              >
+                <span
+                  className="badge badge-success text-uppercase campaign-stats-card__state-badge"
+                >
+                  Open
+                </span>
+              </CampaignStateBadge>
+            </h2>
+            <h1
+              className="d-inline mb-0"
+            >
+              <Memo(ProgressCheckIcon)
+                className="icon-inline mr-2 text-muted"
+              />
+            </h1>
+             
+            <span
+              className="lead text-nowrap campaign-stats-card__completeness"
+            >
+              10
+              % complete
+            </span>
+            <div
+              className="d-flex flex-wrap justify-content-end flex-grow-1"
+            >
+              <CampaignStatsTotalAction
+                count={10}
+              >
+                <div
+                  className="m-0 flex-grow-0 pr-2 text-truncate campaign-stats-card__stat text-nowrap d-flex flex-column align-items-center justify-content-center"
+                >
+                  <span
+                    className="campaign-stats-card__changesets-pill"
+                  >
+                    <span
+                      className="badge badge-pill badge-secondary"
+                    >
+                      10
+                    </span>
+                  </span>
+                  <span
+                    className="text-muted"
+                  >
+                    changesets
+                  </span>
+                </div>
+              </CampaignStatsTotalAction>
+              <ChangesetStatusUnpublished
+                className="d-flex flex-grow-0 px-2 text-truncate campaign-stats-card__stat"
+                label={
+                  <span
+                    className="text-muted"
+                  >
+                    2
+                     unpublished
+                  </span>
+                }
+              >
+                <div
+                  className="m-0 text-nowrap flex-column align-items-center justify-content-center text-muted d-flex flex-grow-0 px-2 text-truncate campaign-stats-card__stat"
+                  data-tooltip="Set published: true to publish to code host"
+                >
+                  <Memo(SourceBranchIcon) />
+                  <span
+                    className="text-muted"
+                  >
+                    2
+                     unpublished
+                  </span>
+                </div>
+              </ChangesetStatusUnpublished>
+              <ChangesetStatusDraft
+                className="d-flex flex-grow-0 px-2 text-truncate campaign-stats-card__stat"
+                label={
+                  <span
+                    className="text-muted"
+                  >
+                    0
+                     draft
+                  </span>
+                }
+              >
+                <div
+                  className="m-0 text-nowrap flex-column align-items-center justify-content-center text-muted d-flex flex-grow-0 px-2 text-truncate campaign-stats-card__stat"
+                >
+                  <Memo(SourcePullIcon) />
+                  <span
+                    className="text-muted"
+                  >
+                    0
+                     draft
+                  </span>
+                </div>
+              </ChangesetStatusDraft>
+              <ChangesetStatusOpen
+                className="d-flex flex-grow-0 px-2 text-truncate campaign-stats-card__stat"
+                label={
+                  <span
+                    className="text-muted"
+                  >
+                    8
+                     open
+                  </span>
+                }
+              >
+                <div
+                  className="m-0 text-nowrap flex-column align-items-center justify-content-center text-success d-flex flex-grow-0 px-2 text-truncate campaign-stats-card__stat"
+                >
+                  <Memo(SourcePullIcon) />
+                  <span
+                    className="text-muted"
+                  >
+                    8
+                     open
+                  </span>
+                </div>
+              </ChangesetStatusOpen>
+              <ChangesetStatusClosed
+                className="d-flex flex-grow-0 px-2 text-truncate campaign-stats-card__stat"
+                label={
+                  <span
+                    className="text-muted"
+                  >
+                    0
+                     closed
+                  </span>
+                }
+              >
+                <div
+                  className="m-0 text-nowrap flex-column align-items-center justify-content-center text-danger d-flex flex-grow-0 px-2 text-truncate campaign-stats-card__stat"
+                >
+                  <Memo(SourcePullIcon) />
+                  <span
+                    className="text-muted"
+                  >
+                    0
+                     closed
+                  </span>
+                </div>
+              </ChangesetStatusClosed>
+              <ChangesetStatusMerged
+                className="d-flex flex-grow-0 pl-2 text-truncate campaign-stats-card__stat"
+                label={
+                  <span
+                    className="text-muted"
+                  >
+                    0
+                     merged
+                  </span>
+                }
+              >
+                <div
+                  className="m-0 text-nowrap flex-column align-items-center justify-content-center text-merged d-flex flex-grow-0 pl-2 text-truncate campaign-stats-card__stat"
+                >
+                  <Memo(SourceMergeIcon) />
+                  <span
+                    className="text-muted"
+                  >
+                    0
+                     merged
+                  </span>
+                </div>
+              </ChangesetStatusMerged>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </CampaignStatsCard>
+  <CampaignDescription
+    description="d"
+    history="[History]"
+  >
+    <div
+      className="mb-3"
+    >
+      <Markdown
+        dangerousInnerHTML="<p>d</p>
+"
+        history="[History]"
+      >
+        <div
+          className="markdown"
+          dangerouslySetInnerHTML={
+            Object {
+              "__html": "<p>d</p>
+",
+            }
+          }
+          onClick={[Function]}
+        />
+      </Markdown>
+    </div>
+  </CampaignDescription>
+  <CampaignTabs
+    campaign={
+      Object {
+        "__typename": "Campaign",
+        "branch": "awesome-branch",
+        "changesets": Object {
+          "stats": Object {
+            "closed": 0,
+            "deleted": 1,
+            "draft": 0,
+            "merged": 0,
+            "open": 8,
+            "total": 10,
+            "unpublished": 2,
+          },
+          "totalCount": 0,
+        },
+        "closedAt": null,
+        "createdAt": "2020-01-01",
+        "currentSpec": Object {
+          "originalInput": "name: awesome-campaign
+description: somestring",
+        },
+        "description": "d",
+        "diffStat": Object {
+          "added": 5,
+          "changed": 3,
+          "deleted": 2,
+        },
+        "id": "c",
+        "initialApplier": Object {
+          "url": "/users/alice",
+          "username": "alice",
+        },
+        "lastAppliedAt": "2020-01-01",
+        "lastApplier": Object {
+          "url": "/users/bob",
+          "username": "bob",
+        },
+        "name": "n",
+        "namespace": Object {
+          "namespaceName": "alice",
+          "url": "/users/alice",
+        },
+        "updatedAt": "2020-01-01",
+        "url": "/users/alice/campaigns/c",
+        "viewerCanAdminister": false,
+      }
+    }
+    history="[History]"
+    isLightTheme={true}
+    location="[Location path=/]"
+    queryChangesetCountsOverTime={[Function]}
+    queryChangesets={[Function]}
+    telemetryService={
+      Object {
+        "log": [Function],
+        "logViewEvent": [Function],
+      }
+    }
+  >
+    <div
+      className="overflow-auto mb-2"
+    >
+      <ul
+        className="nav nav-tabs d-inline-flex d-sm-flex flex-nowrap text-nowrap"
+      >
+        <li
+          className="nav-item"
+        >
+          <a
+            className="nav-link active"
+            href=""
+            onClick={[Function]}
+          >
+            <Memo(SourceBranchIcon)
+              className="icon-inline text-muted mr-1"
+            />
+             Changesets
+          </a>
+        </li>
+        <li
+          className="nav-item test-campaigns-chart-tab"
+        >
+          <a
+            className="nav-link"
+            href=""
+            onClick={[Function]}
+          >
+            <Memo(ChartLineVariantIcon)
+              className="icon-inline text-muted mr-1"
+            />
+             Burndown chart
+          </a>
+        </li>
+        <li
+          className="nav-item test-campaigns-spec-tab"
+        >
+          <a
+            className="nav-link"
+            href=""
+            onClick={[Function]}
+          >
+            <Memo(FileDocumentIcon)
+              className="icon-inline text-muted mr-1"
+            />
+             Spec
+          </a>
+        </li>
+      </ul>
+    </div>
+    <CampaignChangesets
+      campaignID="c"
+      history="[History]"
+      isLightTheme={true}
+      location="[Location path=/]"
+      queryChangesets={[Function]}
+      telemetryService={
+        Object {
+          "log": [Function],
+          "logViewEvent": [Function],
+        }
+      }
+      viewerCanAdminister={false}
+    >
+      <div
+        className="d-flex justify-content-end"
+      >
+        <ChangesetFilterRow
+          history="[History]"
+          location="[Location path=/]"
+          onFiltersChange={[Function]}
+        >
+          <div
+            className="form-inline m-0 my-2"
+          >
+            <ChangesetUIStateFilter
+              className="mr-2"
+              onChange={[Function]}
+              values={
+                Array [
+                  "UNPUBLISHED",
+                  "ERRORED",
+                  "PROCESSING",
+                  "OPEN",
+                  "DRAFT",
+                  "CLOSED",
+                  "MERGED",
+                  "DELETED",
+                ]
+              }
+            >
+              <div
+                className="d-none d-lg-block btn-group flex-wrap mr-2"
+                role="group"
+              >
+                <button
+                  className="btn btn-outline-secondary active"
+                  onClick={[Function]}
+                  type="button"
+                >
+                  All
+                </button>
+                <button
+                  className="btn btn-outline-secondary"
+                  key="UNPUBLISHED"
+                  onClick={[Function]}
+                  type="button"
+                >
+                  Unpublished
+                </button>
+                <button
+                  className="btn btn-outline-secondary"
+                  key="ERRORED"
+                  onClick={[Function]}
+                  type="button"
+                >
+                  Errored
+                </button>
+                <button
+                  className="btn btn-outline-secondary"
+                  key="PROCESSING"
+                  onClick={[Function]}
+                  type="button"
+                >
+                  Processing
+                </button>
+                <button
+                  className="btn btn-outline-secondary"
+                  key="OPEN"
+                  onClick={[Function]}
+                  type="button"
+                >
+                  Open
+                </button>
+                <button
+                  className="btn btn-outline-secondary"
+                  key="DRAFT"
+                  onClick={[Function]}
+                  type="button"
+                >
+                  Draft
+                </button>
+                <button
+                  className="btn btn-outline-secondary"
+                  key="CLOSED"
+                  onClick={[Function]}
+                  type="button"
+                >
+                  Closed
+                </button>
+                <button
+                  className="btn btn-outline-secondary"
+                  key="MERGED"
+                  onClick={[Function]}
+                  type="button"
+                >
+                  Merged
+                </button>
+                <button
+                  className="btn btn-outline-secondary"
+                  key="DELETED"
+                  onClick={[Function]}
+                  type="button"
+                >
+                  Deleted
+                </button>
+              </div>
+              <ChangesetFilter
+                className="d-block d-lg-none mr-2"
+                label="Changeset state"
+                onChange={[Function]}
+                values={
+                  Array [
+                    "UNPUBLISHED",
+                    "ERRORED",
+                    "PROCESSING",
+                    "OPEN",
+                    "DRAFT",
+                    "CLOSED",
+                    "MERGED",
+                    "DELETED",
+                  ]
+                }
+              >
+                <select
+                  className="form-control changeset-filter__dropdown d-block d-lg-none mr-2"
+                  onChange={[Function]}
+                >
+                  <option
+                    value=""
+                  >
+                    Changeset state
+                  </option>
+                  <option
+                    key="UNPUBLISHED"
+                    value="UNPUBLISHED"
+                  >
+                    Unpublished
+                  </option>
+                  <option
+                    key="ERRORED"
+                    value="ERRORED"
+                  >
+                    Errored
+                  </option>
+                  <option
+                    key="PROCESSING"
+                    value="PROCESSING"
+                  >
+                    Processing
+                  </option>
+                  <option
+                    key="OPEN"
+                    value="OPEN"
+                  >
+                    Open
+                  </option>
+                  <option
+                    key="DRAFT"
+                    value="DRAFT"
+                  >
+                    Draft
+                  </option>
+                  <option
+                    key="CLOSED"
+                    value="CLOSED"
+                  >
+                    Closed
+                  </option>
+                  <option
+                    key="MERGED"
+                    value="MERGED"
+                  >
+                    Merged
+                  </option>
+                  <option
+                    key="DELETED"
+                    value="DELETED"
+                  >
+                    Deleted
+                  </option>
+                </select>
+              </ChangesetFilter>
+            </ChangesetUIStateFilter>
+            <ChangesetFilter
+              className="mr-2"
+              label="Check state"
+              onChange={[Function]}
+              values={
+                Array [
+                  "PENDING",
+                  "PASSED",
+                  "FAILED",
+                ]
+              }
+            >
+              <select
+                className="form-control changeset-filter__dropdown mr-2"
+                onChange={[Function]}
+              >
+                <option
+                  value=""
+                >
+                  Check state
+                </option>
+                <option
+                  key="PENDING"
+                  value="PENDING"
+                >
+                  Pending
+                </option>
+                <option
+                  key="PASSED"
+                  value="PASSED"
+                >
+                  Passed
+                </option>
+                <option
+                  key="FAILED"
+                  value="FAILED"
+                >
+                  Failed
+                </option>
+              </select>
+            </ChangesetFilter>
+            <ChangesetFilter
+              label="Review state"
+              onChange={[Function]}
+              values={
+                Array [
+                  "APPROVED",
+                  "CHANGES_REQUESTED",
+                  "PENDING",
+                  "COMMENTED",
+                  "DISMISSED",
+                ]
+              }
+            >
+              <select
+                className="form-control changeset-filter__dropdown"
+                onChange={[Function]}
+              >
+                <option
+                  value=""
+                >
+                  Review state
+                </option>
+                <option
+                  key="APPROVED"
+                  value="APPROVED"
+                >
+                  Approved
+                </option>
+                <option
+                  key="CHANGES_REQUESTED"
+                  value="CHANGES_REQUESTED"
+                >
+                  Changes requested
+                </option>
+                <option
+                  key="PENDING"
+                  value="PENDING"
+                >
+                  Pending
+                </option>
+                <option
+                  key="COMMENTED"
+                  value="COMMENTED"
+                >
+                  Commented
+                </option>
+                <option
+                  key="DISMISSED"
+                  value="DISMISSED"
+                >
+                  Dismissed
+                </option>
+              </select>
+            </ChangesetFilter>
+          </div>
+        </ChangesetFilterRow>
+      </div>
+      <div
+        className="list-group position-relative"
+      >
+        <FilteredConnection
+          className="mt-2"
+          defaultFirst={15}
+          emptyElement={<EmptyChangesetListElement />}
+          headComponent={[Function]}
+          hideSearch={true}
+          history="[History]"
+          listClassName="campaign-changesets__grid mb-3"
+          listComponent="div"
+          location="[Location path=/]"
+          noSummaryIfAllNodesVisible={true}
+          nodeComponent={[Function]}
+          nodeComponentProps={
+            Object {
+              "extensionInfo": Object {
+                "extensionsController": undefined,
+                "hoverifier": Object {
+                  "hoverState": Object {
+                    "actionsOrError": undefined,
+                    "highlightedRange": undefined,
+                    "hoverOverlayProps": undefined,
+                    "hoveredTokenElement": undefined,
+                    "selectedPosition": undefined,
+                  },
+                  "hoverStateUpdates": "[Subject]",
+                  "hoverify": [Function],
+                  "unsubscribe": [Function],
+                },
+              },
+              "history": "[History]",
+              "isLightTheme": true,
+              "location": "[Location path=/]",
+              "queryExternalChangesetWithFileDiffs": undefined,
+              "viewerCanAdminister": false,
+            }
+          }
+          noun="changeset"
+          pluralNoun="changesets"
+          queryConnection={[Function]}
+          useURLQuery={true}
+        >
+          <div
+            className="filtered-connection test-filtered-connection filtered-connection--noncompact mt-2"
+          >
+            <ConnectionNodes
+              connection={
+                Object {
+                  "nodes": Array [],
+                  "pageInfo": Object {
+                    "endCursor": null,
+                    "hasNextPage": false,
+                  },
+                  "totalCount": 0,
+                }
+              }
+              connectionQuery=""
+              emptyElement={<EmptyChangesetListElement />}
+              first={15}
+              headComponent={[Function]}
+              listClassName="campaign-changesets__grid mb-3"
+              listComponent="div"
+              loading={false}
+              location="[Location path=/]"
+              noSummaryIfAllNodesVisible={true}
+              nodeComponent={[Function]}
+              nodeComponentProps={
+                Object {
+                  "extensionInfo": Object {
+                    "extensionsController": undefined,
+                    "hoverifier": Object {
+                      "hoverState": Object {
+                        "actionsOrError": undefined,
+                        "highlightedRange": undefined,
+                        "hoverOverlayProps": undefined,
+                        "hoveredTokenElement": undefined,
+                        "selectedPosition": undefined,
+                      },
+                      "hoverStateUpdates": "[Subject]",
+                      "hoverify": [Function],
+                      "unsubscribe": [Function],
+                    },
+                  },
+                  "history": "[History]",
+                  "isLightTheme": true,
+                  "location": "[Location path=/]",
+                  "queryExternalChangesetWithFileDiffs": undefined,
+                  "viewerCanAdminister": false,
+                }
+              }
+              noun="changeset"
+              onShowMore={[Function]}
+              pluralNoun="changesets"
+              query=""
+            >
+              <EmptyChangesetListElement>
+                <div
+                  className="col-md-8 offset-md-2 col-sm-12 card mt-5"
+                >
+                  <div
+                    className="card-body p-5 empty-changeset-list-element__body"
+                  >
+                    <h2
+                      className="text-center mb-4"
+                    >
+                      This campaign does not contain changesets
+                    </h2>
+                    <p>
+                      This can occur for several reasons:
+                    </p>
+                    <p>
+                      <strong>
+                        The query specified in 
+                        <span
+                          className="text-monospace"
+                        >
+                          repositorieMatchingQuery:
+                        </span>
+                         may not have matched any repositories.
+                      </strong>
+                    </p>
+                    <p>
+                      Test your query in the search bar and ensure it returns results.
+                    </p>
+                    <p>
+                      <strong>
+                        The code specified in 
+                        <span
+                          className="text-monospace"
+                        >
+                          steps:
+                        </span>
+                         may not have resulted in changes being made.
+                      </strong>
+                    </p>
+                    <p>
+                      Try the command on a local instance of one of the repositories returned in your search results. Run
+                       
+                      <span
+                        className="text-monospace"
+                      >
+                        git status
+                      </span>
+                       and ensure it produced changed files.
+                    </p>
+                  </div>
+                </div>
+              </EmptyChangesetListElement>
+            </ConnectionNodes>
+          </div>
+        </FilteredConnection>
+      </div>
+    </CampaignChangesets>
+  </CampaignTabs>
+</CampaignDetailsPage>
+`;
+
+exports[`CampaignDetailsPage viewerCanAdminister: true viewing existing 1`] = `
+<CampaignDetailsPage
+  campaignName="c"
+  deleteCampaign={[Function]}
+  fetchCampaignByNamespace={[Function]}
+  history="[History]"
+  isLightTheme={true}
+  location="[Location path=/]"
+  namespaceID="namespace123"
+  queryChangesetCountsOverTime={[Function]}
+  queryChangesets={[Function]}
+  setBreadcrumb={[Function]}
+  telemetryService={
+    Object {
+      "log": [Function],
+      "logViewEvent": [Function],
+    }
+  }
+  useBreadcrumb={[Function]}
+>
+  <PageTitle
+    title="n"
+  />
+  <CampaignHeader
+    actionSection={
+      <CampaignDetailsActionSection
+        campaignClosed={false}
+        campaignID="c"
+        campaignNamespaceURL="/users/alice"
+        deleteCampaign={[Function]}
+        history="[History]"
+      />
+    }
+    className="test-campaign-details-page"
+    name="n"
+    namespace={
+      Object {
+        "namespaceName": "alice",
+        "url": "/users/alice",
+      }
+    }
+  >
+    <PageHeader
+      actions={
+        <CampaignDetailsActionSection
+          campaignClosed={false}
+          campaignID="c"
+          campaignNamespaceURL="/users/alice"
+          deleteCampaign={[Function]}
+          history="[History]"
+        />
+      }
+      className="justify-content-end test-campaign-details-page"
+      icon={[Function]}
+      title={
+        <React.Fragment>
+          <AnchorLink
+            to="/users/alice/campaigns"
+          >
+            alice
+          </AnchorLink>
+           / 
+          n
+        </React.Fragment>
+      }
+    >
+      <div
+        className="page-header d-flex flex-wrap align-items-center justify-content-end test-campaign-details-page"
+      >
+        <h1
+          className="flex-grow-1"
+        >
+          <CampaignsIconFlushLeft
+            className="icon-inline page-header__icon"
+          >
+            <Memo(BaseCampaignsIcon)
+              className="icon-inline page-header__icon"
+              viewBox="2 0 20 20"
+            />
+          </CampaignsIconFlushLeft>
+           
+          <AnchorLink
+            to="/users/alice/campaigns"
+          >
+            <a
+              href="/users/alice/campaigns"
+            >
+              alice
+            </a>
+          </AnchorLink>
+           / 
+          n
+        </h1>
+        <CampaignDetailsActionSection
+          campaignClosed={false}
+          campaignID="c"
+          campaignNamespaceURL="/users/alice"
+          deleteCampaign={[Function]}
+          history="[History]"
+        >
+          <AnchorLink
+            className="btn btn-outline-danger test-campaigns-close-btn"
+            data-tooltip="View a preview of all changes that will happen when you close this campaign."
+            to="//close"
+          >
+            <a
+              className="btn btn-outline-danger test-campaigns-close-btn"
+              data-tooltip="View a preview of all changes that will happen when you close this campaign."
+              href="//close"
+            >
+              <Memo(DeleteIcon)
+                className="icon-inline"
+              />
+               Close
+            </a>
+          </AnchorLink>
+        </CampaignDetailsActionSection>
+      </div>
+    </PageHeader>
+  </CampaignHeader>
+  <CampaignInfoByline
+    className="mb-3"
+    createdAt="2020-01-01"
+    initialApplier={
+      Object {
+        "url": "/users/alice",
+        "username": "alice",
+      }
+    }
+    lastAppliedAt="2020-01-01"
+    lastApplier={
+      Object {
+        "url": "/users/bob",
+        "username": "bob",
+      }
+    }
+  >
+    <div
+      className="text-muted mb-3"
+    >
+      <AnchorLink
+        to="/users/alice"
+      >
+        <a
+          href="/users/alice"
+        >
+          alice
+        </a>
+      </AnchorLink>
+       
+      <Timestamp
+        date="2020-01-01"
+      >
+        <span
+          className="timestamp"
+          data-tooltip="2020-01-01"
+        >
+          in almost 14 years
+        </span>
+      </Timestamp>
+    </div>
+  </CampaignInfoByline>
+  <UnpublishedNotice
+    className="mb-3"
+    total={10}
+    unpublished={2}
+  />
+  <CampaignStatsCard
+    className="mb-3"
+    closedAt={null}
+    stats={
+      Object {
+        "closed": 0,
+        "deleted": 1,
+        "draft": 0,
+        "merged": 0,
+        "open": 8,
+        "total": 10,
+        "unpublished": 2,
+      }
+    }
+  >
+    <div
+      className="card mb-3"
+    >
+      <div
+        className="card-body p-3"
+      >
+        <div
+          className="d-flex flex-wrap justify-content-between align-items-center"
+        >
+          <div
+            className="d-flex flex-wrap align-items-center flex-grow-1"
+          >
+            <h2
+              className="m-0 mr-3"
+            >
+              <CampaignStateBadge
+                className="campaign-stats-card__state-badge"
+                isClosed={false}
+              >
+                <span
+                  className="badge badge-success text-uppercase campaign-stats-card__state-badge"
+                >
+                  Open
+                </span>
+              </CampaignStateBadge>
+            </h2>
+            <h1
+              className="d-inline mb-0"
+            >
+              <Memo(ProgressCheckIcon)
+                className="icon-inline mr-2 text-muted"
+              />
+            </h1>
+             
+            <span
+              className="lead text-nowrap campaign-stats-card__completeness"
+            >
+              10
+              % complete
+            </span>
+            <div
+              className="d-flex flex-wrap justify-content-end flex-grow-1"
+            >
+              <CampaignStatsTotalAction
+                count={10}
+              >
+                <div
+                  className="m-0 flex-grow-0 pr-2 text-truncate campaign-stats-card__stat text-nowrap d-flex flex-column align-items-center justify-content-center"
+                >
+                  <span
+                    className="campaign-stats-card__changesets-pill"
+                  >
+                    <span
+                      className="badge badge-pill badge-secondary"
+                    >
+                      10
+                    </span>
+                  </span>
+                  <span
+                    className="text-muted"
+                  >
+                    changesets
+                  </span>
+                </div>
+              </CampaignStatsTotalAction>
+              <ChangesetStatusUnpublished
+                className="d-flex flex-grow-0 px-2 text-truncate campaign-stats-card__stat"
+                label={
+                  <span
+                    className="text-muted"
+                  >
+                    2
+                     unpublished
+                  </span>
+                }
+              >
+                <div
+                  className="m-0 text-nowrap flex-column align-items-center justify-content-center text-muted d-flex flex-grow-0 px-2 text-truncate campaign-stats-card__stat"
+                  data-tooltip="Set published: true to publish to code host"
+                >
+                  <Memo(SourceBranchIcon) />
+                  <span
+                    className="text-muted"
+                  >
+                    2
+                     unpublished
+                  </span>
+                </div>
+              </ChangesetStatusUnpublished>
+              <ChangesetStatusDraft
+                className="d-flex flex-grow-0 px-2 text-truncate campaign-stats-card__stat"
+                label={
+                  <span
+                    className="text-muted"
+                  >
+                    0
+                     draft
+                  </span>
+                }
+              >
+                <div
+                  className="m-0 text-nowrap flex-column align-items-center justify-content-center text-muted d-flex flex-grow-0 px-2 text-truncate campaign-stats-card__stat"
+                >
+                  <Memo(SourcePullIcon) />
+                  <span
+                    className="text-muted"
+                  >
+                    0
+                     draft
+                  </span>
+                </div>
+              </ChangesetStatusDraft>
+              <ChangesetStatusOpen
+                className="d-flex flex-grow-0 px-2 text-truncate campaign-stats-card__stat"
+                label={
+                  <span
+                    className="text-muted"
+                  >
+                    8
+                     open
+                  </span>
+                }
+              >
+                <div
+                  className="m-0 text-nowrap flex-column align-items-center justify-content-center text-success d-flex flex-grow-0 px-2 text-truncate campaign-stats-card__stat"
+                >
+                  <Memo(SourcePullIcon) />
+                  <span
+                    className="text-muted"
+                  >
+                    8
+                     open
+                  </span>
+                </div>
+              </ChangesetStatusOpen>
+              <ChangesetStatusClosed
+                className="d-flex flex-grow-0 px-2 text-truncate campaign-stats-card__stat"
+                label={
+                  <span
+                    className="text-muted"
+                  >
+                    0
+                     closed
+                  </span>
+                }
+              >
+                <div
+                  className="m-0 text-nowrap flex-column align-items-center justify-content-center text-danger d-flex flex-grow-0 px-2 text-truncate campaign-stats-card__stat"
+                >
+                  <Memo(SourcePullIcon) />
+                  <span
+                    className="text-muted"
+                  >
+                    0
+                     closed
+                  </span>
+                </div>
+              </ChangesetStatusClosed>
+              <ChangesetStatusMerged
+                className="d-flex flex-grow-0 pl-2 text-truncate campaign-stats-card__stat"
+                label={
+                  <span
+                    className="text-muted"
+                  >
+                    0
+                     merged
+                  </span>
+                }
+              >
+                <div
+                  className="m-0 text-nowrap flex-column align-items-center justify-content-center text-merged d-flex flex-grow-0 pl-2 text-truncate campaign-stats-card__stat"
+                >
+                  <Memo(SourceMergeIcon) />
+                  <span
+                    className="text-muted"
+                  >
+                    0
+                     merged
+                  </span>
+                </div>
+              </ChangesetStatusMerged>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </CampaignStatsCard>
+  <CampaignDescription
+    description="d"
+    history="[History]"
+  >
+    <div
+      className="mb-3"
+    >
+      <Markdown
+        dangerousInnerHTML="<p>d</p>
+"
+        history="[History]"
+      >
+        <div
+          className="markdown"
+          dangerouslySetInnerHTML={
+            Object {
+              "__html": "<p>d</p>
+",
+            }
+          }
+          onClick={[Function]}
+        />
+      </Markdown>
+    </div>
+  </CampaignDescription>
+  <CampaignTabs
+    campaign={
+      Object {
+        "__typename": "Campaign",
+        "branch": "awesome-branch",
+        "changesets": Object {
+          "stats": Object {
+            "closed": 0,
+            "deleted": 1,
+            "draft": 0,
+            "merged": 0,
+            "open": 8,
+            "total": 10,
+            "unpublished": 2,
+          },
+          "totalCount": 0,
+        },
+        "closedAt": null,
+        "createdAt": "2020-01-01",
+        "currentSpec": Object {
+          "originalInput": "name: awesome-campaign
+description: somestring",
+        },
+        "description": "d",
+        "diffStat": Object {
+          "added": 5,
+          "changed": 3,
+          "deleted": 2,
+        },
+        "id": "c",
+        "initialApplier": Object {
+          "url": "/users/alice",
+          "username": "alice",
+        },
+        "lastAppliedAt": "2020-01-01",
+        "lastApplier": Object {
+          "url": "/users/bob",
+          "username": "bob",
+        },
+        "name": "n",
+        "namespace": Object {
+          "namespaceName": "alice",
+          "url": "/users/alice",
+        },
+        "updatedAt": "2020-01-01",
+        "url": "/users/alice/campaigns/c",
+        "viewerCanAdminister": true,
+      }
+    }
+    history="[History]"
+    isLightTheme={true}
+    location="[Location path=/]"
+    queryChangesetCountsOverTime={[Function]}
+    queryChangesets={[Function]}
+    telemetryService={
+      Object {
+        "log": [Function],
+        "logViewEvent": [Function],
+      }
+    }
+  >
+    <div
+      className="overflow-auto mb-2"
+    >
+      <ul
+        className="nav nav-tabs d-inline-flex d-sm-flex flex-nowrap text-nowrap"
+      >
+        <li
+          className="nav-item"
+        >
+          <a
+            className="nav-link active"
+            href=""
+            onClick={[Function]}
+          >
+            <Memo(SourceBranchIcon)
+              className="icon-inline text-muted mr-1"
+            />
+             Changesets
+          </a>
+        </li>
+        <li
+          className="nav-item test-campaigns-chart-tab"
+        >
+          <a
+            className="nav-link"
+            href=""
+            onClick={[Function]}
+          >
+            <Memo(ChartLineVariantIcon)
+              className="icon-inline text-muted mr-1"
+            />
+             Burndown chart
+          </a>
+        </li>
+        <li
+          className="nav-item test-campaigns-spec-tab"
+        >
+          <a
+            className="nav-link"
+            href=""
+            onClick={[Function]}
+          >
+            <Memo(FileDocumentIcon)
+              className="icon-inline text-muted mr-1"
+            />
+             Spec
+          </a>
+        </li>
+      </ul>
+    </div>
+    <CampaignChangesets
+      campaignID="c"
+      history="[History]"
+      isLightTheme={true}
+      location="[Location path=/]"
+      queryChangesets={[Function]}
+      telemetryService={
+        Object {
+          "log": [Function],
+          "logViewEvent": [Function],
+        }
+      }
+      viewerCanAdminister={true}
+    >
+      <div
+        className="d-flex justify-content-end"
+      >
+        <ChangesetFilterRow
+          history="[History]"
+          location="[Location path=/]"
+          onFiltersChange={[Function]}
+        >
+          <div
+            className="form-inline m-0 my-2"
+          >
+            <ChangesetUIStateFilter
+              className="mr-2"
+              onChange={[Function]}
+              values={
+                Array [
+                  "UNPUBLISHED",
+                  "ERRORED",
+                  "PROCESSING",
+                  "OPEN",
+                  "DRAFT",
+                  "CLOSED",
+                  "MERGED",
+                  "DELETED",
+                ]
+              }
+            >
+              <div
+                className="d-none d-lg-block btn-group flex-wrap mr-2"
+                role="group"
+              >
+                <button
+                  className="btn btn-outline-secondary active"
+                  onClick={[Function]}
+                  type="button"
+                >
+                  All
+                </button>
+                <button
+                  className="btn btn-outline-secondary"
+                  key="UNPUBLISHED"
+                  onClick={[Function]}
+                  type="button"
+                >
+                  Unpublished
+                </button>
+                <button
+                  className="btn btn-outline-secondary"
+                  key="ERRORED"
+                  onClick={[Function]}
+                  type="button"
+                >
+                  Errored
+                </button>
+                <button
+                  className="btn btn-outline-secondary"
+                  key="PROCESSING"
+                  onClick={[Function]}
+                  type="button"
+                >
+                  Processing
+                </button>
+                <button
+                  className="btn btn-outline-secondary"
+                  key="OPEN"
+                  onClick={[Function]}
+                  type="button"
+                >
+                  Open
+                </button>
+                <button
+                  className="btn btn-outline-secondary"
+                  key="DRAFT"
+                  onClick={[Function]}
+                  type="button"
+                >
+                  Draft
+                </button>
+                <button
+                  className="btn btn-outline-secondary"
+                  key="CLOSED"
+                  onClick={[Function]}
+                  type="button"
+                >
+                  Closed
+                </button>
+                <button
+                  className="btn btn-outline-secondary"
+                  key="MERGED"
+                  onClick={[Function]}
+                  type="button"
+                >
+                  Merged
+                </button>
+                <button
+                  className="btn btn-outline-secondary"
+                  key="DELETED"
+                  onClick={[Function]}
+                  type="button"
+                >
+                  Deleted
+                </button>
+              </div>
+              <ChangesetFilter
+                className="d-block d-lg-none mr-2"
+                label="Changeset state"
+                onChange={[Function]}
+                values={
+                  Array [
+                    "UNPUBLISHED",
+                    "ERRORED",
+                    "PROCESSING",
+                    "OPEN",
+                    "DRAFT",
+                    "CLOSED",
+                    "MERGED",
+                    "DELETED",
+                  ]
+                }
+              >
+                <select
+                  className="form-control changeset-filter__dropdown d-block d-lg-none mr-2"
+                  onChange={[Function]}
+                >
+                  <option
+                    value=""
+                  >
+                    Changeset state
+                  </option>
+                  <option
+                    key="UNPUBLISHED"
+                    value="UNPUBLISHED"
+                  >
+                    Unpublished
+                  </option>
+                  <option
+                    key="ERRORED"
+                    value="ERRORED"
+                  >
+                    Errored
+                  </option>
+                  <option
+                    key="PROCESSING"
+                    value="PROCESSING"
+                  >
+                    Processing
+                  </option>
+                  <option
+                    key="OPEN"
+                    value="OPEN"
+                  >
+                    Open
+                  </option>
+                  <option
+                    key="DRAFT"
+                    value="DRAFT"
+                  >
+                    Draft
+                  </option>
+                  <option
+                    key="CLOSED"
+                    value="CLOSED"
+                  >
+                    Closed
+                  </option>
+                  <option
+                    key="MERGED"
+                    value="MERGED"
+                  >
+                    Merged
+                  </option>
+                  <option
+                    key="DELETED"
+                    value="DELETED"
+                  >
+                    Deleted
+                  </option>
+                </select>
+              </ChangesetFilter>
+            </ChangesetUIStateFilter>
+            <ChangesetFilter
+              className="mr-2"
+              label="Check state"
+              onChange={[Function]}
+              values={
+                Array [
+                  "PENDING",
+                  "PASSED",
+                  "FAILED",
+                ]
+              }
+            >
+              <select
+                className="form-control changeset-filter__dropdown mr-2"
+                onChange={[Function]}
+              >
+                <option
+                  value=""
+                >
+                  Check state
+                </option>
+                <option
+                  key="PENDING"
+                  value="PENDING"
+                >
+                  Pending
+                </option>
+                <option
+                  key="PASSED"
+                  value="PASSED"
+                >
+                  Passed
+                </option>
+                <option
+                  key="FAILED"
+                  value="FAILED"
+                >
+                  Failed
+                </option>
+              </select>
+            </ChangesetFilter>
+            <ChangesetFilter
+              label="Review state"
+              onChange={[Function]}
+              values={
+                Array [
+                  "APPROVED",
+                  "CHANGES_REQUESTED",
+                  "PENDING",
+                  "COMMENTED",
+                  "DISMISSED",
+                ]
+              }
+            >
+              <select
+                className="form-control changeset-filter__dropdown"
+                onChange={[Function]}
+              >
+                <option
+                  value=""
+                >
+                  Review state
+                </option>
+                <option
+                  key="APPROVED"
+                  value="APPROVED"
+                >
+                  Approved
+                </option>
+                <option
+                  key="CHANGES_REQUESTED"
+                  value="CHANGES_REQUESTED"
+                >
+                  Changes requested
+                </option>
+                <option
+                  key="PENDING"
+                  value="PENDING"
+                >
+                  Pending
+                </option>
+                <option
+                  key="COMMENTED"
+                  value="COMMENTED"
+                >
+                  Commented
+                </option>
+                <option
+                  key="DISMISSED"
+                  value="DISMISSED"
+                >
+                  Dismissed
+                </option>
+              </select>
+            </ChangesetFilter>
+          </div>
+        </ChangesetFilterRow>
+      </div>
+      <div
+        className="list-group position-relative"
+      >
+        <FilteredConnection
+          className="mt-2"
+          defaultFirst={15}
+          emptyElement={<EmptyChangesetListElement />}
+          headComponent={[Function]}
+          hideSearch={true}
+          history="[History]"
+          listClassName="campaign-changesets__grid mb-3"
+          listComponent="div"
+          location="[Location path=/]"
+          noSummaryIfAllNodesVisible={true}
+          nodeComponent={[Function]}
+          nodeComponentProps={
+            Object {
+              "extensionInfo": Object {
+                "extensionsController": undefined,
+                "hoverifier": Object {
+                  "hoverState": Object {
+                    "actionsOrError": undefined,
+                    "highlightedRange": undefined,
+                    "hoverOverlayProps": undefined,
+                    "hoveredTokenElement": undefined,
+                    "selectedPosition": undefined,
+                  },
+                  "hoverStateUpdates": "[Subject]",
+                  "hoverify": [Function],
+                  "unsubscribe": [Function],
+                },
+              },
+              "history": "[History]",
+              "isLightTheme": true,
+              "location": "[Location path=/]",
+              "queryExternalChangesetWithFileDiffs": undefined,
+              "viewerCanAdminister": true,
+            }
+          }
+          noun="changeset"
+          pluralNoun="changesets"
+          queryConnection={[Function]}
+          useURLQuery={true}
+        >
+          <div
+            className="filtered-connection test-filtered-connection filtered-connection--noncompact mt-2"
+          >
+            <ConnectionNodes
+              connection={
+                Object {
+                  "nodes": Array [],
+                  "pageInfo": Object {
+                    "endCursor": null,
+                    "hasNextPage": false,
+                  },
+                  "totalCount": 0,
+                }
+              }
+              connectionQuery=""
+              emptyElement={<EmptyChangesetListElement />}
+              first={15}
+              headComponent={[Function]}
+              listClassName="campaign-changesets__grid mb-3"
+              listComponent="div"
+              loading={false}
+              location="[Location path=/]"
+              noSummaryIfAllNodesVisible={true}
+              nodeComponent={[Function]}
+              nodeComponentProps={
+                Object {
+                  "extensionInfo": Object {
+                    "extensionsController": undefined,
+                    "hoverifier": Object {
+                      "hoverState": Object {
+                        "actionsOrError": undefined,
+                        "highlightedRange": undefined,
+                        "hoverOverlayProps": undefined,
+                        "hoveredTokenElement": undefined,
+                        "selectedPosition": undefined,
+                      },
+                      "hoverStateUpdates": "[Subject]",
+                      "hoverify": [Function],
+                      "unsubscribe": [Function],
+                    },
+                  },
+                  "history": "[History]",
+                  "isLightTheme": true,
+                  "location": "[Location path=/]",
+                  "queryExternalChangesetWithFileDiffs": undefined,
+                  "viewerCanAdminister": true,
+                }
+              }
+              noun="changeset"
+              onShowMore={[Function]}
+              pluralNoun="changesets"
+              query=""
+            >
+              <EmptyChangesetListElement>
+                <div
+                  className="col-md-8 offset-md-2 col-sm-12 card mt-5"
+                >
+                  <div
+                    className="card-body p-5 empty-changeset-list-element__body"
+                  >
+                    <h2
+                      className="text-center mb-4"
+                    >
+                      This campaign does not contain changesets
+                    </h2>
+                    <p>
+                      This can occur for several reasons:
+                    </p>
+                    <p>
+                      <strong>
+                        The query specified in 
+                        <span
+                          className="text-monospace"
+                        >
+                          repositorieMatchingQuery:
+                        </span>
+                         may not have matched any repositories.
+                      </strong>
+                    </p>
+                    <p>
+                      Test your query in the search bar and ensure it returns results.
+                    </p>
+                    <p>
+                      <strong>
+                        The code specified in 
+                        <span
+                          className="text-monospace"
+                        >
+                          steps:
+                        </span>
+                         may not have resulted in changes being made.
+                      </strong>
+                    </p>
+                    <p>
+                      Try the command on a local instance of one of the repositories returned in your search results. Run
+                       
+                      <span
+                        className="text-monospace"
+                      >
+                        git status
+                      </span>
+                       and ensure it produced changed files.
+                    </p>
+                  </div>
+                </div>
+              </EmptyChangesetListElement>
+            </ConnectionNodes>
+          </div>
+        </FilteredConnection>
+      </div>
+    </CampaignChangesets>
+  </CampaignTabs>
+</CampaignDetailsPage>
+`;

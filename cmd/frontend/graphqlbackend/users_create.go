@@ -4,12 +4,13 @@ import (
 	"context"
 
 	"github.com/inconshreveable/log15"
-	"github.com/sourcegraph/sourcegraph/cmd/frontend/authz"
 	"github.com/sourcegraph/sourcegraph/cmd/frontend/backend"
-	"github.com/sourcegraph/sourcegraph/cmd/frontend/db"
 	"github.com/sourcegraph/sourcegraph/cmd/frontend/globals"
 	"github.com/sourcegraph/sourcegraph/cmd/frontend/internal/auth/userpasswd"
 	"github.com/sourcegraph/sourcegraph/cmd/frontend/types"
+	"github.com/sourcegraph/sourcegraph/internal/authz"
+	"github.com/sourcegraph/sourcegraph/internal/conf"
+	"github.com/sourcegraph/sourcegraph/internal/db"
 )
 
 func (*schemaResolver) CreateUser(ctx context.Context, args *struct {
@@ -44,6 +45,7 @@ func (*schemaResolver) CreateUser(ctx context.Context, args *struct {
 	}); err != nil {
 		log15.Error("Failed to grant user pending permissions", "userID", user.ID, "error", err)
 	}
+
 	return &createUserResult{user: user}, nil
 }
 
@@ -61,6 +63,15 @@ func (r *createUserResult) ResetPasswordURL(ctx context.Context) (*string, error
 		return nil, nil
 	}
 
+	var ru string
+	if conf.CanSendEmail() {
+		ru, err := userpasswd.HandleSetPasswordEmail(ctx, r.user.ID)
+		if err == nil {
+			return &ru, nil
+		}
+		log15.Error("failed to send email", "error", err)
+	}
+
 	// This method modifies the DB, which is somewhat counterintuitive for a "value" type from an
 	// implementation POV. Its behavior is justified because it is convenient and intuitive from the
 	// POV of the API consumer.
@@ -68,6 +79,6 @@ func (r *createUserResult) ResetPasswordURL(ctx context.Context) (*string, error
 	if err != nil {
 		return nil, err
 	}
-	urlStr := globals.ExternalURL().ResolveReference(resetURL).String()
-	return &urlStr, nil
+	ru = globals.ExternalURL().ResolveReference(resetURL).String()
+	return &ru, nil
 }

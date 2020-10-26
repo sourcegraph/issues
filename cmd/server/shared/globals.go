@@ -16,7 +16,6 @@ var SrcProfServices = []map[string]string{
 	{"Name": "symbols", "Host": "127.0.0.1:6071"},
 	{"Name": "repo-updater", "Host": "127.0.0.1:6074"},
 	{"Name": "query-runner", "Host": "127.0.0.1:6067"},
-	{"Name": "replacer", "Host": "127.0.0.1:6076"},
 	{"Name": "zoekt-indexserver", "Host": "127.0.0.1:6072"},
 	{"Name": "zoekt-webserver", "Host": "127.0.0.1:3070", "DefaultPath": "/debug/requests/"},
 }

@@ -6,7 +6,6 @@ import (
 
 	"github.com/inconshreveable/log15"
 	"github.com/pkg/errors"
-	"github.com/sourcegraph/sourcegraph/enterprise/internal/codeintel/bundles/client"
 	bundles "github.com/sourcegraph/sourcegraph/enterprise/internal/codeintel/bundles/client"
 )
 
@@ -25,7 +24,7 @@ func (api *codeIntelAPI) Hover(ctx context.Context, file string, line, character
 
 	text, rn, exists, err := bundleClient.Hover(ctx, pathInBundle, line, character)
 	if err != nil {
-		if err == client.ErrNotFound {
+		if err == bundles.ErrNotFound {
 			log15.Warn("Bundle does not exist")
 			return "", bundles.Range{}, false, nil
 		}
@@ -45,7 +44,7 @@ func (api *codeIntelAPI) Hover(ctx context.Context, file string, line, character
 
 	text, rn, exists, err = definitionBundleClient.Hover(ctx, pathInDefinitionBundle, definition.Range.Start.Line, definition.Range.Start.Character)
 	if err != nil {
-		if err == client.ErrNotFound {
+		if err == bundles.ErrNotFound {
 			log15.Warn("Bundle does not exist")
 			return "", bundles.Range{}, false, nil
 		}

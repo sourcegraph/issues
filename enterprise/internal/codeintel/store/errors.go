@@ -13,7 +13,7 @@ var ErrNoTransaction = errors.New("store: not in a transaction")
 var ErrDequeueTransaction = errors.New("unexpected transaction")
 
 // ErrDequeueRace occurs when an upload selected for dequeue has been locked by another worker.
-var ErrDequeueRace = errors.New("unexpected transaction")
+var ErrDequeueRace = errors.New("dequeue race")
 
 // ErrNoSavepoint occurs when there is no savepont to rollback to.
 var ErrNoSavepoint = errors.New("no savepoint defined")

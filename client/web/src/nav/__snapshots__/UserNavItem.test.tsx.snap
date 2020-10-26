@@ -1,0 +1,443 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`UserNavItem simple 1`] = `
+<MemoryRouter>
+  <Router
+    history="[History]"
+  >
+    <UserNavItem
+      authenticatedUser={
+        Object {
+          "avatarURL": null,
+          "organizations": Object {
+            "nodes": Array [
+              Object {
+                "displayName": "Acme Corp",
+                "id": "0",
+                "name": "acme",
+                "settingsURL": "/organizations/acme/settings",
+                "url": "/organizations/acme",
+              },
+              Object {
+                "displayName": "Beta Inc",
+                "id": "1",
+                "name": "beta",
+                "settingsURL": "/organizations/beta/settings",
+                "url": "/organizations/beta",
+              },
+            ],
+          },
+          "session": Object {
+            "canSignOut": true,
+          },
+          "settingsURL": "#",
+          "siteAdmin": true,
+          "username": "alice",
+        }
+      }
+      codeHostIntegrationMessaging="browser-extension"
+      isExtensionAlertAnimating={false}
+      isLightTheme={true}
+      location="[Location path=/]"
+      onThemePreferenceChange={[Function]}
+      showDotComMarketing={true}
+      themePreference="light"
+    >
+      <ButtonDropdown
+        className="py-0"
+        isOpen={false}
+        toggle={[Function]}
+      >
+        <Dropdown
+          a11y={true}
+          active={false}
+          addonType={false}
+          className="py-0"
+          direction="down"
+          group={true}
+          inNavbar={false}
+          isOpen={false}
+          nav={false}
+          setActiveFromChild={false}
+          toggle={[Function]}
+        >
+          <Manager>
+            <div
+              className="py-0 btn-group"
+              onKeyDown={[Function]}
+            >
+              <DropdownToggle
+                aria-haspopup={true}
+                caret={true}
+                className="bg-transparent d-flex align-items-center test-user-nav-item-toggle"
+                color="secondary"
+                nav={true}
+              >
+                <Reference>
+                  <InnerReference
+                    setReferenceNode={[Function]}
+                  >
+                    <a
+                      aria-expanded={false}
+                      aria-haspopup={true}
+                      className="bg-transparent d-flex align-items-center test-user-nav-item-toggle dropdown-toggle nav-link"
+                      href="#"
+                      onClick={[Function]}
+                    >
+                      <div
+                        className="position-relative"
+                      >
+                        <div
+                          className=""
+                        />
+                        <UserAvatar
+                          className="icon-inline"
+                          size={48}
+                          targetID="target-user-avatar"
+                          user={
+                            Object {
+                              "avatarURL": null,
+                              "organizations": Object {
+                                "nodes": Array [
+                                  Object {
+                                    "displayName": "Acme Corp",
+                                    "id": "0",
+                                    "name": "acme",
+                                    "settingsURL": "/organizations/acme/settings",
+                                    "url": "/organizations/acme",
+                                  },
+                                  Object {
+                                    "displayName": "Beta Inc",
+                                    "id": "1",
+                                    "name": "beta",
+                                    "settingsURL": "/organizations/beta/settings",
+                                    "url": "/organizations/beta",
+                                  },
+                                ],
+                              },
+                              "session": Object {
+                                "canSignOut": true,
+                              },
+                              "settingsURL": "#",
+                              "siteAdmin": true,
+                              "username": "alice",
+                            }
+                          }
+                        >
+                          <Memo(AccountCircleIcon)
+                            className="user-avatar icon-inline"
+                            id="target-user-avatar"
+                          />
+                        </UserAvatar>
+                      </div>
+                    </a>
+                  </InnerReference>
+                </Reference>
+              </DropdownToggle>
+              <DropdownMenu
+                className="user-nav-item__dropdown-menu"
+                flip={true}
+                right={true}
+                tag="div"
+              >
+                <div
+                  aria-hidden={true}
+                  className="user-nav-item__dropdown-menu dropdown-menu dropdown-menu-right"
+                  role="menu"
+                  tabIndex="-1"
+                >
+                  <DropdownItem
+                    className="py-1"
+                    header={true}
+                    tag="button"
+                    toggle={true}
+                  >
+                    <h6
+                      className="py-1 dropdown-header"
+                      onClick={[Function]}
+                      tabIndex="-1"
+                    >
+                      Signed in as 
+                      <strong>
+                        @
+                        alice
+                      </strong>
+                    </h6>
+                  </DropdownItem>
+                  <DropdownItem
+                    divider={true}
+                    tag="button"
+                    toggle={true}
+                  >
+                    <div
+                      className="dropdown-divider"
+                      onClick={[Function]}
+                      tabIndex="-1"
+                    />
+                  </DropdownItem>
+                  <Link
+                    className="dropdown-item"
+                    to="#"
+                  >
+                    <LinkAnchor
+                      className="dropdown-item"
+                      href="/"
+                      navigate={[Function]}
+                    >
+                      <a
+                        className="dropdown-item"
+                        href="/"
+                        onClick={[Function]}
+                      >
+                        Settings
+                      </a>
+                    </LinkAnchor>
+                  </Link>
+                  <Link
+                    className="dropdown-item"
+                    to="/extensions"
+                  >
+                    <LinkAnchor
+                      className="dropdown-item"
+                      href="/extensions"
+                      navigate={[Function]}
+                    >
+                      <a
+                        className="dropdown-item"
+                        href="/extensions"
+                        onClick={[Function]}
+                      >
+                        Extensions
+                      </a>
+                    </LinkAnchor>
+                  </Link>
+                  <Link
+                    className="dropdown-item"
+                    to="/users/alice/searches"
+                  >
+                    <LinkAnchor
+                      className="dropdown-item"
+                      href="/users/alice/searches"
+                      navigate={[Function]}
+                    >
+                      <a
+                        className="dropdown-item"
+                        href="/users/alice/searches"
+                        onClick={[Function]}
+                      >
+                        Saved searches
+                      </a>
+                    </LinkAnchor>
+                  </Link>
+                  <DropdownItem
+                    divider={true}
+                    tag="button"
+                    toggle={true}
+                  >
+                    <div
+                      className="dropdown-divider"
+                      onClick={[Function]}
+                      tabIndex="-1"
+                    />
+                  </DropdownItem>
+                  <div
+                    className="px-2 py-1"
+                  >
+                    <div
+                      className="d-flex align-items-center"
+                    >
+                      <div
+                        className="mr-2"
+                      >
+                        Theme
+                      </div>
+                      <select
+                        className="custom-select custom-select-sm test-theme-toggle"
+                        onChange={[Function]}
+                        value="light"
+                      >
+                        <option
+                          value="light"
+                        >
+                          Light
+                        </option>
+                        <option
+                          value="dark"
+                        >
+                          Dark
+                        </option>
+                        <option
+                          value="system"
+                        >
+                          System
+                        </option>
+                      </select>
+                    </div>
+                  </div>
+                  <DropdownItem
+                    divider={true}
+                    tag="button"
+                    toggle={true}
+                  >
+                    <div
+                      className="dropdown-divider"
+                      onClick={[Function]}
+                      tabIndex="-1"
+                    />
+                  </DropdownItem>
+                  <DropdownItem
+                    header={true}
+                    tag="button"
+                    toggle={true}
+                  >
+                    <h6
+                      className="dropdown-header"
+                      onClick={[Function]}
+                      tabIndex="-1"
+                    >
+                      Organizations
+                    </h6>
+                  </DropdownItem>
+                  <Link
+                    className="dropdown-item"
+                    key="0"
+                    to="/organizations/acme/settings"
+                  >
+                    <LinkAnchor
+                      className="dropdown-item"
+                      href="/organizations/acme/settings"
+                      navigate={[Function]}
+                    >
+                      <a
+                        className="dropdown-item"
+                        href="/organizations/acme/settings"
+                        onClick={[Function]}
+                      >
+                        Acme Corp
+                      </a>
+                    </LinkAnchor>
+                  </Link>
+                  <Link
+                    className="dropdown-item"
+                    key="1"
+                    to="/organizations/beta/settings"
+                  >
+                    <LinkAnchor
+                      className="dropdown-item"
+                      href="/organizations/beta/settings"
+                      navigate={[Function]}
+                    >
+                      <a
+                        className="dropdown-item"
+                        href="/organizations/beta/settings"
+                        onClick={[Function]}
+                      >
+                        Beta Inc
+                      </a>
+                    </LinkAnchor>
+                  </Link>
+                  <DropdownItem
+                    divider={true}
+                    tag="button"
+                    toggle={true}
+                  >
+                    <div
+                      className="dropdown-divider"
+                      onClick={[Function]}
+                      tabIndex="-1"
+                    />
+                  </DropdownItem>
+                  <Link
+                    className="dropdown-item"
+                    to="/site-admin"
+                  >
+                    <LinkAnchor
+                      className="dropdown-item"
+                      href="/site-admin"
+                      navigate={[Function]}
+                    >
+                      <a
+                        className="dropdown-item"
+                        href="/site-admin"
+                        onClick={[Function]}
+                      >
+                        Site admin
+                      </a>
+                    </LinkAnchor>
+                  </Link>
+                  <Link
+                    className="dropdown-item"
+                    rel="noopener"
+                    target="_blank"
+                    to="/help"
+                  >
+                    <LinkAnchor
+                      className="dropdown-item"
+                      href="/help"
+                      navigate={[Function]}
+                      rel="noopener"
+                      target="_blank"
+                    >
+                      <a
+                        className="dropdown-item"
+                        href="/help"
+                        onClick={[Function]}
+                        rel="noopener"
+                        target="_blank"
+                      >
+                        Help 
+                        <Memo(OpenInNewIcon)
+                          className="icon-inline"
+                        />
+                      </a>
+                    </LinkAnchor>
+                  </Link>
+                  <a
+                    className="dropdown-item"
+                    href="/-/sign-out"
+                  >
+                    Sign out
+                  </a>
+                  <DropdownItem
+                    divider={true}
+                    tag="button"
+                    toggle={true}
+                  >
+                    <div
+                      className="dropdown-divider"
+                      onClick={[Function]}
+                      tabIndex="-1"
+                    />
+                  </DropdownItem>
+                  <a
+                    className="dropdown-item"
+                    href="https://about.sourcegraph.com"
+                    rel="noopener"
+                    target="_blank"
+                  >
+                    About Sourcegraph 
+                    <Memo(OpenInNewIcon)
+                      className="icon-inline"
+                    />
+                  </a>
+                  <a
+                    className="dropdown-item"
+                    href="https://docs.sourcegraph.com/integration/browser_extension"
+                    rel="noopener"
+                    target="_blank"
+                  >
+                    Browser extension 
+                    <Memo(OpenInNewIcon)
+                      className="icon-inline"
+                    />
+                  </a>
+                </div>
+              </DropdownMenu>
+            </div>
+          </Manager>
+        </Dropdown>
+      </ButtonDropdown>
+    </UserNavItem>
+  </Router>
+</MemoryRouter>
+`;

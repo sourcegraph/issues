@@ -64,6 +64,16 @@ The Sourcegraph instance's site admin must [update the `corsOrigin` site config 
 }
 ```
 
+The site admin should also set `alerts.codeHostIntegrationMessaging` in [global settings](../config/settings.md#editing-global-settings-for-site-admins) to ensure informational content for users in the Sourcegraph webapp references the native integration and not the browser extension.
+
+```json
+{
+  // ...
+  "alerts.codeHostIntegrationMessaging": "native-integration"
+  // ...
+}
+```
+
 ## Configuration
 
 <div markdown-func=jsonschemadoc jsonschemadoc:path="admin/external_service/phabricator.schema.json">[View page on docs.sourcegraph.com](https://docs.sourcegraph.com/admin/external_service/phabricator) to see rendered content.</div>

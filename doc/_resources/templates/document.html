@@ -1,458 +1,60 @@
-{{define "title"}}{{with .Content}}{{.Doc.Title}}{{else}}Error{{end}}{{end}}
+{{define "title"}}
+	{{with .Content}}{{.Doc.Title}}{{else}}Error{{end}}
+{{end}}
 
 {{define "head"}}
-    {{if (or (not .Content) .ContentVersion)}}
-        <meta name="robots" content="noindex">
-    {{end}}
-{{end}}
-
-{{define "versionSelector"}}
-    <div id="version-selector" class="dropdown version-dropdown ml-2">
-        <button class="btn btn-outline dropdown-toggle" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-            {{.ContentVersion}}{{/* If no version is specified we are on the master branch */}}{{if eq .ContentVersion ""}}master{{end}}
-        </button>
-        <details-menu aria-label="Sourcegraph version" class="dropdown-menu m-0 p-0" aria-labelledby="Version Dropdown">
-
-            {{/* Update these after each release. */}} {{$previousReleaseRevspec := "v3.16.2"}} {{$previousReleaseVersion := "3.16"}} {{$currentReleaseRevspec := "v3.17.3"}} {{$currentReleaseVersion := "3.17"}} {{$nextReleaseVersion := "master"}}
-            <a rel="nofollow" class="dropdown-item {{if eq .ContentVersion " "}}active{{end}}" href="/{{.ContentPagePath}}">master</a>
-            <a rel="nofollow" class=" dropdown-item {{if eq $currentReleaseVersion .ContentVersion " "}}active{{end}}" href="/@{{$currentReleaseVersion}}/{{.ContentPagePath}}">{{$currentReleaseVersion}}<span class="current-branch ml-1">current</span></a>
-            <a rel="nofollow" class=" dropdown-item {{if eq $previousReleaseVersion .ContentVersion " "}}active{{end}}" href="/@{{$previousReleaseVersion}}/{{.ContentPagePath}}">{{$previousReleaseVersion}}</a>
-        </details-menu>
-    </div>
-{{end}}
-
-{{define "breadcrumb"}}
-    {{with .Content}}
-        <div class="nav-container flex-container mb-2 pt-2 breadcrumbs small-hidden">
-            <span class="breadcrumb-links">
-                {{if eq (len .Breadcrumbs) 0}}
-                    <a href="/" class="active">docs</a> &nbsp;
-                {{end}}
-                {{range .Breadcrumbs}}
-                    <a href="{{.URL}}" class="{{if .IsActive}}active{{end}}">
-                        {{if eq .Label "Documentation"}}docs{{else}}{{.Label}}{{end}}
-                    </a>
-                    {{if not .IsActive}}/{{end}}
-                {{end}}
-            </span>
-        </div>
-    {{end}}
+	{{if (or (not .Content) .ContentVersion)}}<meta name="robots" content="noindex">{{end}}
 {{end}}
 
 {{define "content"}}
-    <div class="docs-content">
-        <div class="nav-sticky-wrapper content-nav-wrapper column large-3 medium-4 mobile-show">
-            <nav id="breadcrumbs-mobile" class="breadcrumbs large-hidden medium-hidden">
-                <input type="button" class="content-nav-mobile-state large-hidden medium-hidden" />
-                <span class="content-nav-mobile-button"></span>
-                <span class="breadcrumb-links">
-                    {{with .Content}}
-                        {{if eq (len .Breadcrumbs ) 0}}<a href="#">docs</a>{{end}}
-                            {{range .Breadcrumbs}}
-                                <a href="{{.URL}}" {{if .IsActive}} class="active" {{end}}>
-                                  {{if eq .Label "Documentation"}}
-                                  docs
-                                  {{else}}
-                                  {{.Label}}
-                                  {{end}}
-                                </a>
-                                {{if not .IsActive}}/{{end}}
-                                {{end}}
-                                &nbsp;
-                            {{else}}
-                        {{if .ContentVersionNotFoundError}}
-                            Version not found
-                        {{else if .ContentPageNotFoundError}}
-                            Page not found
-                        {{else}}
-                            Error
-                        {{end}}
-                    {{end}}
-                </span>
-            </nav>
-            <div id="content-nav" class="content-nav">
-                <form class="search-form form-inline mobile-search large-hidden medium-hidden" method="get" action="/search">
-                    <input name="q" class="nav-search form-control" type="search" placeholder="Search docs..." spellcheck="false">
-                    <input type="hidden" name="v" value="{{block "version" .}}{{end}}">
-                    <button class="btn btn-primary nav-search-button ml-2" type="submit">Search</button>
-                </form>
-                <ul class="content-nav-section expandable" data-nav-section="user">
-                    <button class="content-nav-button"></button>
-                    <div class="close--icon">
-                        <svg class="mdi-icon material-icons" width="24" height="24" fill="#000" viewBox="0 0 24 24">
-                                <path d="M19,6.41L17.59,5L12,10.59L6.41,5L5,6.41L10.59,12L5,17.59L6.41,19L12,13.41L17.59,19L19,17.59L13.41,12L19,6.41Z"></path>
-                            </svg>
-                    </div>
-                    <li class="content-nav-no-hover">
-                        <a class="content-nav-section-header" href="/user">Usage</a>
-                        <ul class="content-nav-section-group">
-                            <li><a href="/user/tour">Tour</a></li>
-                            <li><a href="/user/code_intelligence">Code Intelligence</a></li>
-                            <li class="content-nav-no-hover">
-                                <ul class="content-nav-section-subsection">
-                                    <li><a href="/user/code_intelligence/basic_code_intelligence">Basic code intelligence</a></li>
-                                    <li><a href="/user/code_intelligence/lsif">LSIF</a></li>
-                                    <li><a href="/user/code_intelligence/lsif_quickstart">LSIF quickstart</a></li>
-                                    <li><a href="/user/code_intelligence/adding_lsif_to_workflows">Adding LSIF to workflows</a></li>
-                                    <li><a href="/user/code_intelligence/languages">Language-specific guides</a></li>
-                                    <li><a href="/user/code_intelligence/writing_an_indexer">Writing an indexer</a></li>
-                                </ul>
-                            </li>
-                            <li><a href="/user/search">Code Search</a></li>
-                            <li class="content-nav-no-hover">
-                                <ul class="content-nav-section-subsection">
-                                    <li><a href="/user/search/queries">Search query syntax</a></li>
-                                    <li><a href="/user/search/language">Search query language</a></li>
-                                    <li><a href="/user/search/structural">Structural search <span class="badge badge-primary">new</span></a></li>
-                                    <li><a href="/user/search/examples">Search examples</a></li>
-                                    <li><a href="/user/search/scopes">Search scopes</a></li>
-                                    <li><a href="/user/search/saved_searches">Saved searches</a></li>
-                                </ul>
-                            </li>
-                            <li><a href="/user/themes">Color themes</a></li>
-                            <li><a href="/user/organizations">Organizations</a></li>
-                            <li><a href="/user/repository">Repositories</a></li>
-                            <li><a href="/user/markdown">Sourcegraph-flavored Markdown</a></li>
-                            <li><a href="/user/usage_statistics">Usage statistics</a></li>
-                            <li><a href="/user/user_surveys">User surveys</a></li>
-                            <li><a href="/user/quick_links">Quick links</a></li>
-
-                            <li><a href="/user/campaigns">Campaigns <span class="badge badge-primary">Beta</span></a></li>
-                            <li class="content-nav-no-hover">
-                                <ul class="content-nav-section-subsection">
-                                    <li><a href="/user/campaigns/getting_started">Getting started</a></li>
-                                    <li><a href="/user/campaigns/creating_campaign_from_patches">Creating a campaign from patches</a></li>
-                                    <li><a href="/user/campaigns/creating_manual_campaign">Creating a manual campaign</a></li>
-                                    <li><a href="/user/campaigns/actions">Actions</a></li>
-                                    <li><a href="/user/campaigns/updating_campaigns">Updating campaigns</a></li>
-                                    <li><a href="/user/campaigns/drafts">Campaign drafts</a></li>
-                                    <li><a href="/user/campaigns/configuration">Configuration</a></li>
-                                    <li><a href="/user/campaigns/examples">Examples</a></li>
-                                    <li class="content-nav-no-hover" data-sub-section-item="Examples" )>
-                                        <ul class="content-nav-section-subsection">
-                                            <li><a href="/user/campaigns/examples/eslint_typescript_version">Migrate to a new TypeScript version</a></li>
-                                            <li><a href="/user/campaigns/examples/lsif_action">Adding a GitHub Action to upload LSIF data</a></li>
-                                            <li><a href="/user/campaigns/examples/refactor_go_comby">Refactor Go code using Comby</a></li>
-                                        </ul>
-                                    </li>
-                                </ul>
-                            </li>
-                        </ul>
-                    </li>
-                </ul>
-                <ul class="content-nav-section expandable" data-nav-section="admin">
-                    <button class="content-nav-button"></button>
-                    <div class="close--icon">
-                        <svg class="mdi-icon material-icons" width="24" height="24" fill="#000" viewBox="0 0 24 24">
-                                <path d="M19,6.41L17.59,5L12,10.59L6.41,5L5,6.41L10.59,12L5,17.59L6.41,19L12,13.41L17.59,19L19,17.59L13.41,12L19,6.41Z"></path>
-                            </svg>
-                    </div>
-                    <li class="content-nav-no-hover">
-                        <a class="content-nav-section-header" href="/admin">Administration</a>
-                        <ul class="content-nav-section-group">
-                            <li><a href="/admin/install">Installing Sourcegraph</a></li>
-                            <li class="content-nav-no-hover">
-                                <ul class="content-nav-section-subsection">
-                                    <li><a href="/admin/install/docker">Install Sourcegraph with Docker</a></li>
-                                    <li class="content-nav-no-hover" data-sub-section-item="Install Sourcegraph with Docker" )>
-                                        <ul class="content-nav-section-subsection">
-                                            <li><a href="/admin/install/docker/aws">AWS</a></li>
-                                            <li><a href="/admin/install/docker/digitalocean">DigitalOcean</a></li>
-                                            <li><a href="/admin/install/docker/google_cloud">Google Cloud</a></li>
-                                        </ul>
-                                    </li>
-                                    <li><a href="/admin/install/docker-compose">Install Sourcegraph with Docker Compose</a></li>
-                                    <li class="content-nav-no-hover" data-sub-section-item="Install Sourcegraph with Docker Compose">
-                                        <ul class="content-nav-section-subsection">
-                                            <li><a href="/admin/install/docker-compose/aws">AWS</a></li>
-                                            <li><a href="/admin/install/docker-compose/digitalocean">DigitalOcean</a></li>
-                                            <li><a href="/admin/install/docker-compose/google_cloud">Google Cloud</a></li>
-                                          <li><a href="/admin/install/docker-compose/migrate">Migrate from the single Docker image to Docker Compose</a></li>
-                                        </ul>
-                                    </li>
-                                    <li><a href="/admin/install/cluster">Installing Sourcegraph on a cluster</a></li>
-                                    <li><a href="/admin/install/managed">Setting up a managed instance</a></li>
-                                </ul>
-                            </li>
-                            <li><a href="/admin/config">Configuring Sourcegraph</a></li>
-                            <li class="content-nav-no-hover">
-                                <ul class="content-nav-section-subsection">
-                                    <li><a href="/admin/config/site_config">Site configuration</a></li>
-                                    <li><a href="/admin/config/settings">Settings (UI and user-specific customizations)</a></li>
-                                    <li><a href="/admin/url">Configuring the external URL</a></li>
-                                    <li><a href="/admin/search">Search configuration</a></li>
-                                </ul>
-                            </li>
-                            <li><a href="/admin/external_service">External services</a></li>
-                            <li class="content-nav-no-hover">
-                                <ul class="content-nav-section-subsection">
-                                    <li><a href="/admin/external_service/github">GitHub</a></li>
-                                    <li><a href="/admin/external_service/gitlab">GitLab</a></li>
-                                    <li><a href="/admin/external_service/bitbucket_cloud">Bitbucket Cloud</a></li>
-                                    <li><a href="/admin/external_service/bitbucket_server">Bitbucket Server</a></li>
-                                    <li><a href="/admin/external_service/phabricator">Phabricator</a></li>
-                                    <li><a href="/admin/external_service/gitolite">Gitolite</a></li>
-                                    <li><a href="/admin/external_service/aws_codecommit">AWS CodeCommit</a></li>
-                                    <li><a href="/admin/external_service/other">Other Git repository hosts</a></li>
-                                </ul>
-                            </li>
-                            <li><a href="/admin/federation">Federation</a></li>
-                            <li><a href="/admin/migration">Migration guides</a></li>
-                            <li class="content-nav-no-hover">
-                                <ul class="content-nav-section-subsection">
-                                    <li><a href="/admin/migration/opengrok">Oracle OpenGrok migration guide</a></li>
-                                    <li><a href="/admin/migration/3_0">v3.0.1+ migration guide</a></li>
-                                    <li><a href="/admin/migration/3_7">v3.7.2+ migration guide</a></li>
-                                </ul>
-                            </li>
-                            <li><a href="/admin/observability">Observability</a></li>
-                            <li class="content-nav-no-hover">
-                                <ul class="content-nav-section-subsection">
-                                    <li><a href="/admin/observability/metrics">Metrics</a></li>
-                                    <li class="content-nav-no-hover">
-                                        <ul class="content-nav-section-subsection">
-                                            <li><a href="/admin/observability/metrics_guide">Guide to metrics</a></li>
-                                            <li><a href="/admin/observability/dashboards">Guide to dashboards</a></li>
-                                        </ul>
-                                    </li>
-                                    <li><a href="/admin/observability/alerting">Alerting</a></li>
-                                    <li><a href="/admin/observability/tracing">Tracing</a></li>
-                                    <li><a href="/admin/observability/troubleshooting">Troubleshooting guide</a></li>
-                                </ul>
-                            </li>
-                            <li><a href="/admin/sourcegraph-nginx-mermaid">NGINX and Sourcegraph diagram</a></li>
-                            <li><a href="/admin/ssl_https_self_signed_cert_nginx">Adding SSL (HTTPS) to Sourcegraph with a self-signed certificate</a></li>
-                            <li><a href="/admin/subscriptions">Paid subscriptions for Sourcegraph Enterprise</a></li>
-                            <li><a href="/admin/pings">Pings</a></li>
-                            <li><a href="/admin/repo">Repositories</a></li>
-                            <li class="content-nav-no-hover">
-                                <ul class="content-nav-section-subsection">
-                                    <li><a href="/admin/repo/add">Add repositories (from code hosts) to Sourcegraph</a></li>
-                                    <li><a href="/admin/repo/pre_load_from_local_disk">Pre-load repositories already cloned to disk</a></li>
-                                    <li><a href="/admin/repo/auth">Repositories that need HTTP(S) or SSH authentication</a></li>
-                                    <li><a href="/admin/repo/permissions">Repository permissions</a></li>
-                                    <li><a href="/admin/repo/webhooks">Repository webhooks</a></li>
-                                    <li><a href="/admin/repo/perforce">Using Perforce repositories with Sourcegraph</a></li>
-                                </ul>
-                            </li>
-                            <li><a href="/admin/tls_ssl">Securing a Sourcegraph instance with TLS/SSL</a></li>
-                            <li><a href="/admin/http_https_configuration">Sourcegraph HTTP and HTTPS/SSL configuration</a></li>
-                            <li><a href="/admin/postgres">Upgrading PostgreSQL</a></li>
-                            <li><a href="/admin/updates">Upgrading Sourcegraph</a></li>
-                            <li><a href="/admin/auth">User authentication (SSO)</a></li>
-                            <li class="content-nav-no-hover">
-                                <ul class="content-nav-section-subsection">
-                                    <li><a href="/admin/auth/saml">SAML</a></li>
-                                </ul>
-                            </li>
-                            <li><a href="/admin/user_data_deletion">User data deletion</a></li>
-                            <li><a href="/admin/external_database">Using external databases with Sourcegraph</a></li>
-                            <li><a href="/admin/extensions">Sourcegraph extensions and the extension registry</a></li>
-                            <li><a href="/admin/privileges">Site admin privileges</a></li>
-                            <li><a href="/admin/faq">Administration FAQ</a></li>
-                            <li><a href="/admin/lfaq">Administration LFAQ</a></li>
-                            <li><a href="/admin/troubleshooting">Administration troubleshooting</a></li>
-                        </ul>
-                    </li>
-                </ul>
-                <ul class="content-nav-section expandable" data-nav-section="integration">
-                    <button class="content-nav-button"></button>
-                    <div class="close--icon">
-                        <svg class="mdi-icon material-icons" width="24" height="24" fill="#000" viewBox="0 0 24 24">
-                                <path d="M19,6.41L17.59,5L12,10.59L6.41,5L5,6.41L10.59,12L5,17.59L6.41,19L12,13.41L17.59,19L19,17.59L13.41,12L19,6.41Z"></path>
-                            </svg>
-                    </div>
-                    <li class="content-nav-no-hover">
-                        <a class="content-nav-section-header" href="/integration">Integrations</a>
-                        <ul class="content-nav-section-group">
-                                <li><a href="/integration/github">GitHub</a></li>
-                                <li><a href="/integration/gitlab">GitLab</a></li>
-                                <li><a href="/integration/bitbucket_cloud">Bitbucket Cloud</a></li>
-                                <li><a href="/integration/bitbucket_server">Bitbucket Server</a></li>
-                                <li><a href="/integration/phabricator">Phabricator</a></li>
-                                <li><a href="/integration/aws_codecommit">AWS CodeCommit</a></li>
-                                <li><a href="/integration/gitolite">Gitolite</a></li>
-                                <hr />
-                                <li><a href="/integration/browser_extension">Browser extension</a></li>
-                                <li><a href="/integration/browser_search_engine">Browser search engine shortcuts</a></li>
-                                <li><a href="/integration/editor">Editor integrations</a></li>
-                                <li><a href="/integration/google_gsuite">G Suite and Chrome Enterprise integration</a></li>
-                                <li><a href="/integration/lightstep">LightStep</a></li>
-                        </ul>
-                    </li>
-                </ul>
-                <ul class="content-nav-section expandable" data-nav-section="extensions">
-                    <button class="content-nav-button"></button>
-                    <div class="close--icon">
-                        <svg class="mdi-icon material-icons" width="24" height="24" fill="#000" viewBox="0 0 24 24">
-                                <path d="M19,6.41L17.59,5L12,10.59L6.41,5L5,6.41L10.59,12L5,17.59L6.41,19L12,13.41L17.59,19L19,17.59L13.41,12L19,6.41Z"></path>
-                            </svg>
-                    </div>
-                    <li class="content-nav-no-hover">
-                        <a class="content-nav-section-header" href="/extensions">Extensions</a>
-                        <ul class="content-nav-section-group">
-                            <li><a href="/extensions/usage">Using Sourcegraph extensions</a></li>
-                            <li><a href="/extensions/security">Security and privacy of Sourcegraph extensions</a></li>
-                            <li><a href="/extensions/principles">Principles of extensibility for Sourcegraph</a></li>
-                            <li><a href="/extensions/authoring">Sourcegraph extension authoring</a></li>
-                            <li class="content-nav-no-hover">
-                                <ul class="content-nav-section-subsection">
-                                    <li><a href="/extensions/authoring/builtin_commands">Builtin commands</a></li>
-                                    <li><a href="/extensions/authoring/cookbook">Cookbook for writing Sourcegraph extensions</a></li>
-                                    <li><a href="/extensions/authoring/creating">Creating a Sourcegraph extension</a></li>
-                                    <li><a href="/extensions/authoring/debugging">Debugging a Sourcegraph extension</a></li>
-                                    <li><a href="/extensions/authoring/ux_style_guide">Extension UX style guide</a></li>
-                                    <li><a href="/extensions/authoring/tutorials">Extension authoring tutorials</a></li>
-                                    <li class="content-nav-no-hover" data-sub-section-item="Extension authoring tutorials">
-                                        <ul class="content-nav-section-subsection">
-                                            <li><a href="/extensions/authoring/tutorials/hello_world">Building a "Hello, world!" Sourcegraph extension</a></li>
-                                            <li><a href="/extensions/authoring/tutorials/lang_specific_extension_tutorial">Building a language-specific extension tutorial</a></li>
-                                            <li><a href="/extensions/authoring/tutorials/button_custom_commands">Sourcegraph extension buttons and custom commands</a></li>
-                                        </ul>
-                                    </li>
-                                    <li><a href="/extensions/authoring/local_development">Local development (sideloading)</a></li>
-                                    <li><a href="/extensions/authoring/publishing">Publishing a Sourcegraph extension</a></li>
-                                    <li><a href="/extensions/authoring/forking">Publishing a local copy of an extension</a></li>
-                                    <li><a href="/extensions/authoring/development_environment">Set up your development environment</a></li>
-                                    <li><a href="/extensions/authoring/activation">Sourcegraph extension activation</a></li>
-                                    <li><a href="/extensions/authoring/contributions">Sourcegraph extension contribution points</a></li>
-                                    <li><a href="/extensions/authoring/manifest">Sourcegraph extension manifest - package.json</a></li>
-                                </ul>
-                            </li>
-                        </ul>
-                    </li>
-                </ul>
-                <ul class="content-nav-section expandable" data-nav-section="api">
-                    <button class="content-nav-button"></button>
-                    <div class="close--icon">
-                        <svg class="mdi-icon material-icons" width="24" height="24" fill="#000" viewBox="0 0 24 24">
-                                <path d="M19,6.41L17.59,5L12,10.59L6.41,5L5,6.41L10.59,12L5,17.59L6.41,19L12,13.41L17.59,19L19,17.59L13.41,12L19,6.41Z"></path>
-                            </svg>
-                    </div>
-                    <li class="content-nav-no-hover">
-                        <a class="content-nav-section-header" href="/api">API documentation</a>
-                        <ul class="content-nav-section-group">
-                            <li><a href="/api/graphql">GraphQL API</a></li>
-                            <li class="content-nav-no-hover">
-                                <ul class="content-nav-section-subsection">
-                                    <li><a href="/api/graphql/examples">Examples</a></li>
-                                </ul>
-                            </li>
-                        </ul>
-                    </li>
-                </ul>
-                <ul class="content-nav-section expandable" data-nav-section="adopt">
-                    <button class="content-nav-button"></button>
-                    <div class="close--icon">
-                        <svg class="mdi-icon material-icons" width="24" height="24" fill="#000" viewBox="0 0 24 24">
-                                <path d="M19,6.41L17.59,5L12,10.59L6.41,5L5,6.41L10.59,12L5,17.59L6.41,19L12,13.41L17.59,19L19,17.59L13.41,12L19,6.41Z"></path>
-                            </svg>
-                    </div>
-                    <li class="content-nav-no-hover">
-                        <a class="content-nav-section-header" href="/adopt">Adopting Sourcegraph</a>
-                        <ul class="content-nav-section-group">
-                            <li><a href="/adopt/trial">How to run a Sourcegraph trial</a></li>
-                        </ul>
-                    </li>
-                </ul>
-                <ul class="content-nav-section expandable" data-nav-section="dev">
-                    <button class="content-nav-button"></button>
-                    <div class="close--icon">
-                        <svg class="mdi-icon material-icons" width="24" height="24" fill="#000" viewBox="0 0 24 24">
-                                <path d="M19,6.41L17.59,5L12,10.59L6.41,5L5,6.41L10.59,12L5,17.59L6.41,19L12,13.41L17.59,19L19,17.59L13.41,12L19,6.41Z"></path>
-                            </svg>
-                    </div>
-                    <li class="content-nav-no-hover">
-                        <a class="content-nav-section-header" href="/dev">Developing Sourcegraph</a>
-                        <ul class="content-nav-section-group">
-                            <li><a href="/dev/campaigns_development">Developing campaigns</a></li>
-                            <li><a href="/dev/graphql_api">Developing the Sourcegraph GraphQL API</a></li>
-                            <li><a href="/dev/local_development">Getting started with developing Sourcegraph</a></li>
-                            <li><a href="/dev/postgresql">PostgreSQL storage tips</a></li>
-                            <li><a href="/dev/phabricator_gitolite">Print info from Gitolite</a></li>
-                            <li><a href="/dev/architecture">Sourcegraph Architecture Overview</a></li>
-                            <li><a href="/dev/telemetry">Telemetry</a></li>
-                            <li><a href="/dev/testing">Testing</a></li>
-                            <li>
-                                <a href="/dev/web">Developing the web clients</a>
-                                <li class="content-nav-no-hover">
-                                    <ul class="content-nav-section-subsection">
-                                        <li><a href="/dev/web/web_app">Developing the web app</a></li>
-                                        <li><a href="/dev/web/build">Build setup</a></li>
-                                    </ul>
-                                </li>
-                            </li>
-                        </ul>
-                    </li>
-                </ul>
-            </div>
-        </div>
-        {{with .Content}}
-        <div class="page-nav column large-2 medium-2 small-12">
-            {{template "index" .}}
-        </div>
-        {{end}}
-        <section class="column large-7 large-push-3 medium-6 medium-push-4 small-12 docs-content-section">
-            {{/* Create breadcrumb nav*/}} {{with .Content}}
-            <div class="markdown-body">{{markdown .}}</div>
-            {{else}}
-            <nav id="breadcrumbs" class="breadcrumbs small-hidden">
-                <input type="button" class="content-nav-mobile-state large-hidden medium-hidden">
-                <span class="content-nav-mobile-button"></span>
-            </nav>
-            <div class="markdown-body">
-                {{if .ContentVersionNotFoundError}}
-                <h1>Version not found</h1>
-                <p>The version <code>{{.ContentVersion}}</code> was not found.</p>
-                {{else if .ContentPageNotFoundError}}
-                <h1>Page not found</h1>
-                <p>The page <code>{{.ContentPagePath}}</code> was not found.</p>
-                {{else}} error {{end}}
-            </div>
-            {{end}}
-        </section>
-    </div>
+	{{with .Content}}
+		<nav id="index">
+			{{if .Doc.Title}}{{template "index" .}}{{end}}
+		</nav>
+	{{end}}
+	<section id="content">
+		{{with .Content}}
+			<nav id="breadcrumbs" class="breadcrumbs">
+				{{range $index, $e := .Breadcrumbs}}
+					<a href="{{$e.URL}}" class="{{if $e.IsActive}}active{{end}}">
+						{{- if eq $index 0 -}}
+							Home
+						{{- else -}}
+							{{$e.Label}}
+						{{- end -}}
+					</a> {{if not $e.IsActive}}/{{end}}
+				{{end}}
+			</nav>
+			<div class="markdown-body">{{markdown .}}</div>
+		{{else}}
+			{{if .ContentVersionNotFoundError}}
+				<h1>Version not found</h1>
+				<p>The version <code>{{.ContentVersion}}</code> was not found.</p>
+			{{else if .ContentPageNotFoundError}}
+				<h1>Page not found</h1>
+				<p>The page <code>{{.ContentPagePath}}</code> was not found.</p>
+			{{else}}<h1>Unexpected error</h1>
+			{{end}}
+		{{end}}
+	</section>
 {{end}}
 
-{{/* Define Page (Right Hand) Nav */}}
 {{define "index"}}
-    {{if gt (len .Doc.Tree) 0}}
-        {{with (or (and (eq (len .Doc.Tree) 1) (index .Doc.Tree 0).Children) .Doc.Tree)}}
-            <h3 class="page-nav-title">On this page:</h3>
-            <ul>{{template "doc_nav_nested" .}}</ul>
-        {{end}}
-    {{end}}
-    <a class="nav-edit-button btn btn-outline-secondary btn-sm" target="blank" href="https://github.com/sourcegraph/sourcegraph/edit/master/doc/{{.FilePath}}">Edit this page on GitHub</a>
+	{{with (or (and (eq (len .Doc.Tree) 1) (index .Doc.Tree 0).Children) .Doc.Tree)}}
+		<h4>{{$.Doc.Title}}</h4>
+		<p class="on-this-page">On this page:</p>
+		<ul>{{template "doc_nav" .}}</ul>
+	{{end}}
+    <a class="page-btn" href="https://github.com/sourcegraph/sourcegraph/edit/main/doc/{{.FilePath}}">Edit this page</a>
 {{end}}
-
 {{define "doc_nav"}}
-    {{range .}}
-        <li>
-            <a href="{{.URL}}">{{.Title}}</a>
-        </li>
-    {{end}}
-{{end}}
-
-{{define "doc_nav_nested"}}
-    {{range .}}
-        <li>
-            <a href="{{.URL}}">{{.Title}}</a>
-            {{with .Children}}
-                <ul>
-                    {{template "doc_nav" .}}
-                </ul>
-            {{end}}
-        </li>
-    {{end}}
-{{end}}
-
-{{define "afterBody"}}
-    <script src="{{asset "docs.js"}}?16"></script>
-    {{with .Content}}
-        <script>sgdocs.init(breadcrumbs = {{ .Breadcrumbs }});</script>
-    {{else}}
-        <script>
-            sgdocs.init(breadcrumbs = null);
-        </script>
-    {{end}}
+	{{range .}}
+		<li>
+			<a href="{{.URL}}">{{.Title}}</a>
+			{{with .Children}}
+				<ul>
+					{{template "doc_nav" .}}
+				</ul>
+			{{end}}
+	{{end}}
 {{end}}

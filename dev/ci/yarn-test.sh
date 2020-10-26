@@ -6,6 +6,9 @@ echo "--- yarn in root"
 # mutex is necessary since CI runs various yarn installs in parallel
 yarn --mutex network --frozen-lockfile --network-timeout 60000
 
+echo "--- generate"
+yarn gulp generate
+
 cd "$1"
 echo "--- test"
 

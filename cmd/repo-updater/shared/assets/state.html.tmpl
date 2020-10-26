@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <title>repo-updater-state</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css" integrity="sha384-9aIt2nRpC12Uk9gS9baDl411NQApFmC26EwAOH8WgZl5MYYxFfc+NcPb1dKGj7Sk" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5.14.0/css/all.min.css">
+    <style>
+        .bs-tooltip-bottom .tooltip-inner {
+            max-width: 100%;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        {{$schedulerDump := index . 0}}
+        {{if gt (len .) 1}}
+            <div class="alert alert-info mt-5 mx-auto text-center" onclick="loadJSON()" role="button">
+                To view additional debug dumps, please request a JSON response
+                <i class="fas fa-link ml-2"></i>
+            </div>
+        {{end}}
+        <div class="mt-5 w-9/12">
+            <h4 class="mb-3">Schedule</h4>
+            <p>
+                The schedule of when repositories get enqueued into the Update Queue.
+            </p>
+            <table class="table text-left mt-4">
+                <thead class="thead-light">
+                <tr>
+                    <th style="width: 10%">ID</th>
+                    <th style="width: 40%">Name</th>
+                    <th>
+                        <span>Update Interval</span>
+                        <i class="fas fa-info-circle my-auto ml-3" data-toggle="tooltip"
+                           title="Calculated based on the time that has elapsed since the last commit, divided by a constant factor of 2.">
+                        </i>
+                    </th>
+                    <th>Next Update</th>
+                </tr>
+                </thead>
+                <tbody>
+                {{range $schedulerDump.Schedule}}
+                    <tr>
+                        <td>{{.Repo.ID}}</td>
+                        <td>
+                            <a href="{{.Repo.URL}}"
+                               data-toggle="tooltip" data-placement="bottom" title="{{.Repo.URL}}">
+                                {{.Repo.Name}}
+                            </a>
+                        </td>
+                        <td>{{truncateDuration .Interval}}</td>
+                        <td>{{.Due.Format "Mon, 02 Jan 2006 15:04:05 MST"}}</td>
+                    </tr>
+                {{else}}
+                    <tr>
+                        <td colspan="100" class="text-center">
+                            <p class="alert">No repositories in schedule</p>
+                        </td>
+                    </tr>
+                {{end}}
+                </tbody>
+            </table>
+        </div>
+        <div class="mt-5 w-9/12">
+            <h4 class="mb-3">Update Queue</h4>
+            <p>
+                A priority queue of repositories to update.
+                A worker continuously dequeues them and sends updates to gitserver.
+            </p>
+            <table class="table text-left mt-4">
+                <thead class="thead-light">
+                <tr>
+                    <th style="width: 10%">ID</th>
+                    <th style="width: 40%">Name</th>
+                    <th>Updating</th>
+                    <th>Priority</th>
+                    <th>Sequence</th>
+                </tr>
+                </thead>
+                <tbody>
+                {{range $schedulerDump.UpdateQueue}}
+                    <tr>
+                        <td>{{.Repo.ID}}</td>
+                        <td>
+                            <a href="{{.Repo.URL}}"
+                               data-toggle="tooltip" data-placement="bottom" title="{{.Repo.URL}}">
+                                {{.Repo.Name}}
+                            </a>
+                        </td>
+                        <td>{{.Updating}}</td>
+                        <td>{{.Priority}}</td>
+                        <td>{{.Seq}}</td>
+                    </tr>
+                {{else}}
+                    <tr>
+                        <td colspan="100" class="text-center">
+                            <p class="alert">No repositories in queue</p>
+                        </td>
+                    </tr>
+                {{end}}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js" integrity="sha384-DfXdz2htPH0lsSSs5nCTpuj/zy4C+OGpamoFVy38MVBnE+IbbVYUew+OrCXaRkfj" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js" integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo" crossorigin="anonymous"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/js/bootstrap.min.js" integrity="sha384-OgVRvuATP1z7JjHLkuOU7Xw704+h835Lr+6QL9UvYjZE3Ipu6Tp75j7Bh/kR0JKI" crossorigin="anonymous"></script>
+    <script>
+        $('[data-toggle="tooltip"]').tooltip()
+        function loadJSON() {
+            window.location.search += '&format=json'
+        }
+    </script>
+</body>
+</html>

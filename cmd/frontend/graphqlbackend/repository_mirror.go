@@ -3,16 +3,17 @@ package graphqlbackend
 import (
 	"context"
 	"errors"
+	"net/url"
+	"strings"
 	"sync"
 
-	graphql "github.com/graph-gophers/graphql-go"
+	"github.com/graph-gophers/graphql-go"
 	"github.com/sourcegraph/sourcegraph/cmd/frontend/backend"
-	"github.com/sourcegraph/sourcegraph/cmd/frontend/db"
-	"github.com/sourcegraph/sourcegraph/cmd/frontend/envvar"
 	"github.com/sourcegraph/sourcegraph/cmd/frontend/types"
 	"github.com/sourcegraph/sourcegraph/internal/api"
 	"github.com/sourcegraph/sourcegraph/internal/gitserver"
 	"github.com/sourcegraph/sourcegraph/internal/gitserver/protocol"
+	"github.com/sourcegraph/sourcegraph/internal/lazyregexp"
 	"github.com/sourcegraph/sourcegraph/internal/repoupdater"
 	repoupdaterprotocol "github.com/sourcegraph/sourcegraph/internal/repoupdater/protocol"
 )
@@ -54,11 +55,37 @@ func (r *repositoryMirrorInfoResolver) repoUpdateSchedulerInfo(ctx context.Conte
 	return r.repoUpdateSchedulerInfoResult, r.repoUpdateSchedulerInfoErr
 }
 
+// TODO(flying-robot): this regex and the majority of the removeUserInfo function can
+// be extracted to a common location in a subsequent change.
+var nonSCPURLRegex = lazyregexp.New(`^(git\+)?(https?|ssh|rsync|file|git)://`)
+
 func (r *repositoryMirrorInfoResolver) RemoteURL(ctx context.Context) (string, error) {
 	// 🚨 SECURITY: The remote URL might contain secret credentials in the URL userinfo, so
 	// only allow site admins to see it.
 	if err := backend.CheckCurrentUserIsSiteAdmin(ctx); err != nil {
 		return "", err
+	}
+
+	// removeUserinfo strips the userinfo component of a remote URL. The provided string s
+	// will be returned if it cannot be parsed as a URL.
+	removeUserinfo := func(s string) string {
+		// Support common syntax (HTTPS, SSH, etc.)
+		if nonSCPURLRegex.MatchString(s) {
+			u, err := url.Parse(s)
+			if err != nil {
+				return s
+			}
+			u.User = nil
+			return u.String()
+		}
+
+		// Support SCP-style syntax.
+		u, err := url.Parse("fake://" + strings.Replace(s, ":", "/", 1))
+		if err != nil {
+			return s
+		}
+		u.User = nil
+		return strings.Replace(strings.Replace(u.String(), "fake://", "", 1), "/", ":", 1)
 	}
 
 	{
@@ -70,7 +97,7 @@ func (r *repositoryMirrorInfoResolver) RemoteURL(ctx context.Context) (string, e
 			return "", err
 		}
 		if result.Repo != nil {
-			return result.Repo.VCS.URL, nil
+			return removeUserinfo(result.Repo.VCS.URL), nil
 		}
 	}
 
@@ -79,7 +106,7 @@ func (r *repositoryMirrorInfoResolver) RemoteURL(ctx context.Context) (string, e
 	if err != nil {
 		return "", err
 	}
-	return info.URL, nil
+	return removeUserinfo(info.URL), nil
 }
 
 func (r *repositoryMirrorInfoResolver) Cloned(ctx context.Context) (bool, error) {
@@ -244,33 +271,6 @@ func (r *schemaResolver) UpdateMirrorRepository(ctx context.Context, args *struc
 	}
 	if _, err := repoupdater.DefaultClient.EnqueueRepoUpdate(ctx, gitserverRepo); err != nil {
 		return nil, err
-	}
-	return &EmptyResponse{}, nil
-}
-
-func (r *schemaResolver) UpdateAllMirrorRepositories(ctx context.Context) (*EmptyResponse, error) {
-	// Only usable for self-hosted instances
-	if envvar.SourcegraphDotComMode() {
-		return nil, errors.New("Not available on sourcegraph.com")
-	}
-	// 🚨 SECURITY: There is no reason why non-site-admins would need to run this operation.
-	if err := backend.CheckCurrentUserIsSiteAdmin(ctx); err != nil {
-		return nil, err
-	}
-
-	reposList, err := db.Repos.List(ctx, db.ReposListOptions{})
-	if err != nil {
-		return nil, err
-	}
-
-	for _, repo := range reposList {
-		gitserverRepo, err := backend.GitRepo(ctx, repo)
-		if err != nil {
-			return nil, err
-		}
-		if _, err := repoupdater.DefaultClient.EnqueueRepoUpdate(ctx, gitserverRepo); err != nil {
-			return nil, err
-		}
 	}
 	return &EmptyResponse{}, nil
 }

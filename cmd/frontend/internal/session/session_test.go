@@ -10,9 +10,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/sourcegraph/sourcegraph/cmd/frontend/db"
 	"github.com/sourcegraph/sourcegraph/cmd/frontend/types"
 	"github.com/sourcegraph/sourcegraph/internal/actor"
+	"github.com/sourcegraph/sourcegraph/internal/db"
 	"github.com/sourcegraph/sourcegraph/internal/errcode"
 )
 
@@ -167,6 +167,45 @@ func TestSessionExpiry(t *testing.T) {
 	time.Sleep(1100 * time.Millisecond)
 	if gotActor := actor.FromContext(authenticateByCookie(authedReq, httptest.NewRecorder())); !reflect.DeepEqual(gotActor, &actor.Actor{}) {
 		t.Errorf("session didn't expire, found actor %+v", gotActor)
+	}
+}
+
+func TestManualSessionExpiry(t *testing.T) {
+	cleanup := ResetMockSessionStore(t)
+	defer cleanup()
+
+	user := &types.User{ID: 123, InvalidatedSessionsAt: time.Now()}
+	db.Mocks.Users.GetByID = func(ctx context.Context, id int32) (*types.User, error) {
+		user.ID = id
+		return user, nil
+	}
+	defer func() { db.Mocks = db.MockStores{} }()
+
+	// Start new session
+	w := httptest.NewRecorder()
+	actr := &actor.Actor{UID: 123, FromSessionCookie: true}
+	if err := SetActor(w, httptest.NewRequest("GET", "/", nil), actr, time.Hour); err != nil {
+		t.Fatal(err)
+	}
+	var authCookies []*http.Cookie
+	for _, cookie := range w.Result().Cookies() {
+		if cookie.Expires.After(time.Now()) || cookie.MaxAge > 0 {
+			authCookies = append(authCookies, cookie)
+		}
+	}
+	user.InvalidatedSessionsAt = time.Now().Add(6 * time.Minute)
+
+	// Create authed request with session cookie
+	authedReq := httptest.NewRequest("GET", "/", nil)
+	for _, cookie := range authCookies {
+		authedReq.AddCookie(cookie)
+	}
+	if len(authedReq.Cookies()) != 1 {
+		t.Fatal("expected exactly 1 authed cookie")
+	}
+
+	if gotActor := actor.FromContext(authenticateByCookie(authedReq, httptest.NewRecorder())); reflect.DeepEqual(gotActor, actr) {
+		t.Errorf("Actor should have been deleted, got %v", gotActor)
 	}
 }
 

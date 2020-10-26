@@ -1,0 +1,87 @@
+.diff-boundary {
+    &__num,
+    &__content {
+        padding-top: 0.325rem;
+        padding-bottom: 0.325rem;
+    }
+    &__content {
+        opacity: 0.7;
+    }
+}
+
+.diff-hunk {
+    &__num {
+        width: 1%;
+        min-width: 2.5rem;
+        padding: 0 0.75rem;
+        font-size: 12px;
+        line-height: 1.25rem;
+        white-space: nowrap;
+        text-align: right;
+        user-select: none;
+        cursor: pointer;
+        vertical-align: top;
+
+        font-family: $code-font-family;
+        color: var(--text-muted);
+        &:hover {
+            color: var(--body-color);
+        }
+
+        &::before {
+            content: attr(data-line);
+        }
+    }
+    &__content {
+        padding-left: 0.5rem;
+        padding-right: 0.5rem;
+        font-family: $code-font-family;
+        white-space: pre;
+        font-size: 12px;
+        &::before {
+            padding-right: 0.5rem;
+            content: attr(data-diff-marker);
+        }
+    }
+
+    &__line--active &__num {
+        background-color: rgba($oc-yellow-5, 0.35) !important;
+    }
+    &__line--active &__content {
+        background-color: rgba($oc-yellow-5, 0.25) !important;
+    }
+
+    $color-addition: $oc-green-7;
+    $color-deletion: $oc-red-7;
+    &__line--addition &__num {
+        background-color: rgba($color-addition, 0.25);
+    }
+    &__line--addition &__content {
+        background-color: rgba($color-addition, 0.17);
+    }
+    &__line--deletion &__num {
+        background-color: rgba($color-deletion, 0.25);
+    }
+    &__line--deletion &__content {
+        background-color: rgba($color-deletion, 0.17);
+    }
+    &__line--both &__num,
+    &__num--both {
+        background-color: var(--color-bg-2);
+    }
+}
+
+.file-diff-hunks {
+    &__container {
+        // Must apply overflow-x to the container, not to the outer .file-diff-hunks, or else per the CSS spec
+        // overflow-y:auto would also be applied, and the code intel hover would be clipped.
+        overflow-x: auto;
+    }
+    position: relative;
+
+    border-collapse: separate;
+
+    &__table {
+        width: 100%;
+    }
+}

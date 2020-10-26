@@ -28,9 +28,9 @@ async function main(): Promise<void> {
     project.addSourceFilesFromTsConfig(path.resolve(repoRoot, 'web/tsconfig.json'))
     project.addSourceFilesFromTsConfig(path.resolve(repoRoot, 'shared/tsconfig.json'))
     project.addSourceFilesAtPaths([
-        path.resolve(repoRoot, 'web/src/**/*.d.ts'),
-        path.resolve(repoRoot, 'shared/src/**/*.d.ts'),
-        path.resolve(repoRoot, 'browser/src/**/*.d.ts'),
+        path.resolve(repoRoot, 'client/web/src/**/*.d.ts'),
+        path.resolve(repoRoot, 'client/shared/src/**/*.d.ts'),
+        path.resolve(repoRoot, 'client/browser/src/**/*.d.ts'),
     ])
 
     console.log('Getting diagnostics')
@@ -50,8 +50,8 @@ async function main(): Promise<void> {
             addMissingHistoryProp(diagnostic, sourceFile)
             sourceFile = await formatSourceFile(sourceFile)
             await sourceFile.save()
-        } catch (err) {
-            console.error(err)
+        } catch (error) {
+            console.error(error)
         }
     }
 }

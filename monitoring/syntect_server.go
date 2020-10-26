@@ -1,5 +1,7 @@
 package main
 
+import "time"
+
 func SyntectServer() *Container {
 	return &Container{
 		Name:        "syntect-server",
@@ -13,30 +15,33 @@ func SyntectServer() *Container {
 						{
 							Name:              "syntax_highlighting_errors",
 							Description:       "syntax highlighting errors every 5m",
-							Query:             `sum(increase(src_syntax_highlighting_requests{status="error"}[5m]))`,
+							Query:             `sum(increase(src_syntax_highlighting_requests{status="error"}[5m])) / sum(increase(src_syntax_highlighting_requests[5m])) * 100`,
 							DataMayNotExist:   true,
-							Warning:           Alert{GreaterOrEqual: 5},
-							PanelOptions:      PanelOptions().LegendFormat("error"),
+							Warning:           Alert().GreaterOrEqual(5).For(5 * time.Minute),
+							PanelOptions:      PanelOptions().LegendFormat("error").Unit(Percentage),
+							Owner:             ObservableOwnerCodeIntel,
 							PossibleSolutions: "none",
 						},
 						{
-							Name:              "syntax_highlighting_panics",
-							Description:       "syntax highlighting panics every 5m",
-							Query:             `sum(increase(src_syntax_highlighting_requests{status="panic"}[5m]))`,
+							Name:              "syntax_highlighting_timeouts",
+							Description:       "syntax highlighting timeouts every 5m",
+							Query:             `sum(increase(src_syntax_highlighting_requests{status="timeout"}[5m])) / sum(increase(src_syntax_highlighting_requests[5m])) * 100`,
 							DataMayNotExist:   true,
-							Warning:           Alert{GreaterOrEqual: 5},
-							PanelOptions:      PanelOptions().LegendFormat("panic"),
+							Warning:           Alert().GreaterOrEqual(5).For(5 * time.Minute),
+							PanelOptions:      PanelOptions().LegendFormat("timeout").Unit(Percentage),
+							Owner:             ObservableOwnerCodeIntel,
 							PossibleSolutions: "none",
 						},
 					},
 					{
 						{
-							Name:              "syntax_highlighting_timeouts",
-							Description:       "syntax highlighting timeouts every 5m",
-							Query:             `sum(increase(src_syntax_highlighting_requests{status="timeout"}[5m]))`,
+							Name:              "syntax_highlighting_panics",
+							Description:       "syntax highlighting panics every 5m",
+							Query:             `sum(increase(src_syntax_highlighting_requests{status="panic"}[5m]))`,
 							DataMayNotExist:   true,
-							Warning:           Alert{GreaterOrEqual: 5},
-							PanelOptions:      PanelOptions().LegendFormat("timeout"),
+							Warning:           Alert().GreaterOrEqual(5),
+							PanelOptions:      PanelOptions().LegendFormat("panic"),
+							Owner:             ObservableOwnerCodeIntel,
 							PossibleSolutions: "none",
 						},
 						{
@@ -44,8 +49,9 @@ func SyntectServer() *Container {
 							Description:       "syntax highlighter worker deaths every 5m",
 							Query:             `sum(increase(src_syntax_highlighting_requests{status="hss_worker_timeout"}[5m]))`,
 							DataMayNotExist:   true,
-							Warning:           Alert{GreaterOrEqual: 1},
+							Warning:           Alert().GreaterOrEqual(1),
 							PanelOptions:      PanelOptions().LegendFormat("worker death"),
+							Owner:             ObservableOwnerCodeIntel,
 							PossibleSolutions: "none",
 						},
 					},
@@ -56,9 +62,12 @@ func SyntectServer() *Container {
 				Hidden: true,
 				Rows: []Row{
 					{
-						sharedContainerRestarts("syntect-server"),
-						sharedContainerMemoryUsage("syntect-server"),
-						sharedContainerCPUUsage("syntect-server"),
+						sharedContainerCPUUsage("syntect-server", ObservableOwnerCodeIntel),
+						sharedContainerMemoryUsage("syntect-server", ObservableOwnerCodeIntel),
+					},
+					{
+						sharedContainerRestarts("syntect-server", ObservableOwnerCodeIntel),
+						sharedContainerFsInodes("syntect-server", ObservableOwnerCodeIntel),
 					},
 				},
 			},
@@ -67,12 +76,21 @@ func SyntectServer() *Container {
 				Hidden: true,
 				Rows: []Row{
 					{
-						sharedProvisioningCPUUsage1d("syntect-server"),
-						sharedProvisioningMemoryUsage1d("syntect-server"),
+						sharedProvisioningCPUUsageLongTerm("syntect-server", ObservableOwnerCodeIntel),
+						sharedProvisioningMemoryUsageLongTerm("syntect-server", ObservableOwnerCodeIntel),
 					},
 					{
-						sharedProvisioningCPUUsage5m("syntect-server"),
-						sharedProvisioningMemoryUsage5m("syntect-server"),
+						sharedProvisioningCPUUsageShortTerm("syntect-server", ObservableOwnerCodeIntel),
+						sharedProvisioningMemoryUsageShortTerm("syntect-server", ObservableOwnerCodeIntel),
+					},
+				},
+			},
+			{
+				Title:  "Kubernetes monitoring (ignore if using Docker Compose or server)",
+				Hidden: true,
+				Rows: []Row{
+					{
+						sharedKubernetesPodsAvailable("syntect-server", ObservableOwnerCodeIntel),
 					},
 				},
 			},

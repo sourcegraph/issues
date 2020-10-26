@@ -1,0 +1,10 @@
+<script>
+    window.MonacoEnvironment = {
+        getWorkerUrl(_, label) {
+            if (label === 'json') {
+                return '/json.worker.bundle.js'
+            }
+            return '/editor.worker.bundle.js'
+        },
+    }
+</script>

@@ -9,8 +9,8 @@ type repositoryContributorResolver struct {
 	args repositoryContributorsArgs
 }
 
-func (r *repositoryContributorResolver) Person() *personResolver {
-	return &personResolver{name: r.name, email: r.email}
+func (r *repositoryContributorResolver) Person() *PersonResolver {
+	return &PersonResolver{name: r.name, email: r.email}
 }
 
 func (r *repositoryContributorResolver) Count() int32 { return r.count }

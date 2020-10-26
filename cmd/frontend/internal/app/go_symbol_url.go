@@ -20,6 +20,7 @@ import (
 
 	"github.com/sourcegraph/ctxvfs"
 	"github.com/sourcegraph/sourcegraph/internal/gituri"
+	"github.com/sourcegraph/sourcegraph/internal/httpcli"
 	"github.com/sourcegraph/sourcegraph/internal/lazyregexp"
 	"github.com/sourcegraph/sourcegraph/internal/vfsutil"
 	"golang.org/x/tools/go/buildutil"
@@ -31,7 +32,6 @@ import (
 	"github.com/sourcegraph/sourcegraph/internal/api"
 	"github.com/sourcegraph/sourcegraph/internal/errcode"
 	"github.com/sourcegraph/sourcegraph/internal/gosrc"
-	"github.com/sourcegraph/sourcegraph/internal/httputil"
 )
 
 // serveGoSymbolURL handles Go symbol URLs (e.g.,
@@ -75,7 +75,7 @@ func serveGoSymbolURL(w http.ResponseWriter, r *http.Request) error {
 		return fmt.Errorf("invalid def %s (must have 1 or 2 path components)", def)
 	}
 
-	dir, err := gosrc.ResolveImportPath(httputil.CachingClient, importPath)
+	dir, err := gosrc.ResolveImportPath(httpcli.ExternalDoer(), importPath)
 	if err != nil {
 		return err
 	}

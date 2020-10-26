@@ -1,24 +1,24 @@
 {
-  "ID": "MDExOlB1bGxSZXF1ZXN0Mzg3OTU2MDc2",
+  "ID": "MDExOlB1bGxSZXF1ZXN0NTA0NDU4Njg1",
   "Title": "This is a test PR",
   "Body": "This is the description of the test PR",
   "State": "OPEN",
-  "URL": "https://github.com/sourcegraph/automation-testing/pull/278",
+  "URL": "https://github.com/sourcegraph/automation-testing/pull/358",
   "HeadRefOid": "05e562cc5d8ab50b5fcab8dfd5dfa5db13a48e80",
-  "BaseRefOid": "be64870b4721794dcdada10f49a2741c09f33a69",
+  "BaseRefOid": "6274d04b734de9f057bb5f196a5046a9e86ba992",
   "HeadRefName": "test-pr-6",
   "BaseRefName": "master",
-  "Number": 278,
+  "Number": 358,
   "Author": {
-   "AvatarURL": "https://avatars3.githubusercontent.com/u/25610?u=416aa7bd7c7a97c714ea0a503c90a0e7e21c5e56\u0026v=4",
-   "Login": "ryanslade",
-   "URL": "https://github.com/ryanslade"
+   "AvatarURL": "https://avatars0.githubusercontent.com/u/19534377?v=4",
+   "Login": "eseliger",
+   "URL": "https://github.com/eseliger"
   },
   "Participants": [
    {
-    "AvatarURL": "https://avatars3.githubusercontent.com/u/25610?u=416aa7bd7c7a97c714ea0a503c90a0e7e21c5e56\u0026v=4",
-    "Login": "ryanslade",
-    "URL": "https://github.com/ryanslade"
+    "AvatarURL": "https://avatars0.githubusercontent.com/u/19534377?v=4",
+    "Login": "eseliger",
+    "URL": "https://github.com/eseliger"
    },
    {
     "AvatarURL": "https://avatars1.githubusercontent.com/u/1185253?u=35f048c505007991433b46c9c0616ccbcfbd4bff\u0026v=4",
@@ -90,6 +90,7 @@
     }
    ]
   },
-  "CreatedAt": "2020-03-13T20:02:37Z",
-  "UpdatedAt": "2020-03-13T20:02:37Z"
+  "IsDraft": false,
+  "CreatedAt": "2020-10-15T23:47:12Z",
+  "UpdatedAt": "2020-10-15T23:47:12Z"
  }

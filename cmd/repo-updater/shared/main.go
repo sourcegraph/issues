@@ -4,18 +4,22 @@ import (
 	"context"
 	"database/sql"
 	"encoding/json"
+	"html/template"
 	"log"
 	"net"
 	"net/http"
 	"strings"
 	"time"
 
+	"github.com/golang/gddo/httputil"
 	"github.com/inconshreveable/log15"
 	"github.com/opentracing/opentracing-go"
 	"github.com/prometheus/client_golang/prometheus"
+
 	"github.com/sourcegraph/sourcegraph/cmd/frontend/envvar"
 	"github.com/sourcegraph/sourcegraph/cmd/repo-updater/repos"
 	"github.com/sourcegraph/sourcegraph/cmd/repo-updater/repoupdater"
+	"github.com/sourcegraph/sourcegraph/cmd/repo-updater/shared/assets"
 	"github.com/sourcegraph/sourcegraph/internal/api"
 	"github.com/sourcegraph/sourcegraph/internal/conf"
 	"github.com/sourcegraph/sourcegraph/internal/db/dbutil"
@@ -24,6 +28,9 @@ import (
 	"github.com/sourcegraph/sourcegraph/internal/extsvc"
 	"github.com/sourcegraph/sourcegraph/internal/gitserver"
 	"github.com/sourcegraph/sourcegraph/internal/httpcli"
+	"github.com/sourcegraph/sourcegraph/internal/logging"
+	"github.com/sourcegraph/sourcegraph/internal/ratelimit"
+	"github.com/sourcegraph/sourcegraph/internal/secret"
 	"github.com/sourcegraph/sourcegraph/internal/trace"
 	"github.com/sourcegraph/sourcegraph/internal/tracer"
 	"github.com/sourcegraph/sourcegraph/schema"
@@ -39,7 +46,14 @@ func Main(enterpriseInit EnterpriseInit) {
 	ctx := context.Background()
 	env.Lock()
 	env.HandleHelpFlag()
+	logging.Init()
 	tracer.Init()
+	trace.Init(true)
+
+	err := secret.Init()
+	if err != nil {
+		log.Fatalf("Failed to initialize secrets encryption: %v", err)
+	}
 
 	clock := func() time.Time { return time.Now().UTC() }
 
@@ -65,10 +79,13 @@ func Main(enterpriseInit EnterpriseInit) {
 			log.Fatalf("Detected repository DSN change, restarting to take effect: %q", newDSN)
 		}
 	})
+
 	db, err := dbutil.NewDB(dsn, "repo-updater")
 	if err != nil {
 		log.Fatalf("failed to initialize db store: %v", err)
 	}
+
+	repos.MustRegisterMetrics(db)
 
 	var store repos.Store
 	{
@@ -88,9 +105,7 @@ func Main(enterpriseInit EnterpriseInit) {
 	var src repos.Sourcer
 	{
 		m := repos.NewSourceMetrics()
-		prometheus.DefaultRegisterer.MustRegister(m.ListRepos.Count)
-		prometheus.DefaultRegisterer.MustRegister(m.ListRepos.Duration)
-		prometheus.DefaultRegisterer.MustRegister(m.ListRepos.Errors)
+		m.MustRegister(prometheus.DefaultRegisterer)
 
 		src = repos.NewSourcer(cf, repos.ObservedSource(log15.Root(), m))
 	}
@@ -102,30 +117,28 @@ func Main(enterpriseInit EnterpriseInit) {
 		GitserverClient: gitserver.DefaultClient,
 	}
 
+	rateLimitSyncer := repos.NewRateLimitSyncer(ratelimit.DefaultRegistry, store)
+	server.RateLimitSyncer = rateLimitSyncer
+	// Attempt to perform an initial sync with all external services
+	if err := rateLimitSyncer.SyncRateLimiters(ctx); err != nil {
+		// This is not a fatal error since the syncer has been added to the server above
+		// and will still be run whenever an external service is added or updated
+		log15.Error("Performing initial rate limit sync", "err", err)
+	}
+
 	// All dependencies ready
 	var debugDumpers []debugserver.Dumper
 	if enterpriseInit != nil {
 		debugDumpers = enterpriseInit(db, store, cf, server)
 	}
 
-	var handler http.Handler
-	{
-		m := repoupdater.NewHandlerMetrics()
-		prometheus.DefaultRegisterer.MustRegister(m.ServeHTTP.Count)
-		prometheus.DefaultRegisterer.MustRegister(m.ServeHTTP.Duration)
-		prometheus.DefaultRegisterer.MustRegister(m.ServeHTTP.Errors)
-		handler = repoupdater.ObservedHandler(
-			log15.Root(),
-			m,
-			opentracing.GlobalTracer(),
-		)(server.Handler())
-	}
-
 	if envvar.SourcegraphDotComMode() {
 		server.SourcegraphDotComMode = true
 
 		es, err := store.ListExternalServices(ctx, repos.StoreListExternalServicesArgs{
-			Kinds: []string{extsvc.KindGitHub, extsvc.KindGitLab},
+			// On Cloud we want to fetch our admin owned external service only here
+			NamespaceUserID: -1,
+			Kinds:           []string{extsvc.KindGitHub, extsvc.KindGitLab},
 		})
 
 		if err != nil {
@@ -163,26 +176,34 @@ func Main(enterpriseInit EnterpriseInit) {
 		}
 	}
 
-	gps := repos.NewGitolitePhabricatorMetadataSyncer(store)
-
 	syncer := &repos.Syncer{
-		Store:   store,
 		Sourcer: src,
-		Logger:  log15.Root(),
-		Now:     clock,
+		Store:   store,
+		// We always want to listen on the Synced channel since external service syncing
+		// happens on both Cloud and non Cloud instances.
+		Synced:     make(chan repos.Diff),
+		Logger:     log15.Root(),
+		Now:        clock,
+		Registerer: prometheus.DefaultRegisterer,
 	}
 
-	if envvar.SourcegraphDotComMode() {
-		syncer.FailFullSync = true
-	} else {
-		syncer.Synced = make(chan repos.Diff)
+	var gps *repos.GitolitePhabricatorMetadataSyncer
+	if !envvar.SourcegraphDotComMode() {
+		gps = repos.NewGitolitePhabricatorMetadataSyncer(store)
 		syncer.SubsetSynced = make(chan repos.Diff)
-		go watchSyncer(ctx, syncer, scheduler, gps)
-		go func() { log.Fatal(syncer.Run(ctx, repos.GetUpdateInterval)) }()
 	}
+
+	go watchSyncer(ctx, syncer, scheduler, gps)
+	go func() {
+		log.Fatal(syncer.Run(ctx, db, store, repos.RunOptions{
+			EnqueueInterval: repos.ConfRepoListUpdateInterval,
+			IsCloud:         envvar.SourcegraphDotComMode(),
+			MinSyncInterval: repos.ConfRepoListUpdateInterval,
+		}))
+	}()
 	server.Syncer = syncer
 
-	go syncCloned(ctx, scheduler, gitserver.DefaultClient)
+	go syncCloned(ctx, scheduler, gitserver.DefaultClient, store)
 
 	go repos.RunPhabricatorRepositorySyncWorker(ctx, store)
 
@@ -202,8 +223,18 @@ func Main(enterpriseInit EnterpriseInit) {
 
 	addr := net.JoinHostPort(host, port)
 	log15.Info("repo-updater: listening", "addr", addr)
-	srv := &http.Server{Addr: addr, Handler: handler}
-	go func() { log.Fatal(srv.ListenAndServe()) }()
+
+	var handler http.Handler
+	{
+		m := repoupdater.NewHandlerMetrics()
+		m.MustRegister(prometheus.DefaultRegisterer)
+
+		handler = repoupdater.ObservedHandler(
+			log15.Root(),
+			m,
+			opentracing.GlobalTracer(),
+		)(server.Handler())
+	}
 
 	go debugserver.Start(debugserver.Endpoint{
 		Name: "Repo Updater State",
@@ -216,17 +247,55 @@ func Main(enterpriseInit EnterpriseInit) {
 				dumps = append(dumps, dumper.DebugDump())
 			}
 
-			p, err := json.MarshalIndent(dumps, "", "  ")
-			if err != nil {
-				http.Error(w, "failed to marshal snapshot: "+err.Error(), http.StatusInternalServerError)
-				return
+			const (
+				textPlain       = "text/plain"
+				applicationJson = "application/json"
+			)
+
+			// Negotiate the content type.
+			contentTypeOffers := []string{textPlain, applicationJson}
+			defaultOffer := textPlain
+			contentType := httputil.NegotiateContentType(r, contentTypeOffers, defaultOffer)
+
+			// Allow users to override the negotiated content type so that e.g. browser
+			// users can easily request json by adding ?format=json to
+			// the URL.
+			switch r.URL.Query().Get("format") {
+			case "json":
+				contentType = applicationJson
 			}
-			w.Header().Set("Content-Type", "application/json")
-			_, _ = w.Write(p)
+
+			switch contentType {
+			case applicationJson:
+				p, err := json.MarshalIndent(dumps, "", "  ")
+				if err != nil {
+					http.Error(w, "failed to marshal snapshot: "+err.Error(), http.StatusInternalServerError)
+					return
+				}
+				w.Header().Set("Content-Type", "application/json")
+				_, _ = w.Write(p)
+
+			default:
+				// This case also applies for defaultOffer. Note that this is preferred
+				// over e.g. a 406 status code, according to the MDN:
+				// https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/406
+				tmpl := template.New("state.html").Funcs(template.FuncMap{
+					"truncateDuration": func(d time.Duration) time.Duration {
+						return d.Truncate(time.Second)
+					},
+				})
+				template.Must(tmpl.Parse(assets.MustAssetString("state.html.tmpl")))
+				err := tmpl.Execute(w, dumps)
+				if err != nil {
+					http.Error(w, "failed to render template: "+err.Error(), http.StatusInternalServerError)
+					return
+				}
+			}
 		}),
 	})
 
-	select {}
+	srv := &http.Server{Addr: addr, Handler: handler}
+	log.Fatal(srv.ListenAndServe())
 }
 
 type scheduler interface {
@@ -242,11 +311,15 @@ func watchSyncer(ctx context.Context, syncer *repos.Syncer, sched scheduler, gps
 
 	for {
 		select {
+		case <-ctx.Done():
+			return
 		case diff := <-syncer.Synced:
 			if !conf.Get().DisableAutoGitUpdates {
 				sched.UpdateFromDiff(diff)
 			}
-
+			if gps == nil {
+				continue
+			}
 			go func() {
 				if err := gps.Sync(ctx, diff.Repos()); err != nil {
 					log15.Error("GitolitePhabricatorMetadataSyncer", "error", err)
@@ -263,20 +336,28 @@ func watchSyncer(ctx context.Context, syncer *repos.Syncer, sched scheduler, gps
 
 // syncCloned will periodically list the cloned repositories on gitserver and
 // update the scheduler with the list.
-func syncCloned(ctx context.Context, sched scheduler, gitserverClient *gitserver.Client) {
-	for {
-		select {
-		case <-ctx.Done():
-			return
-		case <-time.After(repos.GetUpdateInterval() / 2):
-		}
-
+func syncCloned(ctx context.Context, sched scheduler, gitserverClient *gitserver.Client, store repos.Store) {
+	doSync := func() {
 		cloned, err := gitserverClient.ListCloned(ctx)
 		if err != nil {
-			log15.Warn("failed to update git fetch scheduler with list of cloned repositories", "error", err)
-			continue
+			log15.Warn("failed to fetch list of cloned repositories", "error", err)
+			return
 		}
 
 		sched.SetCloned(cloned)
+
+		err = store.SetClonedRepos(ctx, cloned...)
+		if err != nil {
+			log15.Warn("failed to set cloned repository list", "error", err)
+			return
+		}
+	}
+
+	for ctx.Err() == nil {
+		doSync()
+		select {
+		case <-ctx.Done():
+		case <-time.After(30 * time.Second):
+		}
 	}
 }

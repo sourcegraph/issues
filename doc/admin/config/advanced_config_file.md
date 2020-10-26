@@ -169,26 +169,19 @@ To have Sourcegraph use this new ConfigMap, add the following environment variab
 
 ```
         - name: SITE_CONFIG_FILE
-          value: /mnt/site.json
+          value: /etc/sourcegraph/site.json
         - name : GLOBAL_SETTINGS_FILE
-          value: /mnt/global-settings.json
+          value: /etc/sourcegraph/global-settings.json
         - name : EXTSVC_CONFIG_FILE
-          value: /mnt/extsvc.json
+          value: /etc/sourcegraph/extsvc.json
 ```
 
-And instruct Kubernetes to mount the ConfigMap file we created under `/mnt/` by adding the following in your `sourcegraph-frontend.Deployment.yaml` `volumeMounts` section:
+And instruct Kubernetes to mount the ConfigMap file we created under `/etc/sourcegraph/` by adding the following in your `sourcegraph-frontend.Deployment.yaml` `volumeMounts` section:
 
 ```
         volumeMounts:
-        - mountPath: /mnt/site.json
+        - mountPath: /etc/sourcegraph
           name: config-volume
-          subPath: site.json
-        - mountPath: /mnt/global-settings.json
-          name: config-volume
-          subPath: global-settings.json
-        - mountPath: /mnt/extsvc.json
-          name: config-volume
-          subPath: extsvc.json
 ```
 
 And similarly under the `volume` section:

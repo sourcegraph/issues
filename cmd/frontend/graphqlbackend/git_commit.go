@@ -13,7 +13,7 @@ import (
 	"github.com/sourcegraph/sourcegraph/internal/gitserver"
 	"github.com/sourcegraph/sourcegraph/internal/vcs/git"
 
-	graphql "github.com/graph-gophers/graphql-go"
+	"github.com/graph-gophers/graphql-go"
 	"github.com/graph-gophers/graphql-go/relay"
 )
 
@@ -138,7 +138,7 @@ func (r *GitCommitResolver) Message(ctx context.Context) (string, error) {
 }
 func (r *GitCommitResolver) Subject(ctx context.Context) (string, error) {
 	r.resolveCommit(ctx)
-	return gitCommitSubject(r.message), r.err
+	return GitCommitSubject(r.message), r.err
 }
 func (r *GitCommitResolver) Body(ctx context.Context) (*string, error) {
 	r.resolveCommit(ctx)
@@ -146,7 +146,7 @@ func (r *GitCommitResolver) Body(ctx context.Context) (*string, error) {
 		return nil, r.err
 	}
 
-	body := gitCommitBody(r.message)
+	body := GitCommitBody(r.message)
 	if body == "" {
 		return nil, nil
 	}
@@ -327,8 +327,8 @@ func (r *GitCommitResolver) canonicalRepoRevURL() (string, error) {
 	return r.repoResolver.URL() + "@" + string(r.oid), nil
 }
 
-// gitCommitBody returns the first line of the Git commit message.
-func gitCommitSubject(message string) string {
+// GitCommitSubject returns the first line of the Git commit message.
+func GitCommitSubject(message string) string {
 	i := strings.Index(message, "\n")
 	if i == -1 {
 		return message
@@ -336,8 +336,8 @@ func gitCommitSubject(message string) string {
 	return message[:i]
 }
 
-// gitCommitBody returns the contents of the Git commit message after the subject.
-func gitCommitBody(message string) string {
+// GitCommitBody returns the contents of the Git commit message after the subject.
+func GitCommitBody(message string) string {
 	i := strings.Index(message, "\n")
 	if i == -1 {
 		return ""

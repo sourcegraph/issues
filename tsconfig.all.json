@@ -1,0 +1,18 @@
+{
+  "extends": "./tsconfig.json",
+  "references": [
+    { "path": "client/shared" },
+    { "path": "client/shared/src/testing" },
+    { "path": "client/branded" },
+    { "path": "client/web" },
+    { "path": "client/web/src/end-to-end" },
+    { "path": "client/web/src/regression" },
+    { "path": "client/web/src/integration" },
+    { "path": "client/browser" },
+    { "path": "client/browser/src/end-to-end" },
+    { "path": "client/packages/sourcegraph-extension-api" },
+    { "path": "client/packages/@sourcegraph/extension-api-types" },
+    { "path": "dev/release" },
+    { "path": "schema" },
+  ],
+}

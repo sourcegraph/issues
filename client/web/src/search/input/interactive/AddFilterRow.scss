@@ -1,0 +1,11 @@
+.add-filter-row {
+    display: flex;
+
+    &__button {
+        &:not(:first-child) {
+            margin-left: 0.25rem;
+        }
+    }
+}
+
+@import './AddFilterDropdown';

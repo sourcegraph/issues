@@ -1,0 +1,49 @@
+.hierarchical-locations-view {
+    height: 100%;
+    display: flex;
+
+    &__resizable {
+        min-width: 6rem;
+    }
+
+    &__list {
+        flex: 1;
+        border-right: 1px solid var(--border-color);
+        width: 100%; // necessary to prevent border-right from shrinking as width narrows
+        overflow-y: auto;
+    }
+
+    &__item {
+        flex: none;
+
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+
+        cursor: pointer;
+        user-select: none;
+
+        &-name {
+            margin-right: 0.5rem;
+            display: flex;
+            align-items: center;
+
+            min-width: 0;
+
+            &-text {
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                direction: rtl;
+            }
+        }
+        &-badge {
+            opacity: 0.8;
+        }
+    }
+
+    &__content {
+        flex: 1;
+        width: 100%;
+    }
+}

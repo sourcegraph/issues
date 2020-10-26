@@ -1,0 +1,50 @@
+---
+version: 1
+interactions:
+- request:
+    body: ""
+    form: {}
+    headers:
+      Content-Type:
+      - application/json; charset=utf-8
+    url: https://bitbucket.sgdev.org/rest/api/1.0/projects/SOUR/repos/automation-testing/pull-requests/95/reopen?version=1
+    method: POST
+  response:
+    body: '{"id":95,"version":2,"title":"Replace fmt.Sprintf with equivalent strconv.Itoa","description":"This campaign replaces `fmt.Sprintf` with `strconv.Itoa`","state":"OPEN","open":true,"closed":false,"createdDate":1600256487945,"updatedDate":1600950914772,"fromRef":{"id":"refs/heads/campaigns-demo/sprintf-to-itoa","displayId":"campaigns-demo/sprintf-to-itoa","latestCommit":"a5d1ee5e1b025220137e05fe69f495dba324ad00","repository":{"slug":"automation-testing","id":10070,"name":"automation-testing","scmId":"git","state":"AVAILABLE","statusMessage":"Available","forkable":true,"project":{"key":"SOUR","id":1,"name":"sourcegraph","public":false,"type":"NORMAL","links":{"self":[{"href":"https://bitbucket.sgdev.org/projects/SOUR"}]}},"public":false,"links":{"clone":[{"href":"https://bitbucket.sgdev.org/scm/sour/automation-testing.git","name":"http"}],"self":[{"href":"https://bitbucket.sgdev.org/projects/SOUR/repos/automation-testing/browse"}]}}},"toRef":{"id":"refs/heads/master","displayId":"master","latestCommit":"1e256a405ec07c904f0a4e681c8136cc9fca3b87","repository":{"slug":"automation-testing","id":10070,"name":"automation-testing","scmId":"git","state":"AVAILABLE","statusMessage":"Available","forkable":true,"project":{"key":"SOUR","id":1,"name":"sourcegraph","public":false,"type":"NORMAL","links":{"self":[{"href":"https://bitbucket.sgdev.org/projects/SOUR"}]}},"public":false,"links":{"clone":[{"href":"https://bitbucket.sgdev.org/scm/sour/automation-testing.git","name":"http"}],"self":[{"href":"https://bitbucket.sgdev.org/projects/SOUR/repos/automation-testing/browse"}]}}},"locked":false,"author":{"user":{"name":"thorsten","emailAddress":"thorsten@sourcegraph.com","id":104,"displayName":"thorsten","active":true,"slug":"thorsten","type":"NORMAL","links":{"self":[{"href":"https://bitbucket.sgdev.org/users/thorsten"}]}},"role":"AUTHOR","approved":false,"status":"UNAPPROVED"},"reviewers":[],"participants":[],"links":{"self":[{"href":"https://bitbucket.sgdev.org/projects/SOUR/repos/automation-testing/pull-requests/95"}]}}'
+    headers:
+      Cache-Control:
+      - private, no-cache
+      - no-cache, no-transform
+      Cf-Cache-Status:
+      - DYNAMIC
+      Cf-Ray:
+      - 5d7c8b4e8d8f1786-FRA
+      Cf-Request-Id:
+      - 0561b56516000017866203d200000001
+      Content-Type:
+      - application/json;charset=UTF-8
+      Date:
+      - Thu, 24 Sep 2020 12:35:14 GMT
+      Expect-Ct:
+      - max-age=604800, report-uri="https://report-uri.cloudflare.com/cdn-cgi/beacon/expect-ct"
+      Pragma:
+      - no-cache
+      Server:
+      - cloudflare
+      Vary:
+      - X-AUSERNAME,Accept-Encoding
+      X-Arequestid:
+      - '@PXMM0Qx755x755770x0'
+      X-Asen:
+      - SEN-11363689
+      X-Asessionid:
+      - smlip
+      X-Auserid:
+      - "104"
+      X-Ausername:
+      - thorsten
+      X-Content-Type-Options:
+      - nosniff
+    status: 200 OK
+    code: 200
+    duration: ""

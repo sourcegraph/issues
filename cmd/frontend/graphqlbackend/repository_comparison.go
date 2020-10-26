@@ -20,16 +20,23 @@ import (
 	"github.com/sourcegraph/sourcegraph/internal/vcs/git"
 )
 
-type RepositoryComparisonConnectionResolver interface {
-	Nodes(ctx context.Context) ([]*RepositoryComparisonResolver, error)
-	TotalCount(ctx context.Context) (int32, error)
-	PageInfo(ctx context.Context) (*graphqlutil.PageInfo, error)
-}
-
 type RepositoryComparisonInput struct {
 	Base         *string
 	Head         *string
 	FetchMissing bool
+}
+
+type FileDiffsConnectionArgs struct {
+	First *int32
+	After *string
+}
+
+type RepositoryComparisonInterface interface {
+	BaseRepository() *RepositoryResolver
+	FileDiffs(ctx context.Context, args *FileDiffsConnectionArgs) (FileDiffConnection, error)
+
+	ToRepositoryComparison() (*RepositoryComparisonResolver, bool)
+	ToPreviewRepositoryComparison() (PreviewRepositoryComparisonResolver, bool)
 }
 
 type FileDiffConnection interface {
@@ -97,37 +104,24 @@ func NewRepositoryComparison(ctx context.Context, r *RepositoryResolver, args *R
 		return nil, err
 	}
 
-	var (
-		wg               sync.WaitGroup
-		base, head       *GitCommitResolver
-		baseErr, headErr error
-	)
-
-	wg.Add(2)
-	go func() {
-		defer wg.Done()
-		// Find the common merge-base for the diff. That's the revision the diff applies to,
-		// not the baseRevspec.
-		mergeBaseCommit, err := git.MergeBase(ctx, *grepo, api.CommitID(baseRevspec), api.CommitID(headRevspec))
-		if err != nil {
-			baseErr = err
-			return
-		}
-		// We use the merge-base as the base commit here, as the diff will only be guaranteed to be
-		// applicable to the file from that revision.
-		commitString := strings.TrimSpace(string(mergeBaseCommit))
-		base, baseErr = getCommit(ctx, *grepo, commitString)
-	}()
-	go func() {
-		defer wg.Done()
-		head, headErr = getCommit(ctx, *grepo, headRevspec)
-	}()
-	wg.Wait()
-	if baseErr != nil {
-		return nil, baseErr
+	head, err := getCommit(ctx, *grepo, headRevspec)
+	if err != nil {
+		return nil, err
 	}
-	if headErr != nil {
-		return nil, headErr
+
+	// Find the common merge-base for the diff. That's the revision the diff applies to,
+	// not the baseRevspec.
+	mergeBaseCommit, err := git.MergeBase(ctx, *grepo, api.CommitID(baseRevspec), api.CommitID(headRevspec))
+	if err != nil {
+		return nil, err
+	}
+
+	// We use the merge-base as the base commit here, as the diff will only be guaranteed to be
+	// applicable to the file from that revision.
+	commitString := strings.TrimSpace(string(mergeBaseCommit))
+	base, err := getCommit(ctx, *grepo, commitString)
+	if err != nil {
+		return nil, err
 	}
 
 	return &RepositoryComparisonResolver{
@@ -147,6 +141,17 @@ type RepositoryComparisonResolver struct {
 	baseRevspec, headRevspec string
 	base, head               *GitCommitResolver
 	repo                     *RepositoryResolver
+}
+
+// Type guard.
+var _ RepositoryComparisonInterface = &RepositoryComparisonResolver{}
+
+func (r *RepositoryComparisonResolver) ToPreviewRepositoryComparison() (PreviewRepositoryComparisonResolver, bool) {
+	return nil, false
+}
+
+func (r *RepositoryComparisonResolver) ToRepositoryComparison() (*RepositoryComparisonResolver, bool) {
+	return r, true
 }
 
 func (r *RepositoryComparisonResolver) BaseRepository() *RepositoryResolver { return r.repo }
@@ -172,16 +177,14 @@ func (r *RepositoryComparisonResolver) Commits(
 	}
 }
 
-func (r *RepositoryComparisonResolver) FileDiffs(
-	args *FileDiffsConnectionArgs,
-) FileDiffConnection {
+func (r *RepositoryComparisonResolver) FileDiffs(ctx context.Context, args *FileDiffsConnectionArgs) (FileDiffConnection, error) {
 	return NewFileDiffConnectionResolver(
 		r.base,
 		r.head,
 		args,
 		computeRepositoryComparisonDiff(r),
 		repositoryComparisonNewFile,
-	)
+	), nil
 }
 
 // repositoryComparisonNewFile is the default NewFileFunc used by

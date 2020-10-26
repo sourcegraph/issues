@@ -5,11 +5,12 @@ import (
 	"fmt"
 	"time"
 
-	multierror "github.com/hashicorp/go-multierror"
+	"github.com/hashicorp/go-multierror"
 	otlog "github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/sourcegraph/sourcegraph/internal/api"
+	"github.com/sourcegraph/sourcegraph/internal/db/dbutil"
 	"github.com/sourcegraph/sourcegraph/internal/logging"
 	"github.com/sourcegraph/sourcegraph/internal/metrics"
 	"github.com/sourcegraph/sourcegraph/internal/trace"
@@ -38,6 +39,14 @@ type observedSource struct {
 // SourceMetrics encapsulates the Prometheus metrics of a Source.
 type SourceMetrics struct {
 	ListRepos *metrics.OperationMetrics
+}
+
+// MustRegister registers all metrics in SourceMetrics in the given
+// prometheus.Registerer. It panics in case of failure.
+func (sm SourceMetrics) MustRegister(r prometheus.Registerer) {
+	r.MustRegister(sm.ListRepos.Count)
+	r.MustRegister(sm.ListRepos.Duration)
+	r.MustRegister(sm.ListRepos.Errors)
 }
 
 // NewSourceMetrics returns SourceMetrics that need to be registered
@@ -88,6 +97,9 @@ func (o *observedSource) ListRepos(ctx context.Context, results chan SourceResul
 		}
 		count++
 	}
+	if errs != nil {
+		err = errs.ErrorOrNil()
+	}
 }
 
 // NewObservedStore wraps the given Store with error logging,
@@ -121,11 +133,18 @@ type ObservedStore struct {
 type StoreMetrics struct {
 	Transact               *metrics.OperationMetrics
 	Done                   *metrics.OperationMetrics
+	InsertRepos            *metrics.OperationMetrics
+	DeleteRepos            *metrics.OperationMetrics
 	UpsertRepos            *metrics.OperationMetrics
+	UpsertSources          *metrics.OperationMetrics
 	ListRepos              *metrics.OperationMetrics
+	ListExternalRepoSpecs  *metrics.OperationMetrics
 	UpsertExternalServices *metrics.OperationMetrics
 	ListExternalServices   *metrics.OperationMetrics
-	ListAllRepoNames       *metrics.OperationMetrics
+	SetClonedRepos         *metrics.OperationMetrics
+	CountNotClonedRepos    *metrics.OperationMetrics
+	CountUserAddedRepos    *metrics.OperationMetrics
+	EnqueueSyncJobs        *metrics.OperationMetrics
 }
 
 // MustRegister registers all metrics in StoreMetrics in the given
@@ -135,10 +154,14 @@ func (sm StoreMetrics) MustRegister(r prometheus.Registerer) {
 		sm.Transact,
 		sm.Done,
 		sm.ListRepos,
+		sm.ListExternalRepoSpecs,
+		sm.InsertRepos,
+		sm.DeleteRepos,
 		sm.UpsertRepos,
+		sm.UpsertSources,
 		sm.ListExternalServices,
 		sm.UpsertExternalServices,
-		sm.ListAllRepoNames,
+		sm.SetClonedRepos,
 	} {
 		r.MustRegister(om.Count)
 		r.MustRegister(om.Duration)
@@ -178,6 +201,34 @@ func NewStoreMetrics() StoreMetrics {
 				Help: "Total number of errors when closing a transaction",
 			}, []string{}),
 		},
+		InsertRepos: &metrics.OperationMetrics{
+			Duration: prometheus.NewHistogramVec(prometheus.HistogramOpts{
+				Name: "src_repoupdater_store_insert_repos_duration_seconds",
+				Help: "Time spent inserting repos",
+			}, []string{}),
+			Count: prometheus.NewCounterVec(prometheus.CounterOpts{
+				Name: "src_repoupdater_store_insert_repos_total",
+				Help: "Total number of inserting repositories",
+			}, []string{}),
+			Errors: prometheus.NewCounterVec(prometheus.CounterOpts{
+				Name: "src_repoupdater_store_insert_repos_errors_total",
+				Help: "Total number of errors when inserting repos",
+			}, []string{}),
+		},
+		DeleteRepos: &metrics.OperationMetrics{
+			Duration: prometheus.NewHistogramVec(prometheus.HistogramOpts{
+				Name: "src_repoupdater_store_delete_repos_duration_seconds",
+				Help: "Time spent deleting repos",
+			}, []string{}),
+			Count: prometheus.NewCounterVec(prometheus.CounterOpts{
+				Name: "src_repoupdater_store_delete_repos_total",
+				Help: "Total number of deleting repositories",
+			}, []string{}),
+			Errors: prometheus.NewCounterVec(prometheus.CounterOpts{
+				Name: "src_repoupdater_store_delete_repos_errors_total",
+				Help: "Total number of errors when deleting repos",
+			}, []string{}),
+		},
 		UpsertRepos: &metrics.OperationMetrics{
 			Duration: prometheus.NewHistogramVec(prometheus.HistogramOpts{
 				Name: "src_repoupdater_store_upsert_repos_duration_seconds",
@@ -192,6 +243,20 @@ func NewStoreMetrics() StoreMetrics {
 				Help: "Total number of errors when upserting repos",
 			}, []string{}),
 		},
+		UpsertSources: &metrics.OperationMetrics{
+			Duration: prometheus.NewHistogramVec(prometheus.HistogramOpts{
+				Name: "src_repoupdater_store_upsert_sources_duration_seconds",
+				Help: "Time spent upserting sources",
+			}, []string{}),
+			Count: prometheus.NewCounterVec(prometheus.CounterOpts{
+				Name: "src_repoupdater_store_upsert_sources_total",
+				Help: "Total number of upserted sources",
+			}, []string{}),
+			Errors: prometheus.NewCounterVec(prometheus.CounterOpts{
+				Name: "src_repoupdater_store_upsert_sources_errors_total",
+				Help: "Total number of errors when upserting sources",
+			}, []string{}),
+		},
 		ListRepos: &metrics.OperationMetrics{
 			Duration: prometheus.NewHistogramVec(prometheus.HistogramOpts{
 				Name: "src_repoupdater_store_list_repos_duration_seconds",
@@ -204,6 +269,20 @@ func NewStoreMetrics() StoreMetrics {
 			Errors: prometheus.NewCounterVec(prometheus.CounterOpts{
 				Name: "src_repoupdater_store_list_repos_errors_total",
 				Help: "Total number of errors when listing repos",
+			}, []string{}),
+		},
+		ListExternalRepoSpecs: &metrics.OperationMetrics{
+			Duration: prometheus.NewHistogramVec(prometheus.HistogramOpts{
+				Name: "src_repoupdater_store_list_external_repo_specs_duration_seconds",
+				Help: "Time spent listing external repo specs",
+			}, []string{}),
+			Count: prometheus.NewCounterVec(prometheus.CounterOpts{
+				Name: "src_repoupdater_store_list_external_repo_specs_total",
+				Help: "Total number of listed external repo specs",
+			}, []string{}),
+			Errors: prometheus.NewCounterVec(prometheus.CounterOpts{
+				Name: "src_repoupdater_store_list_external_repo_specs_errors_total",
+				Help: "Total number of errors when listing external repo specs",
 			}, []string{}),
 		},
 		UpsertExternalServices: &metrics.OperationMetrics{
@@ -234,18 +313,46 @@ func NewStoreMetrics() StoreMetrics {
 				Help: "Total number of errors when listing external_services",
 			}, []string{}),
 		},
-		ListAllRepoNames: &metrics.OperationMetrics{
+		SetClonedRepos: &metrics.OperationMetrics{
 			Duration: prometheus.NewHistogramVec(prometheus.HistogramOpts{
-				Name: "src_repoupdater_store_list_all_repo_names_duration_seconds",
-				Help: "Time spent listing repo names",
+				Name: "src_repoupdater_store_set_cloned_repos_duration_seconds",
+				Help: "Time spent setting cloned repos",
 			}, []string{}),
 			Count: prometheus.NewCounterVec(prometheus.CounterOpts{
-				Name: "src_repoupdater_store_list_all_repo_names_total",
-				Help: "Total number of listed repo names",
+				Name: "src_repoupdater_store_set_cloned_repos_total",
+				Help: "Total number of set cloned repos calls",
 			}, []string{}),
 			Errors: prometheus.NewCounterVec(prometheus.CounterOpts{
-				Name: "src_repoupdater_store_list_all_repo_names_errors_total",
-				Help: "Total number of errors when listing repo names",
+				Name: "src_repoupdater_store_set_cloned_repos_errors_total",
+				Help: "Total number of errors when setting cloned repos",
+			}, []string{}),
+		},
+		CountNotClonedRepos: &metrics.OperationMetrics{
+			Duration: prometheus.NewHistogramVec(prometheus.HistogramOpts{
+				Name: "src_repoupdater_store_count_not_cloned_repos_duration_seconds",
+				Help: "Time spent counting not-cloned repos",
+			}, []string{}),
+			Count: prometheus.NewCounterVec(prometheus.CounterOpts{
+				Name: "src_repoupdater_store_count_not_cloned_repos_total",
+				Help: "Total number of count not-cloned repos calls",
+			}, []string{}),
+			Errors: prometheus.NewCounterVec(prometheus.CounterOpts{
+				Name: "src_repoupdater_store_count_not_cloned_repos_errors_total",
+				Help: "Total number of errors when counting not-cloned repos",
+			}, []string{}),
+		},
+		CountUserAddedRepos: &metrics.OperationMetrics{
+			Duration: prometheus.NewHistogramVec(prometheus.HistogramOpts{
+				Name: "src_repoupdater_store_count_user_added_repos",
+				Help: "Time spent counting the number of user added repos",
+			}, []string{}),
+			Count: prometheus.NewCounterVec(prometheus.CounterOpts{
+				Name: "src_repoupdater_store_count_user_added_repos_total",
+				Help: "Total number of count user added repo calls",
+			}, []string{}),
+			Errors: prometheus.NewCounterVec(prometheus.CounterOpts{
+				Name: "src_repoupdater_store_count_user_added_repos_errors_total",
+				Help: "Total number of errors when counting user added repos",
 			}, []string{}),
 		},
 	}
@@ -282,8 +389,19 @@ func (o *ObservedStore) Transact(ctx context.Context) (s TxStore, err error) {
 	}, nil
 }
 
+// With calls the With method of the underlying store if it exists,
+// otherwise it returns the store unchanged.
+// It implements the WithStore interface.
+func (o *ObservedStore) With(db dbutil.DB) Store {
+	if ws, ok := o.store.(WithStore); ok {
+		return ws.With(db)
+	}
+
+	return o.store
+}
+
 // Done calls into the inner Store Done method.
-func (o *ObservedStore) Done(errs ...*error) {
+func (o *ObservedStore) Done(err error) error {
 	tr := o.txtrace
 	tr.LogFields(otlog.String("event", "Store.Done"))
 
@@ -291,13 +409,11 @@ func (o *ObservedStore) Done(errs ...*error) {
 		secs := time.Since(began).Seconds()
 		done := false
 
-		for _, err := range errs {
-			if err != nil && *err != nil {
-				done = true
-				tr.SetError(*err)
-				o.metrics.Done.Observe(secs, 1, err)
-				logging.Log(o.log, "store.done", err)
-			}
+		if err != nil {
+			done = true
+			tr.SetError(err)
+			o.metrics.Done.Observe(secs, 1, &err)
+			logging.Log(o.log, "store.done", &err)
 		}
 
 		if !done {
@@ -307,7 +423,7 @@ func (o *ObservedStore) Done(errs ...*error) {
 		tr.Finish()
 	}(time.Now())
 
-	o.store.(TxStore).Done(errs...)
+	return o.store.(TxStore).Done(err)
 }
 
 // ListExternalServices calls into the inner Store and registers the observed results.
@@ -366,6 +482,44 @@ func (o *ObservedStore) UpsertExternalServices(ctx context.Context, svcs ...*Ext
 	return o.store.UpsertExternalServices(ctx, svcs...)
 }
 
+// InsertRepos calls into the inner Store and registers the observed results.
+func (o *ObservedStore) InsertRepos(ctx context.Context, repos ...*Repo) (err error) {
+	tr, ctx := o.trace(ctx, "Store.InsertRepos")
+	tr.LogFields(otlog.Int("count", len(repos)))
+
+	defer func(began time.Time) {
+		secs := time.Since(began).Seconds()
+		count := float64(len(repos))
+
+		o.metrics.InsertRepos.Observe(secs, count, &err)
+		logging.Log(o.log, "store.insert-repos", &err, "count", len(repos))
+
+		tr.SetError(err)
+		tr.Finish()
+	}(time.Now())
+
+	return o.store.InsertRepos(ctx, repos...)
+}
+
+// DeleteRepos calls into the inner Store and registers the observed results.
+func (o *ObservedStore) DeleteRepos(ctx context.Context, ids ...api.RepoID) (err error) {
+	tr, ctx := o.trace(ctx, "Store.DeleteRepos")
+	tr.LogFields(otlog.Int("count", len(ids)))
+
+	defer func(began time.Time) {
+		secs := time.Since(began).Seconds()
+		count := float64(len(ids))
+
+		o.metrics.InsertRepos.Observe(secs, count, &err)
+		logging.Log(o.log, "store.delete-repos", &err, "count", len(ids))
+
+		tr.SetError(err)
+		tr.Finish()
+	}(time.Now())
+
+	return o.store.DeleteRepos(ctx, ids...)
+}
+
 // ListRepos calls into the inner Store and registers the observed results.
 func (o *ObservedStore) ListRepos(ctx context.Context, args StoreListReposArgs) (rs []*Repo, err error) {
 	tr, ctx := o.trace(ctx, "Store.ListRepos")
@@ -393,23 +547,25 @@ func (o *ObservedStore) ListRepos(ctx context.Context, args StoreListReposArgs) 
 	return o.store.ListRepos(ctx, args)
 }
 
-// ListAllRepoNames calls into the inner Store and registers the observed results.
-func (o *ObservedStore) ListAllRepoNames(ctx context.Context) (names []api.RepoName, err error) {
-	tr, ctx := o.trace(ctx, "Store.ListAllRepoNames")
+// ListExternalRepoSpecs calls into the inner Store and registers the observed results.
+func (o *ObservedStore) ListExternalRepoSpecs(ctx context.Context) (ids map[api.ExternalRepoSpec]struct{}, err error) {
+	tr, ctx := o.trace(ctx, "Store.ListExternalRepoSpecs")
 
 	defer func(began time.Time) {
 		secs := time.Since(began).Seconds()
-		count := float64(len(names))
+		count := float64(len(ids))
 
-		o.metrics.ListAllRepoNames.Observe(secs, count, &err)
-		logging.Log(o.log, "store.list-all-repo-names", &err, "count", len(names))
+		o.metrics.ListExternalRepoSpecs.Observe(secs, count, &err)
+		logging.Log(o.log, "store.list-external-repo-specs", &err,
+			"count", len(ids),
+		)
 
-		tr.LogFields(otlog.Int("count", len(names)))
+		tr.LogFields(otlog.Int("count", len(ids)))
 		tr.SetError(err)
 		tr.Finish()
 	}(time.Now())
 
-	return o.store.ListAllRepoNames(ctx)
+	return o.store.ListExternalRepoSpecs(ctx)
 }
 
 // UpsertRepos calls into the inner Store and registers the observed results.
@@ -431,11 +587,97 @@ func (o *ObservedStore) UpsertRepos(ctx context.Context, repos ...*Repo) (err er
 	return o.store.UpsertRepos(ctx, repos...)
 }
 
+// UpsertSources calls into the inner Store and registers the observed results.
+func (o *ObservedStore) UpsertSources(ctx context.Context, added, modified, deleted map[api.RepoID][]SourceInfo) (err error) {
+	tr, ctx := o.trace(ctx, "Store.UpsertSources")
+	tr.LogFields(otlog.Int("count", len(added)+len(deleted)))
+
+	defer func(began time.Time) {
+		secs := time.Since(began).Seconds()
+		count := float64(len(added) + len(modified) + len(deleted))
+
+		o.metrics.UpsertSources.Observe(secs, count, &err)
+		logging.Log(o.log, "store.upsert-sources", &err, "count", count)
+
+		tr.SetError(err)
+		tr.Finish()
+	}(time.Now())
+
+	return o.store.UpsertSources(ctx, added, modified, deleted)
+}
+
+// SetClonedRepos calls into the inner Store and registers the observed results.
+func (o *ObservedStore) SetClonedRepos(ctx context.Context, repoNames ...string) (err error) {
+	tr, ctx := o.trace(ctx, "Store.SetClonedRepos")
+	tr.LogFields(otlog.Int("count", len(repoNames)))
+
+	defer func(began time.Time) {
+		secs := time.Since(began).Seconds()
+		count := float64(len(repoNames))
+
+		o.metrics.SetClonedRepos.Observe(secs, count, &err)
+		logging.Log(o.log, "store.set-cloned-repos", &err, "count", len(repoNames))
+
+		tr.SetError(err)
+		tr.Finish()
+	}(time.Now())
+
+	return o.store.SetClonedRepos(ctx, repoNames...)
+}
+
+// CountNotClonedRepos calls into the inner Store and registers the observed results.
+func (o *ObservedStore) CountNotClonedRepos(ctx context.Context) (count uint64, err error) {
+	tr, ctx := o.trace(ctx, "Store.CountNotClonedRepos")
+
+	defer func(began time.Time) {
+		secs := time.Since(began).Seconds()
+
+		o.metrics.CountNotClonedRepos.Observe(secs, float64(count), &err)
+		logging.Log(o.log, "store.count-not-cloned-repos", &err, "count", count)
+
+		tr.SetError(err)
+		tr.Finish()
+	}(time.Now())
+
+	return o.store.CountNotClonedRepos(ctx)
+}
+
+// CountUserAddedRepos calls into the inner Store and registers the observed results.
+func (o *ObservedStore) CountUserAddedRepos(ctx context.Context) (count uint64, err error) {
+	tr, ctx := o.trace(ctx, "Store.CountUserAddedRepos")
+
+	defer func(began time.Time) {
+		secs := time.Since(began).Seconds()
+
+		o.metrics.CountUserAddedRepos.Observe(secs, float64(count), &err)
+		logging.Log(o.log, "store.count-user-added-repos", &err, "count", count)
+
+		tr.SetError(err)
+		tr.Finish()
+	}(time.Now())
+
+	return o.store.CountUserAddedRepos(ctx)
+}
+
+func (o *ObservedStore) EnqueueSyncJobs(ctx context.Context, ignoreSiteAdmin bool) (err error) {
+	tr, ctx := o.trace(ctx, "Store.EnqueueSyncJobs")
+
+	defer func(began time.Time) {
+		secs := time.Since(began).Seconds()
+		o.metrics.EnqueueSyncJobs.Observe(secs, 0, &err)
+		tr.SetError(err)
+		tr.Finish()
+	}(time.Now())
+
+	return o.store.EnqueueSyncJobs(ctx, ignoreSiteAdmin)
+}
+
 func (o *ObservedStore) trace(ctx context.Context, family string) (*trace.Trace, context.Context) {
 	txctx := o.txctx
 	if txctx == nil {
 		txctx = ctx
 	}
-	tr, _ := o.tracer.New(txctx, family, "")
-	return tr, trace.ContextWithTrace(ctx, tr)
+	tr, txctx := o.tracer.New(txctx, family, "")
+	ctx = trace.CopyContext(ctx, txctx)
+	return tr, ctx
 }

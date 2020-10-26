@@ -21,17 +21,20 @@ const (
 
 	Logout = "logout"
 
-	SignIn            = "sign-in"
-	SignOut           = "sign-out"
-	SignUp            = "sign-up"
-	SiteInit          = "site-init"
-	VerifyEmail       = "verify-email"
-	ResetPasswordInit = "reset-password.init"
-	ResetPasswordCode = "reset-password.code"
+	SignIn             = "sign-in"
+	SignOut            = "sign-out"
+	SignUp             = "sign-up"
+	SiteInit           = "site-init"
+	VerifyEmail        = "verify-email"
+	ResetPasswordInit  = "reset-password.init"
+	ResetPasswordCode  = "reset-password.code"
+	CheckUsernameTaken = "check-username-taken"
 
 	RegistryExtensionBundle = "registry.extension.bundle"
 
 	UsageStatsDownload = "usage-stats.download"
+
+	LatestPing = "pings.latest"
 
 	OldToolsRedirect = "old-tools-redirect"
 	OldTreeRedirect  = "old-tree-redirect"
@@ -73,6 +76,8 @@ func newRouter() *mux.Router {
 	base.Path("/-/reset-password-init").Methods("POST").Name(ResetPasswordInit)
 	base.Path("/-/reset-password-code").Methods("POST").Name(ResetPasswordCode)
 
+	base.Path("/-/check-username-taken/{username}").Methods("GET").Name(CheckUsernameTaken)
+
 	base.Path("/-/static/extension/{RegistryExtensionReleaseFilename}").Methods("GET").Name(RegistryExtensionBundle)
 
 	base.Path("/-/godoc/refs").Methods("GET").Name(GDDORefs)
@@ -87,6 +92,8 @@ func newRouter() *mux.Router {
 	base.Path("/tools").Methods("GET").Name(OldToolsRedirect)
 
 	base.Path("/site-admin/usage-statistics/archive").Methods("GET").Name(UsageStatsDownload)
+
+	base.Path("/site-admin/pings/latest").Methods("GET").Name(LatestPing)
 
 	if envvar.SourcegraphDotComMode() {
 		base.PathPrefix("/go/").Methods("GET").Name(GoSymbolURL)

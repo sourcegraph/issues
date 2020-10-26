@@ -1,0 +1,8 @@
+.changeset-filter {
+    &__dropdown {
+        @include media-breakpoint-down(xs) {
+            margin-right: 0 !important;
+            margin-bottom: 0.5rem;
+        }
+    }
+}

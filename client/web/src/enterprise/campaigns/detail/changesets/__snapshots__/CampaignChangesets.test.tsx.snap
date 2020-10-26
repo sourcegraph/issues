@@ -1,0 +1,644 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`CampaignChangesets renders 1`] = `
+<CampaignChangesets
+  campaignID="123"
+  history="[History]"
+  isLightTheme={true}
+  location="[Location path=/]"
+  queryChangesets={[Function]}
+  telemetryService={
+    Object {
+      "log": [Function],
+      "logViewEvent": [Function],
+    }
+  }
+  viewerCanAdminister={true}
+>
+  <div
+    className="d-flex justify-content-end"
+  >
+    <ChangesetFilterRow
+      history="[History]"
+      location="[Location path=/]"
+      onFiltersChange={[Function]}
+    >
+      <div
+        className="form-inline m-0 my-2"
+      >
+        <ChangesetUIStateFilter
+          className="mr-2"
+          onChange={[Function]}
+          values={
+            Array [
+              "UNPUBLISHED",
+              "ERRORED",
+              "PROCESSING",
+              "OPEN",
+              "DRAFT",
+              "CLOSED",
+              "MERGED",
+              "DELETED",
+            ]
+          }
+        >
+          <div
+            className="d-none d-lg-block btn-group flex-wrap mr-2"
+            role="group"
+          >
+            <button
+              className="btn btn-outline-secondary active"
+              onClick={[Function]}
+              type="button"
+            >
+              All
+            </button>
+            <button
+              className="btn btn-outline-secondary"
+              key="UNPUBLISHED"
+              onClick={[Function]}
+              type="button"
+            >
+              Unpublished
+            </button>
+            <button
+              className="btn btn-outline-secondary"
+              key="ERRORED"
+              onClick={[Function]}
+              type="button"
+            >
+              Errored
+            </button>
+            <button
+              className="btn btn-outline-secondary"
+              key="PROCESSING"
+              onClick={[Function]}
+              type="button"
+            >
+              Processing
+            </button>
+            <button
+              className="btn btn-outline-secondary"
+              key="OPEN"
+              onClick={[Function]}
+              type="button"
+            >
+              Open
+            </button>
+            <button
+              className="btn btn-outline-secondary"
+              key="DRAFT"
+              onClick={[Function]}
+              type="button"
+            >
+              Draft
+            </button>
+            <button
+              className="btn btn-outline-secondary"
+              key="CLOSED"
+              onClick={[Function]}
+              type="button"
+            >
+              Closed
+            </button>
+            <button
+              className="btn btn-outline-secondary"
+              key="MERGED"
+              onClick={[Function]}
+              type="button"
+            >
+              Merged
+            </button>
+            <button
+              className="btn btn-outline-secondary"
+              key="DELETED"
+              onClick={[Function]}
+              type="button"
+            >
+              Deleted
+            </button>
+          </div>
+          <ChangesetFilter
+            className="d-block d-lg-none mr-2"
+            label="Changeset state"
+            onChange={[Function]}
+            values={
+              Array [
+                "UNPUBLISHED",
+                "ERRORED",
+                "PROCESSING",
+                "OPEN",
+                "DRAFT",
+                "CLOSED",
+                "MERGED",
+                "DELETED",
+              ]
+            }
+          >
+            <select
+              className="form-control changeset-filter__dropdown d-block d-lg-none mr-2"
+              onChange={[Function]}
+            >
+              <option
+                value=""
+              >
+                Changeset state
+              </option>
+              <option
+                key="UNPUBLISHED"
+                value="UNPUBLISHED"
+              >
+                Unpublished
+              </option>
+              <option
+                key="ERRORED"
+                value="ERRORED"
+              >
+                Errored
+              </option>
+              <option
+                key="PROCESSING"
+                value="PROCESSING"
+              >
+                Processing
+              </option>
+              <option
+                key="OPEN"
+                value="OPEN"
+              >
+                Open
+              </option>
+              <option
+                key="DRAFT"
+                value="DRAFT"
+              >
+                Draft
+              </option>
+              <option
+                key="CLOSED"
+                value="CLOSED"
+              >
+                Closed
+              </option>
+              <option
+                key="MERGED"
+                value="MERGED"
+              >
+                Merged
+              </option>
+              <option
+                key="DELETED"
+                value="DELETED"
+              >
+                Deleted
+              </option>
+            </select>
+          </ChangesetFilter>
+        </ChangesetUIStateFilter>
+        <ChangesetFilter
+          className="mr-2"
+          label="Check state"
+          onChange={[Function]}
+          values={
+            Array [
+              "PENDING",
+              "PASSED",
+              "FAILED",
+            ]
+          }
+        >
+          <select
+            className="form-control changeset-filter__dropdown mr-2"
+            onChange={[Function]}
+          >
+            <option
+              value=""
+            >
+              Check state
+            </option>
+            <option
+              key="PENDING"
+              value="PENDING"
+            >
+              Pending
+            </option>
+            <option
+              key="PASSED"
+              value="PASSED"
+            >
+              Passed
+            </option>
+            <option
+              key="FAILED"
+              value="FAILED"
+            >
+              Failed
+            </option>
+          </select>
+        </ChangesetFilter>
+        <ChangesetFilter
+          label="Review state"
+          onChange={[Function]}
+          values={
+            Array [
+              "APPROVED",
+              "CHANGES_REQUESTED",
+              "PENDING",
+              "COMMENTED",
+              "DISMISSED",
+            ]
+          }
+        >
+          <select
+            className="form-control changeset-filter__dropdown"
+            onChange={[Function]}
+          >
+            <option
+              value=""
+            >
+              Review state
+            </option>
+            <option
+              key="APPROVED"
+              value="APPROVED"
+            >
+              Approved
+            </option>
+            <option
+              key="CHANGES_REQUESTED"
+              value="CHANGES_REQUESTED"
+            >
+              Changes requested
+            </option>
+            <option
+              key="PENDING"
+              value="PENDING"
+            >
+              Pending
+            </option>
+            <option
+              key="COMMENTED"
+              value="COMMENTED"
+            >
+              Commented
+            </option>
+            <option
+              key="DISMISSED"
+              value="DISMISSED"
+            >
+              Dismissed
+            </option>
+          </select>
+        </ChangesetFilter>
+      </div>
+    </ChangesetFilterRow>
+  </div>
+  <div
+    className="list-group position-relative"
+  >
+    <FilteredConnection
+      className="mt-2"
+      defaultFirst={15}
+      emptyElement={<EmptyChangesetListElement />}
+      headComponent={[Function]}
+      hideSearch={true}
+      history="[History]"
+      listClassName="campaign-changesets__grid mb-3"
+      listComponent="div"
+      location="[Location path=/]"
+      noSummaryIfAllNodesVisible={true}
+      nodeComponent={[Function]}
+      nodeComponentProps={
+        Object {
+          "extensionInfo": Object {
+            "extensionsController": undefined,
+            "hoverifier": Object {
+              "hoverState": Object {
+                "actionsOrError": undefined,
+                "highlightedRange": undefined,
+                "hoverOverlayProps": undefined,
+                "hoveredTokenElement": undefined,
+                "selectedPosition": undefined,
+              },
+              "hoverStateUpdates": "[Subject]",
+              "hoverify": [Function],
+              "unsubscribe": [Function],
+            },
+          },
+          "history": "[History]",
+          "isLightTheme": true,
+          "location": "[Location path=/]",
+          "queryExternalChangesetWithFileDiffs": undefined,
+          "viewerCanAdminister": true,
+        }
+      }
+      noun="changeset"
+      pluralNoun="changesets"
+      queryConnection={[Function]}
+      useURLQuery={true}
+    >
+      <div
+        className="filtered-connection test-filtered-connection filtered-connection--noncompact mt-2"
+      >
+        <ConnectionNodes
+          connection={
+            Object {
+              "nodes": Array [
+                Object {
+                  "__typename": "HiddenExternalChangeset",
+                  "createdAt": "2020-01-03T00:00:00.000Z",
+                  "externalState": "OPEN",
+                  "id": "0",
+                  "nextSyncAt": null,
+                  "publicationState": "PUBLISHED",
+                  "reconcilerState": "COMPLETED",
+                  "updatedAt": "2020-01-04T00:00:00.000Z",
+                },
+              ],
+              "pageInfo": Object {
+                "endCursor": null,
+                "hasNextPage": false,
+              },
+              "totalCount": 1,
+            }
+          }
+          connectionQuery=""
+          emptyElement={<EmptyChangesetListElement />}
+          first={15}
+          headComponent={[Function]}
+          listClassName="campaign-changesets__grid mb-3"
+          listComponent="div"
+          loading={false}
+          location="[Location path=/]"
+          noSummaryIfAllNodesVisible={true}
+          nodeComponent={[Function]}
+          nodeComponentProps={
+            Object {
+              "extensionInfo": Object {
+                "extensionsController": undefined,
+                "hoverifier": Object {
+                  "hoverState": Object {
+                    "actionsOrError": undefined,
+                    "highlightedRange": undefined,
+                    "hoverOverlayProps": undefined,
+                    "hoveredTokenElement": undefined,
+                    "selectedPosition": undefined,
+                  },
+                  "hoverStateUpdates": "[Subject]",
+                  "hoverify": [Function],
+                  "unsubscribe": [Function],
+                },
+              },
+              "history": "[History]",
+              "isLightTheme": true,
+              "location": "[Location path=/]",
+              "queryExternalChangesetWithFileDiffs": undefined,
+              "viewerCanAdminister": true,
+            }
+          }
+          noun="changeset"
+          onShowMore={[Function]}
+          pluralNoun="changesets"
+          query=""
+        >
+          <div
+            className="filtered-connection__nodes campaign-changesets__grid mb-3"
+          >
+            <CampaignChangesetsHeader
+              nodes={
+                Array [
+                  Object {
+                    "__typename": "HiddenExternalChangeset",
+                    "createdAt": "2020-01-03T00:00:00.000Z",
+                    "externalState": "OPEN",
+                    "id": "0",
+                    "nextSyncAt": null,
+                    "publicationState": "PUBLISHED",
+                    "reconcilerState": "COMPLETED",
+                    "updatedAt": "2020-01-04T00:00:00.000Z",
+                  },
+                ]
+              }
+              totalCount={1}
+            >
+              <span
+                className="d-none d-md-block"
+              />
+              <h5
+                className="d-none d-md-block text-uppercase text-center text-nowrap"
+              >
+                Status
+              </h5>
+              <h5
+                className="d-none d-md-block text-uppercase text-nowrap"
+              >
+                Changeset information
+              </h5>
+              <h5
+                className="d-none d-md-block text-uppercase text-center text-nowrap"
+              >
+                Check state
+              </h5>
+              <h5
+                className="d-none d-md-block text-uppercase text-center text-nowrap"
+              >
+                Review state
+              </h5>
+              <h5
+                className="d-none d-md-block text-uppercase text-center text-nowrap"
+              >
+                Changes
+              </h5>
+            </CampaignChangesetsHeader>
+            <ChangesetNode
+              extensionInfo={
+                Object {
+                  "extensionsController": undefined,
+                  "hoverifier": Object {
+                    "hoverState": Object {
+                      "actionsOrError": undefined,
+                      "highlightedRange": undefined,
+                      "hoverOverlayProps": undefined,
+                      "hoveredTokenElement": undefined,
+                      "selectedPosition": undefined,
+                    },
+                    "hoverStateUpdates": "[Subject]",
+                    "hoverify": [Function],
+                    "unsubscribe": [Function],
+                  },
+                }
+              }
+              history="[History]"
+              isLightTheme={true}
+              key="0"
+              location="[Location path=/]"
+              node={
+                Object {
+                  "__typename": "HiddenExternalChangeset",
+                  "createdAt": "2020-01-03T00:00:00.000Z",
+                  "externalState": "OPEN",
+                  "id": "0",
+                  "nextSyncAt": null,
+                  "publicationState": "PUBLISHED",
+                  "reconcilerState": "COMPLETED",
+                  "updatedAt": "2020-01-04T00:00:00.000Z",
+                }
+              }
+              viewerCanAdminister={true}
+            >
+              <span
+                className="changeset-node__separator"
+              />
+              <HiddenExternalChangesetNode
+                extensionInfo={
+                  Object {
+                    "extensionsController": undefined,
+                    "hoverifier": Object {
+                      "hoverState": Object {
+                        "actionsOrError": undefined,
+                        "highlightedRange": undefined,
+                        "hoverOverlayProps": undefined,
+                        "hoveredTokenElement": undefined,
+                        "selectedPosition": undefined,
+                      },
+                      "hoverStateUpdates": "[Subject]",
+                      "hoverify": [Function],
+                      "unsubscribe": [Function],
+                    },
+                  }
+                }
+                history="[History]"
+                isLightTheme={true}
+                location="[Location path=/]"
+                node={
+                  Object {
+                    "__typename": "HiddenExternalChangeset",
+                    "createdAt": "2020-01-03T00:00:00.000Z",
+                    "externalState": "OPEN",
+                    "id": "0",
+                    "nextSyncAt": null,
+                    "publicationState": "PUBLISHED",
+                    "reconcilerState": "COMPLETED",
+                    "updatedAt": "2020-01-04T00:00:00.000Z",
+                  }
+                }
+                viewerCanAdminister={true}
+              >
+                <span
+                  className="d-none d-sm-block"
+                />
+                <ChangesetStatusCell
+                  changeset={
+                    Object {
+                      "__typename": "HiddenExternalChangeset",
+                      "createdAt": "2020-01-03T00:00:00.000Z",
+                      "externalState": "OPEN",
+                      "id": "0",
+                      "nextSyncAt": null,
+                      "publicationState": "PUBLISHED",
+                      "reconcilerState": "COMPLETED",
+                      "updatedAt": "2020-01-04T00:00:00.000Z",
+                    }
+                  }
+                  className="hidden-external-changeset-node__status d-block d-sm-flex"
+                >
+                  <ChangesetStatusOpen
+                    className="hidden-external-changeset-node__status d-block d-sm-flex"
+                  >
+                    <div
+                      className="m-0 text-nowrap flex-column align-items-center justify-content-center text-success hidden-external-changeset-node__status d-block d-sm-flex"
+                    >
+                      <Memo(SourcePullIcon) />
+                      <span
+                        className="text-muted"
+                      >
+                        Open
+                      </span>
+                    </div>
+                  </ChangesetStatusOpen>
+                </ChangesetStatusCell>
+                <HiddenExternalChangesetInfoCell
+                  className="hidden-external-changeset-node__information"
+                  node={
+                    Object {
+                      "__typename": "HiddenExternalChangeset",
+                      "createdAt": "2020-01-03T00:00:00.000Z",
+                      "externalState": "OPEN",
+                      "id": "0",
+                      "nextSyncAt": null,
+                      "publicationState": "PUBLISHED",
+                      "reconcilerState": "COMPLETED",
+                      "updatedAt": "2020-01-04T00:00:00.000Z",
+                    }
+                  }
+                >
+                  <div
+                    className="d-flex flex-column hidden-external-changeset-node__information"
+                  >
+                    <div
+                      className="m-0 mb-2"
+                    >
+                      <h3
+                        className="m-0 d-inline"
+                      >
+                        <span
+                          className="text-muted"
+                        >
+                          Changeset in a private repository
+                        </span>
+                      </h3>
+                    </div>
+                    <div>
+                      <ChangesetLastSynced
+                        changeset={
+                          Object {
+                            "__typename": "HiddenExternalChangeset",
+                            "createdAt": "2020-01-03T00:00:00.000Z",
+                            "externalState": "OPEN",
+                            "id": "0",
+                            "nextSyncAt": null,
+                            "publicationState": "PUBLISHED",
+                            "reconcilerState": "COMPLETED",
+                            "updatedAt": "2020-01-04T00:00:00.000Z",
+                          }
+                        }
+                        viewerCanAdminister={false}
+                      >
+                        <small
+                          className="text-muted"
+                        >
+                          Last synced 
+                          about 14 years
+                           ago.
+                           
+                          <span
+                            data-tooltip="Not scheduled for syncing."
+                          >
+                            <Memo(InfoCircleOutlineIcon)
+                              className="icon-inline"
+                              onClick={[Function]}
+                            />
+                          </span>
+                        </small>
+                      </ChangesetLastSynced>
+                    </div>
+                  </div>
+                </HiddenExternalChangesetInfoCell>
+                <span
+                  className="d-none d-sm-block"
+                />
+                <span
+                  className="d-none d-sm-block"
+                />
+                <span
+                  className="d-none d-sm-block"
+                />
+              </HiddenExternalChangesetNode>
+            </ChangesetNode>
+          </div>
+        </ConnectionNodes>
+      </div>
+    </FilteredConnection>
+  </div>
+</CampaignChangesets>
+`;

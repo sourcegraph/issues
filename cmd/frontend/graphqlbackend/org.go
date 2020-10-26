@@ -3,16 +3,16 @@ package graphqlbackend
 import (
 	"context"
 
-	graphql "github.com/graph-gophers/graphql-go"
+	"github.com/graph-gophers/graphql-go"
 	"github.com/graph-gophers/graphql-go/relay"
 	"github.com/inconshreveable/log15"
 	"github.com/pkg/errors"
 	"github.com/sourcegraph/sourcegraph/cmd/frontend/backend"
-	"github.com/sourcegraph/sourcegraph/cmd/frontend/db"
-	"github.com/sourcegraph/sourcegraph/cmd/frontend/internal/pkg/suspiciousnames"
+	"github.com/sourcegraph/sourcegraph/cmd/frontend/internal/suspiciousnames"
 	"github.com/sourcegraph/sourcegraph/cmd/frontend/types"
 	"github.com/sourcegraph/sourcegraph/internal/actor"
 	"github.com/sourcegraph/sourcegraph/internal/api"
+	"github.com/sourcegraph/sourcegraph/internal/db"
 	"github.com/sourcegraph/sourcegraph/internal/errcode"
 )
 
@@ -54,9 +54,9 @@ type OrgResolver struct {
 
 func NewOrg(org *types.Org) *OrgResolver { return &OrgResolver{org: org} }
 
-func (o *OrgResolver) ID() graphql.ID { return marshalOrgID(o.org.ID) }
+func (o *OrgResolver) ID() graphql.ID { return MarshalOrgID(o.org.ID) }
 
-func marshalOrgID(id int32) graphql.ID { return relay.MarshalID("Org", id) }
+func MarshalOrgID(id int32) graphql.ID { return relay.MarshalID("Org", id) }
 
 func UnmarshalOrgID(id graphql.ID) (orgID int32, err error) {
 	err = relay.UnmarshalSpec(id, &orgID)
@@ -170,6 +170,12 @@ func (o *OrgResolver) ViewerIsMember(ctx context.Context) (bool, error) {
 }
 
 func (o *OrgResolver) NamespaceName() string { return o.org.Name }
+
+func (o *OrgResolver) Campaigns(ctx context.Context, args *ListCampaignsArgs) (CampaignsConnectionResolver, error) {
+	id := o.ID()
+	args.Namespace = &id
+	return EnterpriseResolvers.campaignsResolver.Campaigns(ctx, args)
+}
 
 func (*schemaResolver) CreateOrganization(ctx context.Context, args *struct {
 	Name        string

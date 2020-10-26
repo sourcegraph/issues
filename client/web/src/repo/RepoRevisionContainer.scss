@@ -1,0 +1,51 @@
+@import '../tree/Tree';
+@import './blob/BlobPage';
+@import './tree/TreePage';
+@import './GitReference';
+@import '../marketing/Toast';
+@import './RepoRevisionSidebar';
+@import './RevisionsPopover';
+@import './commits/RepositoryCommitsPage';
+
+.repo-revision-container {
+    flex: 1 1 auto;
+
+    display: flex;
+    min-height: 0;
+
+    position: relative; // for sidebar toggle
+
+    &__sidebar {
+        background: var(--color-bg-2);
+
+        &-toggle {
+            background: var(--color-bg-3);
+            color: var(--text-muted);
+
+            position: absolute;
+            top: 0;
+            left: 0;
+            z-index: 1; // overlay the content when sidebar is closed
+        }
+
+        &-resizable {
+            max-width: 60%;
+            min-width: 8rem;
+            &--open .tree {
+                width: 16rem;
+            }
+        }
+    }
+
+    &__content {
+        isolation: isolate;
+        flex: 1 1 auto;
+
+        display: flex;
+        flex-direction: column;
+        min-height: 0;
+        min-width: 0;
+
+        background-color: var(--body-bg);
+    }
+}

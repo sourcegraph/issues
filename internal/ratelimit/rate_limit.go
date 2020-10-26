@@ -206,3 +206,10 @@ func (r *Registry) GetOrSet(baseURL string, fallback *rate.Limiter) *rate.Limite
 	}
 	return l
 }
+
+// Count returns the total number of rate limiters in the registry
+func (r *Registry) Count() int {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	return len(r.rateLimiters)
+}

@@ -1,0 +1,135 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`GlobalNavbar default 1`] = `
+<div
+  className="global-navbar global-navbar--bg border-bottom py-1"
+>
+  <a
+    className="global-navbar__logo-link"
+    to="/search"
+  >
+    <BrandLogo
+      className="global-navbar__logo"
+      isLightTheme={true}
+      variant="symbol"
+    />
+  </a>
+  <div
+    className="global-navbar__search-box-container d-none d-sm-flex flex-row"
+  >
+    <SearchNavbarItem
+      authenticatedUser={null}
+      caseSensitive={false}
+      copyQueryButton={false}
+      extensionsController={Object {}}
+      filtersInQuery={Object {}}
+      globbing={false}
+      history={
+        Object {
+          "action": "POP",
+          "block": [Function],
+          "canGo": [Function],
+          "createHref": [Function],
+          "entries": Array [
+            Object {
+              "hash": "",
+              "key": undefined,
+              "pathname": "/",
+              "search": "",
+              "state": undefined,
+            },
+          ],
+          "go": [Function],
+          "goBack": [Function],
+          "goForward": [Function],
+          "index": 0,
+          "length": 1,
+          "listen": [Function],
+          "location": Object {
+            "hash": "",
+            "key": undefined,
+            "pathname": "/",
+            "search": "",
+            "state": undefined,
+          },
+          "push": [Function],
+          "replace": [Function],
+        }
+      }
+      isExtensionAlertAnimating={false}
+      isLightTheme={true}
+      isSourcegraphDotCom={false}
+      keyboardShortcuts={Array []}
+      location={
+        Object {
+          "hash": "",
+          "key": undefined,
+          "pathname": "/",
+          "search": "",
+          "state": undefined,
+        }
+      }
+      navbarSearchState={
+        Object {
+          "cursorPosition": 0,
+          "query": "q",
+        }
+      }
+      onChange={[Function]}
+      onThemePreferenceChange={[Function]}
+      patternType="literal"
+      platformContext={Object {}}
+      setCaseSensitivity={[Function]}
+      setPatternType={[Function]}
+      settingsCascade={
+        Object {
+          "final": null,
+          "subjects": null,
+        }
+      }
+      showCampaigns={false}
+      showOnboardingTour={false}
+      telemetryService={Object {}}
+      themePreference="light"
+      toggleSearchMode={[Function]}
+    />
+  </div>
+</div>
+`;
+
+exports[`GlobalNavbar low-profile 1`] = `
+<div
+  className="global-navbar  py-1"
+>
+  <div
+    className="flex-1"
+  />
+</div>
+`;
+
+exports[`GlobalNavbar no-search-input 1`] = `
+<div
+  className="global-navbar global-navbar--bg border-bottom py-1"
+>
+  <a
+    className="global-navbar__logo-link"
+    to="/search"
+  >
+    <BrandLogo
+      className="global-navbar__logo"
+      isLightTheme={true}
+      variant="symbol"
+    />
+  </a>
+  <div
+    className="nav-item flex-1"
+  >
+    <a
+      className="nav-link"
+      to="/search"
+    >
+      Search
+    </a>
+  </div>
+</div>
+`;

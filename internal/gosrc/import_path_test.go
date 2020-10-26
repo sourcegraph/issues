@@ -45,6 +45,14 @@ func TestResolveImportPath(t *testing.T) {
 			VCS:         "git",
 			Rev:         runtime.Version(),
 		}},
+		{"cmd/internal/obj/x86", &Directory{
+			ImportPath:  "cmd/internal/obj/x86",
+			ProjectRoot: "",
+			CloneURL:    "https://github.com/golang/go",
+			RepoPrefix:  "src",
+			VCS:         "git",
+			Rev:         runtime.Version(),
+		}},
 		{"github.com/foo/bar", &Directory{
 			ImportPath:  "github.com/foo/bar",
 			ProjectRoot: "github.com/foo/bar",

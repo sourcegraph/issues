@@ -1,0 +1,9 @@
+// CSS entry point for branded contexts (options menu and after-install page)
+// Bootstrap etc can be used freely here (in opposite to the content page styles in app.scss)
+
+@import '../../branded/src/global-styles/index.scss';
+@import '../../branded/src/components/Toggle';
+@import './browser-extension/after-install-page/AfterInstallPageContent';
+@import './browser-extension/options-menu/OptionsPage';
+@import '../../branded/src/components/LoaderInput.scss';
+@import '~@sourcegraph/react-loading-spinner/lib/LoadingSpinner.css';

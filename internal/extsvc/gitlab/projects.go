@@ -178,7 +178,7 @@ func (c *Client) getProjectFromAPI(ctx context.Context, id int, pathWithNamespac
 	if err != nil {
 		return nil, err
 	}
-	_, err = c.do(ctx, req, &proj)
+	_, _, err = c.do(ctx, req, &proj)
 	return proj, err
 }
 
@@ -192,7 +192,7 @@ func (c *Client) ListProjects(ctx context.Context, urlStr string) (projs []*Proj
 	if err != nil {
 		return nil, nil, err
 	}
-	respHeader, err := c.do(ctx, req, &projs)
+	respHeader, _, err := c.do(ctx, req, &projs)
 	if err != nil {
 		return nil, nil, err
 	}

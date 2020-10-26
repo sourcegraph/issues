@@ -2,7 +2,6 @@ package bitbucketserver
 
 import (
 	"context"
-	"database/sql"
 	"encoding/json"
 	"flag"
 	"fmt"
@@ -12,13 +11,10 @@ import (
 	"strconv"
 	"strings"
 	"testing"
-	"time"
 
 	"github.com/google/go-cmp/cmp"
 
-	"github.com/sourcegraph/sourcegraph/cmd/frontend/authz"
 	"github.com/sourcegraph/sourcegraph/cmd/frontend/types"
-	"github.com/sourcegraph/sourcegraph/cmd/repo-updater/repos"
 	"github.com/sourcegraph/sourcegraph/internal/api"
 	"github.com/sourcegraph/sourcegraph/internal/extsvc"
 	"github.com/sourcegraph/sourcegraph/internal/extsvc/bitbucketserver"
@@ -52,7 +48,7 @@ func TestProvider_Validate(t *testing.T) {
 			cli, save := newClient(t, "Validate/"+tc.name)
 			defer save()
 
-			p := newProvider(cli, nil, 0)
+			p := newProvider(cli)
 
 			if tc.client != nil {
 				tc.client(p.client)
@@ -70,148 +66,9 @@ func TestProvider_Validate(t *testing.T) {
 	}
 }
 
-func testProviderRepoPerms(db *sql.DB, f *fixtures, cli *bitbucketserver.Client) func(*testing.T) {
-	return func(t *testing.T) {
-		p := newProvider(cli, db, 0)
-
-		h := codeHost{CodeHost: p.codeHost}
-
-		stored := make([]*repos.Repo, 0, len(f.repos))
-		for _, r := range f.repos {
-			stored = append(stored, &repos.Repo{
-				Name:         r.Name,
-				Private:      !r.Public,
-				ExternalRepo: h.externalRepo(r),
-				Sources:      map[string]*repos.SourceInfo{},
-			})
-		}
-
-		ctx := context.Background()
-		err := repos.NewDBStore(db, sql.TxOptions{}).UpsertRepos(ctx, stored...)
-		if err != nil {
-			t.Fatal(err)
-		}
-
-		repo := make(map[string]*types.Repo, len(f.repos))
-		toverify := make([]*types.Repo, 0, len(f.repos))
-		for _, r := range stored {
-			repo[r.Name] = &types.Repo{
-				ID:           api.RepoID(r.ID),
-				Name:         api.RepoName(r.Name),
-				Private:      r.Private,
-				ExternalRepo: r.ExternalRepo,
-			}
-			toverify = append(toverify, repo[r.Name])
-		}
-
-		sort.Slice(toverify, func(i, j int) bool {
-			return toverify[i].Name <= toverify[j].Name
-		})
-
-		for i, tc := range []struct {
-			name  string
-			ctx   context.Context
-			user  *bitbucketserver.User
-			perms []authz.RepoPerms
-			err   string
-		}{
-			{
-				name: "anonymous user",
-				user: nil,
-				perms: []authz.RepoPerms{
-					// Because repo is public
-					{Repo: repo["public-repo"], Perms: authz.Read},
-				},
-			},
-			{
-				name: "authenticated user: engineer1",
-				user: f.users["engineer1"],
-				perms: []authz.RepoPerms{
-					// Because engineers group has PROJECT_WRITE perm on PRIVATE project
-					// which private-repo belongs to.
-					{Repo: repo["private-repo"], Perms: authz.Read},
-					// Because repo is public
-					{Repo: repo["public-repo"], Perms: authz.Read},
-					// Because of engineer1 has a secret-project group membership
-					// and secret-project group has PROJECT_READ perm on SECRET project
-					// which secret-repo belongs to.
-					{Repo: repo["secret-repo"], Perms: authz.Read},
-				},
-			},
-			{
-				name: "authenticated user: engineer2",
-				user: f.users["engineer2"],
-				perms: []authz.RepoPerms{
-					// Because engineers group has PROJECT_WRITE perm on PRIVATE project
-					// which private-repo belongs to.
-					{Repo: repo["private-repo"], Perms: authz.Read}, // Because of engineers group membership
-					// Because repo is public
-					{Repo: repo["public-repo"], Perms: authz.Read},
-				},
-			},
-			{
-				name: "authenticated user: scientist",
-				user: f.users["scientist"],
-				perms: []authz.RepoPerms{
-					// Because scientists group has PROJECT_READ perm on PRIVATE project
-					// which private-repo belongs to.
-					{Repo: repo["private-repo"], Perms: authz.Read},
-					// Because repo is public
-					{Repo: repo["public-repo"], Perms: authz.Read},
-					// Because of scientist1 has a secret-project group membership
-					// and secret-project group has PROJECT_READ perm on SECRET project
-					// which secret-repo belongs to.
-					{Repo: repo["secret-repo"], Perms: authz.Read},
-				},
-			},
-			{
-				name: "authenticated user: ceo",
-				user: f.users["ceo"],
-				perms: []authz.RepoPerms{
-					// Because management group has PROJECT_READ perm on PRIVATE project
-					// which private-repo belongs to.
-					{Repo: repo["private-repo"], Perms: authz.Read},
-					// Because repo is public
-					{Repo: repo["public-repo"], Perms: authz.Read},
-					// Because management group has PROJECT_READ perm on PRIVATE project
-					// which private-repo belongs to.
-					{Repo: repo["secret-repo"], Perms: authz.Read},
-					// Because ceo has REPO_WRITE perm on super-secret-repo.
-					{Repo: repo["super-secret-repo"], Perms: authz.Read},
-				},
-			},
-		} {
-			t.Run(tc.name, func(t *testing.T) {
-				if tc.ctx == nil {
-					tc.ctx = context.Background()
-				}
-
-				if tc.err == "" {
-					tc.err = "<nil>"
-				}
-
-				var acct *extsvc.Account
-				if tc.user != nil {
-					acct = h.externalAccount(int32(i), tc.user)
-				}
-
-				perms, err := p.RepoPerms(tc.ctx, acct, toverify)
-
-				if have, want := fmt.Sprint(err), tc.err; have != want {
-					t.Errorf("error:\nhave: %q\nwant: %q", have, want)
-				}
-
-				if have, want := perms, tc.perms; !reflect.DeepEqual(have, want) {
-					t.Error(cmp.Diff(have, want))
-				}
-			})
-		}
-	}
-}
-
 func testProviderFetchAccount(f *fixtures, cli *bitbucketserver.Client) func(*testing.T) {
 	return func(t *testing.T) {
-		p := newProvider(cli, nil, 0)
+		p := newProvider(cli)
 
 		h := codeHost{CodeHost: p.codeHost}
 
@@ -264,7 +121,7 @@ func testProviderFetchAccount(f *fixtures, cli *bitbucketserver.Client) func(*te
 
 func testProviderFetchUserPerms(f *fixtures, cli *bitbucketserver.Client) func(*testing.T) {
 	return func(t *testing.T) {
-		p := newProvider(cli, nil, 0)
+		p := newProvider(cli)
 
 		h := codeHost{CodeHost: p.codeHost}
 
@@ -358,7 +215,7 @@ func testProviderFetchUserPerms(f *fixtures, cli *bitbucketserver.Client) func(*
 
 func testProviderFetchRepoPerms(f *fixtures, cli *bitbucketserver.Client) func(*testing.T) {
 	return func(t *testing.T) {
-		p := newProvider(cli, nil, 0)
+		p := newProvider(cli)
 
 		h := codeHost{CodeHost: p.codeHost}
 
@@ -606,14 +463,6 @@ type codeHost struct {
 	*extsvc.CodeHost
 }
 
-func (h codeHost) externalRepo(r *bitbucketserver.Repo) api.ExternalRepoSpec {
-	return api.ExternalRepoSpec{
-		ServiceType: h.ServiceType,
-		ServiceID:   h.ServiceID,
-		ID:          strconv.Itoa(r.ID),
-	}
-}
-
 func (h codeHost) externalAccount(userID int32, u *bitbucketserver.User) *extsvc.Account {
 	bs := marshalJSON(u)
 	return &extsvc.Account{
@@ -650,9 +499,8 @@ func newClient(t *testing.T, name string) (*bitbucketserver.Client, func()) {
 	return cli, save
 }
 
-func newProvider(cli *bitbucketserver.Client, db *sql.DB, ttl time.Duration) *Provider {
-	p := NewProvider(cli, db, "", ttl, DefaultHardTTL, false)
-	p.pageSize = 1       // Exercise pagination
-	p.store.block = true // Wait for first update to complete.
+func newProvider(cli *bitbucketserver.Client) *Provider {
+	p := NewProvider(cli, "", false)
+	p.pageSize = 1 // Exercise pagination
 	return p
 }

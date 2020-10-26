@@ -1,5 +1,10 @@
 package main
 
+import (
+	"fmt"
+	"time"
+)
+
 func ZoektWebServer() *Container {
 	return &Container{
 		Name:        "zoekt-webserver",
@@ -13,10 +18,11 @@ func ZoektWebServer() *Container {
 						{
 							Name:              "indexed_search_request_errors",
 							Description:       "indexed search request errors every 5m by code",
-							Query:             `sum by (code)(increase(src_zoekt_request_duration_seconds_count{code!~"2.."}[5m]))`,
+							Query:             `sum by (code)(increase(src_zoekt_request_duration_seconds_count{code!~"2.."}[5m])) / ignoring(code) group_left sum(increase(src_zoekt_request_duration_seconds_count[5m])) * 100`,
 							DataMayNotExist:   true,
-							Warning:           Alert{GreaterOrEqual: 50},
-							PanelOptions:      PanelOptions().LegendFormat("{{code}}").Unit(Seconds),
+							Warning:           Alert().GreaterOrEqual(5).For(5 * time.Minute),
+							PanelOptions:      PanelOptions().LegendFormat("{{code}}").Unit(Percentage),
+							Owner:             ObservableOwnerSearch,
 							PossibleSolutions: "none",
 						},
 					},
@@ -27,9 +33,24 @@ func ZoektWebServer() *Container {
 				Hidden: true,
 				Rows: []Row{
 					{
-						sharedContainerRestarts("zoekt-webserver"),
-						sharedContainerMemoryUsage("zoekt-webserver"),
-						sharedContainerCPUUsage("zoekt-webserver"),
+						sharedContainerCPUUsage("zoekt-webserver", ObservableOwnerSearch),
+						sharedContainerMemoryUsage("zoekt-webserver", ObservableOwnerSearch),
+					},
+					{
+						sharedContainerRestarts("zoekt-webserver", ObservableOwnerSearch),
+						sharedContainerFsInodes("zoekt-webserver", ObservableOwnerSearch),
+					},
+					{
+						{
+							Name:              "fs_io_operations",
+							Description:       "filesystem reads and writes by instance rate over 1h",
+							Query:             fmt.Sprintf(`sum by(name) (rate(container_fs_reads_total{%[1]s}[1h]) + rate(container_fs_writes_total{%[1]s}[1h]))`, promCadvisorContainerMatchers("zoekt-webserver")),
+							DataMayNotExist:   true,
+							Warning:           Alert().GreaterOrEqual(5000),
+							PanelOptions:      PanelOptions().LegendFormat("{{name}}"),
+							Owner:             ObservableOwnerSearch,
+							PossibleSolutions: "none",
+						},
 					},
 				},
 			},
@@ -38,15 +59,17 @@ func ZoektWebServer() *Container {
 				Hidden: true,
 				Rows: []Row{
 					{
-						sharedProvisioningCPUUsage1d("zoekt-webserver"),
-						sharedProvisioningMemoryUsage1d("zoekt-webserver"),
+						sharedProvisioningCPUUsageLongTerm("zoekt-webserver", ObservableOwnerSearch),
+						sharedProvisioningMemoryUsageLongTerm("zoekt-webserver", ObservableOwnerSearch),
 					},
 					{
-						sharedProvisioningCPUUsage5m("zoekt-webserver"),
-						sharedProvisioningMemoryUsage5m("zoekt-webserver"),
+						sharedProvisioningCPUUsageShortTerm("zoekt-webserver", ObservableOwnerSearch),
+						sharedProvisioningMemoryUsageShortTerm("zoekt-webserver", ObservableOwnerSearch),
 					},
 				},
 			},
+			// kubernetes monitoring for zoekt-web-server is provided by zoekt-index-server,
+			// since both services are deployed together
 		},
 	}
 }

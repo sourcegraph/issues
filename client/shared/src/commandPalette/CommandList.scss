@@ -1,0 +1,8 @@
+.command-list {
+    width: 24rem;
+    background-color: var(--body-bg);
+
+    &__popover-button {
+        cursor: pointer;
+    }
+}

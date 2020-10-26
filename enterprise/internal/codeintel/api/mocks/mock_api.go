@@ -5,7 +5,7 @@ package mocks
 import (
 	"context"
 	api "github.com/sourcegraph/sourcegraph/enterprise/internal/codeintel/api"
-	client "github.com/sourcegraph/sourcegraph/enterprise/internal/codeintel/bundles/client"
+	clienttypes "github.com/sourcegraph/sourcegraph/enterprise/internal/codeintel/bundles/client_types"
 	store "github.com/sourcegraph/sourcegraph/enterprise/internal/codeintel/store"
 	"sync"
 )
@@ -27,6 +27,9 @@ type MockCodeIntelAPI struct {
 	// HoverFunc is an instance of a mock function object controlling the
 	// behavior of the method Hover.
 	HoverFunc *CodeIntelAPIHoverFunc
+	// RangesFunc is an instance of a mock function object controlling the
+	// behavior of the method Ranges.
+	RangesFunc *CodeIntelAPIRangesFunc
 	// ReferencesFunc is an instance of a mock function object controlling
 	// the behavior of the method References.
 	ReferencesFunc *CodeIntelAPIReferencesFunc
@@ -52,8 +55,13 @@ func NewMockCodeIntelAPI() *MockCodeIntelAPI {
 			},
 		},
 		HoverFunc: &CodeIntelAPIHoverFunc{
-			defaultHook: func(context.Context, string, int, int, int) (string, client.Range, bool, error) {
-				return "", client.Range{}, false, nil
+			defaultHook: func(context.Context, string, int, int, int) (string, clienttypes.Range, bool, error) {
+				return "", clienttypes.Range{}, false, nil
+			},
+		},
+		RangesFunc: &CodeIntelAPIRangesFunc{
+			defaultHook: func(context.Context, string, int, int, int) ([]api.ResolvedCodeIntelligenceRange, error) {
+				return nil, nil
 			},
 		},
 		ReferencesFunc: &CodeIntelAPIReferencesFunc{
@@ -80,6 +88,9 @@ func NewMockCodeIntelAPIFrom(i api.CodeIntelAPI) *MockCodeIntelAPI {
 		},
 		HoverFunc: &CodeIntelAPIHoverFunc{
 			defaultHook: i.Hover,
+		},
+		RangesFunc: &CodeIntelAPIRangesFunc{
+			defaultHook: i.Ranges,
 		},
 		ReferencesFunc: &CodeIntelAPIReferencesFunc{
 			defaultHook: i.References,
@@ -451,15 +462,15 @@ func (c CodeIntelAPIFindClosestDumpsFuncCall) Results() []interface{} {
 // CodeIntelAPIHoverFunc describes the behavior when the Hover method of the
 // parent MockCodeIntelAPI instance is invoked.
 type CodeIntelAPIHoverFunc struct {
-	defaultHook func(context.Context, string, int, int, int) (string, client.Range, bool, error)
-	hooks       []func(context.Context, string, int, int, int) (string, client.Range, bool, error)
+	defaultHook func(context.Context, string, int, int, int) (string, clienttypes.Range, bool, error)
+	hooks       []func(context.Context, string, int, int, int) (string, clienttypes.Range, bool, error)
 	history     []CodeIntelAPIHoverFuncCall
 	mutex       sync.Mutex
 }
 
 // Hover delegates to the next hook function in the queue and stores the
 // parameter and result values of this invocation.
-func (m *MockCodeIntelAPI) Hover(v0 context.Context, v1 string, v2 int, v3 int, v4 int) (string, client.Range, bool, error) {
+func (m *MockCodeIntelAPI) Hover(v0 context.Context, v1 string, v2 int, v3 int, v4 int) (string, clienttypes.Range, bool, error) {
 	r0, r1, r2, r3 := m.HoverFunc.nextHook()(v0, v1, v2, v3, v4)
 	m.HoverFunc.appendCall(CodeIntelAPIHoverFuncCall{v0, v1, v2, v3, v4, r0, r1, r2, r3})
 	return r0, r1, r2, r3
@@ -467,7 +478,7 @@ func (m *MockCodeIntelAPI) Hover(v0 context.Context, v1 string, v2 int, v3 int, 
 
 // SetDefaultHook sets function that is called when the Hover method of the
 // parent MockCodeIntelAPI instance is invoked and the hook queue is empty.
-func (f *CodeIntelAPIHoverFunc) SetDefaultHook(hook func(context.Context, string, int, int, int) (string, client.Range, bool, error)) {
+func (f *CodeIntelAPIHoverFunc) SetDefaultHook(hook func(context.Context, string, int, int, int) (string, clienttypes.Range, bool, error)) {
 	f.defaultHook = hook
 }
 
@@ -475,7 +486,7 @@ func (f *CodeIntelAPIHoverFunc) SetDefaultHook(hook func(context.Context, string
 // Hover method of the parent MockCodeIntelAPI instance inovkes the hook at
 // the front of the queue and discards it. After the queue is empty, the
 // default hook function is invoked for any future action.
-func (f *CodeIntelAPIHoverFunc) PushHook(hook func(context.Context, string, int, int, int) (string, client.Range, bool, error)) {
+func (f *CodeIntelAPIHoverFunc) PushHook(hook func(context.Context, string, int, int, int) (string, clienttypes.Range, bool, error)) {
 	f.mutex.Lock()
 	f.hooks = append(f.hooks, hook)
 	f.mutex.Unlock()
@@ -483,21 +494,21 @@ func (f *CodeIntelAPIHoverFunc) PushHook(hook func(context.Context, string, int,
 
 // SetDefaultReturn calls SetDefaultDefaultHook with a function that returns
 // the given values.
-func (f *CodeIntelAPIHoverFunc) SetDefaultReturn(r0 string, r1 client.Range, r2 bool, r3 error) {
-	f.SetDefaultHook(func(context.Context, string, int, int, int) (string, client.Range, bool, error) {
+func (f *CodeIntelAPIHoverFunc) SetDefaultReturn(r0 string, r1 clienttypes.Range, r2 bool, r3 error) {
+	f.SetDefaultHook(func(context.Context, string, int, int, int) (string, clienttypes.Range, bool, error) {
 		return r0, r1, r2, r3
 	})
 }
 
 // PushReturn calls PushDefaultHook with a function that returns the given
 // values.
-func (f *CodeIntelAPIHoverFunc) PushReturn(r0 string, r1 client.Range, r2 bool, r3 error) {
-	f.PushHook(func(context.Context, string, int, int, int) (string, client.Range, bool, error) {
+func (f *CodeIntelAPIHoverFunc) PushReturn(r0 string, r1 clienttypes.Range, r2 bool, r3 error) {
+	f.PushHook(func(context.Context, string, int, int, int) (string, clienttypes.Range, bool, error) {
 		return r0, r1, r2, r3
 	})
 }
 
-func (f *CodeIntelAPIHoverFunc) nextHook() func(context.Context, string, int, int, int) (string, client.Range, bool, error) {
+func (f *CodeIntelAPIHoverFunc) nextHook() func(context.Context, string, int, int, int) (string, clienttypes.Range, bool, error) {
 	f.mutex.Lock()
 	defer f.mutex.Unlock()
 
@@ -550,7 +561,7 @@ type CodeIntelAPIHoverFuncCall struct {
 	Result0 string
 	// Result1 is the value of the 2nd result returned from this method
 	// invocation.
-	Result1 client.Range
+	Result1 clienttypes.Range
 	// Result2 is the value of the 3rd result returned from this method
 	// invocation.
 	Result2 bool
@@ -569,6 +580,123 @@ func (c CodeIntelAPIHoverFuncCall) Args() []interface{} {
 // invocation.
 func (c CodeIntelAPIHoverFuncCall) Results() []interface{} {
 	return []interface{}{c.Result0, c.Result1, c.Result2, c.Result3}
+}
+
+// CodeIntelAPIRangesFunc describes the behavior when the Ranges method of
+// the parent MockCodeIntelAPI instance is invoked.
+type CodeIntelAPIRangesFunc struct {
+	defaultHook func(context.Context, string, int, int, int) ([]api.ResolvedCodeIntelligenceRange, error)
+	hooks       []func(context.Context, string, int, int, int) ([]api.ResolvedCodeIntelligenceRange, error)
+	history     []CodeIntelAPIRangesFuncCall
+	mutex       sync.Mutex
+}
+
+// Ranges delegates to the next hook function in the queue and stores the
+// parameter and result values of this invocation.
+func (m *MockCodeIntelAPI) Ranges(v0 context.Context, v1 string, v2 int, v3 int, v4 int) ([]api.ResolvedCodeIntelligenceRange, error) {
+	r0, r1 := m.RangesFunc.nextHook()(v0, v1, v2, v3, v4)
+	m.RangesFunc.appendCall(CodeIntelAPIRangesFuncCall{v0, v1, v2, v3, v4, r0, r1})
+	return r0, r1
+}
+
+// SetDefaultHook sets function that is called when the Ranges method of the
+// parent MockCodeIntelAPI instance is invoked and the hook queue is empty.
+func (f *CodeIntelAPIRangesFunc) SetDefaultHook(hook func(context.Context, string, int, int, int) ([]api.ResolvedCodeIntelligenceRange, error)) {
+	f.defaultHook = hook
+}
+
+// PushHook adds a function to the end of hook queue. Each invocation of the
+// Ranges method of the parent MockCodeIntelAPI instance inovkes the hook at
+// the front of the queue and discards it. After the queue is empty, the
+// default hook function is invoked for any future action.
+func (f *CodeIntelAPIRangesFunc) PushHook(hook func(context.Context, string, int, int, int) ([]api.ResolvedCodeIntelligenceRange, error)) {
+	f.mutex.Lock()
+	f.hooks = append(f.hooks, hook)
+	f.mutex.Unlock()
+}
+
+// SetDefaultReturn calls SetDefaultDefaultHook with a function that returns
+// the given values.
+func (f *CodeIntelAPIRangesFunc) SetDefaultReturn(r0 []api.ResolvedCodeIntelligenceRange, r1 error) {
+	f.SetDefaultHook(func(context.Context, string, int, int, int) ([]api.ResolvedCodeIntelligenceRange, error) {
+		return r0, r1
+	})
+}
+
+// PushReturn calls PushDefaultHook with a function that returns the given
+// values.
+func (f *CodeIntelAPIRangesFunc) PushReturn(r0 []api.ResolvedCodeIntelligenceRange, r1 error) {
+	f.PushHook(func(context.Context, string, int, int, int) ([]api.ResolvedCodeIntelligenceRange, error) {
+		return r0, r1
+	})
+}
+
+func (f *CodeIntelAPIRangesFunc) nextHook() func(context.Context, string, int, int, int) ([]api.ResolvedCodeIntelligenceRange, error) {
+	f.mutex.Lock()
+	defer f.mutex.Unlock()
+
+	if len(f.hooks) == 0 {
+		return f.defaultHook
+	}
+
+	hook := f.hooks[0]
+	f.hooks = f.hooks[1:]
+	return hook
+}
+
+func (f *CodeIntelAPIRangesFunc) appendCall(r0 CodeIntelAPIRangesFuncCall) {
+	f.mutex.Lock()
+	f.history = append(f.history, r0)
+	f.mutex.Unlock()
+}
+
+// History returns a sequence of CodeIntelAPIRangesFuncCall objects
+// describing the invocations of this function.
+func (f *CodeIntelAPIRangesFunc) History() []CodeIntelAPIRangesFuncCall {
+	f.mutex.Lock()
+	history := make([]CodeIntelAPIRangesFuncCall, len(f.history))
+	copy(history, f.history)
+	f.mutex.Unlock()
+
+	return history
+}
+
+// CodeIntelAPIRangesFuncCall is an object that describes an invocation of
+// method Ranges on an instance of MockCodeIntelAPI.
+type CodeIntelAPIRangesFuncCall struct {
+	// Arg0 is the value of the 1st argument passed to this method
+	// invocation.
+	Arg0 context.Context
+	// Arg1 is the value of the 2nd argument passed to this method
+	// invocation.
+	Arg1 string
+	// Arg2 is the value of the 3rd argument passed to this method
+	// invocation.
+	Arg2 int
+	// Arg3 is the value of the 4th argument passed to this method
+	// invocation.
+	Arg3 int
+	// Arg4 is the value of the 5th argument passed to this method
+	// invocation.
+	Arg4 int
+	// Result0 is the value of the 1st result returned from this method
+	// invocation.
+	Result0 []api.ResolvedCodeIntelligenceRange
+	// Result1 is the value of the 2nd result returned from this method
+	// invocation.
+	Result1 error
+}
+
+// Args returns an interface slice containing the arguments of this
+// invocation.
+func (c CodeIntelAPIRangesFuncCall) Args() []interface{} {
+	return []interface{}{c.Arg0, c.Arg1, c.Arg2, c.Arg3, c.Arg4}
+}
+
+// Results returns an interface slice containing the results of this
+// invocation.
+func (c CodeIntelAPIRangesFuncCall) Results() []interface{} {
+	return []interface{}{c.Result0, c.Result1}
 }
 
 // CodeIntelAPIReferencesFunc describes the behavior when the References

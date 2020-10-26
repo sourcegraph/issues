@@ -1,18 +1,6 @@
 {
   "extends": "@sourcegraph/tsconfig",
-  "references": [
-    { "path": "shared" },
-    { "path": "shared/src/testing" },
-    { "path": "web" },
-    { "path": "web/src/end-to-end" },
-    { "path": "web/src/regression" },
-    { "path": "browser" },
-    { "path": "browser/src/end-to-end" },
-    { "path": "schema" },
-    { "path": "packages/sourcegraph-extension-api" },
-    { "path": "packages/@sourcegraph/extension-api-types" },
-    { "path": "dev/release" },
-  ],
+  "references": [],
   "compilerOptions": {
     "target": "es2019",
     "module": "commonjs",

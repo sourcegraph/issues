@@ -1,0 +1,87 @@
+@import '~@reach/listbox/styles.css';
+
+.version-context-dropdown {
+    width: max-content;
+
+    &:first-child &__button {
+        border-top-left-radius: 2px;
+        border-bottom-left-radius: 2px;
+    }
+
+    &:not(:first-child) .version-context-dropdown__button {
+        border-left: 1px solid $gray-17 !important;
+    }
+
+    &__button {
+        display: flex;
+        border-radius: 0;
+
+        &-text {
+            font-size: 10px;
+        }
+    }
+
+    &__title {
+        font-weight: bold;
+        display: flex;
+        justify-content: space-between;
+    }
+
+    &__info {
+        padding: 0.5rem 0.5rem;
+        font-size: 12px;
+        border: none;
+
+        &-dismiss {
+            width: fit-content;
+            float: right;
+            align-self: flex-end;
+        }
+    }
+
+    &__popover {
+        color: var(--link-color);
+        min-width: 30rem;
+        max-width: 30rem;
+        min-height: fit-content;
+        max-height: 20rem;
+        overflow-y: auto;
+
+        &:focus-within {
+            outline: none;
+        }
+    }
+
+    &__option {
+        font-size: 12px;
+        display: grid;
+        grid-template-columns: 0.5fr 4fr 5fr 0.5fr;
+        cursor: pointer;
+
+        &-name {
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        &-description {
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+    }
+
+    &__list {
+        padding-left: 0;
+
+        [data-reach-listbox-option][data-current] {
+            /* styles for the option matching the current value of the input */
+            font-weight: normal;
+            background-color: var(--color-bg-3);
+        }
+
+        [data-reach-listbox-option][aria-selected='true'] {
+            /* styles for the option matching the user's navigation selection */
+            color: inherit;
+            background-color: var(--color-bg-2);
+        }
+    }
+}

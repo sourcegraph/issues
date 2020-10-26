@@ -6,7 +6,6 @@ import (
 
 	"github.com/inconshreveable/log15"
 	"github.com/pkg/errors"
-	"github.com/sourcegraph/sourcegraph/enterprise/internal/codeintel/bundles/client"
 	bundles "github.com/sourcegraph/sourcegraph/enterprise/internal/codeintel/bundles/client"
 	"github.com/sourcegraph/sourcegraph/enterprise/internal/codeintel/store"
 )
@@ -36,7 +35,7 @@ func (api *codeIntelAPI) Definitions(ctx context.Context, file string, line, cha
 func (api *codeIntelAPI) definitionsRaw(ctx context.Context, dump store.Dump, bundleClient bundles.BundleClient, pathInBundle string, line, character int) ([]ResolvedLocation, error) {
 	locations, err := bundleClient.Definitions(ctx, pathInBundle, line, character)
 	if err != nil {
-		if err == client.ErrNotFound {
+		if err == bundles.ErrNotFound {
 			log15.Warn("Bundle does not exist")
 			return nil, nil
 		}
@@ -48,7 +47,7 @@ func (api *codeIntelAPI) definitionsRaw(ctx context.Context, dump store.Dump, bu
 
 	rangeMonikers, err := bundleClient.MonikersByPosition(context.Background(), pathInBundle, line, character)
 	if err != nil {
-		if err == client.ErrNotFound {
+		if err == bundles.ErrNotFound {
 			log15.Warn("Bundle does not exist")
 			return nil, nil
 		}
@@ -72,7 +71,7 @@ func (api *codeIntelAPI) definitionsRaw(ctx context.Context, dump store.Dump, bu
 
 				locations, _, err := bundleClient.MonikerResults(context.Background(), "definition", moniker.Scheme, moniker.Identifier, 0, DefintionMonikersLimit)
 				if err != nil {
-					if err == client.ErrNotFound {
+					if err == bundles.ErrNotFound {
 						log15.Warn("Bundle does not exist")
 						return nil, nil
 					}

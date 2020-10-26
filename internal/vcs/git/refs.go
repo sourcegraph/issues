@@ -263,26 +263,33 @@ func ListTags(ctx context.Context, repo gitserver.Repo) ([]*Tag, error) {
 		return nil, errors.WithMessage(err, fmt.Sprintf("git command %v failed (output: %q)", cmd.Args, out))
 	}
 
-	out = bytes.TrimSuffix(out, []byte("\n")) // remove trailing newline
-	if len(out) == 0 {
+	return parseTags(out)
+}
+
+func parseTags(in []byte) ([]*Tag, error) {
+	in = bytes.TrimSuffix(in, []byte("\n")) // remove trailing newline
+	if len(in) == 0 {
 		return nil, nil // no tags
 	}
-	lines := bytes.Split(out, []byte("\n"))
+	lines := bytes.Split(in, []byte("\n"))
 	tags := make([]*Tag, len(lines))
 	for i, line := range lines {
 		parts := bytes.SplitN(line, []byte("\x00"), 3)
 		if len(parts) != 3 {
 			return nil, fmt.Errorf("invalid git tag list output line: %q", line)
 		}
+
+		tag := &Tag{
+			Name:     string(parts[1]),
+			CommitID: api.CommitID(parts[0]),
+		}
+
 		date, err := strconv.ParseInt(string(parts[2]), 10, 64)
-		if err != nil {
-			return nil, err
+		if err == nil {
+			tag.CreatorDate = time.Unix(date, 0).UTC()
 		}
-		tags[i] = &Tag{
-			Name:        string(parts[1]),
-			CommitID:    api.CommitID(parts[0]),
-			CreatorDate: time.Unix(date, 0).UTC(),
-		}
+
+		tags[i] = tag
 	}
 	return tags, nil
 }

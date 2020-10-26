@@ -4,12 +4,13 @@ import (
 	"context"
 
 	"github.com/sourcegraph/sourcegraph/cmd/frontend/backend"
-	"github.com/sourcegraph/sourcegraph/cmd/frontend/db"
 	"github.com/sourcegraph/sourcegraph/cmd/frontend/graphqlbackend/graphqlutil"
+	"github.com/sourcegraph/sourcegraph/internal/db"
 )
 
 func (r *UserResolver) EventLogs(ctx context.Context, args *struct {
 	graphqlutil.ConnectionArgs
+	EventName *string // return only event logs matching the event name
 }) (*userEventLogsConnectionResolver, error) {
 	// 🚨 SECURITY: Event logs can only be viewed by the user or site admin.
 	if err := backend.CheckSiteAdminOrSameUser(ctx, r.user.ID); err != nil {
@@ -18,6 +19,7 @@ func (r *UserResolver) EventLogs(ctx context.Context, args *struct {
 	var opt db.EventLogsListOptions
 	args.ConnectionArgs.Set(&opt.LimitOffset)
 	opt.UserID = r.user.ID
+	opt.EventName = args.EventName
 	return &userEventLogsConnectionResolver{opt: opt}, nil
 }
 
@@ -40,12 +42,28 @@ func (r *userEventLogsConnectionResolver) Nodes(ctx context.Context) ([]*userEve
 }
 
 func (r *userEventLogsConnectionResolver) TotalCount(ctx context.Context) (int32, error) {
-	count, err := db.EventLogs.CountByUserID(ctx, r.opt.UserID)
+	var count int
+	var err error
+
+	if r.opt.EventName != nil {
+		count, err = db.EventLogs.CountByUserIDAndEventName(ctx, r.opt.UserID, *r.opt.EventName)
+	} else {
+		count, err = db.EventLogs.CountByUserID(ctx, r.opt.UserID)
+	}
+
 	return int32(count), err
 }
 
 func (r *userEventLogsConnectionResolver) PageInfo(ctx context.Context) (*graphqlutil.PageInfo, error) {
-	count, err := db.EventLogs.CountByUserID(ctx, r.opt.UserID)
+	var count int
+	var err error
+
+	if r.opt.EventName != nil {
+		count, err = db.EventLogs.CountByUserIDAndEventName(ctx, r.opt.UserID, *r.opt.EventName)
+	} else {
+		count, err = db.EventLogs.CountByUserID(ctx, r.opt.UserID)
+	}
+
 	if err != nil {
 		return nil, err
 	}

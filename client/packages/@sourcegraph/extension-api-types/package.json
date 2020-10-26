@@ -1,0 +1,28 @@
+{
+  "name": "@sourcegraph/extension-api-types",
+  "version": "2.1.0",
+  "description": "Types for working with the Sourcegraph extension API. Extensions should use the 'sourcegraph' package, not this package. This package is only for client applications that embed Sourcegraph extensions and need to communicate with them.",
+  "author": "Sourcegraph",
+  "bugs": {
+    "url": "https://github.com/sourcegraph/sourcegraph/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/sourcegraph/sourcegraph",
+    "directory": "packages/@sourcegraph/extension-api-types"
+  },
+  "license": "Apache-2.0",
+  "main": "",
+  "types": "src/index.d.ts",
+  "files": [
+    "src"
+  ],
+  "sideEffects": false,
+  "scripts": {
+    "eslint": "../../../../node_modules/.bin/eslint 'src/*.[jt]s?(x)'",
+    "prepublishOnly": "yarn run eslint"
+  },
+  "peerDependencies": {
+    "sourcegraph": "*"
+  }
+}

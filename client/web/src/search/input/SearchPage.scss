@@ -1,0 +1,99 @@
+@import '../../nav/GlobalNavbar';
+@import '../QuickLinks';
+@import './QueryInput';
+@import './LazyMonacoQueryInput';
+@import './InfoDropdown';
+@import './interactive/InteractiveModeInput';
+@import './SearchOnboardingTour';
+@import '../panels/HomePanels.scss';
+
+.search-page {
+    justify-content: flex-start;
+    width: 100%;
+    overflow: auto;
+
+    &__logo {
+        flex: 0 0 auto;
+        display: flex;
+        align-items: center;
+        width: 20rem;
+        margin-top: 6rem;
+        max-width: 90%;
+        // Reserve the image's height to avoid jitter before it loads.
+        min-height: 54px;
+    }
+
+    &__search-container {
+        flex: 1 1 auto;
+        margin-top: 1.5rem;
+        width: 49rem;
+        max-width: 90%;
+        position: relative;
+        padding-left: 0.5rem;
+        padding-right: 0.5rem;
+
+        &:hover {
+            .toggle-container__copy-query-button {
+                opacity: 1;
+            }
+        }
+
+        &--with-content-below {
+            flex-grow: 0;
+            margin-bottom: 5rem;
+        }
+    }
+
+    &__input-container {
+        width: 100%;
+        display: flex;
+    }
+
+    &__input-sub-container {
+        width: 100%;
+        display: block;
+        margin: 0.5rem 0;
+    }
+
+    &__repogroup-content {
+        max-width: 90%;
+    }
+
+    &__repogroup-list {
+        &-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(18rem, 1fr));
+            grid-auto-rows: minmax(4rem, auto);
+            gap: $spacer * 0.75;
+        }
+
+        &-icon {
+            width: 3rem;
+            height: 3rem;
+            object-fit: contain;
+        }
+    }
+
+    &__search-a-language {
+        margin-bottom: 3rem;
+    }
+
+    &__lang-link {
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    &__help-content {
+        &-subheading {
+            margin-bottom: 1rem;
+        }
+    }
+
+    &__repogroup-listing-title {
+        margin-bottom: 0.25rem;
+    }
+
+    &__footer {
+        margin-top: 2rem;
+    }
+}

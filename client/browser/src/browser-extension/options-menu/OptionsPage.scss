@@ -1,0 +1,48 @@
+.options-page {
+    width: 26rem;
+
+    &--full {
+        margin: 8rem auto;
+    }
+
+    &__section {
+        padding: 1rem;
+        border-bottom: 1px solid var(--border-color-2);
+
+        &:last-of-type {
+            border-bottom: none;
+        }
+    }
+
+    &__split-section-part {
+        padding: 0.75rem 1rem;
+        flex: 50%;
+        border-left: 1px solid var(--border-color-2);
+        text-align: center;
+        &:first-child {
+            border-left: none;
+        }
+    }
+
+    &__logo {
+        width: 9.5rem;
+    }
+
+    &__version {
+        margin-left: 2rem;
+        margin-top: 0.25rem;
+    }
+
+    &__permission-text {
+        margin-top: 0.75rem;
+    }
+}
+
+.code-hosts-section {
+    &__icon {
+        display: inline-flex;
+        place-items: center;
+        padding: 0.5rem;
+        border-radius: 100%;
+    }
+}

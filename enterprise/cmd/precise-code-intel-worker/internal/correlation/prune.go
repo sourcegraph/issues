@@ -13,8 +13,8 @@ import (
 // and may be the target of a definition or reference (and references a file we do not have).
 func prune(ctx context.Context, state *State, root string, getChildren existence.GetChildrenFunc) error {
 	paths := make([]string, 0, len(state.DocumentData))
-	for _, doc := range state.DocumentData {
-		paths = append(paths, doc.URI)
+	for _, uri := range state.DocumentData {
+		paths = append(paths, uri)
 	}
 
 	checker, err := existence.NewExistenceChecker(ctx, root, paths, getChildren)
@@ -22,8 +22,8 @@ func prune(ctx context.Context, state *State, root string, getChildren existence
 		return err
 	}
 
-	for documentID, doc := range state.DocumentData {
-		if !checker.Exists(doc.URI) {
+	for documentID, uri := range state.DocumentData {
+		if !checker.Exists(uri) {
 			// Document does not exist in git
 			delete(state.DocumentData, documentID)
 		}
@@ -34,13 +34,13 @@ func prune(ctx context.Context, state *State, root string, getChildren existence
 	return nil
 }
 
-func pruneFromDefinitionReferences(state *State, definitionReferenceData map[string]datastructures.DefaultIDSetMap) {
+func pruneFromDefinitionReferences(state *State, definitionReferenceData map[int]*datastructures.DefaultIDSetMap) {
 	for _, documentRanges := range definitionReferenceData {
-		for documentID := range documentRanges {
+		documentRanges.Each(func(documentID int, rangeIDs *datastructures.IDSet) {
 			if _, ok := state.DocumentData[documentID]; !ok {
 				// Document was pruned, remove reference
-				delete(documentRanges, documentID)
+				documentRanges.Delete(documentID)
 			}
-		}
+		})
 	}
 }

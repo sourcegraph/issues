@@ -2,52 +2,7 @@
 version: 1
 interactions:
 - request:
-    body: '{"query":"\nfragment actor on Actor {\n  avatarUrl\n  login\n  url\n}\n\nfragment
-      label on Label {\n  name\n  color\n  description\n  id\n}\n\nfragment commit
-      on Commit {\n  oid\n  message\n  messageHeadline\n  committedDate\n  pushedDate\n  url\n  committer
-      {\n    avatarUrl\n    email\n    name\n    user {\n      ...actor\n    }\n  }\n}\n\nfragment
-      commitWithChecks on Commit {\n  oid\n  status {\n    state\n    contexts {\n      id\n      context\n      state\n      description\n    }\n  }\n  checkSuites(last:
-      20){\n    nodes {\n      id\n      status\n      conclusion\n      checkRuns(last:
-      20){\n        nodes{\n          id\n          status\n          conclusion\n        }\n      }\n    }\n  }\n  committedDate\n}\n\nfragment
-      prCommit on PullRequestCommit {\n  commit {\n    ...commitWithChecks\n  }\n}\n\nfragment
-      review on PullRequestReview {\n  databaseId\n  author {\n    ...actor\n  }\n  authorAssociation\n  body\n  state\n  url\n  createdAt\n  updatedAt\n  commit
-      {\n    ...commit\n  }\n  includesCreatedEdit\n}\n\nfragment pr on PullRequest
-      {\n  id\n  title\n  body\n  state\n  url\n  number\n  createdAt\n  updatedAt\n  headRefOid\n  baseRefOid\n  headRefName\n  baseRefName\n  author
-      {\n    ...actor\n  }\n  participants(first: 100) {\n    nodes {\n      ...actor\n    }\n  }\n  labels(first:
-      100) {\n    nodes {\n      ...label\n    }\n  }\n  commits(last: 1) {\n    nodes
-      {\n      ...prCommit\n    }\n  }\n  timelineItems(first: 250, itemTypes: [ASSIGNED_EVENT,
-      CLOSED_EVENT, ISSUE_COMMENT, RENAMED_TITLE_EVENT, MERGED_EVENT, PULL_REQUEST_REVIEW,
-      PULL_REQUEST_REVIEW_THREAD, REOPENED_EVENT, REVIEW_DISMISSED_EVENT, REVIEW_REQUEST_REMOVED_EVENT,
-      REVIEW_REQUESTED_EVENT, UNASSIGNED_EVENT, LABELED_EVENT, UNLABELED_EVENT, PULL_REQUEST_COMMIT])
-      {\n    nodes {\n      __typename\n      ... on AssignedEvent {\n        actor
-      {\n          ...actor\n        }\n        assignee {\n          ...actor\n        }\n        createdAt\n      }\n      ...
-      on ClosedEvent {\n        actor {\n          ...actor\n        }\n        createdAt\n        url\n      }\n      ...
-      on IssueComment {\n        databaseId\n        author {\n          ...actor\n        }\n        authorAssociation\n        body\n        createdAt\n        editor
-      {\n          ...actor\n        }\n        url\n        updatedAt\n        includesCreatedEdit\n        publishedAt\n      }\n      ...
-      on RenamedTitleEvent {\n        actor {\n          ...actor\n        }\n        previousTitle\n        currentTitle\n        createdAt\n      }\n      ...
-      on MergedEvent {\n        actor {\n          ...actor\n        }\n        mergeRefName\n        url\n        commit
-      {\n          ...commit\n        }\n        createdAt\n      }\n      ... on
-      PullRequestReview {\n        ...review\n      }\n      ... on PullRequestReviewThread
-      {\n        comments(last: 100) {\n          nodes {\n            databaseId\n            author
-      {\n              ...actor\n            }\n            authorAssociation\n            editor
-      {\n              ...actor\n            }\n            commit {\n              ...commit\n            }\n            body\n            state\n            url\n            createdAt\n            updatedAt\n            includesCreatedEdit\n          }\n        }\n      }\n      ...
-      on ReopenedEvent {\n        actor {\n          ...actor\n        }\n        createdAt\n      }\n      ...
-      on ReviewDismissedEvent {\n        actor {\n          ...actor\n        }\n        review
-      {\n          ...review\n        }\n        dismissalMessage\n        createdAt\n      }\n      ...
-      on ReviewRequestRemovedEvent {\n        actor {\n          ...actor\n        }\n        requestedReviewer
-      {\n          ...actor\n        }\n        requestedTeam: requestedReviewer {\n          ...
-      on Team {\n            name\n            url\n            avatarUrl\n          }\n        }\n        createdAt\n      }\n      ...
-      on ReviewRequestedEvent {\n        actor {\n          ...actor\n        }\n        requestedReviewer
-      {\n          ...actor\n        }\n        requestedTeam: requestedReviewer {\n          ...
-      on Team {\n            name\n            url\n            avatarUrl\n          }\n        }\n        createdAt\n      }\n      ...
-      on UnassignedEvent {\n        actor {\n          ...actor\n        }\n        assignee
-      {\n          ...actor\n        }\n        createdAt\n      }\n      ... on LabeledEvent
-      {\n        actor {\n          ...actor\n        }\n        label {\n          ...label\n        }\n        createdAt\n      }\n      ...
-      on UnlabeledEvent {\n        actor {\n          ...actor\n        }\n        label
-      {\n          ...label\n        }\n        createdAt\n      }\n      ... on PullRequestCommit
-      {\n        commit {\n          ...commit\n        }\n      }\n    }\n  }\n}\nmutation\tCreatePullRequest($input:CreatePullRequestInput!)
-      {\n  createPullRequest(input:$input) {\n    pullRequest {\n      ... pr\n    }\n  }\n}","variables":{"input":{"repositoryId":"MDEwOlJlcG9zaXRvcnkyMjExNDc1MTM=","baseRefName":"master","headRefName":"test-pr-6","title":"This
-      is a test PR","body":"This is the description of the test PR"}}}'
+    body: '{"query":"\nfragment actor on Actor {\n  avatarUrl\n  login\n  url\n}\n\nfragment label on Label {\n  name\n  color\n  description\n  id\n}\n\nfragment commit on Commit {\n  oid\n  message\n  messageHeadline\n  committedDate\n  pushedDate\n  url\n  committer {\n    avatarUrl\n    email\n    name\n    user {\n      ...actor\n    }\n  }\n}\n\nfragment review on PullRequestReview {\n  databaseId\n  author {\n    ...actor\n  }\n  authorAssociation\n  body\n  state\n  url\n  createdAt\n  updatedAt\n  commit {\n    ...commit\n  }\n  includesCreatedEdit\n}\n\nfragment timelineItems on PullRequestTimelineItems {\n  ... on AssignedEvent {\n    actor {\n      ...actor\n    }\n    assignee {\n      ...actor\n    }\n    createdAt\n  }\n  ... on ClosedEvent {\n    actor {\n      ...actor\n    }\n    createdAt\n    url\n  }\n  ... on IssueComment {\n    databaseId\n    author {\n      ...actor\n    }\n    authorAssociation\n    body\n    createdAt\n    editor {\n      ...actor\n    }\n    url\n    updatedAt\n    includesCreatedEdit\n    publishedAt\n  }\n  ... on RenamedTitleEvent {\n    actor {\n      ...actor\n    }\n    previousTitle\n    currentTitle\n    createdAt\n  }\n  ... on MergedEvent {\n    actor {\n      ...actor\n    }\n    mergeRefName\n    url\n    commit {\n      ...commit\n    }\n    createdAt\n  }\n  ... on PullRequestReview {\n    ...review\n  }\n  ... on PullRequestReviewThread {\n    comments(last: 100) {\n      nodes {\n        databaseId\n        author {\n          ...actor\n        }\n        authorAssociation\n        editor {\n          ...actor\n        }\n        commit {\n          ...commit\n        }\n        body\n        state\n        url\n        createdAt\n        updatedAt\n        includesCreatedEdit\n      }\n    }\n  }\n  ... on ReopenedEvent {\n    actor {\n      ...actor\n    }\n    createdAt\n  }\n  ... on ReviewDismissedEvent {\n    actor {\n      ...actor\n    }\n    review {\n      ...review\n    }\n    dismissalMessage\n    createdAt\n  }\n  ... on ReviewRequestRemovedEvent {\n    actor {\n      ...actor\n    }\n    requestedReviewer {\n      ...actor\n    }\n    requestedTeam: requestedReviewer {\n      ... on Team {\n        name\n        url\n        avatarUrl\n      }\n    }\n    createdAt\n  }\n  ... on ReviewRequestedEvent {\n    actor {\n      ...actor\n    }\n    requestedReviewer {\n      ...actor\n    }\n    requestedTeam: requestedReviewer {\n      ... on Team {\n        name\n        url\n        avatarUrl\n      }\n    }\n    createdAt\n  }\n  ... on ReadyForReviewEvent {\n    actor {\n      ...actor\n    }\n    createdAt\n  }\n  ... on ConvertToDraftEvent {\n    actor {\n      ...actor\n    }\n    createdAt\n  }\n  ... on UnassignedEvent {\n    actor {\n      ...actor\n    }\n    assignee {\n      ...actor\n    }\n    createdAt\n  }\n  ... on LabeledEvent {\n    actor {\n      ...actor\n    }\n    label {\n      ...label\n    }\n    createdAt\n  }\n  ... on UnlabeledEvent {\n    actor {\n      ...actor\n    }\n    label {\n      ...label\n    }\n    createdAt\n  }\n  ... on PullRequestCommit {\n    commit {\n      ...commit\n    }\n  }\n}\n\nfragment commitWithChecks on Commit {\n  oid\n  status {\n    state\n    contexts {\n      id\n      context\n      state\n      description\n    }\n  }\n  checkSuites(last: 20) {\n    nodes {\n      id\n      status\n      conclusion\n      checkRuns(last: 20) {\n        nodes {\n          id\n          status\n          conclusion\n        }\n      }\n    }\n  }\n  committedDate\n}\n\nfragment prCommit on PullRequestCommit {\n  commit {\n    ...commitWithChecks\n  }\n}\n\nfragment pr on PullRequest {\n  id\n  title\n  body\n  state\n  url\n  number\n  createdAt\n  updatedAt\n  headRefOid\n  baseRefOid\n  headRefName\n  baseRefName\n  isDraft\n  author {\n    ...actor\n  }\n  participants(first: 100) {\n    nodes {\n      ...actor\n    }\n  }\n  labels(first: 100) {\n    nodes {\n      ...label\n    }\n  }\n  commits(last: 1) {\n    nodes {\n      ...prCommit\n    }\n  }\n  timelineItems(first: 250, itemTypes: [ASSIGNED_EVENT, CLOSED_EVENT, ISSUE_COMMENT, RENAMED_TITLE_EVENT, MERGED_EVENT, PULL_REQUEST_REVIEW, PULL_REQUEST_REVIEW_THREAD, REOPENED_EVENT, REVIEW_DISMISSED_EVENT, REVIEW_REQUEST_REMOVED_EVENT, REVIEW_REQUESTED_EVENT, UNASSIGNED_EVENT, LABELED_EVENT, UNLABELED_EVENT, PULL_REQUEST_COMMIT, READY_FOR_REVIEW_EVENT, CONVERT_TO_DRAFT_EVENT]) {\n    pageInfo {\n      hasNextPage\n      endCursor\n    }\n    nodes {\n      __typename\n      ...timelineItems\n    }\n  }\n}\nmutation\tCreatePullRequest($input:CreatePullRequestInput!) {\n  createPullRequest(input:$input) {\n    pullRequest {\n      ... pr\n    }\n  }\n}","variables":{"input":{"repositoryId":"MDEwOlJlcG9zaXRvcnkyMjExNDc1MTM=","baseRefName":"master","headRefName":"test-pr-6","title":"This is a test PR","body":"This is the description of the test PR"}}}'
     form: {}
     headers:
       Accept:
@@ -57,17 +12,12 @@ interactions:
     url: https://api.github.com/graphql
     method: POST
   response:
-    body: '{"data":{"createPullRequest":{"pullRequest":{"id":"MDExOlB1bGxSZXF1ZXN0Mzg3OTU2MDc2","title":"This
-      is a test PR","body":"This is the description of the test PR","state":"OPEN","url":"https://github.com/sourcegraph/automation-testing/pull/278","number":278,"createdAt":"2020-03-13T20:02:37Z","updatedAt":"2020-03-13T20:02:37Z","headRefOid":"05e562cc5d8ab50b5fcab8dfd5dfa5db13a48e80","baseRefOid":"be64870b4721794dcdada10f49a2741c09f33a69","headRefName":"test-pr-6","baseRefName":"master","author":{"avatarUrl":"https://avatars3.githubusercontent.com/u/25610?u=416aa7bd7c7a97c714ea0a503c90a0e7e21c5e56&v=4","login":"ryanslade","url":"https://github.com/ryanslade"},"participants":{"nodes":[{"avatarUrl":"https://avatars3.githubusercontent.com/u/25610?u=416aa7bd7c7a97c714ea0a503c90a0e7e21c5e56&v=4","login":"ryanslade","url":"https://github.com/ryanslade"},{"avatarUrl":"https://avatars1.githubusercontent.com/u/1185253?u=35f048c505007991433b46c9c0616ccbcfbd4bff&v=4","login":"mrnugget","url":"https://github.com/mrnugget"}]},"labels":{"nodes":[]},"commits":{"nodes":[{"commit":{"oid":"05e562cc5d8ab50b5fcab8dfd5dfa5db13a48e80","status":null,"checkSuites":{"nodes":[{"id":"MDEwOkNoZWNrU3VpdGUzMDY5MDkzMzM=","status":"QUEUED","conclusion":null,"checkRuns":{"nodes":[]}},{"id":"MDEwOkNoZWNrU3VpdGUzMDY5MDkzMzY=","status":"QUEUED","conclusion":null,"checkRuns":{"nodes":[]}}]},"committedDate":"2019-11-12T12:57:33Z"}}]},"timelineItems":{"nodes":[{"__typename":"PullRequestCommit","commit":{"oid":"05e562cc5d8ab50b5fcab8dfd5dfa5db13a48e80","message":"Add
-      foobar.md file","messageHeadline":"Add foobar.md file","committedDate":"2019-11-12T12:57:33Z","pushedDate":"2019-11-12T13:00:07Z","url":"https://github.com/sourcegraph/automation-testing/commit/05e562cc5d8ab50b5fcab8dfd5dfa5db13a48e80","committer":{"avatarUrl":"https://avatars3.githubusercontent.com/u/1185253?v=4","email":"mrnugget@gmail.com","name":"Thorsten
-      Ball","user":{"avatarUrl":"https://avatars1.githubusercontent.com/u/1185253?u=35f048c505007991433b46c9c0616ccbcfbd4bff&v=4","login":"mrnugget","url":"https://github.com/mrnugget"}}}}]}}}}}'
+    body: '{"data":{"createPullRequest":{"pullRequest":{"id":"MDExOlB1bGxSZXF1ZXN0NTA0NDU4Njg1","title":"This is a test PR","body":"This is the description of the test PR","state":"OPEN","url":"https://github.com/sourcegraph/automation-testing/pull/358","number":358,"createdAt":"2020-10-15T23:47:12Z","updatedAt":"2020-10-15T23:47:12Z","headRefOid":"05e562cc5d8ab50b5fcab8dfd5dfa5db13a48e80","baseRefOid":"6274d04b734de9f057bb5f196a5046a9e86ba992","headRefName":"test-pr-6","baseRefName":"master","isDraft":false,"author":{"avatarUrl":"https://avatars0.githubusercontent.com/u/19534377?v=4","login":"eseliger","url":"https://github.com/eseliger"},"participants":{"nodes":[{"avatarUrl":"https://avatars0.githubusercontent.com/u/19534377?v=4","login":"eseliger","url":"https://github.com/eseliger"},{"avatarUrl":"https://avatars1.githubusercontent.com/u/1185253?u=35f048c505007991433b46c9c0616ccbcfbd4bff&v=4","login":"mrnugget","url":"https://github.com/mrnugget"}]},"labels":{"nodes":[]},"commits":{"nodes":[{"commit":{"oid":"05e562cc5d8ab50b5fcab8dfd5dfa5db13a48e80","status":null,"checkSuites":{"nodes":[{"id":"MDEwOkNoZWNrU3VpdGUzMDY5MDkzMzM=","status":"QUEUED","conclusion":null,"checkRuns":{"nodes":[]}},{"id":"MDEwOkNoZWNrU3VpdGUzMDY5MDkzMzY=","status":"QUEUED","conclusion":null,"checkRuns":{"nodes":[]}}]},"committedDate":"2019-11-12T12:57:33Z"}}]},"timelineItems":{"pageInfo":{"hasNextPage":false,"endCursor":"Y3Vyc29yOnYyOpPPAAABbl-wzkgH2gAyNTA0NDU4Njg1OjA1ZTU2MmNjNWQ4YWI1MGI1ZmNhYjhkZmQ1ZGZhNWRiMTNhNDhlODA="},"nodes":[{"__typename":"PullRequestCommit","commit":{"oid":"05e562cc5d8ab50b5fcab8dfd5dfa5db13a48e80","message":"Add foobar.md file","messageHeadline":"Add foobar.md file","committedDate":"2019-11-12T12:57:33Z","pushedDate":"2019-11-12T13:00:07Z","url":"https://github.com/sourcegraph/automation-testing/commit/05e562cc5d8ab50b5fcab8dfd5dfa5db13a48e80","committer":{"avatarUrl":"https://avatars3.githubusercontent.com/u/1185253?v=4","email":"mrnugget@gmail.com","name":"Thorsten Ball","user":{"avatarUrl":"https://avatars1.githubusercontent.com/u/1185253?u=35f048c505007991433b46c9c0616ccbcfbd4bff&v=4","login":"mrnugget","url":"https://github.com/mrnugget"}}}}]}}}}}'
     headers:
       Access-Control-Allow-Origin:
       - '*'
       Access-Control-Expose-Headers:
-      - ETag, Link, Location, Retry-After, X-GitHub-OTP, X-RateLimit-Limit, X-RateLimit-Remaining,
-        X-RateLimit-Reset, X-OAuth-Scopes, X-Accepted-OAuth-Scopes, X-Poll-Interval,
-        X-GitHub-Media-Type, Deprecation, Sunset
+      - ETag, Link, Location, Retry-After, X-GitHub-OTP, X-RateLimit-Limit, X-RateLimit-Remaining, X-RateLimit-Used, X-RateLimit-Reset, X-OAuth-Scopes, X-Accepted-OAuth-Scopes, X-Poll-Interval, X-GitHub-Media-Type, Deprecation, Sunset
       Cache-Control:
       - no-cache
       Content-Security-Policy:
@@ -75,7 +25,7 @@ interactions:
       Content-Type:
       - application/json; charset=utf-8
       Date:
-      - Fri, 13 Mar 2020 20:02:37 GMT
+      - Thu, 15 Oct 2020 23:47:12 GMT
       Referrer-Policy:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       Server:
@@ -86,6 +36,7 @@ interactions:
       - max-age=31536000; includeSubdomains; preload
       Vary:
       - Accept-Encoding, Accept, X-Requested-With
+      - Accept-Encoding
       X-Accepted-Oauth-Scopes:
       - repo
       X-Content-Type-Options:
@@ -93,11 +44,13 @@ interactions:
       X-Frame-Options:
       - deny
       X-Github-Media-Type:
-      - github.antiope-preview; format=json
+      - github.v4; param=antiope-preview; format=json
       X-Github-Request-Id:
-      - C450:47B46:33BA8A1:3D2D468:5E6BE6DC
+      - D0A5:719F:B9869E9:D64250D:5F88DF7F
       X-Oauth-Scopes:
-      - read:org, repo
+      - read:discussion, read:org, repo
+      X-Ratelimit-Used:
+      - "1231"
       X-Xss-Protection:
       - 1; mode=block
     status: 200 OK

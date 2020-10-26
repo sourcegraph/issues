@@ -1,0 +1,76 @@
+@import 'bootstrap/scss/type';
+
+h1 {
+    font-size: 32px;
+    line-height: 40px;
+    font-weight: 500;
+    margin: 0 0 1rem;
+}
+
+h2 {
+    font-size: 24px;
+    line-height: 32px;
+    font-weight: 500;
+}
+
+h3 {
+    font-size: 16px;
+    line-height: 24px;
+    font-weight: 600;
+}
+
+h4 {
+    font-size: 14px;
+    line-height: 20px;
+    font-weight: 600;
+}
+
+h5 {
+    font-size: 14px;
+    letter-spacing: 0.05em;
+    font-weight: normal;
+    text-transform: uppercase;
+    margin: 0;
+}
+
+h6 {
+    font-size: 12px;
+    font-weight: 600;
+}
+
+small {
+    font-size: 12px;
+}
+
+sup,
+sub {
+    font-size: 0.5em;
+}
+sup {
+    top: -1em;
+}
+
+.font-weight-semibold {
+    font-weight: 600;
+}
+
+// Make sure text color utilities are theme-aware
+.theme-light {
+    @each $color, $value in $theme-colors-light {
+        @include text-emphasis-variant('.text-#{$color}', $value, true);
+    }
+}
+
+.list-dashed {
+    list-style: none;
+    position: relative;
+    > li::before {
+        content: '–';
+        position: absolute;
+        width: 2.5rem;
+        left: 0;
+        // stylelint-disable-next-line declaration-property-unit-whitelist
+        padding-right: 0.5em;
+        text-align: right;
+    }
+}

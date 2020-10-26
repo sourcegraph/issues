@@ -1,0 +1,9 @@
+.hidden-changeset-spec-node {
+    &__action,
+    &__information {
+        @include media-breakpoint-down(xs) {
+            // Make it full width in the current row.
+            grid-column: 1 / -1;
+        }
+    }
+}

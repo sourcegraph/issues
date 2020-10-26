@@ -6,11 +6,11 @@ import (
 	"testing"
 	"time"
 
+	"github.com/google/go-cmp/cmp"
 	"github.com/google/zoekt"
-	zoektquery "github.com/google/zoekt/query"
-	"github.com/sourcegraph/sourcegraph/cmd/frontend/db"
 	"github.com/sourcegraph/sourcegraph/cmd/frontend/types"
 	"github.com/sourcegraph/sourcegraph/internal/api"
+	"github.com/sourcegraph/sourcegraph/internal/db"
 	"github.com/sourcegraph/sourcegraph/internal/endpoint"
 	"github.com/sourcegraph/sourcegraph/internal/gitserver"
 	"github.com/sourcegraph/sourcegraph/internal/search"
@@ -27,9 +27,6 @@ func TestStructuralSearchRepoFilter(t *testing.T) {
 	indexedRepo := &types.Repo{Name: api.RepoName(repoName)}
 
 	unindexedRepo := &types.Repo{Name: api.RepoName("unindexed/one")}
-
-	mockDecodedViewerFinalSettings = &schema.Settings{}
-	defer func() { mockDecodedViewerFinalSettings = nil }()
 
 	db.Mocks.Repos.List = func(_ context.Context, op db.ReposListOptions) ([]*types.Repo, error) {
 		return []*types.Repo{indexedRepo, unindexedRepo}, nil
@@ -51,9 +48,9 @@ func TestStructuralSearchRepoFilter(t *testing.T) {
 		repoName := repo.Name
 		switch repoName {
 		case "indexed/one":
-			return []*FileMatchResolver{{JPath: indexedFileName}}, false, nil
+			return []*FileMatchResolver{mkFileMatch(nil, indexedFileName)}, false, nil
 		case "unindexed/one":
-			return []*FileMatchResolver{{JPath: "unindexed.go"}}, false, nil
+			return []*FileMatchResolver{mkFileMatch(nil, "unindexed.go")}, false, nil
 		default:
 			return nil, false, errors.New("Unexpected repo")
 		}
@@ -80,7 +77,7 @@ func TestStructuralSearchRepoFilter(t *testing.T) {
 
 	z := &searchbackend.Zoekt{
 		Client: &fakeSearcher{
-			repos:  &zoekt.RepoList{Repos: []*zoekt.RepoListEntry{zoektRepo}},
+			repos:  []*zoekt.RepoListEntry{zoektRepo},
 			result: &zoekt.SearchResult{Files: zoektFileMatches},
 		},
 		DisableCache: true,
@@ -97,6 +94,7 @@ func TestStructuralSearchRepoFilter(t *testing.T) {
 		patternType:  query.SearchTypeStructural,
 		zoekt:        z,
 		searcherURLs: endpoint.Static("test"),
+		userSettings: &schema.Settings{},
 	}
 	results, err := resolver.Results(ctx)
 	if err != nil {
@@ -104,87 +102,139 @@ func TestStructuralSearchRepoFilter(t *testing.T) {
 	}
 
 	fm, _ := results.Results()[0].ToFileMatch()
-	if fm.JPath != indexedFileName {
-		t.Fatalf("wrong indexed filename. want=%s, have=%s\n", indexedFileName, fm.JPath)
+	if got, want := fm.JPath, indexedFileName; got != want {
+		t.Fatalf("wrong indexed filename. want=%s, have=%s\n", want, got)
 	}
 }
 
 func TestStructuralPatToRegexpQuery(t *testing.T) {
 	cases := []struct {
-		Name     string
-		Pattern  string
-		Function func(string, bool) (zoektquery.Q, error)
-		Want     string
+		Name    string
+		Pattern string
+		Want    string
 	}{
 		{
-			Name:     "Just a hole",
-			Pattern:  ":[1]",
-			Function: StructuralPatToRegexpQuery,
-			Want:     `(and case_regex:"()((?s:.))*?()")`,
+			Name:    "Just a hole",
+			Pattern: ":[1]",
+			Want:    `(.|\s)*?`,
 		},
 		{
-			Name:     "Adjacent holes",
-			Pattern:  ":[1]:[2]:[3]",
-			Function: StructuralPatToRegexpQuery,
-			Want:     `(and case_regex:"()((?s:.))*?()((?s:.))*?()((?s:.))*?()")`,
+			Name:    "Adjacent holes",
+			Pattern: ":[1]:[2]:[3]",
+			Want:    `(.|\s)*?`,
 		},
 		{
-			Name:     "Substring between holes",
-			Pattern:  ":[1] substring :[2]",
-			Function: StructuralPatToRegexpQuery,
-			Want:     `(and case_regex:"()((?s:.))*?([\\t-\\n\\f-\\r ]+substring[\\t-\\n\\f-\\r ]+)((?s:.))*?()")`,
+			Name:    "Substring between holes",
+			Pattern: ":[1] substring :[2]",
+			Want:    `([\s]+substring[\s]+)`,
 		},
 		{
-			Name:     "Substring before and after different hole kinds",
-			Pattern:  "prefix :[[1]] :[2.] suffix",
-			Function: StructuralPatToRegexpQuery,
-			Want:     `(and case_regex:"(prefix[\\t-\\n\\f-\\r ]+)((?s:.))*?([\\t-\\n\\f-\\r ]+)((?s:.))*?([\\t-\\n\\f-\\r ]+suffix)")`,
+			Name:    "Substring before and after different hole kinds",
+			Pattern: "prefix :[[1]] :[2.] suffix",
+			Want:    `(prefix[\s]+)(.|\s)*?([\s]+)(.|\s)*?([\s]+suffix)`,
 		},
 		{
-			Name:     "Substrings covering all hole kinds.",
-			Pattern:  `1. :[1] 2. :[[2]] 3. :[3.] 4. :[4\n] 5. :[ ] 6. :[ 6] done.`,
-			Function: StructuralPatToRegexpQuery,
-			Want:     `(and case_regex:"(1\\.[\\t-\\n\\f-\\r ]+)((?s:.))*?([\\t-\\n\\f-\\r ]+2\\.[\\t-\\n\\f-\\r ]+)((?s:.))*?([\\t-\\n\\f-\\r ]+3\\.[\\t-\\n\\f-\\r ]+)((?s:.))*?([\\t-\\n\\f-\\r ]+4\\.[\\t-\\n\\f-\\r ]+)((?s:.))*?([\\t-\\n\\f-\\r ]+5\\.[\\t-\\n\\f-\\r ]+)((?s:.))*?([\\t-\\n\\f-\\r ]+6\\.[\\t-\\n\\f-\\r ]+)((?s:.))*?([\\t-\\n\\f-\\r ]+done\\.)")`,
+			Name:    "Substrings covering all hole kinds.",
+			Pattern: `1. :[1] 2. :[[2]] 3. :[3.] 4. :[4\n] 5. :[ ] 6. :[ 6] done.`,
+			Want:    `(1\.[\s]+)(.|\s)*?([\s]+2\.[\s]+)(.|\s)*?([\s]+3\.[\s]+)(.|\s)*?([\s]+4\.[\s]+)(.|\s)*?([\s]+5\.[\s]+)(.|\s)*?([\s]+6\.[\s]+)(.|\s)*?([\s]+done\.)`,
 		},
 		{
-			Name:     "Substrings across multiple lines.",
-			Pattern:  ``,
-			Function: StructuralPatToRegexpQuery,
-			Want:     `(and case_regex:"()")`,
-		},
-		{
-			Name:     "Allow alphanumeric identifiers in holes",
-			Pattern:  "sub :[alphanum_ident_123] string",
-			Function: StructuralPatToRegexpQuery,
-			Want:     `(and case_regex:"(sub[\\t-\\n\\f-\\r ]+)((?s:.))*?([\\t-\\n\\f-\\r ]+string)")`,
+			Name:    "Allow alphanumeric identifiers in holes",
+			Pattern: "sub :[alphanum_ident_123] string",
+			Want:    `(sub[\s]+)(.|\s)*?([\s]+string)`,
 		},
 
 		{
-			Name:     "Whitespace separated holes",
-			Pattern:  ":[1] :[2]",
-			Function: StructuralPatToRegexpQuery,
-			Want:     `(and case_regex:"()((?s:.))*?([\\t-\\n\\f-\\r ]+)((?s:.))*?()")`,
+			Name:    "Whitespace separated holes",
+			Pattern: ":[1] :[2]",
+			Want:    `([\s]+)`,
 		},
 		{
-			Name:     "Expect newline separated pattern",
-			Pattern:  "ParseInt(:[stuff], :[x]) if err ",
-			Function: StructuralPatToRegexpQuery,
-			Want:     `(and case_regex:"(ParseInt\\()((?s:.))*?(,[\\t-\\n\\f-\\r ]+)((?s:.))*?(\\)[\\t-\\n\\f-\\r ]+if[\\t-\\n\\f-\\r ]+err[\\t-\\n\\f-\\r ]+)")`,
+			Name:    "Expect newline separated pattern",
+			Pattern: "ParseInt(:[stuff], :[x]) if err ",
+			Want:    `(ParseInt\()(.|\s)*?(,[\s]+)(.|\s)*?(\)[\s]+if[\s]+err[\s]+)`,
 		},
 		{
 			Name: "Contiguous whitespace is replaced by regex",
 			Pattern: `ParseInt(:[stuff],    :[x])
              if err `,
-			Function: StructuralPatToRegexpQuery,
-			Want:     `(and case_regex:"(ParseInt\\()((?s:.))*?(,[\\t-\\n\\f-\\r ]+)((?s:.))*?(\\)[\\t-\\n\\f-\\r ]+if[\\t-\\n\\f-\\r ]+err[\\t-\\n\\f-\\r ]+)")`,
+			Want: `(ParseInt\()(.|\s)*?(,[\s]+)(.|\s)*?(\)[\s]+if[\s]+err[\s]+)`,
+		},
+		{
+			Name:    "Regex holes extracts regex",
+			Pattern: `:[x~[yo]]`,
+			Want:    `([yo])`,
+		},
+		{
+			Name:    "Regex holes with escaped space",
+			Pattern: `:[x~\ ]`,
+			Want:    `(\ )`,
+		},
+		{
+			Name:    "Shorthand",
+			Pattern: ":[[1]]",
+			Want:    `(.|\s)*?`,
+		},
+		{
+			Name:    "Array-like preserved",
+			Pattern: `[:[x]]`,
+			Want:    `(\[)(.|\s)*?(\])`,
+		},
+		{
+			Name:    "Shorthand",
+			Pattern: ":[[1]]",
+			Want:    `(.|\s)*?`,
+		},
+		{
+			Name:    "Not well-formed is undefined",
+			Pattern: ":[[",
+			Want:    `(.|\s)*?`,
+		},
+		{
+			Name:    "Complex regex with character class",
+			Pattern: `:[chain~[^(){}\[\],]+\n( +\..*\n)+]`,
+			Want:    `([^(){}\[\],]+\n( +\..*\n)+)`,
+		},
+		{
+			Name:    "Colon regex",
+			Pattern: `:[~:]`,
+			Want:    `(:)`,
+		},
+		{
+			Name:    "Colon prefix",
+			Pattern: `::[version]bar`,
+			Want:    `(:)(.|\s)*?(bar)`,
+		},
+		{
+			Name:    "Colon prefix",
+			Pattern: `::::[version]bar`,
+			Want:    `(:::)(.|\s)*?(bar)`,
 		},
 	}
 	for _, tt := range cases {
 		t.Run(tt.Name, func(t *testing.T) {
-			got, _ := tt.Function(tt.Pattern, false)
-			if got.String() != tt.Want {
-				t.Fatalf("mismatched queries\ngot  %s\nwant %s", got.String(), tt.Want)
+			got := StructuralPatToRegexpQuery(tt.Pattern, false)
+			if diff := cmp.Diff(tt.Want, got); diff != "" {
+				t.Error(diff)
 			}
 		})
 	}
+}
+
+func TestBuildQuery(t *testing.T) {
+	pattern := ":[x~*]"
+	want := "error parsing regexp: missing argument to repetition operator: `*`"
+	t.Run("build query", func(t *testing.T) {
+		_, err := buildQuery(
+			&search.TextParameters{
+				PatternInfo: &search.TextPatternInfo{Pattern: pattern},
+			},
+			nil,
+			nil,
+			false,
+		)
+		if diff := cmp.Diff(err.Error(), want); diff != "" {
+			t.Error(diff)
+		}
+	})
 }

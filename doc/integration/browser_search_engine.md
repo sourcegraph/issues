@@ -2,7 +2,7 @@
 
 You can add Sourcegraph as a browser search engine to quickly search Sourcegraph from your browser's location bar when you type a special shortcut, such as <kbd>src</kbd>. This is one of the most common ways to initiate a search on Sourcegraph.
 
-![](https://storage.googleapis.com/sourcegraph-assets/SearchShortcut2.gif)
+![](https://sourcegraphstatic.com/SearchShortcut2.gif)
 
 ---
 

@@ -6,8 +6,10 @@ Site administrators are the admins responsible for deploying, managing, and conf
 
 - [Install Sourcegraph with Docker](install/docker/index.md)
 - [Install Sourcegraph with Docker Compose](install/docker-compose/index.md)
-- [Install Sourcegraph on a cluster](install/cluster.md)
+- [Install Sourcegraph with Kubernetes](install/kubernetes/index.md)
+- [Install Sourcegraph on a cluster](install/index.md)
 - [Set up a managed instance](install/managed.md)
+- [Back up or migrate to a new Sourcegraph instance](install/migrate-backup.md)
 
 ## Management, deployment, and configuration
 
@@ -25,16 +27,17 @@ Site administrators are the admins responsible for deploying, managing, and conf
 - [Upgrading PostgreSQL](postgres.md)
 - [Using external databases (PostgreSQL and Redis)](external_database.md)
 - [User data deletion](user_data_deletion.md)
+- [Validation](validation.md) **Experimental**
 
 ## Features
 
-- [Code intelligence and language servers](../user/code_intelligence/index.md)
+- [Code intelligence and language servers](../code_intelligence/index.md)
 - [Sourcegraph extensions and extension registry](extensions/index.md)
 - [Search](search.md)
 - [Federation](federation/index.md)
 - [Pings](pings.md)
-- [Usage statistics](../user/usage_statistics.md)
-- [User feedback surveys](../user/user_surveys.md)
+- [Usage statistics](usage_statistics.md)
+- [User feedback surveys](user_surveys.md)
 
 ## Integrations
 

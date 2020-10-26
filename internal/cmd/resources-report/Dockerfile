@@ -8,7 +8,10 @@ RUN go mod download
 COPY *.go ./
 RUN go build -o /bin/resources-report
 
-FROM alpine:3.11@sha256:cb8a924afdf0229ef7515d9e5b3024e23b3eb03ddbba287f4a19c6ac90b8d221
+FROM sourcegraph/alpine:3.12@sha256:133a0a767b836cf86a011101995641cf1b5cbefb3dd212d78d7be145adde636d
+# TODO(security): This container should not be running as root!
+# hadolint ignore=DL3002
+USER root
 
 # hadolint ignore=DL3018
 RUN apk add --no-cache ca-certificates

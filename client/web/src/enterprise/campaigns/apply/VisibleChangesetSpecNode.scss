@@ -1,0 +1,19 @@
+.visible-changeset-spec-node {
+    &__action,
+    &__information,
+    &__show-details {
+        @include media-breakpoint-down(xs) {
+            // Make it full width in the current row.
+            grid-column: 1 / -1;
+        }
+    }
+    &__expanded-section {
+        background-color: rgba($oc-blue-0, 0.5);
+        @include media-breakpoint-down(xs) {
+            // Make it full width in the current row.
+            grid-column: 1 / -1;
+        }
+        // Make it full width in the current row.
+        grid-column: 2 / -1;
+    }
+}

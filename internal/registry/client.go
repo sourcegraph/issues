@@ -11,11 +11,8 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/pkg/errors"
-	"golang.org/x/net/context/ctxhttp"
+	"github.com/sourcegraph/sourcegraph/internal/httpcli"
 )
-
-// HTTPClient is the HTTP client to use (otherwise http.DefaultClient is used).
-var HTTPClient *http.Client
 
 const (
 	// APIVersion is a string that uniquely identifies this API version.
@@ -90,8 +87,9 @@ func httpGet(ctx context.Context, op, urlStr string, result interface{}) (err er
 	}
 	req.Header.Set("Accept", AcceptHeader)
 	req.Header.Set("User-Agent", "Sourcegraph registry client v"+APIVersion)
+	req = req.WithContext(ctx)
 
-	resp, err := ctxhttp.Do(ctx, HTTPClient, req)
+	resp, err := httpcli.ExternalDoer().Do(req)
 	if err != nil {
 		return err
 	}

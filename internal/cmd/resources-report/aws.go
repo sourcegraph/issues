@@ -14,7 +14,7 @@ import (
 	aws_eks "github.com/aws/aws-sdk-go-v2/service/eks"
 )
 
-// for resources that require enumerating over regions, it is not very partical to
+// for resources that require enumerating over regions, it is not very practical to
 // make queries for regions that will either not work or will never have Sourcegraph
 // resources - define relevant regions here.
 //

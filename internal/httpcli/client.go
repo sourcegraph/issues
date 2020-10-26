@@ -4,12 +4,13 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"net/http"
+	"sync"
 	"time"
 
 	"github.com/gregjones/httpcache"
 	"github.com/hashicorp/go-multierror"
 	"github.com/pkg/errors"
-	"github.com/sourcegraph/sourcegraph/internal/httputil"
+	"github.com/sourcegraph/sourcegraph/internal/rcache"
 	"github.com/sourcegraph/sourcegraph/internal/trace/ot"
 )
 
@@ -50,12 +51,17 @@ func NewMiddleware(mws ...Middleware) Middleware {
 type Opt func(*http.Client) error
 
 // A Factory constructs an http.Client with the given functional
-// options applied, returning an aggreagte error of the errors returned by
+// options applied, returning an aggregate error of the errors returned by
 // all those options.
 type Factory struct {
 	stack  Middleware
 	common []Opt
 }
+
+// redisCache is a HTTP cache backed by Redis. The TTL of a week is a balance
+// between caching values for a useful amount of time versus growing the cache
+// too large.
+var redisCache = rcache.NewWithTTL("http", 604800)
 
 // NewExternalHTTPClientFactory returns an httpcli.Factory with common options
 // and middleware pre-set for communicating to external services.
@@ -71,8 +77,50 @@ func NewExternalHTTPClientFactory() *Factory {
 		// not a generic http.RoundTripper.
 		ExternalTransportOpt,
 		TracedTransportOpt,
-		NewCachedTransportOpt(httputil.Cache, true),
+		NewCachedTransportOpt(redisCache, true),
 	)
+}
+
+var (
+	externalOnce       sync.Once
+	externalDoer       Doer
+	externalHTTPClient *http.Client
+)
+
+func externalInit() {
+	externalOnce.Do(func() {
+		var err error
+		externalDoer, err = NewExternalHTTPClientFactory().Doer()
+		if err != nil {
+			panic("httpcli: failed to create the default ExternalDoer. This should not happen: " + err.Error())
+		}
+		externalHTTPClient, err = NewExternalHTTPClientFactory().Client()
+		if err != nil {
+			panic("httpcli: failed to create the default ExternalHTTPClient. This should not happen: " + err.Error())
+		}
+	})
+}
+
+// ExternalDoer returns a shared client for external communication. This is a
+// convenience for existing uses of http.DefaultClient.
+//
+// NOTE: Use this for legacy code. New code should generally take in a
+// httpcli.Doer and at a high level NewExternalHTTPClientFactory() is called
+// and passed down.
+func ExternalDoer() Doer {
+	externalInit()
+	return externalDoer
+}
+
+// ExternalHTTPClient returns a shared client for external communication. This is
+// a convenience for existing uses of http.DefaultClient.
+//
+// NOTE: Use this for legacy code. New code should generally take in a
+// httpcli.Doer and at a high level NewExternalHTTPClientFactory() is called
+// and passed down.
+func ExternalHTTPClient() *http.Client {
+	externalInit()
+	return externalHTTPClient
 }
 
 // Doer returns a new Doer wrapped with the middleware stack

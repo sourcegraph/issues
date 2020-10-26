@@ -1,0 +1,115 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`UserProfileFormFields simple 1`] = `
+<UserProfileFormFields
+  onChange={[Function]}
+  value={
+    Object {
+      "avatarURL": "https://example.com/image.jpg",
+      "displayName": "d",
+      "username": "u",
+    }
+  }
+>
+  <div
+    className="user-profile-form-fields"
+  >
+    <div
+      className="form-group"
+    >
+      <label
+        htmlFor="UserProfileFormFields__username"
+      >
+        Username
+      </label>
+      <UsernameInput
+        aria-describedby="UserProfileFormFields__username-help"
+        className="test-UserProfileFormFields-username"
+        id="UserProfileFormFields__username"
+        onChange={[Function]}
+        required={true}
+        value="u"
+      >
+        <input
+          aria-describedby="UserProfileFormFields__username-help"
+          autoCapitalize="off"
+          autoComplete="username"
+          className="form-control test-UserProfileFormFields-username"
+          id="UserProfileFormFields__username"
+          maxLength={255}
+          name="username"
+          onChange={[Function]}
+          pattern="^[\\\\dA-Za-z](?:[\\\\dA-Za-z]|[.-](?=[\\\\dA-Za-z]))*-?$"
+          placeholder="Username"
+          required={true}
+          spellCheck={false}
+          type="text"
+          value="u"
+        />
+      </UsernameInput>
+      <small
+        className="form-text text-muted"
+        id="UserProfileFormFields__username-help"
+      >
+        A username consists of letters, numbers, hyphens (-), dots (.) and may not begin or end with a dot, nor begin with a hyphen.
+      </small>
+    </div>
+    <div
+      className="form-group"
+    >
+      <label
+        htmlFor="UserProfileFormFields__displayName"
+      >
+        Display name
+      </label>
+      <input
+        className="form-control test-UserProfileFormFields__displayName"
+        id="UserProfileFormFields__displayName"
+        maxLength={255}
+        onChange={[Function]}
+        placeholder="Display name"
+        spellCheck={false}
+        type="text"
+        value="d"
+      />
+    </div>
+    <div
+      className="d-flex align-items-center"
+    >
+      <div
+        className="form-group w-100"
+      >
+        <label
+          htmlFor="UserProfileFormFields__avatarURL"
+        >
+          Avatar URL
+        </label>
+        <input
+          className="form-control test-UserProfileFormFields__avatarURL"
+          id="UserProfileFormFields__avatarURL"
+          onChange={[Function]}
+          placeholder="URL to avatar photo"
+          spellCheck={false}
+          type="url"
+          value="https://example.com/image.jpg"
+        />
+      </div>
+      <UserAvatar
+        className="user-profile-form-fields__avatar ml-2"
+        user={
+          Object {
+            "avatarURL": "https://example.com/image.jpg",
+            "displayName": "d",
+            "username": "u",
+          }
+        }
+      >
+        <img
+          className="user-avatar user-profile-form-fields__avatar ml-2"
+          src="https://example.com/image.jpg"
+        />
+      </UserAvatar>
+    </div>
+  </div>
+</UserProfileFormFields>
+`;

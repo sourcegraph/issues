@@ -3,10 +3,11 @@ package billing
 import (
 	"context"
 
+	"github.com/stripe/stripe-go"
+	"github.com/stripe/stripe-go/customer"
+
 	"github.com/sourcegraph/sourcegraph/cmd/frontend/backend"
 	"github.com/sourcegraph/sourcegraph/cmd/frontend/graphqlbackend"
-	stripe "github.com/stripe/stripe-go"
-	"github.com/stripe/stripe-go/customer"
 )
 
 func init() {

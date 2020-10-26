@@ -1,0 +1,243 @@
+/**
+ * Sourcegraph theme for GraphiQL.
+ *
+ * This is 100% specific to our webapp, since GraphiQL does not actually
+ * support any type of theming. These are just hard CSS overrides for the
+ * standard GraphiQL CSS.
+ *
+ * This works pretty well for now, but is unfortunately CSS spagetti code. If we
+ * ever want to do anything more advanced with GraphiQL, we will likely have to
+ * rewrite it as it sadly lacks a lot in terms of customization and
+ * extensibility.
+ **/
+
+@import '~graphiql/graphiql.css';
+
+/* stylelint-disable selector-class-pattern */
+/* stylelint-disable declaration-property-unit-whitelist */
+
+.graphiql-container {
+    color: var(--body-color);
+    font-family: var(--sans-serif);
+    margin-bottom: 1px;
+
+    .topBar {
+        background: var(--body-bg);
+        height: 3rem;
+        border-color: var(--border-color);
+        .title {
+            white-space: nowrap;
+        }
+        .toolbar {
+            flex: 1;
+            margin-left: auto;
+        }
+    }
+    .variable-editor-title,
+    .resultWrap,
+    .history-contents,
+    .history-contents p,
+    .doc-explorer-contents,
+    .doc-category-title {
+        border-color: var(--border-color);
+    }
+    .variable-editor-title,
+    .result-window .CodeMirror-gutters,
+    .historyPaneWrap,
+    .history-contents,
+    .doc-explorer,
+    .doc-explorer-contents,
+    .execute-options {
+        background: var(--color-bg-2);
+    }
+    .variable-editor {
+        height: auto;
+        .variable-editor-title {
+            border-bottom: none;
+            font-weight: 400;
+            color: var(--text-muted);
+        }
+    }
+    .history-title-bar,
+    .doc-explorer-title-bar {
+        height: 3rem;
+        border-top: 1px solid var(--body-bg);
+    }
+    .doc-explorer-contents {
+        font-family: var(--monospace);
+        .keyword {
+            color: var(--theme-color-keyword);
+        }
+        .search-box .search-box-clear {
+            background: none;
+        }
+        .type-name {
+            color: #b58901;
+            font-weight: bold;
+        }
+        .field-name {
+            color: var(--link-color);
+        }
+        .type-name:hover,
+        .field-name:hover {
+            text-decoration: underline;
+            color: var(--link-hover-color);
+        }
+        .arg-name {
+            color: var(--theme-color-attribute);
+            font-style: italic;
+        }
+        .field-short-description {
+            font-family: var(--sans-serif);
+            color: var(--body-color);
+            border-left: 3px solid var(--border-color);
+            padding-left: 0.5rem;
+            margin-top: 0.5rem;
+            > p {
+                margin-top: 0.25rem;
+                margin-bottom: 0.25rem;
+            }
+        }
+        .doc-deprecation {
+            font-family: var(--sans-serif);
+            background: rgba(42, 58, 81, 0.7);
+            box-shadow: none;
+            border: 1px solid var(--border-color);
+            color: inherit;
+        }
+        .doc-category-item {
+            color: inherit;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 1rem;
+            .field-name:first-of-type {
+                font-weight: bold;
+            }
+        }
+    }
+    li:active,
+    li:hover,
+    .history-contents p:active,
+    .history-contents p:hover,
+    .execute-options > li.selected {
+        background: rgba(42, 58, 81, 0.7);
+        color: inherit;
+    }
+    .execute-button,
+    .toolbar-button,
+    .docExplorerShow,
+    .doc-category .show-btn {
+        @extend .btn;
+        color: #ffffff;
+        box-shadow: none;
+        &:active {
+            box-shadow: none;
+        }
+        &.error {
+            color: var(--danger);
+        }
+    }
+    .execute-button {
+        border-radius: 17px;
+    }
+    .execute-button,
+    .doc-category .show-btn {
+        @extend .btn-primary;
+        background: var(--primary);
+        border-color: var(--primary);
+        fill: #ffffff;
+        padding: 0;
+        &.error {
+            background: var(--primary);
+        }
+    }
+    button {
+        background-image: none !important;
+    }
+    .toolbar-button,
+    .docExplorerShow {
+        @extend .btn-secondary;
+        background: var(--secondary);
+        border-color: var(--secondary);
+    }
+    .toolbar-button.error {
+        background: var(--secondary);
+    }
+    .doc-explorer-back {
+        color: var(--link-color);
+        &::before {
+            margin: 0 3px 0;
+            width: 10px;
+            height: 10px;
+            border-color: var(--link-color);
+        }
+        &:hover {
+            text-decoration: underline;
+            color: var(--link-hover-color);
+            &::before {
+                border-color: var(--link-hover-color);
+            }
+        }
+    }
+    .docExplorerShow::before {
+        margin: 0 3px 0;
+        width: 10px;
+        height: 10px;
+        border-color: var(--body-color);
+    }
+    .doc-explorer {
+        .search-box {
+            border: none;
+            &::before {
+                color: var(--input-placeholder-color);
+                margin-left: 0.5rem;
+            }
+            > input {
+                @extend .form-control;
+                padding: 0.375rem 0.75rem 0.375rem 1.75rem;
+                border-right: none;
+            }
+        }
+    }
+    .CodeMirror-foldmarker {
+        background: $blue;
+    }
+    button,
+    input {
+        color: var(--body-color);
+        font-family: var(--sans-serif);
+    }
+
+    .CodeMirror-hints {
+        border-left: solid 1px var(--dropdown-border-color);
+        border-right: solid 1px var(--dropdown-border-color);
+        .CodeMirror-hint {
+            background-color: var(--dropdown-bg);
+            border-color: var(--dropdown-border-color);
+            color: var(--body-color);
+            &-information {
+                background-color: var(--color-bg-3);
+                border-color: var(--border-color);
+                > .content {
+                    color: var(--body-color);
+                    p:nth-child(odd) {
+                        margin-right: 1rem;
+                    }
+                }
+            }
+            &-active {
+                background-color: var(--dropdown-link-hover-bg);
+            }
+        }
+    }
+}
+
+// Tooltips are added to the body, so we must handle them
+// separately.
+body > .CodeMirror-lint-tooltip,
+body > .CodeMirror-info {
+    background: var(--color-bg-2);
+    color: var(--body-color);
+    .info-description {
+        color: var(--body-color);
+    }
+}

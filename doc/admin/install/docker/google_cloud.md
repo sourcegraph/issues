@@ -23,7 +23,7 @@ This tutorial shows you how to deploy Sourcegraph to a single node running on Go
   sudo apt-get install -y docker-ce
   mkdir -p /root/.sourcegraph/config
   mkdir -p /root/.sourcegraph/data
-  docker run -d --publish 80:7080 --publish 443:7443 --restart unless-stopped --volume /root/.sourcegraph/config:/etc/sourcegraph --volume /root/.sourcegraph/data:/var/opt/sourcegraph sourcegraph/server:3.17.3
+  docker run -d --publish 80:7080 --publish 443:7443 --restart unless-stopped --volume /root/.sourcegraph/config:/etc/sourcegraph --volume /root/.sourcegraph/data:/var/opt/sourcegraph sourcegraph/server:3.21.2
   ```
 
 - Create your VM, then navigate to its public IP address.

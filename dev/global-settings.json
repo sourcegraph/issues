@@ -1,4 +1,10 @@
 {
   // This is set from an environment variable
-  "experimentalFeatures": {}
+  "experimentalFeatures": {
+    "showRepogroupHomepage": true,
+    "showMultilineSearchConsole": true
+  },
+  "search.repositoryGroups": {
+    "test": ["github.com/gorilla/mux", "github.com/gorilla/pat"]
+  }
 }

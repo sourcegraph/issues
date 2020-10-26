@@ -55,10 +55,16 @@ func decodeRepos(host, gitoliteInfo string) []*Repo {
 		if len(fields) >= 2 && fields[0] == "R" {
 			repo := &Repo{Name: name}
 
+			u, err := url.Parse(host)
+			// see https://github.com/sourcegraph/security-issues/issues/97
+			if err != nil {
+				continue
+			}
+
 			// We support both URL and SCP formats
 			// url: ssh://git@github.com:22/tsenart/vegeta
 			// scp: git@github.com:tsenart/vegeta
-			if u, _ := url.Parse(host); u == nil || u.Scheme == "" {
+			if u == nil || u.Scheme == "" {
 				repo.URL = host + ":" + name
 			} else if u.Scheme == "ssh" {
 				u.Path = name

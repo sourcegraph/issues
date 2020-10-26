@@ -108,6 +108,16 @@ func ResolveRevision(ctx context.Context, repo gitserver.Repo, remoteURLFunc fun
 	return commit, err
 }
 
+type BadCommitError struct {
+	Spec   string
+	Commit api.CommitID
+	Repo   api.RepoName
+}
+
+func (e BadCommitError) Error() string {
+	return fmt.Sprintf("ResolveRevision: got bad commit %q for repo %q at revision %q", e.Commit, e.Repo, e.Spec)
+}
+
 // runRevParse sends the git rev-parse command to gitserver. It interprets
 // missing revision responses and converts them into RevisionNotFoundError.
 func runRevParse(ctx context.Context, cmd *gitserver.Cmd, spec string) (api.CommitID, error) {
@@ -130,7 +140,7 @@ func runRevParse(ctx context.Context, cmd *gitserver.Cmd, spec string) (api.Comm
 			// repository.
 			return "", &gitserver.RevisionNotFoundError{Repo: cmd.Name, Spec: spec}
 		}
-		return "", fmt.Errorf("ResolveRevision: got bad commit %q for repo %q at revision %q", commit, cmd.Name, spec)
+		return "", BadCommitError{Spec: spec, Commit: commit, Repo: cmd.Name}
 	}
 	return commit, nil
 }

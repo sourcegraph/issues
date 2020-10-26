@@ -2,14 +2,13 @@ gitserver: gitserver
 query-runner: query-runner
 repo-updater: repo-updater
 searcher: searcher
-replacer: replacer
 symbols: symbols
 github-proxy: github-proxy
 frontend: env CONFIGURATION_MODE=server SITE_CONFIG_ESCAPE_HATCH_PATH=$HOME/.sourcegraph/site-config.json frontend
 watch: ./dev/changewatch.sh
 nginx: nginx -p . -g 'daemon off;' -c $PWD/dev/nginx.conf 2>&1 | grep -v 'could not open error log file'
 caddy: ./dev/caddy.sh run --watch --config=dev/Caddyfile
-web: ./node_modules/.bin/gulp --color watch
+web: ./node_modules/.bin/gulp --color dev
 syntect_server: ./dev/syntect_server.sh
 zoekt-indexserver-0: ./dev/zoekt/wrapper indexserver 0
 zoekt-indexserver-1: ./dev/zoekt/wrapper indexserver 1
@@ -17,7 +16,7 @@ zoekt-webserver-0: ./dev/zoekt/wrapper webserver 0
 zoekt-webserver-1: ./dev/zoekt/wrapper webserver 1
 keycloak: ./dev/auth-provider/keycloak.sh
 jaeger: ./dev/jaeger.sh
-docsite: ./dev/docsite.sh -config doc/docsite.json serve -http=localhost:5080
+docsite: ./dev/docsite.sh -config doc/docsite.json serve -http=localhost:5080 || echo error starting docsite
 prometheus: ./dev/prometheus.sh
 grafana: ./dev/grafana.sh
 postgres_exporter: ./dev/postgres_exporter.sh
@@ -25,4 +24,5 @@ postgres_exporter: ./dev/postgres_exporter.sh
 # Additional enterprise services
 precise-code-intel-bundle-manager: precise-code-intel-bundle-manager
 precise-code-intel-indexer: precise-code-intel-indexer
+precise-code-intel-indexer-vm: TMPDIR=~/.sourcegraph/indexer-temp precise-code-intel-indexer-vm
 precise-code-intel-worker: precise-code-intel-worker

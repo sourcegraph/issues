@@ -23,6 +23,8 @@ import (
 	"github.com/sourcegraph/sourcegraph/internal/debugserver"
 	"github.com/sourcegraph/sourcegraph/internal/env"
 	"github.com/sourcegraph/sourcegraph/internal/eventlogger"
+	"github.com/sourcegraph/sourcegraph/internal/logging"
+	"github.com/sourcegraph/sourcegraph/internal/trace"
 	"github.com/sourcegraph/sourcegraph/internal/tracer"
 )
 
@@ -33,8 +35,9 @@ const port = "3183"
 func main() {
 	env.Lock()
 	env.HandleHelpFlag()
-
+	logging.Init()
 	tracer.Init()
+	trace.Init(true)
 
 	go func() {
 		c := make(chan os.Signal, 1)
@@ -317,6 +320,14 @@ const (
 )
 
 func searchURL(query, utmSource string) string {
+	return sourcegraphURL("search", query, utmSource)
+}
+
+func savedSearchListPageURL(utmSource string) string {
+	return sourcegraphURL("user/searches", "", utmSource)
+}
+
+func sourcegraphURL(path, query, utmSource string) string {
 	if externalURL == nil {
 		// Determine the external URL.
 		externalURLStr, err := api.InternalClient.ExternalURL(context.Background())
@@ -332,9 +343,11 @@ func searchURL(query, utmSource string) string {
 	}
 
 	// Construct URL to the search query.
-	u := externalURL.ResolveReference(&url.URL{Path: "search"})
+	u := externalURL.ResolveReference(&url.URL{Path: path})
 	q := u.Query()
-	q.Set("q", query)
+	if query != "" {
+		q.Set("q", query)
+	}
 	q.Set("utm_source", utmSource)
 	u.RawQuery = q.Encode()
 	return u.String()

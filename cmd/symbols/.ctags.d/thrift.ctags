@@ -1,9 +1,0 @@
---langdef=Thrift
---langmap=Thrift:.thrift
---regex-thrift=/^[ \t]*exception[ \t]+([a-zA-Z0-9_]+)/\1/x,exception/
---regex-thrift=/^[ \t]*enum[ \t]+([a-zA-Z0-9_]+)/\1/e,enum/
---regex-thrift=/^[ \t]*struct[ \t]+([a-zA-Z0-9_]+)/\1/s,struct/
---regex-thrift=/^[ \t]*service[ \t]+([a-zA-Z0-9_]+)/\1/v,service/
---regex-thrift=/^[ \t]*[0-9]+:[ \t]+([a-zA-Z0-9_]+)[ \t]+([a-zA-Z0-9_]+)/\2/m,member/
---regex-thrift=/^[ \t]*([a-zA-Z0-9_]+)[ \t]+=/\1/a,value/
---regex-thrift=/^[ \t]*[a-zA-Z0-9_<>]+[ \t]+([a-zA-Z0-9_]+)[ \t]*\(/\1/f,function/

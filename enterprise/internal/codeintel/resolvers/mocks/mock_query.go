@@ -4,7 +4,7 @@ package mocks
 
 import (
 	"context"
-	client "github.com/sourcegraph/sourcegraph/enterprise/internal/codeintel/bundles/client"
+	clienttypes "github.com/sourcegraph/sourcegraph/enterprise/internal/codeintel/bundles/client_types"
 	resolvers "github.com/sourcegraph/sourcegraph/enterprise/internal/codeintel/resolvers"
 	"sync"
 )
@@ -23,6 +23,9 @@ type MockQueryResolver struct {
 	// HoverFunc is an instance of a mock function object controlling the
 	// behavior of the method Hover.
 	HoverFunc *QueryResolverHoverFunc
+	// RangesFunc is an instance of a mock function object controlling the
+	// behavior of the method Ranges.
+	RangesFunc *QueryResolverRangesFunc
 	// ReferencesFunc is an instance of a mock function object controlling
 	// the behavior of the method References.
 	ReferencesFunc *QueryResolverReferencesFunc
@@ -43,8 +46,13 @@ func NewMockQueryResolver() *MockQueryResolver {
 			},
 		},
 		HoverFunc: &QueryResolverHoverFunc{
-			defaultHook: func(context.Context, int, int) (string, client.Range, bool, error) {
-				return "", client.Range{}, false, nil
+			defaultHook: func(context.Context, int, int) (string, clienttypes.Range, bool, error) {
+				return "", clienttypes.Range{}, false, nil
+			},
+		},
+		RangesFunc: &QueryResolverRangesFunc{
+			defaultHook: func(context.Context, int, int) ([]resolvers.AdjustedCodeIntelligenceRange, error) {
+				return nil, nil
 			},
 		},
 		ReferencesFunc: &QueryResolverReferencesFunc{
@@ -68,6 +76,9 @@ func NewMockQueryResolverFrom(i resolvers.QueryResolver) *MockQueryResolver {
 		},
 		HoverFunc: &QueryResolverHoverFunc{
 			defaultHook: i.Hover,
+		},
+		RangesFunc: &QueryResolverRangesFunc{
+			defaultHook: i.Ranges,
 		},
 		ReferencesFunc: &QueryResolverReferencesFunc{
 			defaultHook: i.References,
@@ -302,15 +313,15 @@ func (c QueryResolverDiagnosticsFuncCall) Results() []interface{} {
 // QueryResolverHoverFunc describes the behavior when the Hover method of
 // the parent MockQueryResolver instance is invoked.
 type QueryResolverHoverFunc struct {
-	defaultHook func(context.Context, int, int) (string, client.Range, bool, error)
-	hooks       []func(context.Context, int, int) (string, client.Range, bool, error)
+	defaultHook func(context.Context, int, int) (string, clienttypes.Range, bool, error)
+	hooks       []func(context.Context, int, int) (string, clienttypes.Range, bool, error)
 	history     []QueryResolverHoverFuncCall
 	mutex       sync.Mutex
 }
 
 // Hover delegates to the next hook function in the queue and stores the
 // parameter and result values of this invocation.
-func (m *MockQueryResolver) Hover(v0 context.Context, v1 int, v2 int) (string, client.Range, bool, error) {
+func (m *MockQueryResolver) Hover(v0 context.Context, v1 int, v2 int) (string, clienttypes.Range, bool, error) {
 	r0, r1, r2, r3 := m.HoverFunc.nextHook()(v0, v1, v2)
 	m.HoverFunc.appendCall(QueryResolverHoverFuncCall{v0, v1, v2, r0, r1, r2, r3})
 	return r0, r1, r2, r3
@@ -318,7 +329,7 @@ func (m *MockQueryResolver) Hover(v0 context.Context, v1 int, v2 int) (string, c
 
 // SetDefaultHook sets function that is called when the Hover method of the
 // parent MockQueryResolver instance is invoked and the hook queue is empty.
-func (f *QueryResolverHoverFunc) SetDefaultHook(hook func(context.Context, int, int) (string, client.Range, bool, error)) {
+func (f *QueryResolverHoverFunc) SetDefaultHook(hook func(context.Context, int, int) (string, clienttypes.Range, bool, error)) {
 	f.defaultHook = hook
 }
 
@@ -326,7 +337,7 @@ func (f *QueryResolverHoverFunc) SetDefaultHook(hook func(context.Context, int, 
 // Hover method of the parent MockQueryResolver instance inovkes the hook at
 // the front of the queue and discards it. After the queue is empty, the
 // default hook function is invoked for any future action.
-func (f *QueryResolverHoverFunc) PushHook(hook func(context.Context, int, int) (string, client.Range, bool, error)) {
+func (f *QueryResolverHoverFunc) PushHook(hook func(context.Context, int, int) (string, clienttypes.Range, bool, error)) {
 	f.mutex.Lock()
 	f.hooks = append(f.hooks, hook)
 	f.mutex.Unlock()
@@ -334,21 +345,21 @@ func (f *QueryResolverHoverFunc) PushHook(hook func(context.Context, int, int) (
 
 // SetDefaultReturn calls SetDefaultDefaultHook with a function that returns
 // the given values.
-func (f *QueryResolverHoverFunc) SetDefaultReturn(r0 string, r1 client.Range, r2 bool, r3 error) {
-	f.SetDefaultHook(func(context.Context, int, int) (string, client.Range, bool, error) {
+func (f *QueryResolverHoverFunc) SetDefaultReturn(r0 string, r1 clienttypes.Range, r2 bool, r3 error) {
+	f.SetDefaultHook(func(context.Context, int, int) (string, clienttypes.Range, bool, error) {
 		return r0, r1, r2, r3
 	})
 }
 
 // PushReturn calls PushDefaultHook with a function that returns the given
 // values.
-func (f *QueryResolverHoverFunc) PushReturn(r0 string, r1 client.Range, r2 bool, r3 error) {
-	f.PushHook(func(context.Context, int, int) (string, client.Range, bool, error) {
+func (f *QueryResolverHoverFunc) PushReturn(r0 string, r1 clienttypes.Range, r2 bool, r3 error) {
+	f.PushHook(func(context.Context, int, int) (string, clienttypes.Range, bool, error) {
 		return r0, r1, r2, r3
 	})
 }
 
-func (f *QueryResolverHoverFunc) nextHook() func(context.Context, int, int) (string, client.Range, bool, error) {
+func (f *QueryResolverHoverFunc) nextHook() func(context.Context, int, int) (string, clienttypes.Range, bool, error) {
 	f.mutex.Lock()
 	defer f.mutex.Unlock()
 
@@ -395,7 +406,7 @@ type QueryResolverHoverFuncCall struct {
 	Result0 string
 	// Result1 is the value of the 2nd result returned from this method
 	// invocation.
-	Result1 client.Range
+	Result1 clienttypes.Range
 	// Result2 is the value of the 3rd result returned from this method
 	// invocation.
 	Result2 bool
@@ -414,6 +425,117 @@ func (c QueryResolverHoverFuncCall) Args() []interface{} {
 // invocation.
 func (c QueryResolverHoverFuncCall) Results() []interface{} {
 	return []interface{}{c.Result0, c.Result1, c.Result2, c.Result3}
+}
+
+// QueryResolverRangesFunc describes the behavior when the Ranges method of
+// the parent MockQueryResolver instance is invoked.
+type QueryResolverRangesFunc struct {
+	defaultHook func(context.Context, int, int) ([]resolvers.AdjustedCodeIntelligenceRange, error)
+	hooks       []func(context.Context, int, int) ([]resolvers.AdjustedCodeIntelligenceRange, error)
+	history     []QueryResolverRangesFuncCall
+	mutex       sync.Mutex
+}
+
+// Ranges delegates to the next hook function in the queue and stores the
+// parameter and result values of this invocation.
+func (m *MockQueryResolver) Ranges(v0 context.Context, v1 int, v2 int) ([]resolvers.AdjustedCodeIntelligenceRange, error) {
+	r0, r1 := m.RangesFunc.nextHook()(v0, v1, v2)
+	m.RangesFunc.appendCall(QueryResolverRangesFuncCall{v0, v1, v2, r0, r1})
+	return r0, r1
+}
+
+// SetDefaultHook sets function that is called when the Ranges method of the
+// parent MockQueryResolver instance is invoked and the hook queue is empty.
+func (f *QueryResolverRangesFunc) SetDefaultHook(hook func(context.Context, int, int) ([]resolvers.AdjustedCodeIntelligenceRange, error)) {
+	f.defaultHook = hook
+}
+
+// PushHook adds a function to the end of hook queue. Each invocation of the
+// Ranges method of the parent MockQueryResolver instance inovkes the hook
+// at the front of the queue and discards it. After the queue is empty, the
+// default hook function is invoked for any future action.
+func (f *QueryResolverRangesFunc) PushHook(hook func(context.Context, int, int) ([]resolvers.AdjustedCodeIntelligenceRange, error)) {
+	f.mutex.Lock()
+	f.hooks = append(f.hooks, hook)
+	f.mutex.Unlock()
+}
+
+// SetDefaultReturn calls SetDefaultDefaultHook with a function that returns
+// the given values.
+func (f *QueryResolverRangesFunc) SetDefaultReturn(r0 []resolvers.AdjustedCodeIntelligenceRange, r1 error) {
+	f.SetDefaultHook(func(context.Context, int, int) ([]resolvers.AdjustedCodeIntelligenceRange, error) {
+		return r0, r1
+	})
+}
+
+// PushReturn calls PushDefaultHook with a function that returns the given
+// values.
+func (f *QueryResolverRangesFunc) PushReturn(r0 []resolvers.AdjustedCodeIntelligenceRange, r1 error) {
+	f.PushHook(func(context.Context, int, int) ([]resolvers.AdjustedCodeIntelligenceRange, error) {
+		return r0, r1
+	})
+}
+
+func (f *QueryResolverRangesFunc) nextHook() func(context.Context, int, int) ([]resolvers.AdjustedCodeIntelligenceRange, error) {
+	f.mutex.Lock()
+	defer f.mutex.Unlock()
+
+	if len(f.hooks) == 0 {
+		return f.defaultHook
+	}
+
+	hook := f.hooks[0]
+	f.hooks = f.hooks[1:]
+	return hook
+}
+
+func (f *QueryResolverRangesFunc) appendCall(r0 QueryResolverRangesFuncCall) {
+	f.mutex.Lock()
+	f.history = append(f.history, r0)
+	f.mutex.Unlock()
+}
+
+// History returns a sequence of QueryResolverRangesFuncCall objects
+// describing the invocations of this function.
+func (f *QueryResolverRangesFunc) History() []QueryResolverRangesFuncCall {
+	f.mutex.Lock()
+	history := make([]QueryResolverRangesFuncCall, len(f.history))
+	copy(history, f.history)
+	f.mutex.Unlock()
+
+	return history
+}
+
+// QueryResolverRangesFuncCall is an object that describes an invocation of
+// method Ranges on an instance of MockQueryResolver.
+type QueryResolverRangesFuncCall struct {
+	// Arg0 is the value of the 1st argument passed to this method
+	// invocation.
+	Arg0 context.Context
+	// Arg1 is the value of the 2nd argument passed to this method
+	// invocation.
+	Arg1 int
+	// Arg2 is the value of the 3rd argument passed to this method
+	// invocation.
+	Arg2 int
+	// Result0 is the value of the 1st result returned from this method
+	// invocation.
+	Result0 []resolvers.AdjustedCodeIntelligenceRange
+	// Result1 is the value of the 2nd result returned from this method
+	// invocation.
+	Result1 error
+}
+
+// Args returns an interface slice containing the arguments of this
+// invocation.
+func (c QueryResolverRangesFuncCall) Args() []interface{} {
+	return []interface{}{c.Arg0, c.Arg1, c.Arg2}
+}
+
+// Results returns an interface slice containing the results of this
+// invocation.
+func (c QueryResolverRangesFuncCall) Results() []interface{} {
+	return []interface{}{c.Result0, c.Result1}
 }
 
 // QueryResolverReferencesFunc describes the behavior when the References

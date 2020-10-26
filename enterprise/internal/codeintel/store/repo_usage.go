@@ -5,6 +5,7 @@ import (
 	"database/sql"
 
 	"github.com/keegancsmith/sqlf"
+	"github.com/sourcegraph/sourcegraph/internal/db/basestore"
 )
 
 // RepoUsageStatistics pairs a repository identifier with a count of code intelligence events.
@@ -19,7 +20,7 @@ func scanRepoUsageStatisticsSlice(rows *sql.Rows, queryErr error) (_ []RepoUsage
 	if queryErr != nil {
 		return nil, queryErr
 	}
-	defer func() { err = closeRows(rows, err) }()
+	defer func() { err = basestore.CloseRows(rows, err) }()
 
 	var stats []RepoUsageStatistics
 	for rows.Next() {
@@ -42,7 +43,7 @@ func scanRepoUsageStatisticsSlice(rows *sql.Rows, queryErr error) (_ []RepoUsage
 // code intelligence activity within the last week grouped by repository. The resulting slice is ordered
 // by search then precise event counts.
 func (s *store) RepoUsageStatistics(ctx context.Context) ([]RepoUsageStatistics, error) {
-	return scanRepoUsageStatisticsSlice(s.query(ctx, sqlf.Sprintf(`
+	return scanRepoUsageStatisticsSlice(s.Store.Query(ctx, sqlf.Sprintf(`
 		SELECT
 			r.id,
 			counts.search_count,

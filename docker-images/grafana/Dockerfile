@@ -21,7 +21,7 @@ RUN mkdir -p /generated/grafana
 RUN DOC_SOLUTIONS_FILE='' PROMETHEUS_DIR='' GRAFANA_DIR=/generated/grafana /go/bin/monitoring-generator
 
 # when upgrading the Grafana version, please refer to https://about.sourcegraph.com/handbook/engineering/distribution/observability/monitoring#upgrading-grafana
-FROM grafana/grafana:7.0.3@sha256:d72946c8e5d57a9a121bcc3ae8e4a8ccab96960d81031d18a4c31ad1f7aea03e as production
+FROM grafana/grafana:7.2.0@sha256:b1c8a29dc7972bd5773bce5e564dd4bdcd96723dfeee6f5b754a2b3039e39dcb as production
 LABEL com.sourcegraph.grafana.version=7.0.3
 
 ARG COMMIT_SHA="unknown"
@@ -34,9 +34,6 @@ LABEL org.opencontainers.image.version=${VERSION}
 LABEL org.opencontainers.image.url=https://sourcegraph.com/
 LABEL org.opencontainers.image.source=https://github.com/sourcegraph/sourcegraph/
 LABEL org.opencontainers.image.documentation=https://docs.sourcegraph.com/
-
-# copy cross-compiled grafana-wrapper command
-COPY ./.bin/grafana-wrapper /bin/grafana-wrapper
 
 # hadolint ignore=DL3020
 ADD --chown=grafana:grafana config /sg_config_grafana

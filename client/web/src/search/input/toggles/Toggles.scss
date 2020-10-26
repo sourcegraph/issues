@@ -1,0 +1,21 @@
+.toggle-container {
+    display: flex;
+
+    &__toggle {
+        display: block;
+        cursor: pointer;
+        &:not(:last-child) {
+            margin-right: 0.25rem;
+        }
+        border: 1px solid transparent;
+        &--active {
+            border: 1px solid var(--primary);
+            border-radius: 2px;
+            background-color: var(--color-bg-3);
+        }
+    }
+
+    &__copy-query-button {
+        opacity: 0;
+    }
+}

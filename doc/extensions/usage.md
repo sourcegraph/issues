@@ -21,7 +21,7 @@ Screenshots of test coverage and Git blame extensions:
 
 ## Usage
 
-To view all available extensions on your Sourcegraph instance, click **User menu > Extensions** in the top navigation bar. (To see recommended extensions, click **Explore** in the top navigation bar.)
+To view all available extensions on your Sourcegraph instance, click **User menu > Extensions** in the top navigation bar.
 
 To enable/disable an extension for yourself, click **User menu > Extensions**, find the extension, and toggle the slider.
 
@@ -50,3 +50,9 @@ To enable/disable an extension for all organization members, add it to the `exte
 ### For all users
 
 On a self-hosted Sourcegraph instance, add the same JSON above to global settings (in **Site admin > Global settings**).
+
+<div style="text-align:center;margin:20px 0;display:flex">
+<img src="https://sourcegraphstatic.com/docs/images/extensions/all-users-global-settings.png" style="padding:15px"></a>
+</div>
+
+

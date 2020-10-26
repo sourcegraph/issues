@@ -7,13 +7,14 @@ import (
 	"sort"
 	"sync"
 
-	graphql "github.com/graph-gophers/graphql-go"
-	"github.com/sourcegraph/sourcegraph/cmd/frontend/authz"
+	"github.com/graph-gophers/graphql-go"
+	"github.com/inconshreveable/log15"
 	"github.com/sourcegraph/sourcegraph/cmd/frontend/backend"
-	"github.com/sourcegraph/sourcegraph/cmd/frontend/db"
 	"github.com/sourcegraph/sourcegraph/cmd/frontend/graphqlbackend/graphqlutil"
 	"github.com/sourcegraph/sourcegraph/internal/actor"
+	"github.com/sourcegraph/sourcegraph/internal/authz"
 	"github.com/sourcegraph/sourcegraph/internal/conf"
+	"github.com/sourcegraph/sourcegraph/internal/db"
 )
 
 type createAccessTokenInput struct {
@@ -72,6 +73,13 @@ func (r *schemaResolver) CreateAccessToken(ctx context.Context, args *createAcce
 	}
 
 	id, token, err := db.AccessTokens.Create(ctx, userID, args.Scopes, args.Note, actor.FromContext(ctx).UID)
+
+	if conf.CanSendEmail() {
+		if err := backend.UserEmails.SendUserEmailOnFieldUpdate(ctx, userID, "created an access token"); err != nil {
+			log15.Warn("Failed to send email to inform user of access token creation", "error", err)
+		}
+	}
+
 	return &createAccessTokenResult{id: marshalAccessTokenID(id), token: token}, err
 }
 
@@ -121,6 +129,12 @@ func (r *schemaResolver) DeleteAccessToken(ctx context.Context, args *deleteAcce
 		// secret value is assumed to be allowed to delete it.
 		if err := db.AccessTokens.DeleteByToken(ctx, *args.ByToken); err != nil {
 			return nil, err
+		}
+	}
+
+	if conf.CanSendEmail() {
+		if err := backend.UserEmails.SendUserEmailOnFieldUpdate(ctx, token.SubjectUserID, "deleted an access token"); err != nil {
+			log15.Warn("Failed to send email to inform user of access token deletion", "error", err)
 		}
 	}
 

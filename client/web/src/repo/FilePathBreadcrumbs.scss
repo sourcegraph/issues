@@ -1,0 +1,29 @@
+.file-path-breadcrumbs {
+    display: flex;
+    min-width: 0;
+    overflow: hidden;
+    align-items: center;
+    white-space: nowrap;
+
+    .part-directory {
+        flex: 1 1 1em;
+        min-width: 1em;
+        max-width: fit-content;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        text-align: center;
+    }
+
+    .part-last {
+        font-weight: 600;
+    }
+
+    &__separator {
+        // IMPORTANT
+        //
+        // This needs to be margin, not padding, because padding can become
+        // spaces when copy-pasted in Chrome, while margin is ignored.
+        margin: 0 0.25rem;
+        font-weight: 600;
+    }
+}

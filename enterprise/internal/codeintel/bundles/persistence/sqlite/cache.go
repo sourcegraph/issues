@@ -13,15 +13,15 @@ import (
 // ErrUnknownDatabase occurs when a request for an unknown database is made.
 var ErrUnknownDatabase = errors.New("unknown database")
 
-// NewReaderCache creates a new reader cache. All readers share the same data cache with the
+// NewStoreCache creates a new store cache. All stores share the same data cache with the
 // given maximum capacity.
-func NewReaderCache(dataCacheSize int) (cache.ReaderCache, error) {
-	readerDataCache, err := cache.NewDataCache(dataCacheSize)
+func NewStoreCache(dataCacheSize int) (cache.StoreCache, error) {
+	dataCache, err := cache.NewDataCache(dataCacheSize)
 	if err != nil {
 		return nil, err
 	}
 
-	cache := cache.NewReaderCache(func(filename string) (persistence.Reader, error) {
+	cache := cache.NewStoreCache(func(filename string) (persistence.Store, error) {
 		// Ensure database exists prior to opening
 		if exists, err := util.PathExists(filename); err != nil {
 			return nil, err
@@ -29,7 +29,7 @@ func NewReaderCache(dataCacheSize int) (cache.ReaderCache, error) {
 			return nil, ErrUnknownDatabase
 		}
 
-		reader, err := NewReader(context.Background(), filename, readerDataCache)
+		store, err := NewStore(context.Background(), filename, dataCache)
 		if err != nil {
 			return nil, err
 		}
@@ -41,12 +41,12 @@ func NewReaderCache(dataCacheSize int) (cache.ReaderCache, error) {
 		if exists, err := util.PathExists(filename); err != nil {
 			return nil, err
 		} else if !exists {
-			reader.Close()
+			store.Close(nil)
 			os.Remove(filename) // Possibly created on close
 			return nil, ErrUnknownDatabase
 		}
 
-		return reader, nil
+		return store, nil
 	})
 
 	return cache, nil

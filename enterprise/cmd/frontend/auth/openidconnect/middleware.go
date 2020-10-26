@@ -17,7 +17,7 @@ import (
 	"github.com/sourcegraph/sourcegraph/internal/actor"
 	"golang.org/x/oauth2"
 
-	oidc "github.com/coreos/go-oidc"
+	"github.com/coreos/go-oidc"
 )
 
 const stateCookieName = "sg-oidc-state"

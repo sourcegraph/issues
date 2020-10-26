@@ -72,7 +72,7 @@ const GitLabSchemaJSON = `{
         "type": "object",
         "title": "GitLabProject",
         "additionalProperties": false,
-        "anyOf": [{ "required": ["name"] }, { "required": ["id"] }],
+        "oneOf": [{ "required": ["name"] }, { "required": ["id"] }],
         "properties": {
           "name": {
             "description": "The name of a GitLab project (\"group/name\") to mirror.",
@@ -179,11 +179,23 @@ const GitLabSchemaJSON = `{
           "!go": {
             "taggedUnionType": true
           }
-        },
-        "ttl": {
-          "description": "The TTL of how long to cache permissions data. This is 3 hours by default.\n\nDecreasing the TTL will increase the load on the code host API. If you have X private repositories on your instance, it will take ~X/100 API requests to fetch the complete list for 1 user.  If you have Y users, you will incur up to X*Y/100 API requests per cache refresh period (depending on user activity).\n\nIf set to zero, Sourcegraph will sync a user's entire accessible repository list on every request (NOT recommended).\n\nPublic and internal repositories are cached once for all users per cache TTL period.",
-          "type": "string",
-          "default": "3h"
+        }
+      }
+    },
+    "webhooks": {
+      "description": "An array of webhook configurations",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "title": "GitLabWebhook",
+        "required": ["secret"],
+        "additionalProperties": false,
+        "properties": {
+          "secret": {
+            "description": "The secret used to authenticate incoming webhook requests",
+            "type": "string",
+            "minLength": 1
+          }
         }
       }
     }
@@ -197,16 +209,6 @@ const GitLabSchemaJSON = `{
         "type": {
           "type": "string",
           "const": "oauth"
-        },
-        "minBatchingThreshold": {
-          "description": "The minimum number of GitLab projects to fetch at which to start batching requests to fetch project visibility. Please consult with the Sourcegraph support team before modifying this.",
-          "type": "integer",
-          "default": 200
-        },
-        "maxBatchRequests": {
-          "description": "The maximum number of batch API requests to make for GitLab Project visibility. Please consult with the Sourcegraph support team before modifying this.",
-          "type": "integer",
-          "default": 300
         }
       }
     },

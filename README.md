@@ -1,4 +1,4 @@
-# <a href="https://sourcegraph.com"><img alt="Sourcegraph" src="https://storage.googleapis.com/sourcegraph-assets/sourcegraph-logo.png" height="32px" /></a>
+# <a href="https://sourcegraph.com"><img alt="Sourcegraph" src="https://sourcegraphstatic.com/sourcegraph-logo.png" height="32px" /></a>
 
 [![build](https://badge.buildkite.com/00bbe6fa9986c78b8e8591cffeb0b0f2e8c4bb610d7e339ff6.svg?branch=master)](https://buildkite.com/sourcegraph/sourcegraph)
 [![apache license](https://img.shields.io/badge/license-Apache-blue.svg)](LICENSE)
@@ -18,7 +18,7 @@
 
 - Try out the public instance on any open-source repository at [sourcegraph.com](https://sourcegraph.com/github.com/golang/go/-/blob/src/net/http/httptest/httptest.go#L41:6&tab=references).
 - Install the free and open-source [browser extension](https://chrome.google.com/webstore/detail/sourcegraph/dgjhfomjieaadpoljlnidmbgkdffpack?hl=en).
-- Spin up your own instance with the [quickstart installation guide](https://docs.sourcegraph.com/#quickstart).
+- Spin up your own instance with the [quickstart installation guide](https://docs.sourcegraph.com/#quickstart-guide).
 - File feature requests and bug reports in [our issue tracker](https://github.com/sourcegraph/sourcegraph/issues).
 - Visit [about.sourcegraph.com](https://about.sourcegraph.com) for more information about product features.
 
@@ -36,18 +36,18 @@
 - Nginx
 
 For a detailed guide to installing prerequisites, see [these
-instructions](doc/dev/local_development.md#step-1-install-dependencies).
+instructions](doc/dev/getting-started/quickstart_1_install_dependencies.md).
 
 ### Installation
 
-> Prebuilt Docker images are the fastest way to use Sourcegraph Enterprise. See the [quickstart installation guide](https://docs.sourcegraph.com/#quickstart).
+> Prebuilt Docker images are the fastest way to use Sourcegraph Enterprise. See the [quickstart installation guide](https://docs.sourcegraph.com/#quickstart-guide).
 
 To use Sourcegraph OSS:
 
-1.  [Ensure Docker is running](doc/dev/local_development.md#step-3-macos-start-docker)
-1.  [Initialize the PostgreSQL database](doc/dev/local_development.md#step-2-initialize-your-database)
-1.  [Configure the HTTPS reverse proxy](doc/dev/local_development.md#step-5-configure-https-reverse-proxy)
-1.  Start the development server
+1.  [Initialize the PostgreSQL database](doc/dev/getting-started/quickstart_2_initialize_database.md)
+1.  [Ensure Docker is running](doc/dev/getting-started/quickstart_3_start_docker.md)
+1.  [Configure the HTTPS reverse proxy](doc/dev/getting-started/quickstart_5_configure_https_reverse_proxy.md)
+1.  [Start the development server](doc/dev/getting-started/quickstart_6_start_server.md)
 
     ```
     ./dev/start.sh
@@ -55,23 +55,23 @@ To use Sourcegraph OSS:
 
 Sourcegraph should now be running at https://sourcegraph.test:3443.
 
-For detailed instructions and troubleshooting, see the [local development documentation](./doc/dev/local_development.md).
+For detailed instructions and troubleshooting, see the [local development documentation](./doc/dev/index.md).
 
 ### Documentation
 
 The `doc` directory has additional documentation for developing and understanding Sourcegraph:
 
 - [Project FAQ](./doc/admin/faq.md)
-- [Architecture](./doc/dev/architecture/index.md): high-level architecture
-- [Database setup](./doc/dev/postgresql.md): database setup and best practices
+- [Architecture](./doc/dev/background-information/architecture/index.md): high-level architecture
+- [Database setup](./doc/dev/background-information/postgresql.md): database best practices
 - [General style guide](https://about.sourcegraph.com/handbook/communication/style_guide)
 - [Go style guide](https://about.sourcegraph.com/handbook/engineering/languages/go)
 - [Documentation style guide](https://about.sourcegraph.com/handbook/engineering/product_documentation)
-- [GraphQL API](./doc/dev/graphql_api.md): useful tips when modifying the GraphQL API
+- [GraphQL API](./doc/api/graphql/index.md): useful tips when modifying the GraphQL API
 - [Contributing](./CONTRIBUTING.md)
 
 ### License
 
-Sourcegraph OSS is available freely under the [Apache 2 license](LICENSE.apache). Sourcegraph OSS comprises all files in this repository except those in the `enterprise/` and `web/src/enterprise` directories.
+Sourcegraph OSS is available freely under the [Apache 2 license](LICENSE.apache). Sourcegraph OSS comprises all files in this repository except those in the `enterprise/` and `client/web/src/enterprise` directories.
 
-All files in the `enterprise/` and `web/src/enterprise/` directories are subject to the [Sourcegraph Enterprise license](LICENSE.enterprise).
+All files in the `enterprise/` and `client/web/src/enterprise/` directories are subject to the [Sourcegraph Enterprise license](LICENSE.enterprise).

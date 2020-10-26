@@ -7,6 +7,7 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/sourcegraph/sourcegraph/enterprise/internal/codeintel/bundles/types"
+	"github.com/sourcegraph/sourcegraph/internal/db/basestore"
 	"github.com/sourcegraph/sourcegraph/internal/db/dbconn"
 	"github.com/sourcegraph/sourcegraph/internal/db/dbtesting"
 )
@@ -47,7 +48,6 @@ func TestGetPackage(t *testing.T) {
 		ID:             expected.ID,
 		Commit:         expected.Commit,
 		Root:           expected.Root,
-		VisibleAtTip:   expected.VisibleAtTip,
 		UploadedAt:     expected.UploadedAt,
 		State:          expected.State,
 		FailureMessage: expected.FailureMessage,
@@ -55,10 +55,12 @@ func TestGetPackage(t *testing.T) {
 		FinishedAt:     expected.FinishedAt,
 		ProcessAfter:   expected.ProcessAfter,
 		NumResets:      expected.NumResets,
+		NumFailures:    expected.NumFailures,
 		RepositoryID:   expected.RepositoryID,
 		RepositoryName: expected.RepositoryName,
 		Indexer:        expected.Indexer,
 	})
+	insertVisibleAtTip(t, dbconn.Global, 50, 1)
 
 	if err := store.UpdatePackages(context.Background(), []types.Package{
 		{DumpID: 1, Scheme: "gomod", Name: "leftpad", Version: "0.1.0"},
@@ -101,7 +103,7 @@ func TestUpdatePackages(t *testing.T) {
 		t.Fatalf("unexpected error updating packages: %s", err)
 	}
 
-	count, _, err := scanFirstInt(dbconn.Global.Query("SELECT COUNT(*) FROM lsif_packages"))
+	count, _, err := basestore.ScanFirstInt(dbconn.Global.Query("SELECT COUNT(*) FROM lsif_packages"))
 	if err != nil {
 		t.Fatalf("unexpected error checking package count: %s", err)
 	}
@@ -121,7 +123,7 @@ func TestUpdatePackagesEmpty(t *testing.T) {
 		t.Fatalf("unexpected error updating packages: %s", err)
 	}
 
-	count, _, err := scanFirstInt(dbconn.Global.Query("SELECT COUNT(*) FROM lsif_packages"))
+	count, _, err := basestore.ScanFirstInt(dbconn.Global.Query("SELECT COUNT(*) FROM lsif_packages"))
 	if err != nil {
 		t.Fatalf("unexpected error checking package count: %s", err)
 	}

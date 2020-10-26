@@ -10,11 +10,15 @@ jobs:
       with: { ruby-version: '2.6' }
     - uses: actions/setup-go@v2
       with: { go-version: '1.14' }
+
+    # set up correct version of node
+    - id: nvmrc
+      run: echo ::set-output name=NODE_VERSION::$(cat .nvmrc)
     - uses: actions/setup-node@v1
-      with: { node-version: '14.4' }
+      with: { node-version: '${{ steps.nvmrc.outputs.NODE_VERSION }}' }
 
     - name: Install license_finder
-      run: gem install license_finder:6.6.1
+      run: gem install license_finder:6.8.0
 
     - name: Check dependencies
       run: LICENSE_CHECK=true ./dev/licenses.sh

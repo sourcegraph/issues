@@ -59,7 +59,7 @@ function build() {
         ;;
 
       *)
-        echo "See the local development documentation: https://github.com/sourcegraph/sourcegraph/blob/master/doc/dev/local_development.md#step-2-install-dependencies"
+        echo "See the local development documentation: https://github.com/sourcegraph/sourcegraph/blob/main/doc/dev/local_development.md#step-2-install-dependencies"
         ;;
     esac
 
@@ -86,7 +86,8 @@ function build() {
       ;;
 
     *)
-      echo "See the local development documentation: https://github.com/sourcegraph/sourcegraph/blob/master/doc/dev/local_development.md#step-2-install-dependencies"Uecho "Unknown platform $OSTYPE"
+      echo "See the local development documentation: https://github.com/sourcegraph/sourcegraph/blob/main/doc/dev/local_development.md#step-2-install-dependencies"
+      echo "Unknown platform $OSTYPE"
       exit 1
       ;;
   esac

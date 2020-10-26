@@ -1,0 +1,23 @@
+npm-debug.log
+yarn-error.log
+.DS_Store
+
+# Ignore build/ except for the Phabricator package.json
+/build/*
+!/build/phabricator/
+/build/phabricator/*
+!/build/phabricator/package.json
+!/build/phabricator/package-lock.json
+
+.checksum
+.extension
+
+*.zip
+*.crx
+*.pem
+*.xpi
+update.xml
+npm-debug.log.*
+/.gtm/
+
+code-intel-extensions

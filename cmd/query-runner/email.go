@@ -49,6 +49,7 @@ func (n *notifier) emailNotify(ctx context.Context) {
 			}
 			if err := sendEmail(ctx, recipient.spec.userID, "results", newSearchResultsEmailTemplates, struct {
 				URL                    string
+				SavedSearchPageURL     string
 				Description            string
 				Query                  string
 				ApproximateResultCount string
@@ -56,6 +57,7 @@ func (n *notifier) emailNotify(ctx context.Context) {
 				PluralResults          string
 			}{
 				URL:                    searchURL(n.newQuery, utmSourceEmail),
+				SavedSearchPageURL:     savedSearchListPageURL(utmSourceEmail),
 				Description:            n.query.Description,
 				Query:                  n.query.Query,
 				ApproximateResultCount: n.results.Data.Search.Results.ApproximateResultCount,
@@ -83,6 +85,8 @@ View the new result{{.PluralResults}} on Sourcegraph: {{.URL}}
 <p style="padding-left: 16px">&quot;{{.Description}}&quot;</p>
 
 <p><a href="{{.URL}}">View the new result{{.PluralResults}} on Sourcegraph</a></p>
+
+<p><a href="{{.SavedSearchPageURL}}">Edit your saved searches on Sourcegraph</a></p>
 `,
 })
 

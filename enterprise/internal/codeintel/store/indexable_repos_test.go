@@ -96,8 +96,8 @@ func TestIndexableRepositoriesMinimumTimeSinceLastEnqueue(t *testing.T) {
 
 	expectedIndexableRepositories := []IndexableRepository{
 		{RepositoryID: 1},
-		{RepositoryID: 2, LastIndexEnqueuedAt: &t1},
-		{RepositoryID: 3, LastIndexEnqueuedAt: &t2},
+		{RepositoryID: 4, LastIndexEnqueuedAt: &t3},
+		{RepositoryID: 5, LastIndexEnqueuedAt: &t4},
 	}
 	if diff := cmp.Diff(expectedIndexableRepositories, indexableRepositories); diff != "" {
 		t.Errorf("unexpected ids (-want +got):\n%s", diff)
@@ -184,6 +184,50 @@ func TestIndexableRepositoriesMinimumSearchRatio(t *testing.T) {
 	}
 }
 
+func TestIndexableRepositoriesEnabled(t *testing.T) {
+	if testing.Short() {
+		t.Skip()
+	}
+	dbtesting.SetupGlobalTestDB(t)
+	store := testStore()
+
+	updates := []UpdateableIndexableRepository{
+		{RepositoryID: 1},
+		{RepositoryID: 2, Enabled: boolptr(true)},
+		{RepositoryID: 3, Enabled: boolptr(false)},
+		{RepositoryID: 4, SearchCount: intptr(10)},                                                    // 100%
+		{RepositoryID: 5, SearchCount: intptr(10), Enabled: boolptr(true)},                            // 100%
+		{RepositoryID: 6, SearchCount: intptr(10), Enabled: boolptr(false)},                           // 100%
+		{RepositoryID: 7, SearchCount: intptr(10), PreciseCount: intptr(30)},                          // 30%
+		{RepositoryID: 8, SearchCount: intptr(10), PreciseCount: intptr(30), Enabled: boolptr(true)},  // 30%
+		{RepositoryID: 9, SearchCount: intptr(10), PreciseCount: intptr(30), Enabled: boolptr(false)}, // 30%
+	}
+
+	for _, update := range updates {
+		if err := store.UpdateIndexableRepository(context.Background(), update, time.Now().UTC()); err != nil {
+			t.Fatalf("unexpected error while updating indexable repository: %s", err)
+		}
+	}
+
+	indexableRepositories, err := store.IndexableRepositories(context.Background(), IndexableRepositoryQueryOptions{
+		Limit:              50,
+		MinimumSearchRatio: 0.50,
+	})
+	if err != nil {
+		t.Fatalf("unexpected error while fetching indexable repository: %s", err)
+	}
+
+	expectedIndexableRepositories := []IndexableRepository{
+		{RepositoryID: 2, Enabled: boolptr(true)},
+		{RepositoryID: 4, SearchCount: 10},
+		{RepositoryID: 5, SearchCount: 10, Enabled: boolptr(true)},
+		{RepositoryID: 8, SearchCount: 10, PreciseCount: 30, Enabled: boolptr(true)},
+	}
+	if diff := cmp.Diff(expectedIndexableRepositories, indexableRepositories); diff != "" {
+		t.Errorf("unexpected ids (-want +got):\n%s", diff)
+	}
+}
+
 func TestResetIndexableRepositories(t *testing.T) {
 	if testing.Short() {
 		t.Skip()
@@ -234,5 +278,9 @@ func TestResetIndexableRepositories(t *testing.T) {
 }
 
 func intptr(val int) *int {
+	return &val
+}
+
+func boolptr(val bool) *bool {
 	return &val
 }

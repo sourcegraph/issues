@@ -1,0 +1,48 @@
+.search-onboarding-tour {
+    &__structural-next-button {
+        border-color: var(--border-color);
+    }
+}
+
+.tour-card {
+    border: none;
+    border-radius: 10px;
+
+    &__description {
+        max-width: 24rem;
+    }
+}
+
+.shepherd-element {
+    background: var(--color-bg-3);
+}
+
+.shepherd-arrow::after {
+    content: '';
+    position: absolute;
+    width: 0;
+    height: 0;
+    box-sizing: border-box;
+    // stylelint-disable-next-line declaration-property-unit-whitelist
+    border: 8px solid #000000;
+    border-top-color: transparent;
+    border-right-color: transparent;
+    border-bottom-color: var(--color-bg-3);
+    border-left-color: transparent;
+    transform-origin: 0 0;
+    margin-left: -0.5rem;
+}
+
+.shepherd-element[data-popper-placement^='bottom'] .shepherd-arrow::after {
+    top: -40px;
+}
+
+.shepherd-element[data-popper-placement^='top'] .shepherd-arrow::after,
+.shepherd-element.shepherd-pinned-top .shepherd-arrow::after {
+    transform: rotate(180deg);
+    top: 90px;
+}
+
+.shepherd-modal-overlay-container {
+    display: none;
+}

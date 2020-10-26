@@ -6,8 +6,8 @@ import (
 	"github.com/sourcegraph/sourcegraph/cmd/frontend/envvar"
 
 	"github.com/sourcegraph/sourcegraph/cmd/frontend/backend"
-	"github.com/sourcegraph/sourcegraph/cmd/frontend/db"
 	"github.com/sourcegraph/sourcegraph/internal/conf"
+	"github.com/sourcegraph/sourcegraph/internal/db"
 )
 
 func (r *siteResolver) NeedsRepositoryConfiguration(ctx context.Context) (bool, error) {
@@ -40,14 +40,6 @@ func needsRepositoryConfiguration(ctx context.Context) (bool, error) {
 		return false, err
 	}
 	return count == 0, nil
-}
-
-func (r *siteResolver) NoRepositoriesEnabled(ctx context.Context) (bool, error) {
-	// With 3.4 the Enabled/Disabled fields on repositories have been
-	// deprecated with the result being that all repositories are "enabled" by
-	// default.
-	// So instead of removing this flag and breaking the API we always return false
-	return false, nil
 }
 
 func (*siteResolver) DisableBuiltInSearches() bool {

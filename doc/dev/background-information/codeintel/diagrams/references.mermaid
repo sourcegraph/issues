@@ -1,0 +1,34 @@
+sequenceDiagram
+  Caller          ->>+ Resolvers: References(repo, commit, file, position)
+  Resolvers       ->>+ Code Intel API: FindClosestDumps(repo, commit, file)
+  Code Intel API  ->>+ Store: FindClosestDumps(repo, commit, file)
+  Store          -->>- Code Intel API: dumps
+  Code Intel API -->>- Resolvers: dumps
+
+  loop for each dumps[i]
+    Resolvers         -->>+ Position Adjuster: AdjustPosition(file, position)
+    Position Adjuster -->>- Resolvers: adjusted file, adjusted position
+
+    alt if cursor is supplied
+      Note right of Resolvers: cursor is decoded from request
+    else
+      Resolvers       ->>+ Bundle Manager: MonikersForPosition(dumps[i], adjusted file, adjusted position)
+      Bundle Manager -->>- Resolvers: monikers
+
+      Note right of Resolvers: cursor is created from <dump, monikers, adjusted file, adjusted position>
+    end
+
+    Resolvers ->>+ Code Intel API: References(cursor)
+
+    loop while under page limit
+      Code Intel API           ->>+ Reference Page Resolver: resolvePage(cursor)
+      Reference Page Resolver -->>- Code Intel API: locations, cursor'
+      Note right of Code Intel API: cursor = cursor' on subsequent iteration
+    end
+
+    Code Intel API -->>- Resolvers: locations[0], ..., locations[n], cursor'
+  end
+
+  Resolvers         -->>+ Position Adjuster: AdjustLocations(locations[0], ..., locations[n])
+  Position Adjuster -->>- Resolvers: adjusted locations[i]
+  Resolvers -->>- Caller: adjusted locations, cursor'

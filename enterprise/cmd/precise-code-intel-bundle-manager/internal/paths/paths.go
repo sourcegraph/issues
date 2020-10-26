@@ -4,12 +4,14 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strconv"
 )
 
 const uploadDir = "uploads"
 const uploadPartsDir = "upload-parts"
 const dbsDir = "dbs"
 const dbPartsDir = "db-parts"
+const dbBackupsDir = "db-backups"
 const migrationMarkersDir = "migration-markers"
 
 // PrepDirectories creates the root directories within the given bundle dir.
@@ -19,6 +21,7 @@ func PrepDirectories(bundleDir string) error {
 		uploadPartsDir,
 		dbsDir,
 		dbPartsDir,
+		dbBackupsDir,
 		migrationMarkersDir,
 	}
 
@@ -58,12 +61,12 @@ func DBsDir(bundleDir string) string {
 
 // DBDir returns the path of the directory containing files for a given bundle identifier.
 func DBDir(bundleDir string, id int64) string {
-	return filepath.Join(bundleDir, dbsDir, fmt.Sprintf("%d", id))
+	return filepath.Join(bundleDir, dbsDir, strconv.FormatInt(id, 10))
 }
 
 // SQLiteDBFilename returns the path of the SQLite db for the given bundle identifier.
 func SQLiteDBFilename(bundleDir string, id int64) string {
-	return filepath.Join(bundleDir, dbsDir, fmt.Sprintf("%d", id), "sqlite.db")
+	return filepath.Join(bundleDir, dbsDir, strconv.FormatInt(id, 10), "sqlite.db")
 }
 
 // DBPartsDir returns the path of the directory containing db part files.
@@ -74,6 +77,16 @@ func DBPartsDir(bundleDir string) string {
 // DBPartFilename returns the path of the db with the given identifier and part index.
 func DBPartFilename(bundleDir string, id, index int64) string {
 	return filepath.Join(bundleDir, dbPartsDir, fmt.Sprintf("%d.%d.gz", id, index))
+}
+
+// DBBackupsDir returns the path of the directory containing db backup files.
+func DBBackupsDir(bundleDir string) string {
+	return filepath.Join(bundleDir, dbBackupsDir)
+}
+
+// DBBackupFilename returns the path of the backup SQLite db for the given bundle identifier.
+func DBBackupFilename(bundleDir string, id int64) string {
+	return filepath.Join(bundleDir, dbBackupsDir, strconv.FormatInt(id, 10)+".db")
 }
 
 // MigrationMarkerFilename returns the path to the file that marks a migration has been performed.

@@ -1,0 +1,226 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`SiteAdminProductSubscriptionPage renders 1`] = `
+<div
+  className="site-admin-product-subscription-page"
+>
+  <div
+    className="mb-2"
+  >
+    <a
+      className="btn btn-link btn-sm"
+      href="/site-admin/dotcom/product/subscriptions"
+      onClick={[Function]}
+    >
+      <ArrowLeftIcon
+        className="icon-inline"
+      />
+       All subscriptions
+    </a>
+  </div>
+  <h2>
+    Product subscription 
+  </h2>
+  <div
+    className="mb-3"
+  >
+    <button
+      className="btn btn-danger"
+      disabled={false}
+      onClick={[Function]}
+      type="button"
+    >
+      Archive
+    </button>
+  </div>
+  <div
+    className="card mt-3"
+  >
+    <div
+      className="card-header"
+    >
+      Details
+    </div>
+    <table
+      className="table mb-0"
+    >
+      <tbody>
+        <tr>
+          <th
+            className="text-nowrap"
+          >
+            ID
+          </th>
+          <td
+            className="w-100"
+          />
+        </tr>
+        <tr>
+          <th
+            className="text-nowrap"
+          >
+            Plan
+          </th>
+          <td
+            className="w-100"
+          >
+            <span
+              className=""
+            >
+              <span
+                className="text-muted font-italic"
+              >
+                No plan selected
+              </span>
+            </span>
+          </td>
+        </tr>
+        <tr>
+          <th
+            className="text-nowrap"
+          >
+            Account
+          </th>
+          <td
+            className="w-100"
+          >
+            <AccountName />
+             —
+             
+            <a
+              href="/s"
+              onClick={[Function]}
+            >
+              View as user
+            </a>
+          </td>
+        </tr>
+        <tr>
+          <th
+            className="text-nowrap"
+          >
+            Account emails
+          </th>
+          <td
+            className="w-100"
+          />
+        </tr>
+        <tr>
+          <th
+            className="text-nowrap"
+          >
+            Billing
+          </th>
+          <td
+            className="w-100"
+          >
+            <div
+              className="site-admin-product-subscription-billing-link"
+            >
+              <div
+                className="d-flex align-items-center"
+              >
+                <button
+                  className="btn btn-secondary btn-sm"
+                  disabled={false}
+                  onClick={[Function]}
+                  type="button"
+                >
+                  Link billing subscription
+                </button>
+              </div>
+            </div>
+          </td>
+        </tr>
+        <tr>
+          <th
+            className="text-nowrap"
+          >
+            Created at
+          </th>
+          <td
+            className="w-100"
+          >
+            <span
+              className="timestamp"
+              data-tooltip="2020-01-01"
+            >
+              in almost 14 years
+            </span>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  <div
+    className="card mt-1"
+  >
+    <div
+      className="card-header d-flex align-items-center justify-content-between"
+    >
+      Licenses
+      <button
+        className="btn btn-primary btn-sm"
+        onClick={[Function]}
+        type="button"
+      >
+        <AddIcon
+          className="icon-inline"
+        />
+         Generate new license manually
+      </button>
+    </div>
+    <div
+      className="filtered-connection test-filtered-connection filtered-connection--compact list-group list-group-flush"
+    >
+      
+      <ul
+        className="filtered-connection__nodes "
+      >
+        <SiteAdminProductLicenseNode
+          node={
+            Object {
+              "createdAt": "2020-01-01",
+              "id": "l1",
+              "info": Object {
+                "__typename": "ProductLicenseInfo",
+                "expiresAt": "2021-01-01",
+                "productNameWithBrand": "NB",
+                "tags": Array [
+                  "a",
+                ],
+                "userCount": 123,
+              },
+              "licenseKey": "lk1",
+              "subscription": Object {
+                "activeLicense": Object {
+                  "id": "l1",
+                },
+              },
+            }
+          }
+          showSubscription={false}
+        />
+      </ul>
+    </div>
+  </div>
+  <div
+    className="card mt-3"
+  >
+    <div
+      className="card-header"
+    >
+      History
+    </div>
+    <div
+      className="card-body"
+    >
+      <span
+        className="text-muted"
+      >
+        No events
+      </span>
+    </div>
+  </div>
+</div>
+`;

@@ -1,0 +1,125 @@
+---
+version: 1
+interactions:
+- request:
+    body: '{"query":"\nfragment actor on Actor {\n  avatarUrl\n  login\n  url\n}\n\nfragment label on Label {\n  name\n  color\n  description\n  id\n}\n\nfragment commit on Commit {\n  oid\n  message\n  messageHeadline\n  committedDate\n  pushedDate\n  url\n  committer {\n    avatarUrl\n    email\n    name\n    user {\n      ...actor\n    }\n  }\n}\n\nfragment review on PullRequestReview {\n  databaseId\n  author {\n    ...actor\n  }\n  authorAssociation\n  body\n  state\n  url\n  createdAt\n  updatedAt\n  commit {\n    ...commit\n  }\n  includesCreatedEdit\n}\n\nfragment timelineItems on PullRequestTimelineItems {\n  ... on AssignedEvent {\n    actor {\n      ...actor\n    }\n    assignee {\n      ...actor\n    }\n    createdAt\n  }\n  ... on ClosedEvent {\n    actor {\n      ...actor\n    }\n    createdAt\n    url\n  }\n  ... on IssueComment {\n    databaseId\n    author {\n      ...actor\n    }\n    authorAssociation\n    body\n    createdAt\n    editor {\n      ...actor\n    }\n    url\n    updatedAt\n    includesCreatedEdit\n    publishedAt\n  }\n  ... on RenamedTitleEvent {\n    actor {\n      ...actor\n    }\n    previousTitle\n    currentTitle\n    createdAt\n  }\n  ... on MergedEvent {\n    actor {\n      ...actor\n    }\n    mergeRefName\n    url\n    commit {\n      ...commit\n    }\n    createdAt\n  }\n  ... on PullRequestReview {\n    ...review\n  }\n  ... on PullRequestReviewThread {\n    comments(last: 100) {\n      nodes {\n        databaseId\n        author {\n          ...actor\n        }\n        authorAssociation\n        editor {\n          ...actor\n        }\n        commit {\n          ...commit\n        }\n        body\n        state\n        url\n        createdAt\n        updatedAt\n        includesCreatedEdit\n      }\n    }\n  }\n  ... on ReopenedEvent {\n    actor {\n      ...actor\n    }\n    createdAt\n  }\n  ... on ReviewDismissedEvent {\n    actor {\n      ...actor\n    }\n    review {\n      ...review\n    }\n    dismissalMessage\n    createdAt\n  }\n  ... on ReviewRequestRemovedEvent {\n    actor {\n      ...actor\n    }\n    requestedReviewer {\n      ...actor\n    }\n    requestedTeam: requestedReviewer {\n      ... on Team {\n        name\n        url\n        avatarUrl\n      }\n    }\n    createdAt\n  }\n  ... on ReviewRequestedEvent {\n    actor {\n      ...actor\n    }\n    requestedReviewer {\n      ...actor\n    }\n    requestedTeam: requestedReviewer {\n      ... on Team {\n        name\n        url\n        avatarUrl\n      }\n    }\n    createdAt\n  }\n  ... on ReadyForReviewEvent {\n    actor {\n      ...actor\n    }\n    createdAt\n  }\n  ... on ConvertToDraftEvent {\n    actor {\n      ...actor\n    }\n    createdAt\n  }\n  ... on UnassignedEvent {\n    actor {\n      ...actor\n    }\n    assignee {\n      ...actor\n    }\n    createdAt\n  }\n  ... on LabeledEvent {\n    actor {\n      ...actor\n    }\n    label {\n      ...label\n    }\n    createdAt\n  }\n  ... on UnlabeledEvent {\n    actor {\n      ...actor\n    }\n    label {\n      ...label\n    }\n    createdAt\n  }\n  ... on PullRequestCommit {\n    commit {\n      ...commit\n    }\n  }\n}\n\nfragment commitWithChecks on Commit {\n  oid\n  status {\n    state\n    contexts {\n      id\n      context\n      state\n      description\n    }\n  }\n  checkSuites(last: 20) {\n    nodes {\n      id\n      status\n      conclusion\n      checkRuns(last: 20) {\n        nodes {\n          id\n          status\n          conclusion\n        }\n      }\n    }\n  }\n  committedDate\n}\n\nfragment prCommit on PullRequestCommit {\n  commit {\n    ...commitWithChecks\n  }\n}\n\nfragment pr on PullRequest {\n  id\n  title\n  body\n  state\n  url\n  number\n  createdAt\n  updatedAt\n  headRefOid\n  baseRefOid\n  headRefName\n  baseRefName\n  isDraft\n  author {\n    ...actor\n  }\n  participants(first: 100) {\n    nodes {\n      ...actor\n    }\n  }\n  labels(first: 100) {\n    nodes {\n      ...label\n    }\n  }\n  commits(last: 1) {\n    nodes {\n      ...prCommit\n    }\n  }\n  timelineItems(first: 250, itemTypes: [ASSIGNED_EVENT, CLOSED_EVENT, ISSUE_COMMENT, RENAMED_TITLE_EVENT, MERGED_EVENT, PULL_REQUEST_REVIEW, PULL_REQUEST_REVIEW_THREAD, REOPENED_EVENT, REVIEW_DISMISSED_EVENT, REVIEW_REQUEST_REMOVED_EVENT, REVIEW_REQUESTED_EVENT, UNASSIGNED_EVENT, LABELED_EVENT, UNLABELED_EVENT, PULL_REQUEST_COMMIT, READY_FOR_REVIEW_EVENT, CONVERT_TO_DRAFT_EVENT]) {\n    pageInfo {\n      hasNextPage\n      endCursor\n    }\n    nodes {\n      __typename\n      ...timelineItems\n    }\n  }\n}\nmutation\tReopenPullRequest($input:ReopenPullRequestInput!) {\n  reopenPullRequest(input:$input) {\n    pullRequest {\n      ... pr\n    }\n  }\n}","variables":{"input":{"pullRequestId":"MDExOlB1bGxSZXF1ZXN0NDg4NjEzODA3"}}}'
+    form: {}
+    headers:
+      Accept:
+      - application/vnd.github.antiope-preview+json
+      Content-Type:
+      - application/json; charset=utf-8
+    url: https://api.github.com/graphql
+    method: POST
+  response:
+    body: '{"data":{"reopenPullRequest":{"pullRequest":{"id":"MDExOlB1bGxSZXF1ZXN0NDg4NjEzODA3","title":"Test reopening 1","body":"This is just one of _many_ pull requests. Is it useless? Yes. But is it cool? Yes.","state":"OPEN","url":"https://github.com/sourcegraph/automation-testing/pull/356","number":356,"createdAt":"2020-09-17T11:53:51Z","updatedAt":"2020-09-24T08:18:30Z","headRefOid":"4fc28c316ec75bd1c6f71938a7b285f41cd3ef96","baseRefOid":"6274d04b734de9f057bb5f196a5046a9e86ba992","headRefName":"demo/267-in-2","baseRefName":"master","isDraft":false,"author":{"avatarUrl":"https://avatars1.githubusercontent.com/u/1185253?u=35f048c505007991433b46c9c0616ccbcfbd4bff&v=4","login":"mrnugget","url":"https://github.com/mrnugget"},"participants":{"nodes":[{"avatarUrl":"https://avatars1.githubusercontent.com/u/1185253?u=35f048c505007991433b46c9c0616ccbcfbd4bff&v=4","login":"mrnugget","url":"https://github.com/mrnugget"}]},"labels":{"nodes":[]},"commits":{"nodes":[{"commit":{"oid":"4fc28c316ec75bd1c6f71938a7b285f41cd3ef96","status":null,"checkSuites":{"nodes":[{"id":"MDEwOkNoZWNrU3VpdGUxMjA2MzA3OTU4","status":"QUEUED","conclusion":null,"checkRuns":{"nodes":[]}},{"id":"MDEwOkNoZWNrU3VpdGUxMjA2MzA3OTYx","status":"QUEUED","conclusion":null,"checkRuns":{"nodes":[]}}]},"committedDate":"2020-09-17T11:50:07Z"}}]},"timelineItems":{"pageInfo":{"hasNextPage":false,"endCursor":"Y3Vyc29yOnYyOpPPAAABdL8xP_ABqjM4MDE5NzY0NzE="},"nodes":[{"__typename":"PullRequestCommit","commit":{"oid":"4fc28c316ec75bd1c6f71938a7b285f41cd3ef96","message":"Append Hello World to all README.md files","messageHeadline":"Append Hello World to all README.md files","committedDate":"2020-09-17T11:50:07Z","pushedDate":"2020-09-17T11:53:51Z","url":"https://github.com/sourcegraph/automation-testing/commit/4fc28c316ec75bd1c6f71938a7b285f41cd3ef96","committer":{"avatarUrl":"https://camo.githubusercontent.com/33d4c509ae479643c65ba8967c16b869c1558e90/68747470733a2f2f322e67726176617461722e636f6d2f6176617461722f34366333653536396163366530356264326136366339313661396666343934633f643d68747470732533412532462532466769746875622e6769746875626173736574732e636f6d253246696d6167657325324667726176617461727325324667726176617461722d757365722d3432302e706e6726723d67","email":"campaigns@sourcegraph.com","name":"Sourcegraph","user":null}}},{"__typename":"ClosedEvent","actor":{"avatarUrl":"https://avatars1.githubusercontent.com/u/1185253?u=35f048c505007991433b46c9c0616ccbcfbd4bff&v=4","login":"mrnugget","url":"https://github.com/mrnugget"},"createdAt":"2020-09-24T08:12:22Z","url":"https://github.com/sourcegraph/automation-testing/pull/356#event-3801951041"},{"__typename":"RenamedTitleEvent","actor":{"avatarUrl":"https://avatars1.githubusercontent.com/u/1185253?u=35f048c505007991433b46c9c0616ccbcfbd4bff&v=4","login":"mrnugget","url":"https://github.com/mrnugget"},"previousTitle":"Hello Viewers!","currentTitle":"Test reopening 1","createdAt":"2020-09-24T08:12:32Z"},{"__typename":"ReopenedEvent","actor":{"avatarUrl":"https://avatars1.githubusercontent.com/u/1185253?u=35f048c505007991433b46c9c0616ccbcfbd4bff&v=4","login":"mrnugget","url":"https://github.com/mrnugget"},"createdAt":"2020-09-24T08:16:19Z"},{"__typename":"ClosedEvent","actor":{"avatarUrl":"https://avatars1.githubusercontent.com/u/1185253?u=35f048c505007991433b46c9c0616ccbcfbd4bff&v=4","login":"mrnugget","url":"https://github.com/mrnugget"},"createdAt":"2020-09-24T08:18:04Z","url":"https://github.com/sourcegraph/automation-testing/pull/356#event-3801974500"},{"__typename":"ReopenedEvent","actor":{"avatarUrl":"https://avatars1.githubusercontent.com/u/1185253?u=35f048c505007991433b46c9c0616ccbcfbd4bff&v=4","login":"mrnugget","url":"https://github.com/mrnugget"},"createdAt":"2020-09-24T08:18:30Z"}]}}}}}'
+    headers:
+      Access-Control-Allow-Origin:
+      - '*'
+      Access-Control-Expose-Headers:
+      - ETag, Link, Location, Retry-After, X-GitHub-OTP, X-RateLimit-Limit, X-RateLimit-Remaining, X-RateLimit-Used, X-RateLimit-Reset, X-OAuth-Scopes, X-Accepted-OAuth-Scopes, X-Poll-Interval, X-GitHub-Media-Type, Deprecation, Sunset
+      Cache-Control:
+      - no-cache
+      Content-Security-Policy:
+      - default-src 'none'
+      Content-Type:
+      - application/json; charset=utf-8
+      Date:
+      - Mon, 19 Oct 2020 15:41:56 GMT
+      Referrer-Policy:
+      - origin-when-cross-origin, strict-origin-when-cross-origin
+      Server:
+      - GitHub.com
+      Status:
+      - 200 OK
+      Strict-Transport-Security:
+      - max-age=31536000; includeSubdomains; preload
+      Vary:
+      - Accept-Encoding, Accept, X-Requested-With
+      - Accept-Encoding
+      X-Accepted-Oauth-Scopes:
+      - repo
+      X-Content-Type-Options:
+      - nosniff
+      X-Frame-Options:
+      - deny
+      X-Github-Media-Type:
+      - github.v4; param=antiope-preview; format=json
+      X-Github-Request-Id:
+      - FB0D:7C68:1C464577:20AAC845:5F8DB3C4
+      X-Oauth-Scopes:
+      - read:discussion, read:org, repo
+      X-Ratelimit-Limit:
+      - "5000"
+      X-Ratelimit-Remaining:
+      - "4968"
+      X-Ratelimit-Reset:
+      - "1603124091"
+      X-Ratelimit-Used:
+      - "32"
+      X-Xss-Protection:
+      - 1; mode=block
+    status: 200 OK
+    code: 200
+    duration: ""
+- request:
+    body: '{"query":"\nfragment actor on Actor {\n  avatarUrl\n  login\n  url\n}\n\nfragment label on Label {\n  name\n  color\n  description\n  id\n}\n\nfragment commit on Commit {\n  oid\n  message\n  messageHeadline\n  committedDate\n  pushedDate\n  url\n  committer {\n    avatarUrl\n    email\n    name\n    user {\n      ...actor\n    }\n  }\n}\n\nfragment review on PullRequestReview {\n  databaseId\n  author {\n    ...actor\n  }\n  authorAssociation\n  body\n  state\n  url\n  createdAt\n  updatedAt\n  commit {\n    ...commit\n  }\n  includesCreatedEdit\n}\n\nfragment timelineItems on PullRequestTimelineItems {\n  ... on AssignedEvent {\n    actor {\n      ...actor\n    }\n    assignee {\n      ...actor\n    }\n    createdAt\n  }\n  ... on ClosedEvent {\n    actor {\n      ...actor\n    }\n    createdAt\n    url\n  }\n  ... on IssueComment {\n    databaseId\n    author {\n      ...actor\n    }\n    authorAssociation\n    body\n    createdAt\n    editor {\n      ...actor\n    }\n    url\n    updatedAt\n    includesCreatedEdit\n    publishedAt\n  }\n  ... on RenamedTitleEvent {\n    actor {\n      ...actor\n    }\n    previousTitle\n    currentTitle\n    createdAt\n  }\n  ... on MergedEvent {\n    actor {\n      ...actor\n    }\n    mergeRefName\n    url\n    commit {\n      ...commit\n    }\n    createdAt\n  }\n  ... on PullRequestReview {\n    ...review\n  }\n  ... on PullRequestReviewThread {\n    comments(last: 100) {\n      nodes {\n        databaseId\n        author {\n          ...actor\n        }\n        authorAssociation\n        editor {\n          ...actor\n        }\n        commit {\n          ...commit\n        }\n        body\n        state\n        url\n        createdAt\n        updatedAt\n        includesCreatedEdit\n      }\n    }\n  }\n  ... on ReopenedEvent {\n    actor {\n      ...actor\n    }\n    createdAt\n  }\n  ... on ReviewDismissedEvent {\n    actor {\n      ...actor\n    }\n    review {\n      ...review\n    }\n    dismissalMessage\n    createdAt\n  }\n  ... on ReviewRequestRemovedEvent {\n    actor {\n      ...actor\n    }\n    requestedReviewer {\n      ...actor\n    }\n    requestedTeam: requestedReviewer {\n      ... on Team {\n        name\n        url\n        avatarUrl\n      }\n    }\n    createdAt\n  }\n  ... on ReviewRequestedEvent {\n    actor {\n      ...actor\n    }\n    requestedReviewer {\n      ...actor\n    }\n    requestedTeam: requestedReviewer {\n      ... on Team {\n        name\n        url\n        avatarUrl\n      }\n    }\n    createdAt\n  }\n  ... on ReadyForReviewEvent {\n    actor {\n      ...actor\n    }\n    createdAt\n  }\n  ... on ConvertToDraftEvent {\n    actor {\n      ...actor\n    }\n    createdAt\n  }\n  ... on UnassignedEvent {\n    actor {\n      ...actor\n    }\n    assignee {\n      ...actor\n    }\n    createdAt\n  }\n  ... on LabeledEvent {\n    actor {\n      ...actor\n    }\n    label {\n      ...label\n    }\n    createdAt\n  }\n  ... on UnlabeledEvent {\n    actor {\n      ...actor\n    }\n    label {\n      ...label\n    }\n    createdAt\n  }\n  ... on PullRequestCommit {\n    commit {\n      ...commit\n    }\n  }\n}\n\nfragment commitWithChecks on Commit {\n  oid\n  status {\n    state\n    contexts {\n      id\n      context\n      state\n      description\n    }\n  }\n  checkSuites(last: 20) {\n    nodes {\n      id\n      status\n      conclusion\n      checkRuns(last: 20) {\n        nodes {\n          id\n          status\n          conclusion\n        }\n      }\n    }\n  }\n  committedDate\n}\n\nfragment prCommit on PullRequestCommit {\n  commit {\n    ...commitWithChecks\n  }\n}\n\nfragment pr on PullRequest {\n  id\n  title\n  body\n  state\n  url\n  number\n  createdAt\n  updatedAt\n  headRefOid\n  baseRefOid\n  headRefName\n  baseRefName\n  isDraft\n  author {\n    ...actor\n  }\n  participants(first: 100) {\n    nodes {\n      ...actor\n    }\n  }\n  labels(first: 100) {\n    nodes {\n      ...label\n    }\n  }\n  commits(last: 1) {\n    nodes {\n      ...prCommit\n    }\n  }\n  timelineItems(first: 250, itemTypes: [ASSIGNED_EVENT, CLOSED_EVENT, ISSUE_COMMENT, RENAMED_TITLE_EVENT, MERGED_EVENT, PULL_REQUEST_REVIEW, PULL_REQUEST_REVIEW_THREAD, REOPENED_EVENT, REVIEW_DISMISSED_EVENT, REVIEW_REQUEST_REMOVED_EVENT, REVIEW_REQUESTED_EVENT, UNASSIGNED_EVENT, LABELED_EVENT, UNLABELED_EVENT, PULL_REQUEST_COMMIT, READY_FOR_REVIEW_EVENT, CONVERT_TO_DRAFT_EVENT]) {\n    pageInfo {\n      hasNextPage\n      endCursor\n    }\n    nodes {\n      __typename\n      ...timelineItems\n    }\n  }\n}\nmutation\tReopenPullRequest($input:ReopenPullRequestInput!) {\n  reopenPullRequest(input:$input) {\n    pullRequest {\n      ... pr\n    }\n  }\n}","variables":{"input":{"pullRequestId":"MDExOlB1bGxSZXF1ZXN0NDg4NjA0NTQ5"}}}'
+    form: {}
+    headers:
+      Accept:
+      - application/vnd.github.antiope-preview+json
+      Content-Type:
+      - application/json; charset=utf-8
+    url: https://api.github.com/graphql
+    method: POST
+  response:
+    body: '{"data":{"reopenPullRequest":{"pullRequest":{"id":"MDExOlB1bGxSZXF1ZXN0NDg4NjA0NTQ5","title":"Hello Viewers!","body":"This is just one of _many_ pull requests. Is it useless? Yes. But is it cool? Yes.","state":"OPEN","url":"https://github.com/sourcegraph/automation-testing/pull/355","number":355,"createdAt":"2020-09-17T11:37:38Z","updatedAt":"2020-09-17T11:37:38Z","headRefOid":"55dc5cf08fad39e41973cd384ffe0ea5d5e958d3","baseRefOid":"6274d04b734de9f057bb5f196a5046a9e86ba992","headRefName":"demo/200-in-2","baseRefName":"master","isDraft":false,"author":{"avatarUrl":"https://avatars1.githubusercontent.com/u/1185253?u=35f048c505007991433b46c9c0616ccbcfbd4bff&v=4","login":"mrnugget","url":"https://github.com/mrnugget"},"participants":{"nodes":[{"avatarUrl":"https://avatars1.githubusercontent.com/u/1185253?u=35f048c505007991433b46c9c0616ccbcfbd4bff&v=4","login":"mrnugget","url":"https://github.com/mrnugget"}]},"labels":{"nodes":[]},"commits":{"nodes":[{"commit":{"oid":"55dc5cf08fad39e41973cd384ffe0ea5d5e958d3","status":null,"checkSuites":{"nodes":[{"id":"MDEwOkNoZWNrU3VpdGUxMjA2MjM5ODg1","status":"QUEUED","conclusion":null,"checkRuns":{"nodes":[]}},{"id":"MDEwOkNoZWNrU3VpdGUxMjA2MjM5ODg3","status":"QUEUED","conclusion":null,"checkRuns":{"nodes":[]}}]},"committedDate":"2020-09-17T11:35:44Z"}}]},"timelineItems":{"pageInfo":{"hasNextPage":false,"endCursor":"Y3Vyc29yOnYyOpPPAAABdJvZToAH2gAyNDg4NjA0NTQ5OjU1ZGM1Y2YwOGZhZDM5ZTQxOTczY2QzODRmZmUwZWE1ZDVlOTU4ZDM="},"nodes":[{"__typename":"PullRequestCommit","commit":{"oid":"55dc5cf08fad39e41973cd384ffe0ea5d5e958d3","message":"Append Hello World to all README.md files","messageHeadline":"Append Hello World to all README.md files","committedDate":"2020-09-17T11:35:44Z","pushedDate":"2020-09-17T11:37:38Z","url":"https://github.com/sourcegraph/automation-testing/commit/55dc5cf08fad39e41973cd384ffe0ea5d5e958d3","committer":{"avatarUrl":"https://camo.githubusercontent.com/33d4c509ae479643c65ba8967c16b869c1558e90/68747470733a2f2f322e67726176617461722e636f6d2f6176617461722f34366333653536396163366530356264326136366339313661396666343934633f643d68747470732533412532462532466769746875622e6769746875626173736574732e636f6d253246696d6167657325324667726176617461727325324667726176617461722d757365722d3432302e706e6726723d67","email":"campaigns@sourcegraph.com","name":"Sourcegraph","user":null}}}]}}}}}'
+    headers:
+      Access-Control-Allow-Origin:
+      - '*'
+      Access-Control-Expose-Headers:
+      - ETag, Link, Location, Retry-After, X-GitHub-OTP, X-RateLimit-Limit, X-RateLimit-Remaining, X-RateLimit-Used, X-RateLimit-Reset, X-OAuth-Scopes, X-Accepted-OAuth-Scopes, X-Poll-Interval, X-GitHub-Media-Type, Deprecation, Sunset
+      Cache-Control:
+      - no-cache
+      Content-Security-Policy:
+      - default-src 'none'
+      Content-Type:
+      - application/json; charset=utf-8
+      Date:
+      - Mon, 19 Oct 2020 15:41:56 GMT
+      Referrer-Policy:
+      - origin-when-cross-origin, strict-origin-when-cross-origin
+      Server:
+      - GitHub.com
+      Status:
+      - 200 OK
+      Strict-Transport-Security:
+      - max-age=31536000; includeSubdomains; preload
+      Vary:
+      - Accept-Encoding, Accept, X-Requested-With
+      - Accept-Encoding
+      X-Accepted-Oauth-Scopes:
+      - repo
+      X-Content-Type-Options:
+      - nosniff
+      X-Frame-Options:
+      - deny
+      X-Github-Media-Type:
+      - github.v4; param=antiope-preview; format=json
+      X-Github-Request-Id:
+      - FB0D:7C68:1C464618:20AAC909:5F8DB3C4
+      X-Oauth-Scopes:
+      - read:discussion, read:org, repo
+      X-Ratelimit-Limit:
+      - "5000"
+      X-Ratelimit-Remaining:
+      - "4965"
+      X-Ratelimit-Reset:
+      - "1603124091"
+      X-Ratelimit-Used:
+      - "35"
+      X-Xss-Protection:
+      - 1; mode=block
+    status: 200 OK
+    code: 200
+    duration: ""

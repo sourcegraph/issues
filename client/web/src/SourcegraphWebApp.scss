@@ -1,0 +1,147 @@
+/*
+This is the main entry point for all styles
+It should import all component stylesheets
+*/
+
+// Use duplicate selectors for the light-theme
+// stylelint-disable no-duplicate-selectors
+
+@import '../../branded/src/global-styles/index.scss';
+
+// stylelint-disable-next-line selector-max-id
+html,
+body,
+#root {
+    height: 100%;
+}
+
+// Document highlight is the background color for tokens which are matched with
+// a result from a document highlight provider. e.g. for references of the token
+// currently being hovered over.
+//
+// Note that we define this before selection highlights so that it will override
+// the styles of symbol that has both classes applied.
+.sourcegraph-document-highlight {
+    background-color: var(--secondary);
+}
+
+// Selection highlight is the background color for matched/highlighted tokens,
+// e.g. for search results, for identifying the token currently being hovered over,
+// or identifying the token the references panel is toggled for
+.selection-highlight,
+.selection-highlight-sticky {
+    .theme-dark & {
+        background-color: rgba(217, 72, 15, 0.5);
+    }
+    .theme-light & {
+        background-color: rgba(255, 192, 120, 0.5);
+    }
+}
+
+.app {
+    &__error {
+        > hr {
+            margin-top: 1rem;
+            margin-bottom: 1rem;
+            border-color: #93a9c8;
+        }
+
+        &-text {
+            margin-top: 1rem;
+            background-color: #233043;
+            padding: 1rem;
+        }
+    }
+}
+
+.spacer {
+    flex: 1;
+}
+
+.flex-1 {
+    flex: 1;
+}
+
+.flex-shrink-past-contents {
+    flex-shrink: 1;
+    min-width: 0;
+}
+
+// Hide the given element from Percy.
+.percy-hide,
+.monaco-editor .cursor {
+    @media only percy {
+        visibility: hidden !important;
+    }
+}
+
+// Pages
+@import './Layout';
+@import './api/ApiConsole';
+@import './extensions/ExtensionsArea';
+@import './extensions/extension/ExtensionArea';
+@import './global/GlobalAlerts';
+@import './global/GlobalDebug';
+@import './global/Notices';
+@import './savedSearches/index';
+@import './search/input/SearchPage';
+@import './search/SearchConsolePage';
+@import './repogroups/RepogroupPage';
+@import './search/queryBuilder/index';
+@import './search/results/SearchResults';
+@import './settings/SettingsFile';
+@import './site-admin/init/SiteInitPage';
+@import './site-admin/SiteAdmin';
+@import './tree/Tree';
+@import './nav/GlobalNavbar';
+@import './nav/NavLinks';
+@import './auth/ResetPasswordPage';
+@import './auth/SignInPage';
+@import './auth/SignUpPage';
+@import './auth/OrDivider';
+@import './repo/GitReferenceTag';
+@import './repo/RepoContainer';
+@import './repo/FilePathBreadcrumbs.scss';
+@import './repo/settings/RepoSettingsArea';
+@import './repo/actions//InstallBrowserExtensionPopover.scss';
+@import './repo/actions/InstallBrowserExtensionAlert.scss';
+@import './components/PageHeader';
+@import './components/completion/CompletionWidgetDropdown';
+@import './components/CopyableText';
+@import './components/FilteredConnection';
+@import './components/SaveToolbar';
+@import './components/HeroPage';
+@import './components/ModalPage';
+@import './components/RadioButtons';
+@import './components/Dialog';
+@import '../../branded/src/components/tooltip/Tooltip';
+@import './components/CtaBanner.scss';
+@import './user/settings/UserSettingsArea';
+@import './site-admin/SiteAdminAlert';
+@import './site/DockerForMacAlert';
+@import './user/UserAvatar';
+@import './user/area/UserArea';
+@import './org/OrgsArea';
+@import './components/Collapsible';
+@import './components/DismissibleAlert';
+@import './marketing/SurveyPage';
+@import './components/branding/BrandLogo';
+@import './components/SingleValueCard';
+@import './components/SearchResult';
+@import './components/SearchResultMatch';
+@import './components/diff/FileDiffNode';
+@import './components/externalServices/AddExternalServicesPage';
+@import '../../branded/src/components/Tabs';
+@import '../../branded/src/components/panel/Panel';
+@import '../../branded/src/components/panel/views/FileLocations';
+@import '../../branded/src/components/panel/views/HierarchicalLocationsView';
+@import '../../branded/src/components/LoaderInput';
+@import '~@sourcegraph/react-loading-spinner/lib/LoadingSpinner.css';
+
+@import '../../shared/src/index';
+
+:root {
+    // Skip Reach UI styles. See https://reacttraining.com/reach-ui/styling/.
+    --reach-menu-button: 1;
+    --reach-accordion: 1;
+}

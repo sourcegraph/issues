@@ -36,7 +36,7 @@ func getProvider(serviceType, id string) *Provider {
 
 func (p *Provider) ConfigID() providers.ConfigID {
 	return providers.ConfigID{
-		ID:   p.ServiceID,
+		ID:   p.ServiceID + "::" + p.OAuth2Config.ClientID,
 		Type: p.ServiceType,
 	}
 }
@@ -80,10 +80,11 @@ type ProviderOp struct {
 }
 
 func NewProvider(op ProviderOp) *Provider {
+	providerID := op.ServiceID + "::" + op.OAuth2Config.ClientID
 	return &Provider{
 		ProviderOp: op,
-		Login:      stateHandler(true, op.ServiceID, op.StateConfig, op.Login),
-		Callback:   stateHandler(false, op.ServiceID, op.StateConfig, op.Callback),
+		Login:      stateHandler(true, providerID, op.StateConfig, op.Login),
+		Callback:   stateHandler(false, providerID, op.StateConfig, op.Callback),
 	}
 }
 

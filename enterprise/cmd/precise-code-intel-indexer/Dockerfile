@@ -1,5 +1,5 @@
 FROM golang:1.14.4-alpine@sha256:9887985d9de3d1c2a37be9e2e9c6dbc44f4cbcc7afe3d564cf6c3916a58b1a5c AS go
-FROM sourcegraph/alpine:3.10@sha256:4d05cd5669726fc38823e92320659a6d1ef7879e62268adec5df658a0bacf65c AS lsif-go
+FROM sourcegraph/alpine:3.12@sha256:133a0a767b836cf86a011101995641cf1b5cbefb3dd212d78d7be145adde636d AS lsif-go
 
 ENV LSIF_GO_VERSION=0.8.0
 
@@ -7,7 +7,7 @@ RUN curl -L "https://github.com/sourcegraph/lsif-go/releases/download/v${LSIF_GO
     tar -C /usr/local/bin -zvxf lsif-go.tar.gz lsif-go && \
     rm lsif-go.tar.gz
 
-FROM sourcegraph/alpine:3.10@sha256:4d05cd5669726fc38823e92320659a6d1ef7879e62268adec5df658a0bacf65c
+FROM sourcegraph/alpine:3.12@sha256:133a0a767b836cf86a011101995641cf1b5cbefb3dd212d78d7be145adde636d
 
 ARG COMMIT_SHA="unknown"
 ARG DATE="unknown"

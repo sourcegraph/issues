@@ -51,7 +51,7 @@ func parseProvider(callbackURL string, p *schema.GitLabAuthProvider, sourceCfg s
 			}, sessionKey),
 			nil,
 		),
-	}), nil
+	}), messages
 }
 
 func getStateConfig() gologin.CookieConfig {

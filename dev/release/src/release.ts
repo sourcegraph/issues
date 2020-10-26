@@ -7,30 +7,18 @@ import {
     getIssueByTitle,
     trackingIssueTitle,
     ensurePatchReleaseIssue,
-    createBranchWithChanges,
-    createPR,
-    CreateBranchWithChangesOptions,
+    createChangesets,
 } from './github'
+import * as changelog from './changelog'
+import { formatDate, timezoneLink } from './util'
 import * as persistedConfig from './config.json'
 import { addMinutes, isWeekend, eachDayOfInterval, addDays, subDays } from 'date-fns'
 import * as semver from 'semver'
-import commandExists from 'command-exists'
-import { PullsCreateParams } from '@octokit/rest'
 import execa from 'execa'
+import { readFileSync, writeFileSync } from 'fs'
+import * as path from 'path'
 
 const sed = process.platform === 'linux' ? 'sed' : 'gsed'
-
-const formatDate = (date: Date): string =>
-    `${date.toLocaleString('en-US', {
-        timeZone: 'America/Los_Angeles',
-        dateStyle: 'medium',
-        timeStyle: 'short',
-    } as Intl.DateTimeFormatOptions)} (SF time) / ${date.toLocaleString('en-US', {
-        timeZone: 'Europe/Berlin',
-        dateStyle: 'medium',
-        timeStyle: 'short',
-    } as Intl.DateTimeFormatOptions)} (Berlin time)`
-
 interface Config {
     teamEmail: string
 
@@ -45,18 +33,26 @@ interface Config {
     fiveWorkingDaysBeforeRelease: string
 
     slackAnnounceChannel: string
+
+    dryRun: {
+        changesets: boolean
+        trackingIssues: boolean
+    }
 }
 
 type StepID =
-    | 'add-timeline-to-calendar'
     | 'help'
-    | 'tracking-issue:announce'
-    | 'tracking-issue:create'
-    | 'release-candidate:create'
-    | 'release-candidate:dev-announce'
-    | 'qa-start:dev-announce'
-    | 'patch:issue'
+    // release tracking
+    | 'tracking:release-timeline'
+    | 'tracking:release-issue'
+    | 'tracking:patch-issue'
+    // branch cut
+    | 'changelog:cut'
+    // release
+    | 'release:status'
+    | 'release:create-candidate'
     | 'release:publish'
+    // testing
     | '_test:google-calendar'
     | '_test:slack'
 
@@ -107,7 +103,7 @@ const steps: Step[] = [
         },
     },
     {
-        id: 'add-timeline-to-calendar',
+        id: 'tracking:release-timeline',
         run: async config => {
             const googleCalendar = await getClient()
             const events: EventOptions[] = [
@@ -159,13 +155,13 @@ const steps: Step[] = [
             ]
 
             for (const event of events) {
-                console.log(`Create calendar event: ${event.title}: ${event.startDateTime!}`)
+                console.log(`Create calendar event: ${event.title}: ${event.startDateTime || 'undefined'}`)
                 await ensureEvent(event, googleCalendar)
             }
         },
     },
     {
-        id: 'tracking-issue:create',
+        id: 'tracking:release-issue',
         run: async ({
             majorVersion,
             minorVersion,
@@ -174,7 +170,12 @@ const steps: Step[] = [
             oneWorkingDayBeforeRelease,
             fourWorkingDaysBeforeRelease,
             fiveWorkingDaysBeforeRelease,
+
+            captainSlackUsername,
+            slackAnnounceChannel,
+            dryRun,
         }: Config) => {
+            // Create issue
             const { url, created } = await ensureTrackingIssue({
                 majorVersion,
                 minorVersion,
@@ -183,15 +184,127 @@ const steps: Step[] = [
                 oneWorkingDayBeforeRelease: new Date(oneWorkingDayBeforeRelease),
                 fourWorkingDaysBeforeRelease: new Date(fourWorkingDaysBeforeRelease),
                 fiveWorkingDaysBeforeRelease: new Date(fiveWorkingDaysBeforeRelease),
+                dryRun: dryRun.trackingIssues,
             })
-            console.log(created ? `Created tracking issue ${url}` : `Tracking issue already exists: ${url}`)
+            if (url) {
+                console.log(created ? `Created tracking issue ${url}` : `Tracking issue already exists: ${url}`)
+            }
+
+            // Announce issue if issue does not already exist
+            if (created) {
+                // Slack markdown links
+                const majorMinor = `${majorVersion}.${minorVersion}`
+                const branchCutDate = new Date(fourWorkingDaysBeforeRelease)
+                const branchCutDateString = `<${timezoneLink(branchCutDate, `${majorMinor} branch cut`)}|${formatDate(
+                    branchCutDate
+                )}>`
+                const releaseDate = new Date(releaseDateTime)
+                const releaseDateString = `<${timezoneLink(releaseDate, `${majorMinor} release`)}|${formatDate(
+                    releaseDate
+                )}>`
+                await postMessage(
+                    `*${majorVersion}.${minorVersion} Release*
+
+:captain: Release captain: @${captainSlackUsername}
+:pencil: Tracking issue: ${url}
+:spiral_calendar_pad: Key dates:
+* Branch cut: ${branchCutDateString}
+* Release: ${releaseDateString}`,
+                    slackAnnounceChannel
+                )
+                console.log(`Posted to Slack channel ${slackAnnounceChannel}`)
+            }
         },
     },
     {
-        id: 'tracking-issue:announce',
-        run: async config => {
+        id: 'tracking:patch-issue',
+        run: async ({ captainGitHubUsername, slackAnnounceChannel, dryRun }, version) => {
+            const parsedVersion = semver.parse(version, { loose: false })
+            if (!parsedVersion) {
+                throw new Error(`version ${version} is not valid semver`)
+            }
+            if (parsedVersion.prerelease.length > 0) {
+                throw new Error(`version ${version} is pre-release`)
+            }
+
+            // Create issue
+            const { url, created } = await ensurePatchReleaseIssue({
+                version: parsedVersion,
+                assignees: [captainGitHubUsername],
+                dryRun: dryRun.trackingIssues,
+            })
+            if (url) {
+                console.log(created ? `Created tracking issue ${url}` : `Tracking issue already exists: ${url}`)
+            }
+
+            // Announce issue if issue does not already exist
+            if (created) {
+                await postMessage(
+                    `:captain: Patch release ${parsedVersion.version} will be published soon. If you have changes that should go into this patch release, please add your item to the checklist in the issue description: ${url}`,
+                    slackAnnounceChannel
+                )
+                console.log(`Posted to Slack channel ${slackAnnounceChannel}`)
+            }
+        },
+    },
+    {
+        id: 'changelog:cut',
+        argNames: ['version', 'changelogFile'],
+        run: async ({ dryRun }, version, changelogFile = 'CHANGELOG.md') => {
+            const parsedVersion = semver.parse(version, { loose: false })
+            if (!parsedVersion) {
+                throw new Error(`version ${version} is not valid semver`)
+            }
+
+            await createChangesets({
+                requiredCommands: [],
+                changes: [
+                    {
+                        owner: 'sourcegraph',
+                        repo: 'sourcegraph',
+                        base: 'main',
+                        head: `publish-${parsedVersion.version}`,
+                        commitMessage: `release: sourcegraph@${parsedVersion.version}`,
+                        edits: [
+                            (directory: string) => {
+                                console.log(`Updating '${changelogFile} for ${parsedVersion.format()}'`)
+                                const changelogPath = path.join(directory, changelogFile)
+                                let changelogContents = readFileSync(changelogPath).toString()
+
+                                // Convert 'unreleased' to a release
+                                const releaseHeader = `## ${parsedVersion.format()}`
+                                const unreleasedHeader = '## Unreleased'
+                                changelogContents = changelogContents.replace(unreleasedHeader, releaseHeader)
+
+                                // Add a blank changelog template for the next release
+                                changelogContents = changelogContents.replace(
+                                    changelog.divider,
+                                    changelog.releaseTemplate
+                                )
+
+                                // Update changelog
+                                writeFileSync(changelogPath, changelogContents)
+                            },
+                        ], // Changes already done
+                        title: `release: sourcegraph@${parsedVersion.version}`,
+                    },
+                ],
+                dryRun: dryRun.changesets,
+            })
+        },
+    },
+    {
+        id: 'release:status',
+        run: async (config, version) => {
+            const parsedVersion = semver.parse(version, { loose: false })
+            if (!parsedVersion) {
+                throw new Error(`version ${version} is not valid semver`)
+            }
+
+            const githubClient = await getAuthenticatedGitHubClient()
+
             const trackingIssueURL = await getIssueByTitle(
-                await getAuthenticatedGitHubClient(),
+                githubClient,
                 trackingIssueTitle(config.majorVersion, config.minorVersion)
             )
             if (!trackingIssueURL) {
@@ -199,20 +312,37 @@ const steps: Step[] = [
                     `Tracking issue for version ${config.majorVersion}.${config.minorVersion} not found--has it been create yet?`
                 )
             }
-            await postMessage(
-                `:captain: ${config.majorVersion}.${config.minorVersion} Release :captain:
-Release captain: @${config.captainSlackUsername}
-Tracking issue: ${trackingIssueURL}
-Key dates:
-- Release branch cut, testing commences: ${formatDate(new Date(config.fourWorkingDaysBeforeRelease))}
-- Final release tag: ${formatDate(new Date(config.oneWorkingDayBeforeRelease))}
-- Release: ${formatDate(new Date(config.releaseDateTime))}`,
-                config.slackAnnounceChannel
-            )
+
+            const blockingQuery = 'is:open org:sourcegraph label:release-blocker'
+            const blockingIssues = await listIssues(githubClient, blockingQuery)
+            const blockingIssuesURL = `https://github.com/issues?q=${encodeURIComponent(blockingQuery)}`
+
+            const openQuery = `is:open org:sourcegraph is:issue milestone:${config.majorVersion}.${config.minorVersion}`
+            const openIssues = await listIssues(githubClient, openQuery)
+            const openIssuesURL = `https://github.com/issues?q=${encodeURIComponent(openQuery)}`
+
+            const issueCategories = [
+                { name: 'release-blocking', issues: blockingIssues, issuesURL: blockingIssuesURL },
+                { name: 'open', issues: openIssues, issuesURL: openIssuesURL },
+            ]
+
+            const message = `:captain: ${version} release status update:
+
+- Tracking issue: ${trackingIssueURL}
+${issueCategories
+    .map(
+        category =>
+            '- ' +
+            (category.issues.length === 1
+                ? `There is 1 ${category.name} issue: ${category.issuesURL}`
+                : `There are ${category.issues.length} ${category.name} issues: ${category.issuesURL}`)
+    )
+    .join('\n')}`
+            await postMessage(message, config.slackAnnounceChannel)
         },
     },
     {
-        id: 'release-candidate:create',
+        id: 'release:create-candidate',
         argNames: ['version'],
         run: async (_config, version) => {
             const parsedVersion = semver.parse(version, { loose: false })
@@ -233,66 +363,8 @@ Key dates:
         },
     },
     {
-        id: 'release-candidate:dev-announce',
-        run: async (config, version) => {
-            const parsedVersion = semver.parse(version, { loose: false })
-            if (!parsedVersion) {
-                throw new Error(`version ${version} is not valid semver`)
-            }
-
-            const query = `is:open is:issue milestone:${config.majorVersion}.${config.minorVersion} label:release-blocker`
-            const issues = await listIssues(await getAuthenticatedGitHubClient(), query)
-            const issuesURL = `https://github.com/issues?q=${encodeURIComponent(query)}`
-            const releaseBlockerMessage =
-                issues.length === 0
-                    ? 'There are currently ZERO release blocking issues'
-                    : issues.length === 1
-                    ? `There is 1 release-blocking issue: ${issuesURL}`
-                    : `There are ${issues.length} release-blocking issues: ${issuesURL}`
-
-            const message = `:captain: Release \`${version}\` has been cut :captain:
-
-- Please ensure \`CHANGELOG.md\` on \`master\` is up-to-date.
-- Run this release locally with \`IMAGE=sourcegraph/server:${version} ./dev/run-server-image.sh\`
-- It will be deployed to k8s.sgdev.org within approximately one hour (https://k8s.sgdev.org/site-admin/updates)
-- ${releaseBlockerMessage}
-            `
-            await postMessage(message, config.slackAnnounceChannel)
-        },
-    },
-    {
-        id: 'patch:issue',
-        run: async ({ captainGitHubUsername, slackAnnounceChannel }, version) => {
-            const parsedVersion = semver.parse(version, { loose: false })
-            if (!parsedVersion) {
-                throw new Error(`version ${version} is not valid semver`)
-            }
-            if (parsedVersion.prerelease.length > 0) {
-                throw new Error(`version ${version} is pre-release`)
-            }
-
-            // Create issue
-            const { url, created } = await ensurePatchReleaseIssue({
-                version: parsedVersion,
-                assignees: [captainGitHubUsername],
-            })
-            const existsText = created ? '' : ' (already exists)'
-            console.log(`Patch release issue URL${existsText}: ${url}`)
-            if (!created) {
-                return
-            }
-
-            // - Announce issue if issue does not already exist
-            await postMessage(
-                `:captain: Patch release ${parsedVersion.version} will be published soon. If you have changes that should go into this patch release, please add your item to the checklist in the issue description: ${url}`,
-                slackAnnounceChannel
-            )
-            console.log(`Posted to Slack channel ${slackAnnounceChannel}`)
-        },
-    },
-    {
         id: 'release:publish',
-        run: async ({ slackAnnounceChannel }, version) => {
+        run: async ({ slackAnnounceChannel, dryRun }, version) => {
             const parsedVersion = semver.parse(version, { loose: false })
             if (!parsedVersion) {
                 throw new Error(`version ${version} is not valid semver`)
@@ -300,65 +372,71 @@ Key dates:
             if (parsedVersion.prerelease.length > 0) {
                 throw new Error(`version ${version} is pre-release`)
             }
-            const requiredCommands = ['comby', sed, 'find']
-            for (const command of requiredCommands) {
-                try {
-                    await commandExists(command)
-                } catch {
-                    throw new Error(`Required command ${command} does not exist`)
-                }
-            }
+            await createChangesets({
+                requiredCommands: ['comby', sed, 'find', 'go'],
+                changes: [
+                    {
+                        owner: 'sourcegraph',
+                        repo: 'sourcegraph',
+                        base: 'main',
+                        head: `publish-${parsedVersion.version}`,
+                        commitMessage: `release: sourcegraph@${parsedVersion.version}`,
+                        title: `release: sourcegraph@${parsedVersion.version}`,
+                        edits: [
+                            `find . -type f -name '*.md' ! -name 'CHANGELOG.md' -exec ${sed} -i -E 's/sourcegraph\\/server:[0-9]+\\.[0-9]+\\.[0-9]+/sourcegraph\\/server:${parsedVersion.version}/g' {} +`,
+                            `${sed} -i -E 's/version \`[0-9]+\\.[0-9]+\\.[0-9]+\`/version \`${parsedVersion.version}\`/g' doc/index.md`,
+                            parsedVersion.patch === 0
+                                ? `comby -in-place '{{$previousReleaseRevspec := ":[1]"}} {{$previousReleaseVersion := ":[2]"}} {{$currentReleaseRevspec := ":[3]"}} {{$currentReleaseVersion := ":[4]"}}' '{{$previousReleaseRevspec := ":[3]"}} {{$previousReleaseVersion := ":[4]"}} {{$currentReleaseRevspec := "v${parsedVersion.version}"}} {{$currentReleaseVersion := "${parsedVersion.major}.${parsedVersion.minor}"}}' doc/_resources/templates/document.html`
+                                : `comby -in-place 'currentReleaseRevspec := ":[1]"' 'currentReleaseRevspec := "v${parsedVersion.version}"' doc/_resources/templates/document.html`,
+                            `comby -in-place 'latestReleaseKubernetesBuild = newBuild(":[1]")' "latestReleaseKubernetesBuild = newBuild(\\"${parsedVersion.version}\\")" cmd/frontend/internal/app/updatecheck/handler.go`,
+                            `comby -in-place 'latestReleaseDockerServerImageBuild = newBuild(":[1]")' "latestReleaseDockerServerImageBuild = newBuild(\\"${parsedVersion.version}\\")" cmd/frontend/internal/app/updatecheck/handler.go`,
+                        ],
+                    },
+                    {
+                        owner: 'sourcegraph',
+                        repo: 'deploy-sourcegraph',
+                        base: `${parsedVersion.major}.${parsedVersion.minor}`,
+                        head: `publish-${parsedVersion.version}`,
+                        commitMessage: `release: sourcegraph@${parsedVersion.version}`,
+                        title: `release: sourcegraph@${parsedVersion.version}`,
+                        edits: [
+                            // installs version pinned by deploy-sourcegraph
+                            'go install github.com/slimsag/update-docker-tags',
+                            `.github/workflows/scripts/update-docker-tags.sh ${parsedVersion.version}`,
+                        ],
+                    },
+                    {
+                        owner: 'sourcegraph',
+                        repo: 'deploy-sourcegraph-aws',
+                        base: 'master',
+                        head: `publish-${parsedVersion.version}`,
+                        commitMessage: `release: sourcegraph@${parsedVersion.version}`,
+                        title: `release: sourcegraph@${parsedVersion.version}`,
+                        edits: [
+                            `${sed} -i -E 's/export SOURCEGRAPH_VERSION=[0-9]+\\.[0-9]+\\.[0-9]+/export SOURCEGRAPH_VERSION=${parsedVersion.version}/g' resources/amazon-linux2.sh`,
+                        ],
+                    },
+                    {
+                        owner: 'sourcegraph',
+                        repo: 'deploy-sourcegraph-digitalocean',
+                        base: 'master',
+                        head: `publish-${parsedVersion.version}`,
+                        commitMessage: `release: sourcegraph@${parsedVersion.version}`,
+                        title: `release: sourcegraph@${parsedVersion.version}`,
+                        edits: [
+                            `${sed} -i -E 's/export SOURCEGRAPH_VERSION=[0-9]+\\.[0-9]+\\.[0-9]+/export SOURCEGRAPH_VERSION=${parsedVersion.version}/g' resources/user-data.sh`,
+                        ],
+                    },
+                ],
+                dryRun: dryRun.changesets,
+            })
 
-            const changes: (PullsCreateParams & CreateBranchWithChangesOptions)[] = [
-                {
-                    owner: 'sourcegraph',
-                    repo: 'sourcegraph',
-                    base: 'master',
-                    head: `publish-${parsedVersion.version}`,
-                    commitMessage: `Update latest release to ${parsedVersion.version}`,
-                    bashEditCommands: [
-                        `find . -type f -name '*.md' ! -name 'CHANGELOG.md' -exec ${sed} -i -E 's/sourcegraph\\/server:[0-9]+\\.[0-9]+\\.[0-9]+/sourcegraph\\/server:${parsedVersion.version}/g' {} +`,
-                        `${sed} -i -E 's/version \`[0-9]+\\.[0-9]+\\.[0-9]+\`/version \`${parsedVersion.version}\`/g' doc/index.md`,
-                        parsedVersion.patch === 0
-                            ? `comby -in-place '{{$previousReleaseRevspec := ":[1]"}} {{$previousReleaseVersion := ":[2]"}} {{$currentReleaseRevspec := ":[3]"}} {{$currentReleaseVersion := ":[4]"}}' '{{$previousReleaseRevspec := ":[3]"}} {{$previousReleaseVersion := ":[4]"}} {{$currentReleaseRevspec := "v${parsedVersion.version}"}} {{$currentReleaseVersion := "${parsedVersion.major}.${parsedVersion.minor}"}}' doc/_resources/templates/document.html`
-                            : `comby -in-place 'currentReleaseRevspec := ":[1]"' 'currentReleaseRevspec := "v${parsedVersion.version}"' doc/_resources/templates/document.html`,
-                        `comby -in-place 'latestReleaseKubernetesBuild = newBuild(":[1]")' "latestReleaseKubernetesBuild = newBuild(\\"${parsedVersion.version}\\")" cmd/frontend/internal/app/pkg/updatecheck/handler.go`,
-                        `comby -in-place 'latestReleaseDockerServerImageBuild = newBuild(":[1]")' "latestReleaseDockerServerImageBuild = newBuild(\\"${parsedVersion.version}\\")" cmd/frontend/internal/app/pkg/updatecheck/handler.go`,
-                    ],
-                    title: `Update latest release to ${parsedVersion.version}`,
-                },
-                {
-                    owner: 'sourcegraph',
-                    repo: 'deploy-sourcegraph-aws',
-                    base: 'master',
-                    head: `publish-${parsedVersion.version}`,
-                    commitMessage: `Update latest release to ${parsedVersion.version}`,
-                    bashEditCommands: [
-                        `${sed} -i -E 's/export SOURCEGRAPH_VERSION=[0-9]+\\.[0-9]+\\.[0-9]+/export SOURCEGRAPH_VERSION=${parsedVersion.version}/g' resources/amazon-linux2.sh`,
-                    ],
-                    title: `Update latest release to ${parsedVersion.version}`,
-                },
-                {
-                    owner: 'sourcegraph',
-                    repo: 'deploy-sourcegraph-digitalocean',
-                    base: 'master',
-                    head: `publish-${parsedVersion.version}`,
-                    commitMessage: `Update latest release to ${parsedVersion.version}`,
-                    bashEditCommands: [
-                        `${sed} -i -E 's/export SOURCEGRAPH_VERSION=[0-9]+\\.[0-9]+\\.[0-9]+/export SOURCEGRAPH_VERSION=${parsedVersion.version}/g' resources/user-data.sh`,
-                    ],
-                    title: `Update latest release to ${parsedVersion.version}`,
-                },
-            ]
-            for (const changeset of changes) {
-                await createBranchWithChanges(changeset)
-                const prURL = await createPR(changeset)
-                console.log(`Pull request created: ${prURL}`)
+            if (!dryRun.changesets) {
+                await postMessage(
+                    `${parsedVersion.version} has been released, update deploy-sourcegraph-docker as needed, cc @stephen`,
+                    slackAnnounceChannel
+                )
             }
-            await postMessage(
-                `${parsedVersion.version} has been released, update deploy-sourcegraph-docker as needed, cc @stephen`,
-                slackAnnounceChannel
-            )
         },
     },
 ]

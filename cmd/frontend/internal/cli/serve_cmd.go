@@ -17,35 +17,40 @@ import (
 
 	"github.com/inconshreveable/log15"
 	"github.com/keegancsmith/tmpfriend"
+
 	"github.com/sourcegraph/sourcegraph/cmd/frontend/backend"
 	"github.com/sourcegraph/sourcegraph/cmd/frontend/enterprise"
+	"github.com/sourcegraph/sourcegraph/cmd/frontend/envvar"
 	"github.com/sourcegraph/sourcegraph/cmd/frontend/globals"
 	"github.com/sourcegraph/sourcegraph/cmd/frontend/graphqlbackend"
-	"github.com/sourcegraph/sourcegraph/cmd/frontend/internal/app/pkg/updatecheck"
+	"github.com/sourcegraph/sourcegraph/cmd/frontend/internal/app/updatecheck"
 	"github.com/sourcegraph/sourcegraph/cmd/frontend/internal/bg"
 	"github.com/sourcegraph/sourcegraph/cmd/frontend/internal/cli/loghandlers"
-	"github.com/sourcegraph/sourcegraph/cmd/frontend/internal/pkg/siteid"
+	"github.com/sourcegraph/sourcegraph/cmd/frontend/internal/siteid"
 	"github.com/sourcegraph/sourcegraph/internal/conf"
 	"github.com/sourcegraph/sourcegraph/internal/db/dbconn"
 	"github.com/sourcegraph/sourcegraph/internal/db/dbutil"
 	"github.com/sourcegraph/sourcegraph/internal/debugserver"
 	"github.com/sourcegraph/sourcegraph/internal/env"
 	"github.com/sourcegraph/sourcegraph/internal/goroutine"
+	"github.com/sourcegraph/sourcegraph/internal/logging"
 	"github.com/sourcegraph/sourcegraph/internal/processrestart"
+	"github.com/sourcegraph/sourcegraph/internal/secret"
 	"github.com/sourcegraph/sourcegraph/internal/sysreq"
+	"github.com/sourcegraph/sourcegraph/internal/trace"
 	"github.com/sourcegraph/sourcegraph/internal/tracer"
 	"github.com/sourcegraph/sourcegraph/internal/version"
 	"github.com/sourcegraph/sourcegraph/internal/vfsutil"
 )
 
 var (
-	trace          = env.Get("SRC_LOG_TRACE", "HTTP", "space separated list of trace logs to show. Options: all, HTTP, build, github")
+	traceFields    = env.Get("SRC_LOG_TRACE", "HTTP", "space separated list of trace logs to show. Options: all, HTTP, build, github")
 	traceThreshold = env.Get("SRC_LOG_TRACE_THRESHOLD", "", "show traces that take longer than this")
 
 	printLogo, _ = strconv.ParseBool(env.Get("LOGO", "false", "print Sourcegraph logo upon startup"))
 
 	httpAddr         = env.Get("SRC_HTTP_ADDR", ":3080", "HTTP listen address for app and HTTP API")
-	httpAddrInternal = env.Get("SRC_HTTP_ADDR_INTERNAL", ":3090", "HTTP listen address for internal HTTP API. This should never be exposed externally, as it lacks certain authz checks.")
+	httpAddrInternal = envvar.HTTPAddrInternal
 
 	nginxAddr = env.Get("SRC_NGINX_HTTP_ADDR", "", "HTTP listen address for nginx reverse proxy to SRC_HTTP_ADDR. Has preference over SRC_HTTP_ADDR for ExternalURL.")
 
@@ -82,8 +87,8 @@ func defaultExternalURL(nginxAddr, httpAddr string) *url.URL {
 // InitDB initializes the global database connection and sets the
 // version of the frontend in our versions table.
 func InitDB() error {
-	if err := dbconn.ConnectToDB(""); err != nil {
-		return err
+	if err := dbconn.SetupGlobalConnection(""); err != nil {
+		return fmt.Errorf("failed to connect to frontend database: %s", err)
 	}
 
 	ctx := context.Background()
@@ -103,7 +108,7 @@ func InitDB() error {
 			return nil
 		}
 
-		if err := dbconn.MigrateDB(dbconn.Global, ""); err != nil {
+		if err := dbconn.MigrateDB(dbconn.Global, "frontend"); err != nil {
 			return err
 		}
 
@@ -129,7 +134,9 @@ func Main(enterpriseSetupHook func() enterprise.Services) error {
 
 	// Filter trace logs
 	d, _ := time.ParseDuration(traceThreshold)
-	tracer.Init(tracer.Filter(loghandlers.Trace(strings.Fields(trace), d)))
+	logging.Init(logging.Filter(loghandlers.Trace(strings.Fields(traceFields), d)))
+	tracer.Init()
+	trace.Init(true)
 
 	// Run enterprise setup hook
 	enterprise := enterpriseSetupHook()
@@ -187,7 +194,6 @@ func Main(enterpriseSetupHook func() enterprise.Services) error {
 
 	globals.WatchExternalURL(defaultExternalURL(nginxAddr, httpAddr))
 	globals.WatchPermissionsUserMapping()
-	globals.WatchPermissionsBackgroundSync()
 
 	goroutine.Go(func() { bg.MigrateAllSettingsMOTDToNotices(context.Background()) })
 	goroutine.Go(func() { bg.MigrateSavedQueriesAndSlackWebhookURLsFromSettingsToDatabase(context.Background()) })
@@ -202,13 +208,18 @@ func Main(enterpriseSetupHook func() enterprise.Services) error {
 		return errors.New("dbconn.Global is nil when trying to parse GraphQL schema")
 	}
 
+	err := secret.Init()
+	if err != nil {
+		return err
+	}
+
 	schema, err := graphqlbackend.NewSchema(enterprise.CampaignsResolver, enterprise.CodeIntelResolver, enterprise.AuthzResolver)
 	if err != nil {
 		return err
 	}
 
 	// Create the external HTTP handler.
-	externalHandler, err := newExternalHTTPHandler(schema, enterprise.GithubWebhook, enterprise.BitbucketServerWebhook, enterprise.NewCodeIntelUploadHandler)
+	externalHandler, err := newExternalHTTPHandler(schema, enterprise.GitHubWebhook, enterprise.GitLabWebhook, enterprise.BitbucketServerWebhook, enterprise.NewCodeIntelUploadHandler, enterprise.NewCodeIntelInternalProxyHandler)
 	if err != nil {
 		return err
 	}

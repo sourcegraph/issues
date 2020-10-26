@@ -11,11 +11,9 @@ import (
 	"strings"
 
 	"github.com/felixge/fgprof"
-	"github.com/sourcegraph/sourcegraph/internal/env"
-
-	"golang.org/x/net/trace"
-
 	"github.com/prometheus/client_golang/prometheus/promhttp"
+	"github.com/sourcegraph/sourcegraph/internal/env"
+	"golang.org/x/net/trace"
 )
 
 var addr = env.Get("SRC_PROF_HTTP", ":6060", "net/http/pprof http bind address.")
@@ -121,4 +119,18 @@ func Start(extra ...Endpoint) {
 type Dumper interface {
 	// DebugDump returns a snapshot of the current state.
 	DebugDump() interface{}
+}
+
+// ServerRoutine is a type wrapping the `Start` method so it can be used
+// easily by the goroutine package.
+type ServerRoutine struct {
+	extra []Endpoint
+}
+
+func NewServerRoutine(extra ...Endpoint) *ServerRoutine {
+	return &ServerRoutine{extra: extra}
+}
+
+func (r *ServerRoutine) Start() {
+	Start(r.extra...)
 }

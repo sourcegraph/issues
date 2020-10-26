@@ -1,0 +1,5 @@
+route:
+  receiver: src-noop-receiver
+
+receivers:
+  - name: src-noop-receiver

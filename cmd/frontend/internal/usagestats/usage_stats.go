@@ -10,8 +10,8 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/sourcegraph/sourcegraph/cmd/frontend/db"
 	"github.com/sourcegraph/sourcegraph/cmd/frontend/types"
+	"github.com/sourcegraph/sourcegraph/internal/db"
 	"github.com/sourcegraph/sourcegraph/internal/timeutil"
 )
 
@@ -257,108 +257,11 @@ func activeUsers(ctx context.Context, periodType db.PeriodType, periods int) ([]
 			RegisteredUserCount:  int32(registeredUniqueUsers[i].Count),
 			AnonymousUserCount:   int32(u.Count - registeredUniqueUsers[i].Count),
 			IntegrationUserCount: int32(integrationUniqueUsers[i].Count),
-			Stages:               nil,
 		}
 		activeUsers = append(activeUsers, actPer)
 	}
 
-	// Count stage unique users For the latest week and month only.
-	switch periodType {
-	case db.Weekly:
-		fallthrough
-	case db.Monthly:
-		activeUsers[0].Stages, err = stageUniqueUsers(activeUsers[0].StartTime)
-		if err != nil {
-			return nil, err
-		}
-	}
-
 	return activeUsers, nil
-}
-
-var MockStageUniqueUsers func(startDate time.Time) (*types.Stages, error)
-
-// stageUniqueUsers returns the count of unique users on this instance in each stage of the Software Development Lifecycle since the given start date.
-func stageUniqueUsers(startDate time.Time) (*types.Stages, error) {
-	if MockStageUniqueUsers != nil {
-		return MockStageUniqueUsers(startDate)
-	}
-
-	ctx := context.Background()
-	startDate = startDate.UTC()
-	endDate := timeNow()
-
-	//// MANAGE ////
-	// 1) any activity from a site admin
-	// 2) any usage of an API access token
-
-	manageUniqueUsers, err := db.EventLogs.CountUniqueUsersByEventNamePrefix(ctx, startDate, endDate, "ViewSiteAdmin")
-	if err != nil {
-		return nil, err
-	}
-
-	//// PLAN ////
-	// none currently
-
-	//// CODE ////
-	// 1) any searches
-	// 2) any file, repo, tree views
-	// 3) TODO(Dan): any code host integration usage (other than for code review)
-
-	codeUniqueUsers, err := db.EventLogs.CountUniqueUsersByEventNames(ctx, startDate, endDate, []string{"ViewRepository", "ViewBlob", "ViewTree", "SearchResultsQueried"})
-	if err != nil {
-		return nil, err
-	}
-
-	//// REVIEW ////
-	// 1) TODO(Dan): code host integration usage for code review
-
-	//// VERIFY ////
-	// 1) receiving a saved search notification (email)
-	// 2) TODO(Dan): receiving a saved search notification (slack)
-	// 3) clicking a saved search notification (email or slack)
-	// 4) TODO(Dan): having a saved search defined in your user or org settings
-	verifyUniqueUsers, err := db.EventLogs.CountUniqueUsersByEventNames(ctx, startDate, endDate, []string{"SavedSearchEmailClicked", "SavedSearchSlackClicked", "SavedSearchEmailNotificationSent"})
-	if err != nil {
-		return nil, err
-	}
-
-	//// PACKAGE ////
-	// none currently
-
-	//// DEPLOY ////
-	// none currently
-
-	//// CONFIGURE ////
-	// none currently
-
-	//// MONITOR ////
-	// 1) running a diff search
-	// 2) TODO(Dan): monitoring extension enabled (e.g. LightStep, Sentry, Datadog)
-	monitorUniqueUsers, err := db.EventLogs.CountUniqueUsersByEventName(ctx, startDate, endDate, "DiffSearchResultsQueried")
-	if err != nil {
-		return nil, err
-	}
-
-	//// SECURE ////
-	// none currently
-
-	//// AUTOMATE ////
-	// none currently
-
-	return &types.Stages{
-		Manage:    int32(manageUniqueUsers),
-		Plan:      0,
-		Code:      int32(codeUniqueUsers),
-		Review:    0,
-		Verify:    int32(verifyUniqueUsers),
-		Package:   0,
-		Deploy:    0,
-		Configure: 0,
-		Monitor:   int32(monitorUniqueUsers),
-		Secure:    0,
-		Automate:  0,
-	}, nil
 }
 
 func minIntOrZero(a, b int) int {

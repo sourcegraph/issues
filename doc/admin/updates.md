@@ -1,25 +1,17 @@
 # Upgrading Sourcegraph
 
-## For single-node deployments (`sourcegraph/server`)
+## Updating to a new version of Sourcegraph
 
-A new version of Sourcegraph is released every month (with patch releases in between, released as needed). Check the [Sourcegraph blog](https://about.sourcegraph.com/blog) or the site admin updates page to learn about updates.
+Please see the instructions for your deployment type:
 
-To update, just use the newer `sourcegraph/server:N.N.N` Docker image (where `N.N.N` is the version number) in place of the older one, using the same Docker volumes. Your server's data will be migrated automatically if needed.
+- [Single-container `sourcegraph/server` deployments](updates/server.md)
+- [Docker Compose single-machine deployments](updates/docker_compose.md)
+- [Kubernetes cluster deployments](updates/kubernetes.md)
+- [pure-Docker custom deployments](updates/pure_docker.md)
 
-You can always find the version number of the latest release at [docs.sourcegraph.com](https://docs.sourcegraph.com) in the `docker run` command's image tag.
+## Migrating to a new deployment type
 
-- As a precaution, before updating, we recommend backing up the contents of the Docker volumes used by Sourcegraph.
-- If you need a HA deployment, use the [Kubernetes cluster deployment option](https://github.com/sourcegraph/deploy-sourcegraph).
-- There is currently no automated way to downgrade to an older version after you have updated. [Contact support](https://about.sourcegraph.com/contact) for help.
+See [this page](install.md) to get advice on which deployment type you should be running.
 
-## For Kubernetes cluster deployments
-
-See "[Updating Sourcegraph](https://github.com/sourcegraph/deploy-sourcegraph/blob/master/docs/update.md)" in the Kubernetes cluster administrator guide.
-
-## For Docker Compose deployments
-
-Please see: [updating a Docker Compose Sourcegraph instance](updates/docker_compose.md)
-
-## For pure-Docker cluster deployments
-
-Please see: [updating a pure-Docker Sourcegraph cluster](updates/pure_docker.md)
+- [Migrate to Docker Compose](install/docker-compose/migrate.md) for improved stability and performance if you are using a single-container `sourcegraph/server` deployment.
+- [Migrate to a Kubernetes cluster](https://docs.sourcegraph.com/admin/install/kubernetes) if you exceed the limits of a single machine Docker Compose deployment.

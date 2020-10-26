@@ -11,8 +11,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/sourcegraph/sourcegraph/cmd/frontend/db"
 	"github.com/sourcegraph/sourcegraph/cmd/frontend/types"
+	"github.com/sourcegraph/sourcegraph/internal/db"
 	"github.com/sourcegraph/sourcegraph/internal/db/dbtesting"
 )
 
@@ -262,10 +262,6 @@ func TestUserUsageStatistics_getUsersActiveToday(t *testing.T) {
 }
 
 func TestUserUsageStatistics_DAUs_WAUs_MAUs(t *testing.T) {
-	MockStageUniqueUsers = func(_ time.Time) (*types.Stages, error) {
-		return nil, nil
-	}
-
 	ctx := context.Background()
 
 	defer func() {

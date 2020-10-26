@@ -1,0 +1,112 @@
+.search-result-match {
+    text-decoration: none; // don't use cascading link style
+    display: flex;
+    align-items: center;
+    padding: 0.25rem 0;
+    overflow-x: auto;
+    overflow-y: hidden;
+
+    &-clickable {
+        cursor: pointer;
+    }
+
+    &:hover {
+        background-color: var(--color-bg-1);
+        text-decoration: none;
+    }
+
+    &:not(:first-child) {
+        border-top: 1px solid var(--border-color);
+    }
+
+    pre,
+    code {
+        width: 100%;
+        padding: 0;
+        margin-bottom: 0;
+    }
+
+    table,
+    tr,
+    td {
+        display: flex;
+        flex-grow: 1;
+        padding: 0;
+        margin-bottom: 0;
+        .code {
+            padding: 0;
+        }
+        span:last-child {
+            width: 100%;
+        }
+    }
+
+    tbody {
+        display: flex;
+        flex-grow: 1;
+        flex-direction: column;
+    }
+
+    &__markdown {
+        padding: 0.25rem 0.5rem;
+        display: flex;
+        flex-direction: column;
+        flex-grow: 1;
+
+        table,
+        th,
+        td {
+            border: none;
+            padding: 0;
+        }
+
+        code,
+        pre {
+            background-color: transparent;
+            padding: 0;
+        }
+
+        p,
+        li {
+            code {
+                display: inline;
+            }
+        }
+    }
+
+    &__code-excerpt {
+        padding-top: 0;
+        padding-bottom: 1rem;
+        padding-left: 0.5rem;
+        padding-right: 0;
+
+        table {
+            margin-bottom: 0 !important; // Override docsite Markdown table CSS. A currently open PR removes that CSS and lets us remove this override.
+        }
+        td.line {
+            display: none;
+        }
+        td.code > span:first-child {
+            padding-left: 1rem;
+        }
+
+        td.code > span:last-child {
+            padding-right: 1rem;
+        }
+    }
+
+    &__line {
+        &--hidden {
+            visibility: hidden;
+        }
+    }
+
+    &__loader {
+        position: absolute;
+        top: 50%;
+        transform: translateY(-50%);
+        left: 50%;
+    }
+
+    border-top: 1px solid var(--border-color);
+}

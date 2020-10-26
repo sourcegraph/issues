@@ -1,0 +1,54 @@
+---
+version: 1
+interactions:
+- request:
+    body: ""
+    form: {}
+    headers:
+      Content-Type:
+      - application/json; charset=utf-8
+    url: https://bitbucket.sgdev.org/rest/api/1.0/projects/SOUR/repos/vegeta/pull-requests/999
+    method: GET
+  response:
+    body: '{"errors":[{"context":null,"message":"Pull request 999 does not exist in SOUR/vegeta.","exceptionName":"com.atlassian.bitbucket.pull.NoSuchPullRequestException"}]}'
+    headers:
+      Cache-Control:
+      - private, no-cache
+      - no-cache, no-transform
+      Cf-Cache-Status:
+      - DYNAMIC
+      Cf-Ray:
+      - 5e5b080ec9d496c2-FRA
+      Cf-Request-Id:
+      - 05ecc35d3e000096c2229a0000000001
+      Content-Type:
+      - application/json;charset=UTF-8
+      Date:
+      - Wed, 21 Oct 2020 12:37:43 GMT
+      Expect-Ct:
+      - max-age=604800, report-uri="https://report-uri.cloudflare.com/cdn-cgi/beacon/expect-ct"
+      Nel:
+      - '{"report_to":"cf-nel","max_age":604800}'
+      Pragma:
+      - no-cache
+      Report-To:
+      - '{"endpoints":[{"url":"https:\/\/a.nel.cloudflare.com\/report?lkg-colo=71&lkg-time=1603283863"}],"group":"cf-nel","max_age":604800}'
+      Server:
+      - cloudflare
+      Vary:
+      - X-AUSERNAME,Accept-Encoding
+      X-Arequestid:
+      - '@AEJ6EVx757x1021833x0'
+      X-Asen:
+      - SEN-11363689
+      X-Asessionid:
+      - lhja3d
+      X-Auserid:
+      - "104"
+      X-Ausername:
+      - thorsten
+      X-Content-Type-Options:
+      - nosniff
+    status: 404 Not Found
+    code: 404
+    duration: ""

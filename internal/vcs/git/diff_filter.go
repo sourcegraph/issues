@@ -4,7 +4,9 @@ import (
 	"bytes"
 	"fmt"
 	"io"
+	"log"
 	"regexp"
+	"runtime/debug"
 	"unicode/utf8"
 
 	"github.com/sourcegraph/go-diff/diff"
@@ -21,7 +23,18 @@ func compilePathMatcher(options PathOptions) (pathmatch.PathMatcher, error) {
 
 // filterAndHighlightDiff returns the raw diff with query matches highlighted
 // and only hunks that satisfy the query (if onlyMatchingHunks) and path matcher.
-func filterAndHighlightDiff(rawDiff []byte, query *regexp.Regexp, onlyMatchingHunks bool, pathMatcher pathmatch.PathMatcher) ([]byte, []Highlight, error) {
+func filterAndHighlightDiff(rawDiff []byte, query *regexp.Regexp, onlyMatchingHunks bool, pathMatcher pathmatch.PathMatcher) (_ []byte, _ []Highlight, err error) {
+	// go-diff has been known to panic. Until we are sure it has been written
+	// to avoid panics, we protect calles from the panic. eg
+	// https://github.com/sourcegraph/go-diff/issues/54
+	defer func() {
+		if panicValue := recover(); panicValue != nil {
+			stack := debug.Stack()
+			log.Printf("filterAndHighlightDiff panic: %v\n%s", panicValue, stack)
+			err = fmt.Errorf("filterAndHighlightDiff panic: %v", panicValue)
+		}
+	}()
+
 	const (
 		maxFiles          = 5
 		maxHunksPerFile   = 3
@@ -79,7 +92,6 @@ func filterAndHighlightDiff(rawDiff []byte, query *regexp.Regexp, onlyMatchingHu
 		return nil, nil, nil
 	}
 
-	var err error
 	rawDiff, err = diff.PrintMultiFileDiff(matchingFileDiffs)
 	if err != nil {
 		return nil, nil, err

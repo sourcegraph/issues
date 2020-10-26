@@ -3,8 +3,9 @@ package txemail
 import (
 	"testing"
 
+	"github.com/google/go-cmp/cmp"
+	"github.com/jordan-wright/email"
 	"github.com/sourcegraph/sourcegraph/internal/txemail/txtypes"
-	gophermail "gopkg.in/jpoehls/gophermail.v0"
 )
 
 func TestParseTemplate(t *testing.T) {
@@ -21,7 +22,7 @@ func TestParseTemplate(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	var m gophermail.Message
+	var m email.Email
 	if err := renderTemplate(pt, struct {
 		A string
 		B string
@@ -32,13 +33,15 @@ func TestParseTemplate(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if want := `a subject <b>`; m.Subject != want {
-		t.Errorf("got subject %q, want %q", m.Subject, want)
+	if diff := cmp.Diff(m.Subject, `a subject <b>`); diff != "" {
+		t.Fatalf("(-want +got):\n%s", diff)
 	}
-	if want := `a text body <b>`; m.Body != want {
-		t.Errorf("got text body %q, want %q", m.Body, want)
+
+	if diff := cmp.Diff(string(m.Text), `a text body <b>`); diff != "" {
+		t.Fatalf("(-want +got):\n%s", diff)
 	}
-	if want := `a html body <span class="&lt;b&gt;" />`; m.HTMLBody != want {
-		t.Errorf("got html body %q, want %q", m.HTMLBody, want)
+
+	if diff := cmp.Diff(string(m.HTML), `a html body <span class="&lt;b&gt;" />`); diff != "" {
+		t.Fatalf("(-want +got):\n%s", diff)
 	}
 }

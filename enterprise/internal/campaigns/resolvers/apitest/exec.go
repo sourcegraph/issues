@@ -7,7 +7,7 @@ import (
 	"strings"
 	"testing"
 
-	graphql "github.com/graph-gophers/graphql-go"
+	"github.com/graph-gophers/graphql-go"
 	gqlerrors "github.com/graph-gophers/graphql-go/errors"
 	"github.com/sourcegraph/sourcegraph/internal/jsonc"
 )
@@ -41,7 +41,18 @@ func Exec(
 
 	query = strings.Replace(query, "\t", "  ", -1)
 
-	r := s.Exec(ctx, query, "", in)
+	b, err := json.Marshal(in)
+	if err != nil {
+		t.Fatalf("failed to marshal input: %s", err)
+	}
+
+	var anonInput map[string]interface{}
+	err = json.Unmarshal(b, &anonInput)
+	if err != nil {
+		t.Fatalf("failed to unmarshal input back: %s", err)
+	}
+
+	r := s.Exec(ctx, query, "", anonInput)
 	if len(r.Errors) != 0 {
 		return r.Errors
 	}

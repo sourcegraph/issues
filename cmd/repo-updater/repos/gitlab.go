@@ -16,6 +16,7 @@ import (
 	"github.com/sourcegraph/sourcegraph/internal/extsvc/gitlab"
 	"github.com/sourcegraph/sourcegraph/internal/httpcli"
 	"github.com/sourcegraph/sourcegraph/internal/jsonc"
+	"github.com/sourcegraph/sourcegraph/internal/vcs/git"
 	"github.com/sourcegraph/sourcegraph/schema"
 )
 
@@ -141,8 +142,8 @@ func (s GitLabSource) makeRepo(proj *gitlab.Project) *Repo {
 	}
 }
 
-// authenticatedRemoteURL returns the GitLab projects's Git remote URL with the configured GitLab personal access
-// token inserted in the URL userinfo, for repositories needing authentication.
+// authenticatedRemoteURL returns the GitLab projects's Git remote URL with the
+// configured GitLab personal access token inserted in the URL userinfo.
 func (s *GitLabSource) authenticatedRemoteURL(proj *gitlab.Project) string {
 	if s.config.GitURLType == "ssh" {
 		return proj.SSHURLToRepo // SSH authentication must be provided out-of-band
@@ -299,4 +300,257 @@ func projectQueryToURL(projectQuery string, perPage int) (string, error) {
 	u.RawQuery = q.Encode()
 
 	return u.String(), nil
+}
+
+var _ ChangesetSource = &GitLabSource{}
+var _ DraftChangesetSource = &GitLabSource{}
+
+// CreateChangeset creates a GitLab merge request. If it already exists,
+// *Changeset will be populated and the return value will be true.
+func (s *GitLabSource) CreateChangeset(ctx context.Context, c *Changeset) (bool, error) {
+	project := c.Repo.Metadata.(*gitlab.Project)
+	exists := false
+	source := git.AbbreviateRef(c.HeadRef)
+	target := git.AbbreviateRef(c.BaseRef)
+
+	mr, err := s.client.CreateMergeRequest(ctx, project, gitlab.CreateMergeRequestOpts{
+		SourceBranch: source,
+		TargetBranch: target,
+		Title:        c.Title,
+		Description:  c.Body,
+	})
+	if err != nil {
+		if err == gitlab.ErrMergeRequestAlreadyExists {
+			exists = true
+
+			mr, err = s.client.GetOpenMergeRequestByRefs(ctx, project, source, target)
+			if err != nil {
+				return exists, errors.Wrap(err, "retrieving an extant merge request")
+			}
+		} else {
+			return exists, errors.Wrap(err, "creating the merge request")
+		}
+	}
+
+	if err := c.SetMetadata(mr); err != nil {
+		return exists, errors.Wrap(err, "setting changeset metadata")
+	}
+	return exists, nil
+}
+
+// CreateDraftChangeset creates a GitLab merge request. If it already exists,
+// *Changeset will be populated and the return value will be true.
+func (s *GitLabSource) CreateDraftChangeset(ctx context.Context, c *Changeset) (bool, error) {
+	c.Title = gitlab.SetWIP(c.Title)
+
+	exists, err := s.CreateChangeset(ctx, c)
+	if err != nil {
+		return exists, err
+	}
+
+	mr, ok := c.Changeset.Metadata.(*gitlab.MergeRequest)
+	if !ok {
+		return false, errors.New("Changeset is not a GitLab merge request")
+	}
+
+	// If it already exists, but is not a WIP, we need to update the title.
+	if exists && !mr.WorkInProgress {
+		if err := s.UpdateChangeset(ctx, c); err != nil {
+			return exists, err
+		}
+	}
+	return exists, nil
+}
+
+// CloseChangeset closes the merge request on GitLab, leaving it unlocked.
+func (s *GitLabSource) CloseChangeset(ctx context.Context, c *Changeset) error {
+	mr, ok := c.Changeset.Metadata.(*gitlab.MergeRequest)
+	if !ok {
+		return errors.New("Changeset is not a GitLab merge request")
+	}
+
+	// Title and TargetBranch are required, even though we're not actually
+	// changing them.
+	updated, err := s.client.UpdateMergeRequest(ctx, c.Repo.Metadata.(*gitlab.Project), mr, gitlab.UpdateMergeRequestOpts{
+		Title:        mr.Title,
+		TargetBranch: mr.TargetBranch,
+		StateEvent:   gitlab.UpdateMergeRequestStateEventClose,
+	})
+	if err != nil {
+		return errors.Wrap(err, "updating GitLab merge request")
+	}
+
+	if err := c.SetMetadata(updated); err != nil {
+		return errors.Wrap(err, "setting changeset metadata")
+	}
+	return nil
+}
+
+// LoadChangeset loads the given merge request from GitLab and updates it.
+func (s *GitLabSource) LoadChangeset(ctx context.Context, cs *Changeset) error {
+	project := cs.Repo.Metadata.(*gitlab.Project)
+
+	iid, err := strconv.ParseInt(cs.ExternalID, 10, 64)
+	if err != nil {
+		return errors.Wrapf(err, "parsing changeset external ID %s", cs.ExternalID)
+	}
+
+	mr, err := s.client.GetMergeRequest(ctx, project, gitlab.ID(iid))
+	if err != nil {
+		if gitlab.IsNotFound(err) {
+			return ChangesetNotFoundError{Changeset: cs}
+		}
+		return errors.Wrapf(err, "retrieving merge request %d", iid)
+	}
+
+	// These additional API calls can go away once we can use the GraphQL API.
+	if err := s.decorateMergeRequestData(ctx, project, mr); err != nil {
+		return errors.Wrapf(err, "retrieving additional data for merge request %d", iid)
+	}
+
+	if err := cs.SetMetadata(mr); err != nil {
+		return errors.Wrapf(err, "setting changeset metadata for merge request %d", iid)
+	}
+
+	return nil
+}
+
+// ReopenChangeset closes the merge request on GitLab, leaving it unlocked.
+func (s *GitLabSource) ReopenChangeset(ctx context.Context, c *Changeset) error {
+	mr, ok := c.Changeset.Metadata.(*gitlab.MergeRequest)
+	if !ok {
+		return errors.New("Changeset is not a GitLab merge request")
+	}
+
+	// Title and TargetBranch are required, even though we're not actually
+	// changing them.
+	updated, err := s.client.UpdateMergeRequest(ctx, c.Repo.Metadata.(*gitlab.Project), mr, gitlab.UpdateMergeRequestOpts{
+		Title:        mr.Title,
+		TargetBranch: mr.TargetBranch,
+		StateEvent:   gitlab.UpdateMergeRequestStateEventReopen,
+	})
+	if err != nil {
+		return errors.Wrap(err, "reopening GitLab merge request")
+	}
+
+	if err := c.SetMetadata(updated); err != nil {
+		return errors.Wrap(err, "setting changeset metadata")
+	}
+	return nil
+}
+
+func (s *GitLabSource) decorateMergeRequestData(ctx context.Context, project *gitlab.Project, mr *gitlab.MergeRequest) error {
+	notes, err := s.getMergeRequestNotes(ctx, project, mr)
+	if err != nil {
+		return errors.Wrap(err, "retrieving notes")
+	}
+
+	pipelines, err := s.getMergeRequestPipelines(ctx, project, mr)
+	if err != nil {
+		return errors.Wrap(err, "retrieving pipelines")
+	}
+
+	mr.Notes = notes
+	mr.Pipelines = pipelines
+	return nil
+}
+
+// getMergeRequestNotes retrieves the notes attached to a merge request in
+// descending time order.
+func (s *GitLabSource) getMergeRequestNotes(ctx context.Context, project *gitlab.Project, mr *gitlab.MergeRequest) ([]*gitlab.Note, error) {
+	// Get the forward iterator that gives us a note page at a time.
+	it := s.client.GetMergeRequestNotes(ctx, project, mr.IID)
+
+	// Now we can iterate over the pages of notes and fill in the slice to be
+	// returned.
+	notes, err := readSystemNotes(it)
+	if err != nil {
+		return nil, errors.Wrap(err, "reading note pages")
+	}
+
+	return notes, nil
+}
+
+func readSystemNotes(it func() ([]*gitlab.Note, error)) ([]*gitlab.Note, error) {
+	var notes []*gitlab.Note
+
+	for {
+		page, err := it()
+		if err != nil {
+			return nil, errors.Wrap(err, "retrieving note page")
+		}
+		if len(page) == 0 {
+			// The terminal condition for the iterator is returning an empty
+			// slice with no error, so we can stop iterating here.
+			return notes, nil
+		}
+
+		for _, note := range page {
+			// We're only interested in system notes for campaigns, since they
+			// include the review state changes we need; let's not even bother
+			// storing the non-system ones.
+			if note.System {
+				notes = append(notes, note)
+			}
+		}
+	}
+}
+
+// getMergeRequestPipelines retrieves the pipelines attached to a merge request
+// in descending time order.
+func (s *GitLabSource) getMergeRequestPipelines(ctx context.Context, project *gitlab.Project, mr *gitlab.MergeRequest) ([]*gitlab.Pipeline, error) {
+	// Get the forward iterator that gives us a pipeline page at a time.
+	it := s.client.GetMergeRequestPipelines(ctx, project, mr.IID)
+
+	// Now we can iterate over the pages of pipelines and fill in the slice to
+	// be returned.
+	pipelines, err := readPipelines(it)
+	if err != nil {
+		return nil, errors.Wrap(err, "reading pipeline pages")
+	}
+	return pipelines, nil
+}
+
+func readPipelines(it func() ([]*gitlab.Pipeline, error)) ([]*gitlab.Pipeline, error) {
+	var pipelines []*gitlab.Pipeline
+
+	for {
+		page, err := it()
+		if err != nil {
+			return nil, errors.Wrap(err, "retrieving pipeline page")
+		}
+		if len(page) == 0 {
+			// The terminal condition for the iterator is returning an empty
+			// slice with no error, so we can stop iterating here.
+			return pipelines, nil
+		}
+
+		pipelines = append(pipelines, page...)
+	}
+}
+
+// UpdateChangeset updates the merge request on GitLab to reflect the local
+// state of the Changeset.
+func (s *GitLabSource) UpdateChangeset(ctx context.Context, c *Changeset) error {
+	mr, ok := c.Changeset.Metadata.(*gitlab.MergeRequest)
+	if !ok {
+		return errors.New("Changeset is not a GitLab merge request")
+	}
+
+	updated, err := s.client.UpdateMergeRequest(ctx, c.Repo.Metadata.(*gitlab.Project), mr, gitlab.UpdateMergeRequestOpts{
+		Title:        c.Title,
+		Description:  c.Body,
+		TargetBranch: git.AbbreviateRef(c.BaseRef),
+	})
+	if err != nil {
+		return errors.Wrap(err, "updating GitLab merge request")
+	}
+
+	return c.Changeset.SetMetadata(updated)
+}
+
+// UndraftChangeset marks the changeset as *not* work in progress anymore.
+func (s *GitLabSource) UndraftChangeset(ctx context.Context, c *Changeset) error {
+	c.Title = gitlab.UnsetWIP(c.Title)
+	return s.UpdateChangeset(ctx, c)
 }

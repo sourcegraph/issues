@@ -1,0 +1,15 @@
+@import './CompletionWidgetDropdown';
+
+// The theme CSS for this component is set in CompletionWidgetClassProps.
+.completion-widget {
+    position: relative;
+    z-index: 99999999; // should be higher than anything else on any code host
+
+    &__container {
+        position: absolute;
+        top: 0;
+        left: 0;
+        min-width: 12rem;
+        max-width: 34rem;
+    }
+}

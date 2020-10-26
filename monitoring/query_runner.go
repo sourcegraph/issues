@@ -10,7 +10,7 @@ func QueryRunner() *Container {
 				Title: "General",
 				Rows: []Row{
 					{
-						sharedFrontendInternalAPIErrorResponses("query-runner"),
+						sharedFrontendInternalAPIErrorResponses("query-runner", ObservableOwnerSearch),
 					},
 				},
 			},
@@ -19,9 +19,12 @@ func QueryRunner() *Container {
 				Hidden: true,
 				Rows: []Row{
 					{
-						sharedContainerRestarts("query-runner"),
-						sharedContainerMemoryUsage("query-runner"),
-						sharedContainerCPUUsage("query-runner"),
+						sharedContainerMemoryUsage("query-runner", ObservableOwnerSearch),
+						sharedContainerCPUUsage("query-runner", ObservableOwnerSearch),
+					},
+					{
+						sharedContainerRestarts("query-runner", ObservableOwnerSearch),
+						sharedContainerFsInodes("query-runner", ObservableOwnerSearch),
 					},
 				},
 			},
@@ -30,12 +33,31 @@ func QueryRunner() *Container {
 				Hidden: true,
 				Rows: []Row{
 					{
-						sharedProvisioningCPUUsage1d("query-runner"),
-						sharedProvisioningMemoryUsage1d("query-runner"),
+						sharedProvisioningCPUUsageLongTerm("query-runner", ObservableOwnerSearch),
+						sharedProvisioningMemoryUsageLongTerm("query-runner", ObservableOwnerSearch),
 					},
 					{
-						sharedProvisioningCPUUsage5m("query-runner"),
-						sharedProvisioningMemoryUsage5m("query-runner"),
+						sharedProvisioningCPUUsageShortTerm("query-runner", ObservableOwnerSearch),
+						sharedProvisioningMemoryUsageShortTerm("query-runner", ObservableOwnerSearch),
+					},
+				},
+			},
+			{
+				Title:  "Golang runtime monitoring",
+				Hidden: true,
+				Rows: []Row{
+					{
+						sharedGoGoroutines("query-runner", ObservableOwnerSearch),
+						sharedGoGcDuration("query-runner", ObservableOwnerSearch),
+					},
+				},
+			},
+			{
+				Title:  "Kubernetes monitoring (ignore if using Docker Compose or server)",
+				Hidden: true,
+				Rows: []Row{
+					{
+						sharedKubernetesPodsAvailable("query-runner", ObservableOwnerSearch),
 					},
 				},
 			},

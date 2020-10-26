@@ -3,11 +3,9 @@ package resolvers
 import (
 	"context"
 
-	"github.com/pkg/errors"
 	gql "github.com/sourcegraph/sourcegraph/cmd/frontend/graphqlbackend"
 	codeintelapi "github.com/sourcegraph/sourcegraph/enterprise/internal/codeintel/api"
 	bundles "github.com/sourcegraph/sourcegraph/enterprise/internal/codeintel/bundles/client"
-	"github.com/sourcegraph/sourcegraph/enterprise/internal/codeintel/gitserver"
 	"github.com/sourcegraph/sourcegraph/enterprise/internal/codeintel/store"
 )
 
@@ -30,14 +28,16 @@ type resolver struct {
 	store               store.Store
 	bundleManagerClient bundles.BundleManagerClient
 	codeIntelAPI        codeintelapi.CodeIntelAPI
+	hunkCache           HunkCache
 }
 
 // NewResolver creates a new resolver with the given services.
-func NewResolver(store store.Store, bundleManagerClient bundles.BundleManagerClient, codeIntelAPI codeintelapi.CodeIntelAPI) Resolver {
+func NewResolver(store store.Store, bundleManagerClient bundles.BundleManagerClient, codeIntelAPI codeintelapi.CodeIntelAPI, hunkCache HunkCache) Resolver {
 	return &resolver{
 		store:               store,
 		bundleManagerClient: bundleManagerClient,
 		codeIntelAPI:        codeIntelAPI,
+		hunkCache:           hunkCache,
 	}
 }
 
@@ -58,7 +58,7 @@ func (r *resolver) IndexConnectionResolver(opts store.GetIndexesOptions) *Indexe
 }
 
 func (r *resolver) DeleteUploadByID(ctx context.Context, uploadID int) error {
-	_, err := r.store.DeleteUploadByID(ctx, uploadID, r.getTipCommit)
+	_, err := r.store.DeleteUploadByID(ctx, uploadID)
 	return err
 }
 
@@ -87,21 +87,10 @@ func (r *resolver) QueryResolver(ctx context.Context, args *gql.GitBlobLSIFDataA
 		r.store,
 		r.bundleManagerClient,
 		r.codeIntelAPI,
-		NewPositionAdjuster(args.Repo, string(args.Commit)),
+		NewPositionAdjuster(args.Repo, string(args.Commit), r.hunkCache),
 		int(args.Repo.ID),
 		string(args.Commit),
 		args.Path,
 		dumps,
 	), nil
-}
-
-// getTipCommit returns the head of the default branch for the given repository. This
-// is used to recalculate the set of visible dumps for a repository on dump deletion.
-func (r *resolver) getTipCommit(ctx context.Context, repositoryID int) (string, error) {
-	tipCommit, err := gitserver.Head(ctx, r.store, repositoryID)
-	if err != nil {
-		return "", errors.Wrap(err, "gitserver.Head")
-	}
-
-	return tipCommit, nil
 }

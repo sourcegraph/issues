@@ -14,8 +14,8 @@ import (
 	"github.com/pkg/errors"
 	"github.com/sourcegraph/go-lsp"
 	"github.com/sourcegraph/sourcegraph/cmd/frontend/backend"
-	"github.com/sourcegraph/sourcegraph/cmd/frontend/db"
 	"github.com/sourcegraph/sourcegraph/internal/api"
+	"github.com/sourcegraph/sourcegraph/internal/db"
 	"github.com/sourcegraph/sourcegraph/internal/errcode"
 	"github.com/sourcegraph/sourcegraph/internal/search"
 	"github.com/sourcegraph/sourcegraph/internal/search/query"
@@ -44,6 +44,17 @@ var (
 )
 
 func (r *searchResolver) Suggestions(ctx context.Context, args *searchSuggestionsArgs) ([]*searchSuggestionResolver, error) {
+
+	// If globbing is activated, convert regex patterns of repo, file, and repohasfile
+	// from "field:^foo$" to "field:^foo".
+	globbing := false
+	if getBoolPtr(r.userSettings.SearchGlobbing, false) {
+		globbing = true
+	}
+	if AndOrQuery, isAndOr := r.query.(*query.AndOrQuery); globbing && isAndOr {
+		AndOrQuery.Query = query.FuzzifyRegexPatterns(AndOrQuery.Query)
+	}
+
 	args.applyDefaultsAndConstraints()
 
 	if len(r.query.ParseTree()) == 0 {
@@ -86,10 +97,10 @@ func (r *searchResolver) Suggestions(ctx context.Context, args *searchSuggestion
 		effectiveRepoFieldValues = effectiveRepoFieldValues[:i]
 
 		if len(effectiveRepoFieldValues) > 0 {
-			repoRevs, _, _, _, err := r.resolveRepositories(ctx, effectiveRepoFieldValues)
+			resolved, err := r.resolveRepositories(ctx, effectiveRepoFieldValues)
 
-			resolvers := make([]*searchSuggestionResolver, 0, len(repoRevs))
-			for _, rev := range repoRevs {
+			resolvers := make([]*searchSuggestionResolver, 0, len(resolved.repoRevs))
+			for _, rev := range resolved.repoRevs {
 				resolvers = append(resolvers, newSearchSuggestionResolver(
 					&RepositoryResolver{repo: rev.Repo},
 					math.MaxInt32,
@@ -193,7 +204,7 @@ func (r *searchResolver) Suggestions(ctx context.Context, args *searchSuggestion
 			return mockShowSymbolMatches()
 		}
 
-		repoRevs, _, _, _, err := r.resolveRepositories(ctx, nil)
+		resolved, err := r.resolveRepositories(ctx, nil)
 		if err != nil {
 			return nil, err
 		}
@@ -208,7 +219,7 @@ func (r *searchResolver) Suggestions(ctx context.Context, args *searchSuggestion
 
 		fileMatches, _, err := searchSymbols(ctx, &search.TextParameters{
 			PatternInfo:  p,
-			Repos:        repoRevs,
+			RepoPromise:  (&search.Promise{}).Resolve(resolved.repoRevs),
 			Query:        r.query,
 			Zoekt:        r.zoekt,
 			SearcherURLs: r.searcherURLs,

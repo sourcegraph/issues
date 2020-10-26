@@ -11,9 +11,9 @@ import (
 	"time"
 
 	"github.com/pkg/errors"
-	"github.com/sourcegraph/sourcegraph/cmd/frontend/db"
 	"github.com/sourcegraph/sourcegraph/internal/actor"
 	"github.com/sourcegraph/sourcegraph/internal/conf"
+	"github.com/sourcegraph/sourcegraph/internal/db"
 	"github.com/sourcegraph/sourcegraph/internal/env"
 	"github.com/sourcegraph/sourcegraph/internal/errcode"
 	"github.com/sourcegraph/sourcegraph/internal/redispool"
@@ -263,6 +263,20 @@ func deleteSession(w http.ResponseWriter, r *http.Request) error {
 	return errors.WithMessage(err, "deleting session")
 }
 
+// InvalidateSessionsCurrentUser invalidates all sessions for the current user
+// If an error occurs, return the error
+func InvalidateSessionCurrentUser(r *http.Request) error {
+	a := actor.FromContext(r.Context())
+	return db.Users.InvalidateSessionsByID(r.Context(), a.UID)
+}
+
+// InvalidateSessionsByID invalidates all sessions for a user
+// If an error occurs, it returns the error
+func InvalidateSessionsByID(ctx context.Context, id int32) error {
+	// Get the user from the request context
+	return db.Users.InvalidateSessionsByID(ctx, id)
+}
+
 // CookieMiddleware is an http.Handler middleware that authenticates
 // future HTTP request via cookie.
 func CookieMiddleware(next http.Handler) http.Handler {
@@ -344,7 +358,8 @@ func authenticateByCookie(r *http.Request, w http.ResponseWriter) context.Contex
 		}
 
 		// Check that user still exists.
-		if _, err := db.Users.GetByID(r.Context(), info.Actor.UID); err != nil {
+		usr, err := db.Users.GetByID(r.Context(), info.Actor.UID)
+		if err != nil {
 			if errcode.IsNotFound(err) {
 				_ = deleteSession(w, r) // clear the bad value
 			} else {
@@ -353,6 +368,12 @@ func authenticateByCookie(r *http.Request, w http.ResponseWriter) context.Contex
 				log15.Error("Error looking up user for session.", "uid", info.Actor.UID, "error", err)
 			}
 			return r.Context() // not authenticated
+		}
+
+		// Check that the session is still valid
+		if info.LastActive.Before(usr.InvalidatedSessionsAt) {
+			_ = deleteSession(w, r) // Delete the now invalid session
+			return r.Context()
 		}
 
 		// Renew session

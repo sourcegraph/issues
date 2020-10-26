@@ -1,0 +1,142 @@
+@import '~@sourcegraph/react-loading-spinner/lib/LoadingSpinner.css';
+
+.hover-overlay {
+    position: absolute;
+    min-width: 6rem;
+    max-width: 32rem;
+    z-index: 100;
+    transition: opacity 100ms ease-in-out;
+    // Make sure content doesn't leak behind border-radius
+    overflow: hidden;
+
+    &__close-button,
+    &__badge {
+        // We want text to wrap around the close button and badges.
+        float: right;
+        margin-left: 0.25rem;
+    }
+
+    &__close-button {
+        // The close button should stay in place when scrolling a large hover content.
+        position: sticky;
+        top: 0;
+
+        // Overlay alert background
+        z-index: 1;
+
+        // When loading, we want the loader to be centered in the hover overlay,
+        // not centered within the space left of the close button.
+        &--loading {
+            position: absolute;
+            top: 0.5rem;
+            right: 0.5rem;
+        }
+    }
+
+    &__contents {
+        padding: 0.5rem;
+        // Make very large MarkupContents scroll.
+        overflow-y: auto;
+        max-height: 10rem;
+        border-bottom: 1px solid var(--border-color);
+    }
+
+    // We use <hr>s as a divider between multiple contents.
+    // This has the nice property of having floating buttons that text wraps around.
+    // stylelint-disable-next-line selector-max-compound-selectors
+    hr {
+        margin: 0.5rem -0.5rem;
+        overflow: visible;
+        background: var(--border-color);
+        border: none;
+        // The <hr> acts like a border, which should always be exactly 1px
+        // stylelint-disable-next-line declaration-property-unit-whitelist
+        height: 1px;
+    }
+
+    &__content {
+        display: contents;
+        max-height: 15rem;
+        overflow-x: auto;
+        word-wrap: normal;
+
+        // Descendant selectors are needed here to style rendered markdown
+        // stylelint-disable selector-max-compound-selectors
+
+        p,
+        pre {
+            margin-bottom: 0.5rem;
+            &:last-child {
+                margin-bottom: 0;
+            }
+        }
+        pre,
+        code {
+            padding: 0;
+            // We want code to wrap, not scroll (but whitespace needs to be preserved).
+            white-space: pre-wrap;
+            // Any other value would create a new block formatting context,
+            // which would prevent wrapping around the floating buttons.
+            overflow: visible;
+        }
+        // stylelint-enable selector-max-compound-selectors
+    }
+
+    &__alerts {
+        display: flex;
+        flex-direction: column;
+
+        // Make sure HoverOverlay doesn't get too large even with large alerts.
+        overflow-y: auto;
+        max-height: 20rem;
+    }
+    &__alert {
+        padding: 0.5rem;
+        margin: 0;
+        border-radius: 0;
+        border: none;
+        &:not(:last-child) {
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        // this is necessary otherwise single line alerts will render on two lines
+        // if they are dismissible.
+        p:last-child {
+            display: inline;
+        }
+    }
+
+    &__alert-actions {
+        float: right;
+        margin-left: 0.75rem;
+    }
+
+    &__actions {
+        display: flex;
+    }
+
+    &__action:not(:first-child) {
+        border-left: 1px solid var(--border-color);
+    }
+
+    &__action {
+        flex: 1 1 auto;
+        text-align: center;
+        border: none;
+        border-radius: 0;
+    }
+
+    &__loader-row {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    &__loader-row,
+    &__hover-error {
+        padding: 0.5rem;
+        margin: -0.5rem;
+        border: none;
+        border-radius: 0;
+    }
+}

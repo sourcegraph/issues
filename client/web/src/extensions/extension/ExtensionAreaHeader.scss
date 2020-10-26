@@ -1,0 +1,43 @@
+@import '../../../../branded/src/components/ToggleBig.scss';
+
+.extension-area-header {
+    padding-top: 0.5rem;
+
+    &__wrapper {
+        display: grid;
+        grid-template-rows: auto auto;
+    }
+
+    &__icon {
+        display: block;
+        width: 4.5rem;
+        height: 4.5rem;
+        object-fit: contain;
+    }
+
+    &__toggle {
+        transform: translateY(-50%);
+    }
+
+    &__alert {
+        position: absolute;
+        bottom: $toggle-big-height + 0.375rem;
+        right: 0.5rem + ($toggle-big-width / 2);
+        transform: translate(50%, -50%);
+        width: max-content;
+        // hide alerts for narrow screens
+        display: none;
+    }
+
+    @include media-breakpoint-up(md) {
+        &__wrapper {
+            display: grid;
+            grid-template-columns: auto 7.5rem 7.5rem;
+            grid-template-rows: none;
+        }
+
+        &__alert {
+            display: block;
+        }
+    }
+}

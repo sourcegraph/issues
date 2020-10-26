@@ -3,6 +3,7 @@ package server
 import (
 	"bytes"
 	"context"
+	"encoding/json"
 	"fmt"
 	"hash/fnv"
 	"io"
@@ -19,6 +20,7 @@ import (
 	"github.com/hashicorp/go-multierror"
 	"github.com/pkg/errors"
 	"github.com/sourcegraph/sourcegraph/internal/api"
+	"github.com/sourcegraph/sourcegraph/internal/gitserver/protocol"
 	"github.com/sourcegraph/sourcegraph/internal/lazyregexp"
 
 	"github.com/prometheus/client_golang/prometheus"
@@ -50,6 +52,8 @@ var (
 	})
 )
 
+const reposStatsName = "repos-stats.json"
+
 // cleanupRepos walks the repos directory and performs maintenance tasks:
 //
 // 1. Remove corrupt repos.
@@ -59,6 +63,15 @@ var (
 func (s *Server) cleanupRepos() {
 	bCtx, bCancel := s.serverContext()
 	defer bCancel()
+
+	stats := protocol.ReposStats{
+		UpdatedAt: time.Now(),
+	}
+
+	computeStats := func(dir GitDir) (done bool, err error) {
+		stats.GitDirBytes += dirSize(dir.Path("."))
+		return false, nil
+	}
 
 	maybeRemoveCorrupt := func(dir GitDir) (done bool, err error) {
 		// We treat repositories missing HEAD to be corrupt. Both our cloning
@@ -171,6 +184,7 @@ func (s *Server) cleanupRepos() {
 		Do   func(GitDir) (bool, error)
 	}
 	cleanups := []cleanupFn{
+		{"compute statistics", computeStats},
 		// Do some sanity checks on the repository.
 		{"maybe remove corrupt", maybeRemoveCorrupt},
 		// If git is interrupted it can leave lock files lying around. It does
@@ -215,6 +229,12 @@ func (s *Server) cleanupRepos() {
 	})
 	if err != nil {
 		log15.Error("cleanup: error iterating over repositories", "error", err)
+	}
+
+	if b, err := json.Marshal(stats); err != nil {
+		log15.Error("cleanup: failed to marshal periodic stats", "error", err)
+	} else if err = ioutil.WriteFile(filepath.Join(s.ReposDir, reposStatsName), b, 0666); err != nil {
+		log15.Error("cleanup: failed to write periodic stats", "error", err)
 	}
 
 	if s.DiskSizer == nil {
@@ -317,10 +337,7 @@ func (s *Server) freeUpSpace(howManyBytesToFree int64) error {
 		if spaceFreed >= howManyBytesToFree {
 			return nil
 		}
-		delta, err := dirSize(string(d))
-		if err != nil {
-			return errors.Wrapf(err, "computing size of directory %s", d)
-		}
+		delta := dirSize(d.Path("."))
 		if err := s.removeRepoDirectory(d); err != nil {
 			return errors.Wrap(err, "removing repo directory")
 		}
@@ -380,19 +397,18 @@ func (s *Server) findGitDirs() ([]GitDir, error) {
 }
 
 // dirSize returns the total size in bytes of all the files under d.
-func dirSize(d string) (int64, error) {
+func dirSize(d string) int64 {
 	var size int64
-	err := bestEffortWalk(d, func(path string, fi os.FileInfo) error {
+	// We don't return an error, so we know that err is always nil and can be
+	// ignored.
+	_ = bestEffortWalk(d, func(path string, fi os.FileInfo) error {
 		if fi.IsDir() {
 			return nil
 		}
 		size += fi.Size()
 		return nil
 	})
-	if err != nil {
-		return 0, errors.Wrapf(err, "walking dir tree from %s to find size", d)
-	}
-	return size, nil
+	return size
 }
 
 // removeRepoDirectory atomically removes a directory from s.ReposDir.
@@ -547,6 +563,7 @@ func (s *Server) SetupAndClearTmp() (string, error) {
 func setRecloneTime(dir GitDir, now time.Time) error {
 	err := gitConfigSet(dir, "sourcegraph.recloneTimestamp", strconv.FormatInt(now.Unix(), 10))
 	if err != nil {
+		ensureHead(dir)
 		return errors.Wrap(err, "failed to update recloneTimestamp")
 	}
 	return nil

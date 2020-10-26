@@ -1,0 +1,44 @@
+{
+  "private": true,
+  "name": "webapp",
+  "version": "1.10.1",
+  "description": "The Sourcegraph web app",
+  "license": "MIT",
+  "scripts": {
+    "test": "jest --testPathIgnorePatterns end-to-end --testPathIgnorePatterns regression integration",
+    "test:regression": "mocha './src/regression/**/*.test.ts'",
+    "test:regression:auth": "mocha ./src/regression/auth.test.ts",
+    "test:regression:codeintel": "mocha ./src/regression/codeintel.test.ts",
+    "test:regression:config-settings": "mocha ./src/regression/config-settings.test.ts",
+    "test:regression:core": "mocha ./src/regression/core.test.ts",
+    "test:regression:extensions": "mocha ./src/regression/extensions.test.ts",
+    "test:regression:external-services": "mocha ./src/regression/external-services.test.ts",
+    "test:regression:init": "mocha ./src/regression/init.test.ts",
+    "test:regression:integrations": "mocha ./src/regression/integrations.test.ts",
+    "test:regression:onboarding": "mocha ./src/regression/onboarding.test.ts",
+    "test:regression:org": "mocha ./src/regression/org.test.ts",
+    "test:regression:search": "mocha ./src/regression/search.test.ts",
+    "test-e2e-sgdev": "env SOURCEGRAPH_BASE_URL=https://sourcegraph.sgdev.org OVERRIDE_AUTH_SECRET=${SGDEV_OVERRIDE_AUTH_SECRET} mocha ./end-to-end/end-to-end.test.ts",
+    "build": "cross-env NODE_OPTIONS=\"--max_old_space_size=4096\" gulp build",
+    "watch": "cross-env NODE_OPTIONS=\"--max_old_space_size=4096\" gulp watch",
+    "watch-webpack": "cross-env NODE_OPTIONS=\"--max_old_space_size=4096\" gulp watchWebpack",
+    "webpack": "cross-env NODE_OPTIONS=\"--max_old_space_size=4096\" gulp webpack",
+    "lint": "yarn run eslint && gulp unusedExports && yarn run stylelint",
+    "eslint": "eslint --cache '**/*.[tj]s?(x)'",
+    "stylelint": "stylelint 'src/**/*.scss' --quiet",
+    "bundlesize": "GITHUB_TOKEN= bundlesize",
+    "browserslist": "browserslist",
+    "analyze-bundle": "NODE_ENV=production ENTERPRISE=1 WEBPACK_ANALYZER=1 yarn build"
+  },
+  "bundlesize": [
+    {
+      "path": "../../ui/assets/styles/app.bundle.css"
+    },
+    {
+      "path": "../../ui/assets/scripts/app.bundle.js"
+    }
+  ],
+  "jest": {
+    "testURL": "http://localhost:3080"
+  }
+}

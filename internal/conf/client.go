@@ -185,7 +185,7 @@ type continuousUpdateOptions struct {
 	sleep func()                                // sleep between updates
 }
 
-// continuouslyUpdate runs (*client).fetchAndUpdate in an infinte loop, with error logging and
+// continuouslyUpdate runs (*client).fetchAndUpdate in an infinite loop, with error logging and
 // random sleep intervals.
 //
 // The optOnlySetByTests parameter is ONLY customized by tests. All callers in main code should pass

@@ -4,12 +4,12 @@ import (
 	"context"
 	"errors"
 
-	graphql "github.com/graph-gophers/graphql-go"
+	"github.com/graph-gophers/graphql-go"
 	"github.com/graph-gophers/graphql-go/relay"
 	"github.com/sourcegraph/sourcegraph/cmd/frontend/backend"
-	"github.com/sourcegraph/sourcegraph/cmd/frontend/db"
 	"github.com/sourcegraph/sourcegraph/cmd/frontend/types"
 	"github.com/sourcegraph/sourcegraph/cmd/query-runner/queryrunnerapi"
+	"github.com/sourcegraph/sourcegraph/internal/db"
 	"github.com/sourcegraph/sourcegraph/internal/lazyregexp"
 )
 
@@ -82,7 +82,7 @@ func (r savedSearchResolver) Query() string { return r.s.Query }
 
 func (r savedSearchResolver) Namespace(ctx context.Context) (*NamespaceResolver, error) {
 	if r.s.OrgID != nil {
-		n, err := NamespaceByID(ctx, marshalOrgID(*r.s.OrgID))
+		n, err := NamespaceByID(ctx, MarshalOrgID(*r.s.OrgID))
 		if err != nil {
 			return nil, err
 		}
@@ -289,4 +289,4 @@ func queryHasPatternType(query string) bool {
 	return patternTypeRegexp.Match([]byte(query))
 }
 
-var errMissingPatternType error = errors.New("a `patternType:` filter is required in the query for all saved searches. `patternType` can be \"literal\" or \"regexp\"")
+var errMissingPatternType = errors.New("a `patternType:` filter is required in the query for all saved searches. `patternType` can be \"literal\" or \"regexp\"")

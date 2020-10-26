@@ -1,0 +1,14 @@
+.campaign-close-changesets-list-empty-element {
+    &__logo {
+        max-height: 6rem;
+        @include media-breakpoint-down(xs) {
+            max-height: 3rem;
+        }
+    }
+    &__body {
+        @include media-breakpoint-down(xs) {
+            padding: 0 !important;
+            padding-top: 0.5rem !important;
+        }
+    }
+}

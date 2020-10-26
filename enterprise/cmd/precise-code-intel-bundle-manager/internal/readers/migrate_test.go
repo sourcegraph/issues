@@ -1,10 +1,10 @@
 package readers
 
 import (
-	"fmt"
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"strconv"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
@@ -17,7 +17,7 @@ func TestSQLitePaths(t *testing.T) {
 	}
 
 	for i := 0; i < 20; i++ {
-		filename := filepath.Join(tempDir, "dbs", fmt.Sprintf("%d", i), "sqlite.db")
+		filename := filepath.Join(tempDir, "dbs", strconv.Itoa(i), "sqlite.db")
 
 		if err := os.MkdirAll(filepath.Dir(filename), os.ModePerm); err != nil {
 			t.Fatalf("unexpected error creating dir: %s", err)

@@ -18,6 +18,7 @@ var allFields = map[string]struct{}{
 	FieldType:               empty,
 	FieldPatternType:        empty,
 	FieldContent:            empty,
+	FieldVisibility:         empty,
 	FieldRepoHasFile:        empty,
 	FieldRepoHasCommitAfter: empty,
 	FieldBefore:             empty,
@@ -34,6 +35,7 @@ var allFields = map[string]struct{}{
 	FieldStable:             empty,
 	FieldMax:                empty,
 	FieldTimeout:            empty,
-	FieldReplace:            empty,
 	FieldCombyRule:          empty,
+	FieldRev:                empty,
+	"revision":              empty,
 }

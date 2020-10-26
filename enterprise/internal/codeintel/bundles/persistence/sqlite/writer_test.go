@@ -8,6 +8,7 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
+	"github.com/sourcegraph/sourcegraph/enterprise/internal/codeintel/bundles/persistence"
 	"github.com/sourcegraph/sourcegraph/enterprise/internal/codeintel/bundles/persistence/cache"
 	"github.com/sourcegraph/sourcegraph/enterprise/internal/codeintel/bundles/types"
 )
@@ -22,12 +23,22 @@ func TestWrite(t *testing.T) {
 	ctx := context.Background()
 	filename := filepath.Join(tempDir, "test.db")
 
-	writer, err := NewWriter(context.Background(), filename)
+	cache, err := cache.NewDataCache(1)
 	if err != nil {
-		t.Fatalf("unexpected error while opening writer: %s", err)
+		t.Fatalf("unexpected error creating cache: %s", err)
 	}
 
-	if err := writer.WriteMeta(ctx, types.MetaData{NumResultChunks: 7}); err != nil {
+	store, err := NewStore(context.Background(), filename, cache)
+	if err != nil {
+		t.Fatalf("unexpected error while opening store: %s", err)
+	}
+	defer store.Close(nil)
+
+	if err := store.CreateTables(context.Background()); err != nil {
+		t.Fatalf("unexpected error while creating tables: %s", err)
+	}
+
+	if err := store.WriteMeta(ctx, types.MetaData{NumResultChunks: 7}); err != nil {
 		t.Fatalf("unexpected error while writing: %s", err)
 	}
 
@@ -49,7 +60,15 @@ func TestWrite(t *testing.T) {
 			"p02": {Name: "pkg B", Version: "1.2.3"},
 		},
 	}
-	if err := writer.WriteDocuments(ctx, map[string]types.DocumentData{"foo.go": expectedDocumentData}); err != nil {
+
+	documentCh := make(chan persistence.KeyedDocumentData, 1)
+	documentCh <- persistence.KeyedDocumentData{
+		Path:     "foo.go",
+		Document: expectedDocumentData,
+	}
+	close(documentCh)
+
+	if err := store.WriteDocuments(ctx, documentCh); err != nil {
 		t.Fatalf("unexpected error while writing documents: %s", err)
 	}
 
@@ -77,7 +96,15 @@ func TestWrite(t *testing.T) {
 			},
 		},
 	}
-	if err := writer.WriteResultChunks(ctx, map[int]types.ResultChunkData{7: expectedResultChunkData}); err != nil {
+
+	resultChunkCh := make(chan persistence.IndexedResultChunkData, 1)
+	resultChunkCh <- persistence.IndexedResultChunkData{
+		Index:       7,
+		ResultChunk: expectedResultChunkData,
+	}
+	close(resultChunkCh)
+
+	if err := store.WriteResultChunks(ctx, resultChunkCh); err != nil {
 		t.Fatalf("unexpected error while writing result chunks: %s", err)
 	}
 
@@ -87,14 +114,15 @@ func TestWrite(t *testing.T) {
 		{URI: "foo.go", StartLine: 3, StartCharacter: 4, EndLine: 5, EndCharacter: 6},
 	}
 
-	definitionMonikerLocations := []types.MonikerLocations{
-		{
-			Scheme:     "scheme A",
-			Identifier: "ident A",
-			Locations:  expectedDefinitions,
-		},
+	definitionsCh := make(chan types.MonikerLocations, 1)
+	definitionsCh <- types.MonikerLocations{
+		Scheme:     "scheme A",
+		Identifier: "ident A",
+		Locations:  expectedDefinitions,
 	}
-	if err := writer.WriteDefinitions(ctx, definitionMonikerLocations); err != nil {
+	close(definitionsCh)
+
+	if err := store.WriteDefinitions(ctx, definitionsCh); err != nil {
 		t.Fatalf("unexpected error while writing definitions: %s", err)
 	}
 
@@ -104,33 +132,23 @@ func TestWrite(t *testing.T) {
 		{URI: "foo.go", StartLine: 3, StartCharacter: 4, EndLine: 5, EndCharacter: 6},
 	}
 
-	referenceMonikerLocations := []types.MonikerLocations{
-		{
-			Scheme:     "scheme C",
-			Identifier: "ident C",
-			Locations:  expectedReferences,
-		},
+	referencesCh := make(chan types.MonikerLocations, 1)
+	referencesCh <- types.MonikerLocations{
+		Scheme:     "scheme C",
+		Identifier: "ident C",
+		Locations:  expectedReferences,
 	}
-	if err := writer.WriteReferences(ctx, referenceMonikerLocations); err != nil {
+	close(referencesCh)
+
+	if err := store.WriteReferences(ctx, referencesCh); err != nil {
 		t.Fatalf("unexpected error while writing references: %s", err)
 	}
 
-	if err := writer.Close(nil); err != nil {
-		t.Fatalf("unexpected error closing writer: %s", err)
+	if err := store.Done(nil); err != nil {
+		t.Fatalf("unexpected error closing transaction: %s", err)
 	}
 
-	cache, err := cache.NewDataCache(1)
-	if err != nil {
-		t.Fatalf("unexpected error creating cache: %s", err)
-	}
-
-	reader, err := NewReader(context.Background(), filename, cache)
-	if err != nil {
-		t.Fatalf("unexpected error opening database: %s", err)
-	}
-	defer reader.Close()
-
-	meta, err := reader.ReadMeta(ctx)
+	meta, err := store.ReadMeta(ctx)
 	if err != nil {
 		t.Fatalf("unexpected error reading from database: %s", err)
 	}
@@ -138,7 +156,7 @@ func TestWrite(t *testing.T) {
 		t.Errorf("unexpected num result chunks. want=%d have=%d", 7, meta.NumResultChunks)
 	}
 
-	documentData, _, err := reader.ReadDocument(ctx, "foo.go")
+	documentData, _, err := store.ReadDocument(ctx, "foo.go")
 	if err != nil {
 		t.Fatalf("unexpected error reading from database: %s", err)
 	}
@@ -146,7 +164,7 @@ func TestWrite(t *testing.T) {
 		t.Errorf("unexpected document data (-want +got):\n%s", diff)
 	}
 
-	resultChunkData, _, err := reader.ReadResultChunk(ctx, 7)
+	resultChunkData, _, err := store.ReadResultChunk(ctx, 7)
 	if err != nil {
 		t.Fatalf("unexpected error reading from database: %s", err)
 	}
@@ -154,7 +172,7 @@ func TestWrite(t *testing.T) {
 		t.Errorf("unexpected result chunk data (-want +got):\n%s", diff)
 	}
 
-	definitions, _, err := reader.ReadDefinitions(ctx, "scheme A", "ident A", 0, 100)
+	definitions, _, err := store.ReadDefinitions(ctx, "scheme A", "ident A", 0, 100)
 	if err != nil {
 		t.Fatalf("unexpected error reading from database: %s", err)
 	}
@@ -162,7 +180,7 @@ func TestWrite(t *testing.T) {
 		t.Errorf("unexpected definitions (-want +got):\n%s", diff)
 	}
 
-	references, _, err := reader.ReadReferences(ctx, "scheme C", "ident C", 0, 100)
+	references, _, err := store.ReadReferences(ctx, "scheme C", "ident C", 0, 100)
 	if err != nil {
 		t.Fatalf("unexpected error reading from database: %s", err)
 	}

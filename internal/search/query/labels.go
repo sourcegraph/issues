@@ -13,6 +13,7 @@ const (
 	HeuristicParensAsPatterns
 	HeuristicDanglingParens
 	HeuristicHoisted
+	Structural
 )
 
 var allLabels = map[labels]string{
@@ -23,15 +24,28 @@ var allLabels = map[labels]string{
 	HeuristicParensAsPatterns: "HeuristicParensAsPatterns",
 	HeuristicDanglingParens:   "HeuristicDanglingParens",
 	HeuristicHoisted:          "HeuristicHoisted",
+	Structural:                "Structural",
 }
 
-func Strings(labels labels) []string {
-	if labels == 0 {
+func (l *labels) isSet(label labels) bool {
+	return *l&label != 0
+}
+
+func (l *labels) set(label labels) {
+	*l |= label
+}
+
+func (l *labels) unset(label labels) {
+	*l &^= label
+}
+
+func (l *labels) String() []string {
+	if *l == 0 {
 		return []string{"None"}
 	}
 	var s []string
 	for k, v := range allLabels {
-		if k&labels != 0 {
+		if l.isSet(k) {
 			s = append(s, v)
 		}
 	}

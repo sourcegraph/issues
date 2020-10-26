@@ -11,7 +11,7 @@ import (
 const v5TestFile = "./testdata/lsif-go@5bc35c78.lsif.db"
 
 func TestReadMetaV5(t *testing.T) {
-	meta, err := testReader(t, v5TestFile).ReadMeta(context.Background())
+	meta, err := testStore(t, v5TestFile).ReadMeta(context.Background())
 	if err != nil {
 		t.Fatalf("unexpected error reading meta: %s", err)
 	}
@@ -21,7 +21,7 @@ func TestReadMetaV5(t *testing.T) {
 }
 
 func TestPathsWithPrefixV5(t *testing.T) {
-	paths, err := testReader(t, v5TestFile).PathsWithPrefix(context.Background(), "internal/")
+	paths, err := testStore(t, v5TestFile).PathsWithPrefix(context.Background(), "internal/")
 	if err != nil {
 		t.Fatalf("unexpected error fetching paths with prefix: %s", err)
 	}
@@ -38,7 +38,7 @@ func TestPathsWithPrefixV5(t *testing.T) {
 }
 
 func TestReadDocumentV5(t *testing.T) {
-	data, exists, err := testReader(t, v5TestFile).ReadDocument(context.Background(), "protocol/writer.go")
+	data, exists, err := testStore(t, v5TestFile).ReadDocument(context.Background(), "protocol/writer.go")
 	if err != nil {
 		t.Fatalf("unexpected error reading document: %s", err)
 	}
@@ -85,7 +85,7 @@ func TestReadDocumentV5(t *testing.T) {
 }
 
 func TestReadResultChunkV5(t *testing.T) {
-	data, exists, err := testReader(t, v5TestFile).ReadResultChunk(context.Background(), 1)
+	data, exists, err := testStore(t, v5TestFile).ReadResultChunk(context.Background(), 1)
 	if err != nil {
 		t.Fatalf("unexpected error reading result chunk: %s", err)
 	}
@@ -109,7 +109,7 @@ func TestReadResultChunkV5(t *testing.T) {
 }
 
 func TestReadDefinitionsV5(t *testing.T) {
-	definitions, totalCount, err := testReader(t, v5TestFile).ReadDefinitions(context.Background(), "gomod", "github.com/sourcegraph/lsif-go/protocol:Vertex", 0, 0)
+	definitions, totalCount, err := testStore(t, v5TestFile).ReadDefinitions(context.Background(), "gomod", "github.com/sourcegraph/lsif-go/protocol:Vertex", 0, 0)
 	if err != nil {
 		t.Fatalf("unexpected error getting definitions: %s", err)
 	}
@@ -126,7 +126,7 @@ func TestReadDefinitionsV5(t *testing.T) {
 }
 
 func TestReadReferencesV5(t *testing.T) {
-	references, totalCount, err := testReader(t, v5TestFile).ReadReferences(context.Background(), "gomod", "golang.org/x/tools/go/packages:Package", 3, 4)
+	references, totalCount, err := testStore(t, v5TestFile).ReadReferences(context.Background(), "gomod", "golang.org/x/tools/go/packages:Package", 3, 4)
 	if err != nil {
 		t.Fatalf("unexpected error getting references: %s", err)
 	}

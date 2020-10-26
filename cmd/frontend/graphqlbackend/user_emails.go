@@ -3,12 +3,12 @@ package graphqlbackend
 import (
 	"context"
 
-	graphql "github.com/graph-gophers/graphql-go"
+	"github.com/graph-gophers/graphql-go"
 	"github.com/inconshreveable/log15"
-	"github.com/sourcegraph/sourcegraph/cmd/frontend/authz"
 	"github.com/sourcegraph/sourcegraph/cmd/frontend/backend"
-	"github.com/sourcegraph/sourcegraph/cmd/frontend/db"
+	"github.com/sourcegraph/sourcegraph/internal/authz"
 	"github.com/sourcegraph/sourcegraph/internal/conf"
+	"github.com/sourcegraph/sourcegraph/internal/db"
 )
 
 func (r *UserResolver) Emails(ctx context.Context) ([]*userEmailResolver, error) {
@@ -75,6 +75,13 @@ func (r *schemaResolver) AddUserEmail(ctx context.Context, args *struct {
 	if err := backend.UserEmails.Add(ctx, userID, args.Email); err != nil {
 		return nil, err
 	}
+
+	if conf.CanSendEmail() {
+		if err := backend.UserEmails.SendUserEmailOnFieldUpdate(ctx, userID, "added an email"); err != nil {
+			log15.Warn("Failed to send email to inform user of email addition", "error", err)
+		}
+	}
+
 	return &EmptyResponse{}, nil
 }
 
@@ -99,6 +106,12 @@ func (r *schemaResolver) RemoveUserEmail(ctx context.Context, args *struct {
 	// 🚨 SECURITY: If an email is removed, invalidate any existing password reset tokens that may have been sent to that email.
 	if err := db.Users.DeletePasswordResetCode(ctx, userID); err != nil {
 		return nil, err
+	}
+
+	if conf.CanSendEmail() {
+		if err := backend.UserEmails.SendUserEmailOnFieldUpdate(ctx, userID, "removed an email"); err != nil {
+			log15.Warn("Failed to send email to inform user of email removal", "error", err)
+		}
 	}
 
 	return &EmptyResponse{}, nil

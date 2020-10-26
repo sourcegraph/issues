@@ -19,54 +19,62 @@ import (
 	"github.com/gchaincl/sqlhooks"
 	"github.com/inconshreveable/log15"
 	"github.com/lib/pq"
-	"github.com/opentracing/opentracing-go"
-	"github.com/opentracing/opentracing-go/ext"
 	otlog "github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/sourcegraph/sourcegraph/internal/db/dbutil"
 	"github.com/sourcegraph/sourcegraph/internal/env"
+	"github.com/sourcegraph/sourcegraph/internal/lazyregexp"
 	"github.com/sourcegraph/sourcegraph/internal/trace"
 )
 
 var (
 	// Global is the global DB connection.
-	// Only use this after a call to ConnectToDB.
+	// Only use this after a call to SetupGlobalConnection.
 	Global *sql.DB
 
 	defaultDataSource      = env.Get("PGDATASOURCE", "", "Default dataSource to pass to Postgres. See https://godoc.org/github.com/lib/pq for more information.")
 	defaultApplicationName = env.Get("PGAPPLICATIONNAME", "sourcegraph", "The value of application_name appended to dataSource")
 )
 
-// ConnectToDB connects to the given DB and stores the handle globally.
+// SetupGlobalConnection connects to the given data source and stores the handle
+// globally.
 //
 // Note: github.com/lib/pq parses the environment as well. This function will
 // also use the value of PGDATASOURCE if supplied and dataSource is the empty
 // string.
-func ConnectToDB(dataSource string) error {
+func SetupGlobalConnection(dataSource string) (err error) {
+	Global, err = New(dataSource, "_app")
+	return err
+}
+
+// New connects to the given data source and returns the handle.
+//
+// Note: github.com/lib/pq parses the environment as well. This function will
+// also use the value of PGDATASOURCE if supplied and dataSource is the empty
+// string.
+func New(dataSource, dbNameSuffix string) (*sql.DB, error) {
 	// Force PostgreSQL session timezone to UTC.
 	if v, ok := os.LookupEnv("PGTZ"); ok && v != "UTC" && v != "utc" {
 		log15.Warn("Ignoring PGTZ environment variable; using PGTZ=UTC.", "ignoredPGTZ", v)
 	}
 	if err := os.Setenv("PGTZ", "UTC"); err != nil {
-		return errors.Wrap(err, "Error setting PGTZ=UTC")
+		return nil, errors.Wrap(err, "Error setting PGTZ=UTC")
 	}
 
 	connectionString := buildConnectionString(dataSource)
 
-	var err error
-	Global, err = openDBWithStartupWait(connectionString)
+	db, err := openDBWithStartupWait(connectionString)
 	if err != nil {
-		return errors.Wrap(err, "DB not available")
+		return nil, errors.Wrap(err, "DB not available")
 	}
-	registerPrometheusCollector(Global, "_app")
-	configureConnectionPool(Global)
-
-	return nil
+	registerPrometheusCollector(db, dbNameSuffix)
+	configureConnectionPool(db)
+	return db, nil
 }
 
-func MigrateDB(db *sql.DB, dataSource string) error {
-	m, err := dbutil.NewMigrate(db, dataSource)
+func MigrateDB(db *sql.DB, databaseName string) error {
+	m, err := dbutil.NewMigrate(db, databaseName)
 	if err != nil {
 		return err
 	}
@@ -159,20 +167,52 @@ func Open(dataSource string) (*sql.DB, error) {
 // be used by health checks.
 func Ping(ctx context.Context) error { return Global.PingContext(ctx) }
 
+type key int
+
+const bulkInsertionKey key = iota
+
+// BulkInsertion returns true if the bulkInsertionKey context value is true.
+func BulkInsertion(ctx context.Context) bool {
+	v, ok := ctx.Value(bulkInsertionKey).(bool)
+	if !ok {
+		return false
+	}
+	return v
+}
+
+// WithBulkInsertion sets the bulkInsertionKey context value.
+func WithBulkInsertion(ctx context.Context, bulkInsertion bool) context.Context {
+	return context.WithValue(ctx, bulkInsertionKey, bulkInsertion)
+}
+
 type hook struct{}
+
+// postgresBulkInsertRowPattern matches `($1, $2, $3), ($4, $5, $6), ...` which
+// we use to cut out the row payloads from bulk insertion tracing data. We don't
+// need all the parameter data for such requests, which are too big to fit into
+// Jaeger spans.
+var postgresBulkInsertRowPattern = lazyregexp.New(`(\([$\d,\s]+\)[,\s]*)+`)
 
 // Before implements sqlhooks.Hooks
 func (h *hook) Before(ctx context.Context, query string, args ...interface{}) (context.Context, error) {
-	tr, ctx := trace.New(ctx, "sql", query)
-	if span := opentracing.SpanFromContext(ctx); span != nil {
-		ext.SpanKindRPCClient.Set(span)
-		ext.DBType.Set(span, "sql")
+	if BulkInsertion(ctx) {
+		query = string(postgresBulkInsertRowPattern.ReplaceAll([]byte(query), []byte("...")))
 	}
-	tr.LogFields(otlog.Lazy(func(fv otlog.Encoder) {
-		for i, arg := range args {
-			fv.EmitString(strconv.Itoa(i+1), fmt.Sprintf("%q", arg))
-		}
-	}))
+
+	tr, ctx := trace.New(ctx, "sql", query,
+		trace.Tag{Key: "span.kind", Value: "client"},
+		trace.Tag{Key: "db.type", Value: "sql"},
+	)
+
+	if !BulkInsertion(ctx) {
+		tr.LogFields(otlog.Lazy(func(fv otlog.Encoder) {
+			for i, arg := range args {
+				fv.EmitString(strconv.Itoa(i+1), fmt.Sprintf("%v", arg))
+			}
+		}))
+	} else {
+		tr.LogFields(otlog.Bool("bulk_insert", true), otlog.Int("num_args", len(args)))
+	}
 
 	return ctx, nil
 }

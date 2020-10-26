@@ -2,7 +2,7 @@
 
 When you click on **Site admin > Monitoring** you will see the Grafana Home Dashboard.
 
-![Home Dashboard](https://storage.googleapis.com/sourcegraph-assets/GrafanaHomeDashboard.png)
+![Home Dashboard](https://sourcegraphstatic.com/GrafanaHomeDashboard.png)
 
 > NOTE: We are working on changing the default Home Dashboard to show useful summary metrics panels.
 

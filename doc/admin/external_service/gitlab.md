@@ -4,10 +4,14 @@ Site admins can sync Git repositories hosted on [GitLab](https://gitlab.com) (Gi
 
 To connect GitLab to Sourcegraph:
 
-1. Go to **Site admin > Manage repositories > Add repositories**
+1. Depending on whether you are a site admin or user:
+    1. *Site admin*: Go to **Site admin > Manage repositories > Add repositories**
+    1. *User*: Go to **Settings > Manage repositories**.
 1. Select **GitLab**.
 1. Configure the connection to GitLab using the action buttons above the text field, and additional fields can be added using <kbd>Cmd/Ctrl+Space</kbd> for auto-completion. See the [configuration documentation below](#configuration).
 1. Press **Add repositories**.
+
+**NOTE** That adding code hosts as a user is currently in private beta.
 
 ## Supported versions
 
@@ -24,7 +28,7 @@ There are three fields for configuring which projects are mirrored/synchronized:
 
 ### Troubleshooting
 
-You can test your access token's permissions by running a cURL command against the GitLab API. This is the same API and the same project list used by Sourcegraph. 
+You can test your access token's permissions by running a cURL command against the GitLab API. This is the same API and the same project list used by Sourcegraph.
 
 Replace `$ACCESS_TOKEN` with the access token you are providing to Sourcegraph, and `$GITLAB_HOSTNAME` with your GitLab hostname:
 
@@ -45,11 +49,11 @@ To configure GitLab as an authentication provider (which will enable sign-in via
 
 ## Internal rate limits
 
-Internal rate limiting can be configured to limit the rate at which requests are made from Sourcegraph to GitLab. 
+Internal rate limiting can be configured to limit the rate at which requests are made from Sourcegraph to GitLab.
 
 If enabled, the default rate is set at 36,000 per hour (10 per second) which can be configured via the `requestsPerHour` field (see below). If rate limiting is configured more than once for the same code host instance, the most restrictive limit will be used.
 
-**NOTE** Internal rate limiting is only currently applied when synchronising [campaign](../../user/campaigns/index.md) changesets.
+**NOTE** Internal rate limiting is only currently applied when synchronising [campaign](../../campaigns/index.md) changesets.
 
 ## Configuration
 
@@ -70,6 +74,16 @@ The Sourcegraph instance's site admin must [update the `corsOrigin` site config 
 }
 ```
 
+The site admin should also set `alerts.codeHostIntegrationMessaging` in [global settings](../config/settings.md#editing-global-settings-for-site-admins) to ensure informational content for users in the Sourcegraph webapp references the native integration and not the browser extension.
+
+```json
+{
+  // ...
+  "alerts.codeHostIntegrationMessaging": "native-integration"
+  // ...
+}
+```
+
 ## Access token scopes
 
 Sourcegraph requires an access token with `api` permissions (and `sudo`, if you are using an `external` identity provider type). These permissions are required for the following reasons:
@@ -83,4 +97,33 @@ We are actively collaborating with GitLab to improve our integration (e.g. the [
 | [`GET /users/:id`](https://docs.gitlab.com/ee/api/users.html#single-user) | `read_user` or `api` | If using GitLab OAuth, used to fetch user metadata during the OAuth sign in process. |
 | [`GET /projects/:id`](https://docs.gitlab.com/ee/api/projects.html#get-single-project) | `api` | (1) If using GitLab OAuth and repository permissions, used to determine if a user has access to a given _project_; (2) Used to query repository metadata (e.g. description) for display on Sourcegraph. |
 | [`GET /projects/:id/repository/tree`](https://docs.gitlab.com/ee/api/repositories.html#list-repository-tree) | `api` | If using GitLab OAuth and repository permissions, used to verify a given user has access to the file contents of a repository within a project (i.e. does not merely have `Guest` permissions). |
-| (future) write access | `api` | graph site-admins (only) to perform large-scale code refactors, with Sourcegraph issuing and managing the merge requests on GitLab repositories, company-wide. |
+| Campaigns requests | `api`, `read_repository`, `write_repository` | [Campaigns](../../campaigns/index.md) require write access to push commits and create, update and close merge requests on GitLab repositories. See "[Code host interactions in campaigns](../../campaigns/explanations/permissions_in_campaigns.md#code-host-interactions-in-campaigns)" for details. |
+
+## Webhooks
+
+The `webhooks` setting allows specifying the webhook secrets necessary to authenticate incoming webhook requests to `/.api/gitlab-webhooks`.
+
+```json
+"webhooks": [
+  {"secret": "verylongrandomsecret"}
+]
+```
+
+Using webhooks is highly recommended when using [campaigns](../../campaigns/index.md), since they speed up the syncing of pull request data between GitLab and Sourcegraph and make it more efficient.
+
+To set up webhooks:
+
+1. In Sourcegraph, go to **Site admin > Manage repositories** and edit the GitLab configuration.
+1. Add the `"webhooks"` property to the configuration (you can generate a secret with `openssl rand -hex 32`):<br /> `"webhooks": [{"secret": "verylongrandomsecret"}]`
+1. Click **Update repositories**.
+1. Copy the webhook URL displayed below the **Update repositories** button.
+1. On GitLab, go to your project, and then **Settings > Webhooks** (or **Settings > Integration** on older GitLab versions that don't have the **Webhooks** option).
+1. Fill in the webhook form:
+   * **URL**: the URL you copied above from Sourcegraph.
+   * **Secret token**: the secret token you configured Sourcegraph to use above.
+   * **Trigger**: select **Merge request events** and **Pipeline events**.
+   * **Enable SSL verification**: ensure this is enabled if you have configured SSL with a valid certificate in your Sourcegraph instance.
+1. Click **Add webhook**.
+1. Confirm that the new webhook is listed below **Project Hooks**.
+
+Done! Sourcegraph will now receive webhook events from GitLab and use them to sync merge request events, used by [campaigns](../../campaigns/index.md), faster and more efficiently.

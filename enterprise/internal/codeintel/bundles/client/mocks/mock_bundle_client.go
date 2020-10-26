@@ -5,6 +5,7 @@ package mocks
 import (
 	"context"
 	client "github.com/sourcegraph/sourcegraph/enterprise/internal/codeintel/bundles/client"
+	clienttypes "github.com/sourcegraph/sourcegraph/enterprise/internal/codeintel/bundles/client_types"
 	"sync"
 )
 
@@ -37,6 +38,9 @@ type MockBundleClient struct {
 	// PackageInformationFunc is an instance of a mock function object
 	// controlling the behavior of the method PackageInformation.
 	PackageInformationFunc *BundleClientPackageInformationFunc
+	// RangesFunc is an instance of a mock function object controlling the
+	// behavior of the method Ranges.
+	RangesFunc *BundleClientRangesFunc
 	// ReferencesFunc is an instance of a mock function object controlling
 	// the behavior of the method References.
 	ReferencesFunc *BundleClientReferencesFunc
@@ -47,12 +51,12 @@ type MockBundleClient struct {
 func NewMockBundleClient() *MockBundleClient {
 	return &MockBundleClient{
 		DefinitionsFunc: &BundleClientDefinitionsFunc{
-			defaultHook: func(context.Context, string, int, int) ([]client.Location, error) {
+			defaultHook: func(context.Context, string, int, int) ([]clienttypes.Location, error) {
 				return nil, nil
 			},
 		},
 		DiagnosticsFunc: &BundleClientDiagnosticsFunc{
-			defaultHook: func(context.Context, string, int, int) ([]client.Diagnostic, int, error) {
+			defaultHook: func(context.Context, string, int, int) ([]clienttypes.Diagnostic, int, error) {
 				return nil, 0, nil
 			},
 		},
@@ -62,8 +66,8 @@ func NewMockBundleClient() *MockBundleClient {
 			},
 		},
 		HoverFunc: &BundleClientHoverFunc{
-			defaultHook: func(context.Context, string, int, int) (string, client.Range, bool, error) {
-				return "", client.Range{}, false, nil
+			defaultHook: func(context.Context, string, int, int) (string, clienttypes.Range, bool, error) {
+				return "", clienttypes.Range{}, false, nil
 			},
 		},
 		IDFunc: &BundleClientIDFunc{
@@ -72,22 +76,27 @@ func NewMockBundleClient() *MockBundleClient {
 			},
 		},
 		MonikerResultsFunc: &BundleClientMonikerResultsFunc{
-			defaultHook: func(context.Context, string, string, string, int, int) ([]client.Location, int, error) {
+			defaultHook: func(context.Context, string, string, string, int, int) ([]clienttypes.Location, int, error) {
 				return nil, 0, nil
 			},
 		},
 		MonikersByPositionFunc: &BundleClientMonikersByPositionFunc{
-			defaultHook: func(context.Context, string, int, int) ([][]client.MonikerData, error) {
+			defaultHook: func(context.Context, string, int, int) ([][]clienttypes.MonikerData, error) {
 				return nil, nil
 			},
 		},
 		PackageInformationFunc: &BundleClientPackageInformationFunc{
-			defaultHook: func(context.Context, string, string) (client.PackageInformationData, error) {
-				return client.PackageInformationData{}, nil
+			defaultHook: func(context.Context, string, string) (clienttypes.PackageInformationData, error) {
+				return clienttypes.PackageInformationData{}, nil
+			},
+		},
+		RangesFunc: &BundleClientRangesFunc{
+			defaultHook: func(context.Context, string, int, int) ([]clienttypes.CodeIntelligenceRange, error) {
+				return nil, nil
 			},
 		},
 		ReferencesFunc: &BundleClientReferencesFunc{
-			defaultHook: func(context.Context, string, int, int) ([]client.Location, error) {
+			defaultHook: func(context.Context, string, int, int) ([]clienttypes.Location, error) {
 				return nil, nil
 			},
 		},
@@ -123,6 +132,9 @@ func NewMockBundleClientFrom(i client.BundleClient) *MockBundleClient {
 		PackageInformationFunc: &BundleClientPackageInformationFunc{
 			defaultHook: i.PackageInformation,
 		},
+		RangesFunc: &BundleClientRangesFunc{
+			defaultHook: i.Ranges,
+		},
 		ReferencesFunc: &BundleClientReferencesFunc{
 			defaultHook: i.References,
 		},
@@ -132,15 +144,15 @@ func NewMockBundleClientFrom(i client.BundleClient) *MockBundleClient {
 // BundleClientDefinitionsFunc describes the behavior when the Definitions
 // method of the parent MockBundleClient instance is invoked.
 type BundleClientDefinitionsFunc struct {
-	defaultHook func(context.Context, string, int, int) ([]client.Location, error)
-	hooks       []func(context.Context, string, int, int) ([]client.Location, error)
+	defaultHook func(context.Context, string, int, int) ([]clienttypes.Location, error)
+	hooks       []func(context.Context, string, int, int) ([]clienttypes.Location, error)
 	history     []BundleClientDefinitionsFuncCall
 	mutex       sync.Mutex
 }
 
 // Definitions delegates to the next hook function in the queue and stores
 // the parameter and result values of this invocation.
-func (m *MockBundleClient) Definitions(v0 context.Context, v1 string, v2 int, v3 int) ([]client.Location, error) {
+func (m *MockBundleClient) Definitions(v0 context.Context, v1 string, v2 int, v3 int) ([]clienttypes.Location, error) {
 	r0, r1 := m.DefinitionsFunc.nextHook()(v0, v1, v2, v3)
 	m.DefinitionsFunc.appendCall(BundleClientDefinitionsFuncCall{v0, v1, v2, v3, r0, r1})
 	return r0, r1
@@ -149,7 +161,7 @@ func (m *MockBundleClient) Definitions(v0 context.Context, v1 string, v2 int, v3
 // SetDefaultHook sets function that is called when the Definitions method
 // of the parent MockBundleClient instance is invoked and the hook queue is
 // empty.
-func (f *BundleClientDefinitionsFunc) SetDefaultHook(hook func(context.Context, string, int, int) ([]client.Location, error)) {
+func (f *BundleClientDefinitionsFunc) SetDefaultHook(hook func(context.Context, string, int, int) ([]clienttypes.Location, error)) {
 	f.defaultHook = hook
 }
 
@@ -157,7 +169,7 @@ func (f *BundleClientDefinitionsFunc) SetDefaultHook(hook func(context.Context, 
 // Definitions method of the parent MockBundleClient instance inovkes the
 // hook at the front of the queue and discards it. After the queue is empty,
 // the default hook function is invoked for any future action.
-func (f *BundleClientDefinitionsFunc) PushHook(hook func(context.Context, string, int, int) ([]client.Location, error)) {
+func (f *BundleClientDefinitionsFunc) PushHook(hook func(context.Context, string, int, int) ([]clienttypes.Location, error)) {
 	f.mutex.Lock()
 	f.hooks = append(f.hooks, hook)
 	f.mutex.Unlock()
@@ -165,21 +177,21 @@ func (f *BundleClientDefinitionsFunc) PushHook(hook func(context.Context, string
 
 // SetDefaultReturn calls SetDefaultDefaultHook with a function that returns
 // the given values.
-func (f *BundleClientDefinitionsFunc) SetDefaultReturn(r0 []client.Location, r1 error) {
-	f.SetDefaultHook(func(context.Context, string, int, int) ([]client.Location, error) {
+func (f *BundleClientDefinitionsFunc) SetDefaultReturn(r0 []clienttypes.Location, r1 error) {
+	f.SetDefaultHook(func(context.Context, string, int, int) ([]clienttypes.Location, error) {
 		return r0, r1
 	})
 }
 
 // PushReturn calls PushDefaultHook with a function that returns the given
 // values.
-func (f *BundleClientDefinitionsFunc) PushReturn(r0 []client.Location, r1 error) {
-	f.PushHook(func(context.Context, string, int, int) ([]client.Location, error) {
+func (f *BundleClientDefinitionsFunc) PushReturn(r0 []clienttypes.Location, r1 error) {
+	f.PushHook(func(context.Context, string, int, int) ([]clienttypes.Location, error) {
 		return r0, r1
 	})
 }
 
-func (f *BundleClientDefinitionsFunc) nextHook() func(context.Context, string, int, int) ([]client.Location, error) {
+func (f *BundleClientDefinitionsFunc) nextHook() func(context.Context, string, int, int) ([]clienttypes.Location, error) {
 	f.mutex.Lock()
 	defer f.mutex.Unlock()
 
@@ -226,7 +238,7 @@ type BundleClientDefinitionsFuncCall struct {
 	Arg3 int
 	// Result0 is the value of the 1st result returned from this method
 	// invocation.
-	Result0 []client.Location
+	Result0 []clienttypes.Location
 	// Result1 is the value of the 2nd result returned from this method
 	// invocation.
 	Result1 error
@@ -247,15 +259,15 @@ func (c BundleClientDefinitionsFuncCall) Results() []interface{} {
 // BundleClientDiagnosticsFunc describes the behavior when the Diagnostics
 // method of the parent MockBundleClient instance is invoked.
 type BundleClientDiagnosticsFunc struct {
-	defaultHook func(context.Context, string, int, int) ([]client.Diagnostic, int, error)
-	hooks       []func(context.Context, string, int, int) ([]client.Diagnostic, int, error)
+	defaultHook func(context.Context, string, int, int) ([]clienttypes.Diagnostic, int, error)
+	hooks       []func(context.Context, string, int, int) ([]clienttypes.Diagnostic, int, error)
 	history     []BundleClientDiagnosticsFuncCall
 	mutex       sync.Mutex
 }
 
 // Diagnostics delegates to the next hook function in the queue and stores
 // the parameter and result values of this invocation.
-func (m *MockBundleClient) Diagnostics(v0 context.Context, v1 string, v2 int, v3 int) ([]client.Diagnostic, int, error) {
+func (m *MockBundleClient) Diagnostics(v0 context.Context, v1 string, v2 int, v3 int) ([]clienttypes.Diagnostic, int, error) {
 	r0, r1, r2 := m.DiagnosticsFunc.nextHook()(v0, v1, v2, v3)
 	m.DiagnosticsFunc.appendCall(BundleClientDiagnosticsFuncCall{v0, v1, v2, v3, r0, r1, r2})
 	return r0, r1, r2
@@ -264,7 +276,7 @@ func (m *MockBundleClient) Diagnostics(v0 context.Context, v1 string, v2 int, v3
 // SetDefaultHook sets function that is called when the Diagnostics method
 // of the parent MockBundleClient instance is invoked and the hook queue is
 // empty.
-func (f *BundleClientDiagnosticsFunc) SetDefaultHook(hook func(context.Context, string, int, int) ([]client.Diagnostic, int, error)) {
+func (f *BundleClientDiagnosticsFunc) SetDefaultHook(hook func(context.Context, string, int, int) ([]clienttypes.Diagnostic, int, error)) {
 	f.defaultHook = hook
 }
 
@@ -272,7 +284,7 @@ func (f *BundleClientDiagnosticsFunc) SetDefaultHook(hook func(context.Context, 
 // Diagnostics method of the parent MockBundleClient instance inovkes the
 // hook at the front of the queue and discards it. After the queue is empty,
 // the default hook function is invoked for any future action.
-func (f *BundleClientDiagnosticsFunc) PushHook(hook func(context.Context, string, int, int) ([]client.Diagnostic, int, error)) {
+func (f *BundleClientDiagnosticsFunc) PushHook(hook func(context.Context, string, int, int) ([]clienttypes.Diagnostic, int, error)) {
 	f.mutex.Lock()
 	f.hooks = append(f.hooks, hook)
 	f.mutex.Unlock()
@@ -280,21 +292,21 @@ func (f *BundleClientDiagnosticsFunc) PushHook(hook func(context.Context, string
 
 // SetDefaultReturn calls SetDefaultDefaultHook with a function that returns
 // the given values.
-func (f *BundleClientDiagnosticsFunc) SetDefaultReturn(r0 []client.Diagnostic, r1 int, r2 error) {
-	f.SetDefaultHook(func(context.Context, string, int, int) ([]client.Diagnostic, int, error) {
+func (f *BundleClientDiagnosticsFunc) SetDefaultReturn(r0 []clienttypes.Diagnostic, r1 int, r2 error) {
+	f.SetDefaultHook(func(context.Context, string, int, int) ([]clienttypes.Diagnostic, int, error) {
 		return r0, r1, r2
 	})
 }
 
 // PushReturn calls PushDefaultHook with a function that returns the given
 // values.
-func (f *BundleClientDiagnosticsFunc) PushReturn(r0 []client.Diagnostic, r1 int, r2 error) {
-	f.PushHook(func(context.Context, string, int, int) ([]client.Diagnostic, int, error) {
+func (f *BundleClientDiagnosticsFunc) PushReturn(r0 []clienttypes.Diagnostic, r1 int, r2 error) {
+	f.PushHook(func(context.Context, string, int, int) ([]clienttypes.Diagnostic, int, error) {
 		return r0, r1, r2
 	})
 }
 
-func (f *BundleClientDiagnosticsFunc) nextHook() func(context.Context, string, int, int) ([]client.Diagnostic, int, error) {
+func (f *BundleClientDiagnosticsFunc) nextHook() func(context.Context, string, int, int) ([]clienttypes.Diagnostic, int, error) {
 	f.mutex.Lock()
 	defer f.mutex.Unlock()
 
@@ -341,7 +353,7 @@ type BundleClientDiagnosticsFuncCall struct {
 	Arg3 int
 	// Result0 is the value of the 1st result returned from this method
 	// invocation.
-	Result0 []client.Diagnostic
+	Result0 []clienttypes.Diagnostic
 	// Result1 is the value of the 2nd result returned from this method
 	// invocation.
 	Result1 int
@@ -473,15 +485,15 @@ func (c BundleClientExistsFuncCall) Results() []interface{} {
 // BundleClientHoverFunc describes the behavior when the Hover method of the
 // parent MockBundleClient instance is invoked.
 type BundleClientHoverFunc struct {
-	defaultHook func(context.Context, string, int, int) (string, client.Range, bool, error)
-	hooks       []func(context.Context, string, int, int) (string, client.Range, bool, error)
+	defaultHook func(context.Context, string, int, int) (string, clienttypes.Range, bool, error)
+	hooks       []func(context.Context, string, int, int) (string, clienttypes.Range, bool, error)
 	history     []BundleClientHoverFuncCall
 	mutex       sync.Mutex
 }
 
 // Hover delegates to the next hook function in the queue and stores the
 // parameter and result values of this invocation.
-func (m *MockBundleClient) Hover(v0 context.Context, v1 string, v2 int, v3 int) (string, client.Range, bool, error) {
+func (m *MockBundleClient) Hover(v0 context.Context, v1 string, v2 int, v3 int) (string, clienttypes.Range, bool, error) {
 	r0, r1, r2, r3 := m.HoverFunc.nextHook()(v0, v1, v2, v3)
 	m.HoverFunc.appendCall(BundleClientHoverFuncCall{v0, v1, v2, v3, r0, r1, r2, r3})
 	return r0, r1, r2, r3
@@ -489,7 +501,7 @@ func (m *MockBundleClient) Hover(v0 context.Context, v1 string, v2 int, v3 int) 
 
 // SetDefaultHook sets function that is called when the Hover method of the
 // parent MockBundleClient instance is invoked and the hook queue is empty.
-func (f *BundleClientHoverFunc) SetDefaultHook(hook func(context.Context, string, int, int) (string, client.Range, bool, error)) {
+func (f *BundleClientHoverFunc) SetDefaultHook(hook func(context.Context, string, int, int) (string, clienttypes.Range, bool, error)) {
 	f.defaultHook = hook
 }
 
@@ -497,7 +509,7 @@ func (f *BundleClientHoverFunc) SetDefaultHook(hook func(context.Context, string
 // Hover method of the parent MockBundleClient instance inovkes the hook at
 // the front of the queue and discards it. After the queue is empty, the
 // default hook function is invoked for any future action.
-func (f *BundleClientHoverFunc) PushHook(hook func(context.Context, string, int, int) (string, client.Range, bool, error)) {
+func (f *BundleClientHoverFunc) PushHook(hook func(context.Context, string, int, int) (string, clienttypes.Range, bool, error)) {
 	f.mutex.Lock()
 	f.hooks = append(f.hooks, hook)
 	f.mutex.Unlock()
@@ -505,21 +517,21 @@ func (f *BundleClientHoverFunc) PushHook(hook func(context.Context, string, int,
 
 // SetDefaultReturn calls SetDefaultDefaultHook with a function that returns
 // the given values.
-func (f *BundleClientHoverFunc) SetDefaultReturn(r0 string, r1 client.Range, r2 bool, r3 error) {
-	f.SetDefaultHook(func(context.Context, string, int, int) (string, client.Range, bool, error) {
+func (f *BundleClientHoverFunc) SetDefaultReturn(r0 string, r1 clienttypes.Range, r2 bool, r3 error) {
+	f.SetDefaultHook(func(context.Context, string, int, int) (string, clienttypes.Range, bool, error) {
 		return r0, r1, r2, r3
 	})
 }
 
 // PushReturn calls PushDefaultHook with a function that returns the given
 // values.
-func (f *BundleClientHoverFunc) PushReturn(r0 string, r1 client.Range, r2 bool, r3 error) {
-	f.PushHook(func(context.Context, string, int, int) (string, client.Range, bool, error) {
+func (f *BundleClientHoverFunc) PushReturn(r0 string, r1 clienttypes.Range, r2 bool, r3 error) {
+	f.PushHook(func(context.Context, string, int, int) (string, clienttypes.Range, bool, error) {
 		return r0, r1, r2, r3
 	})
 }
 
-func (f *BundleClientHoverFunc) nextHook() func(context.Context, string, int, int) (string, client.Range, bool, error) {
+func (f *BundleClientHoverFunc) nextHook() func(context.Context, string, int, int) (string, clienttypes.Range, bool, error) {
 	f.mutex.Lock()
 	defer f.mutex.Unlock()
 
@@ -569,7 +581,7 @@ type BundleClientHoverFuncCall struct {
 	Result0 string
 	// Result1 is the value of the 2nd result returned from this method
 	// invocation.
-	Result1 client.Range
+	Result1 clienttypes.Range
 	// Result2 is the value of the 3rd result returned from this method
 	// invocation.
 	Result2 bool
@@ -692,15 +704,15 @@ func (c BundleClientIDFuncCall) Results() []interface{} {
 // BundleClientMonikerResultsFunc describes the behavior when the
 // MonikerResults method of the parent MockBundleClient instance is invoked.
 type BundleClientMonikerResultsFunc struct {
-	defaultHook func(context.Context, string, string, string, int, int) ([]client.Location, int, error)
-	hooks       []func(context.Context, string, string, string, int, int) ([]client.Location, int, error)
+	defaultHook func(context.Context, string, string, string, int, int) ([]clienttypes.Location, int, error)
+	hooks       []func(context.Context, string, string, string, int, int) ([]clienttypes.Location, int, error)
 	history     []BundleClientMonikerResultsFuncCall
 	mutex       sync.Mutex
 }
 
 // MonikerResults delegates to the next hook function in the queue and
 // stores the parameter and result values of this invocation.
-func (m *MockBundleClient) MonikerResults(v0 context.Context, v1 string, v2 string, v3 string, v4 int, v5 int) ([]client.Location, int, error) {
+func (m *MockBundleClient) MonikerResults(v0 context.Context, v1 string, v2 string, v3 string, v4 int, v5 int) ([]clienttypes.Location, int, error) {
 	r0, r1, r2 := m.MonikerResultsFunc.nextHook()(v0, v1, v2, v3, v4, v5)
 	m.MonikerResultsFunc.appendCall(BundleClientMonikerResultsFuncCall{v0, v1, v2, v3, v4, v5, r0, r1, r2})
 	return r0, r1, r2
@@ -709,7 +721,7 @@ func (m *MockBundleClient) MonikerResults(v0 context.Context, v1 string, v2 stri
 // SetDefaultHook sets function that is called when the MonikerResults
 // method of the parent MockBundleClient instance is invoked and the hook
 // queue is empty.
-func (f *BundleClientMonikerResultsFunc) SetDefaultHook(hook func(context.Context, string, string, string, int, int) ([]client.Location, int, error)) {
+func (f *BundleClientMonikerResultsFunc) SetDefaultHook(hook func(context.Context, string, string, string, int, int) ([]clienttypes.Location, int, error)) {
 	f.defaultHook = hook
 }
 
@@ -717,7 +729,7 @@ func (f *BundleClientMonikerResultsFunc) SetDefaultHook(hook func(context.Contex
 // MonikerResults method of the parent MockBundleClient instance inovkes the
 // hook at the front of the queue and discards it. After the queue is empty,
 // the default hook function is invoked for any future action.
-func (f *BundleClientMonikerResultsFunc) PushHook(hook func(context.Context, string, string, string, int, int) ([]client.Location, int, error)) {
+func (f *BundleClientMonikerResultsFunc) PushHook(hook func(context.Context, string, string, string, int, int) ([]clienttypes.Location, int, error)) {
 	f.mutex.Lock()
 	f.hooks = append(f.hooks, hook)
 	f.mutex.Unlock()
@@ -725,21 +737,21 @@ func (f *BundleClientMonikerResultsFunc) PushHook(hook func(context.Context, str
 
 // SetDefaultReturn calls SetDefaultDefaultHook with a function that returns
 // the given values.
-func (f *BundleClientMonikerResultsFunc) SetDefaultReturn(r0 []client.Location, r1 int, r2 error) {
-	f.SetDefaultHook(func(context.Context, string, string, string, int, int) ([]client.Location, int, error) {
+func (f *BundleClientMonikerResultsFunc) SetDefaultReturn(r0 []clienttypes.Location, r1 int, r2 error) {
+	f.SetDefaultHook(func(context.Context, string, string, string, int, int) ([]clienttypes.Location, int, error) {
 		return r0, r1, r2
 	})
 }
 
 // PushReturn calls PushDefaultHook with a function that returns the given
 // values.
-func (f *BundleClientMonikerResultsFunc) PushReturn(r0 []client.Location, r1 int, r2 error) {
-	f.PushHook(func(context.Context, string, string, string, int, int) ([]client.Location, int, error) {
+func (f *BundleClientMonikerResultsFunc) PushReturn(r0 []clienttypes.Location, r1 int, r2 error) {
+	f.PushHook(func(context.Context, string, string, string, int, int) ([]clienttypes.Location, int, error) {
 		return r0, r1, r2
 	})
 }
 
-func (f *BundleClientMonikerResultsFunc) nextHook() func(context.Context, string, string, string, int, int) ([]client.Location, int, error) {
+func (f *BundleClientMonikerResultsFunc) nextHook() func(context.Context, string, string, string, int, int) ([]clienttypes.Location, int, error) {
 	f.mutex.Lock()
 	defer f.mutex.Unlock()
 
@@ -792,7 +804,7 @@ type BundleClientMonikerResultsFuncCall struct {
 	Arg5 int
 	// Result0 is the value of the 1st result returned from this method
 	// invocation.
-	Result0 []client.Location
+	Result0 []clienttypes.Location
 	// Result1 is the value of the 2nd result returned from this method
 	// invocation.
 	Result1 int
@@ -817,15 +829,15 @@ func (c BundleClientMonikerResultsFuncCall) Results() []interface{} {
 // MonikersByPosition method of the parent MockBundleClient instance is
 // invoked.
 type BundleClientMonikersByPositionFunc struct {
-	defaultHook func(context.Context, string, int, int) ([][]client.MonikerData, error)
-	hooks       []func(context.Context, string, int, int) ([][]client.MonikerData, error)
+	defaultHook func(context.Context, string, int, int) ([][]clienttypes.MonikerData, error)
+	hooks       []func(context.Context, string, int, int) ([][]clienttypes.MonikerData, error)
 	history     []BundleClientMonikersByPositionFuncCall
 	mutex       sync.Mutex
 }
 
 // MonikersByPosition delegates to the next hook function in the queue and
 // stores the parameter and result values of this invocation.
-func (m *MockBundleClient) MonikersByPosition(v0 context.Context, v1 string, v2 int, v3 int) ([][]client.MonikerData, error) {
+func (m *MockBundleClient) MonikersByPosition(v0 context.Context, v1 string, v2 int, v3 int) ([][]clienttypes.MonikerData, error) {
 	r0, r1 := m.MonikersByPositionFunc.nextHook()(v0, v1, v2, v3)
 	m.MonikersByPositionFunc.appendCall(BundleClientMonikersByPositionFuncCall{v0, v1, v2, v3, r0, r1})
 	return r0, r1
@@ -834,7 +846,7 @@ func (m *MockBundleClient) MonikersByPosition(v0 context.Context, v1 string, v2 
 // SetDefaultHook sets function that is called when the MonikersByPosition
 // method of the parent MockBundleClient instance is invoked and the hook
 // queue is empty.
-func (f *BundleClientMonikersByPositionFunc) SetDefaultHook(hook func(context.Context, string, int, int) ([][]client.MonikerData, error)) {
+func (f *BundleClientMonikersByPositionFunc) SetDefaultHook(hook func(context.Context, string, int, int) ([][]clienttypes.MonikerData, error)) {
 	f.defaultHook = hook
 }
 
@@ -842,7 +854,7 @@ func (f *BundleClientMonikersByPositionFunc) SetDefaultHook(hook func(context.Co
 // MonikersByPosition method of the parent MockBundleClient instance inovkes
 // the hook at the front of the queue and discards it. After the queue is
 // empty, the default hook function is invoked for any future action.
-func (f *BundleClientMonikersByPositionFunc) PushHook(hook func(context.Context, string, int, int) ([][]client.MonikerData, error)) {
+func (f *BundleClientMonikersByPositionFunc) PushHook(hook func(context.Context, string, int, int) ([][]clienttypes.MonikerData, error)) {
 	f.mutex.Lock()
 	f.hooks = append(f.hooks, hook)
 	f.mutex.Unlock()
@@ -850,21 +862,21 @@ func (f *BundleClientMonikersByPositionFunc) PushHook(hook func(context.Context,
 
 // SetDefaultReturn calls SetDefaultDefaultHook with a function that returns
 // the given values.
-func (f *BundleClientMonikersByPositionFunc) SetDefaultReturn(r0 [][]client.MonikerData, r1 error) {
-	f.SetDefaultHook(func(context.Context, string, int, int) ([][]client.MonikerData, error) {
+func (f *BundleClientMonikersByPositionFunc) SetDefaultReturn(r0 [][]clienttypes.MonikerData, r1 error) {
+	f.SetDefaultHook(func(context.Context, string, int, int) ([][]clienttypes.MonikerData, error) {
 		return r0, r1
 	})
 }
 
 // PushReturn calls PushDefaultHook with a function that returns the given
 // values.
-func (f *BundleClientMonikersByPositionFunc) PushReturn(r0 [][]client.MonikerData, r1 error) {
-	f.PushHook(func(context.Context, string, int, int) ([][]client.MonikerData, error) {
+func (f *BundleClientMonikersByPositionFunc) PushReturn(r0 [][]clienttypes.MonikerData, r1 error) {
+	f.PushHook(func(context.Context, string, int, int) ([][]clienttypes.MonikerData, error) {
 		return r0, r1
 	})
 }
 
-func (f *BundleClientMonikersByPositionFunc) nextHook() func(context.Context, string, int, int) ([][]client.MonikerData, error) {
+func (f *BundleClientMonikersByPositionFunc) nextHook() func(context.Context, string, int, int) ([][]clienttypes.MonikerData, error) {
 	f.mutex.Lock()
 	defer f.mutex.Unlock()
 
@@ -912,7 +924,7 @@ type BundleClientMonikersByPositionFuncCall struct {
 	Arg3 int
 	// Result0 is the value of the 1st result returned from this method
 	// invocation.
-	Result0 [][]client.MonikerData
+	Result0 [][]clienttypes.MonikerData
 	// Result1 is the value of the 2nd result returned from this method
 	// invocation.
 	Result1 error
@@ -934,15 +946,15 @@ func (c BundleClientMonikersByPositionFuncCall) Results() []interface{} {
 // PackageInformation method of the parent MockBundleClient instance is
 // invoked.
 type BundleClientPackageInformationFunc struct {
-	defaultHook func(context.Context, string, string) (client.PackageInformationData, error)
-	hooks       []func(context.Context, string, string) (client.PackageInformationData, error)
+	defaultHook func(context.Context, string, string) (clienttypes.PackageInformationData, error)
+	hooks       []func(context.Context, string, string) (clienttypes.PackageInformationData, error)
 	history     []BundleClientPackageInformationFuncCall
 	mutex       sync.Mutex
 }
 
 // PackageInformation delegates to the next hook function in the queue and
 // stores the parameter and result values of this invocation.
-func (m *MockBundleClient) PackageInformation(v0 context.Context, v1 string, v2 string) (client.PackageInformationData, error) {
+func (m *MockBundleClient) PackageInformation(v0 context.Context, v1 string, v2 string) (clienttypes.PackageInformationData, error) {
 	r0, r1 := m.PackageInformationFunc.nextHook()(v0, v1, v2)
 	m.PackageInformationFunc.appendCall(BundleClientPackageInformationFuncCall{v0, v1, v2, r0, r1})
 	return r0, r1
@@ -951,7 +963,7 @@ func (m *MockBundleClient) PackageInformation(v0 context.Context, v1 string, v2 
 // SetDefaultHook sets function that is called when the PackageInformation
 // method of the parent MockBundleClient instance is invoked and the hook
 // queue is empty.
-func (f *BundleClientPackageInformationFunc) SetDefaultHook(hook func(context.Context, string, string) (client.PackageInformationData, error)) {
+func (f *BundleClientPackageInformationFunc) SetDefaultHook(hook func(context.Context, string, string) (clienttypes.PackageInformationData, error)) {
 	f.defaultHook = hook
 }
 
@@ -959,7 +971,7 @@ func (f *BundleClientPackageInformationFunc) SetDefaultHook(hook func(context.Co
 // PackageInformation method of the parent MockBundleClient instance inovkes
 // the hook at the front of the queue and discards it. After the queue is
 // empty, the default hook function is invoked for any future action.
-func (f *BundleClientPackageInformationFunc) PushHook(hook func(context.Context, string, string) (client.PackageInformationData, error)) {
+func (f *BundleClientPackageInformationFunc) PushHook(hook func(context.Context, string, string) (clienttypes.PackageInformationData, error)) {
 	f.mutex.Lock()
 	f.hooks = append(f.hooks, hook)
 	f.mutex.Unlock()
@@ -967,21 +979,21 @@ func (f *BundleClientPackageInformationFunc) PushHook(hook func(context.Context,
 
 // SetDefaultReturn calls SetDefaultDefaultHook with a function that returns
 // the given values.
-func (f *BundleClientPackageInformationFunc) SetDefaultReturn(r0 client.PackageInformationData, r1 error) {
-	f.SetDefaultHook(func(context.Context, string, string) (client.PackageInformationData, error) {
+func (f *BundleClientPackageInformationFunc) SetDefaultReturn(r0 clienttypes.PackageInformationData, r1 error) {
+	f.SetDefaultHook(func(context.Context, string, string) (clienttypes.PackageInformationData, error) {
 		return r0, r1
 	})
 }
 
 // PushReturn calls PushDefaultHook with a function that returns the given
 // values.
-func (f *BundleClientPackageInformationFunc) PushReturn(r0 client.PackageInformationData, r1 error) {
-	f.PushHook(func(context.Context, string, string) (client.PackageInformationData, error) {
+func (f *BundleClientPackageInformationFunc) PushReturn(r0 clienttypes.PackageInformationData, r1 error) {
+	f.PushHook(func(context.Context, string, string) (clienttypes.PackageInformationData, error) {
 		return r0, r1
 	})
 }
 
-func (f *BundleClientPackageInformationFunc) nextHook() func(context.Context, string, string) (client.PackageInformationData, error) {
+func (f *BundleClientPackageInformationFunc) nextHook() func(context.Context, string, string) (clienttypes.PackageInformationData, error) {
 	f.mutex.Lock()
 	defer f.mutex.Unlock()
 
@@ -1026,7 +1038,7 @@ type BundleClientPackageInformationFuncCall struct {
 	Arg2 string
 	// Result0 is the value of the 1st result returned from this method
 	// invocation.
-	Result0 client.PackageInformationData
+	Result0 clienttypes.PackageInformationData
 	// Result1 is the value of the 2nd result returned from this method
 	// invocation.
 	Result1 error
@@ -1044,18 +1056,132 @@ func (c BundleClientPackageInformationFuncCall) Results() []interface{} {
 	return []interface{}{c.Result0, c.Result1}
 }
 
+// BundleClientRangesFunc describes the behavior when the Ranges method of
+// the parent MockBundleClient instance is invoked.
+type BundleClientRangesFunc struct {
+	defaultHook func(context.Context, string, int, int) ([]clienttypes.CodeIntelligenceRange, error)
+	hooks       []func(context.Context, string, int, int) ([]clienttypes.CodeIntelligenceRange, error)
+	history     []BundleClientRangesFuncCall
+	mutex       sync.Mutex
+}
+
+// Ranges delegates to the next hook function in the queue and stores the
+// parameter and result values of this invocation.
+func (m *MockBundleClient) Ranges(v0 context.Context, v1 string, v2 int, v3 int) ([]clienttypes.CodeIntelligenceRange, error) {
+	r0, r1 := m.RangesFunc.nextHook()(v0, v1, v2, v3)
+	m.RangesFunc.appendCall(BundleClientRangesFuncCall{v0, v1, v2, v3, r0, r1})
+	return r0, r1
+}
+
+// SetDefaultHook sets function that is called when the Ranges method of the
+// parent MockBundleClient instance is invoked and the hook queue is empty.
+func (f *BundleClientRangesFunc) SetDefaultHook(hook func(context.Context, string, int, int) ([]clienttypes.CodeIntelligenceRange, error)) {
+	f.defaultHook = hook
+}
+
+// PushHook adds a function to the end of hook queue. Each invocation of the
+// Ranges method of the parent MockBundleClient instance inovkes the hook at
+// the front of the queue and discards it. After the queue is empty, the
+// default hook function is invoked for any future action.
+func (f *BundleClientRangesFunc) PushHook(hook func(context.Context, string, int, int) ([]clienttypes.CodeIntelligenceRange, error)) {
+	f.mutex.Lock()
+	f.hooks = append(f.hooks, hook)
+	f.mutex.Unlock()
+}
+
+// SetDefaultReturn calls SetDefaultDefaultHook with a function that returns
+// the given values.
+func (f *BundleClientRangesFunc) SetDefaultReturn(r0 []clienttypes.CodeIntelligenceRange, r1 error) {
+	f.SetDefaultHook(func(context.Context, string, int, int) ([]clienttypes.CodeIntelligenceRange, error) {
+		return r0, r1
+	})
+}
+
+// PushReturn calls PushDefaultHook with a function that returns the given
+// values.
+func (f *BundleClientRangesFunc) PushReturn(r0 []clienttypes.CodeIntelligenceRange, r1 error) {
+	f.PushHook(func(context.Context, string, int, int) ([]clienttypes.CodeIntelligenceRange, error) {
+		return r0, r1
+	})
+}
+
+func (f *BundleClientRangesFunc) nextHook() func(context.Context, string, int, int) ([]clienttypes.CodeIntelligenceRange, error) {
+	f.mutex.Lock()
+	defer f.mutex.Unlock()
+
+	if len(f.hooks) == 0 {
+		return f.defaultHook
+	}
+
+	hook := f.hooks[0]
+	f.hooks = f.hooks[1:]
+	return hook
+}
+
+func (f *BundleClientRangesFunc) appendCall(r0 BundleClientRangesFuncCall) {
+	f.mutex.Lock()
+	f.history = append(f.history, r0)
+	f.mutex.Unlock()
+}
+
+// History returns a sequence of BundleClientRangesFuncCall objects
+// describing the invocations of this function.
+func (f *BundleClientRangesFunc) History() []BundleClientRangesFuncCall {
+	f.mutex.Lock()
+	history := make([]BundleClientRangesFuncCall, len(f.history))
+	copy(history, f.history)
+	f.mutex.Unlock()
+
+	return history
+}
+
+// BundleClientRangesFuncCall is an object that describes an invocation of
+// method Ranges on an instance of MockBundleClient.
+type BundleClientRangesFuncCall struct {
+	// Arg0 is the value of the 1st argument passed to this method
+	// invocation.
+	Arg0 context.Context
+	// Arg1 is the value of the 2nd argument passed to this method
+	// invocation.
+	Arg1 string
+	// Arg2 is the value of the 3rd argument passed to this method
+	// invocation.
+	Arg2 int
+	// Arg3 is the value of the 4th argument passed to this method
+	// invocation.
+	Arg3 int
+	// Result0 is the value of the 1st result returned from this method
+	// invocation.
+	Result0 []clienttypes.CodeIntelligenceRange
+	// Result1 is the value of the 2nd result returned from this method
+	// invocation.
+	Result1 error
+}
+
+// Args returns an interface slice containing the arguments of this
+// invocation.
+func (c BundleClientRangesFuncCall) Args() []interface{} {
+	return []interface{}{c.Arg0, c.Arg1, c.Arg2, c.Arg3}
+}
+
+// Results returns an interface slice containing the results of this
+// invocation.
+func (c BundleClientRangesFuncCall) Results() []interface{} {
+	return []interface{}{c.Result0, c.Result1}
+}
+
 // BundleClientReferencesFunc describes the behavior when the References
 // method of the parent MockBundleClient instance is invoked.
 type BundleClientReferencesFunc struct {
-	defaultHook func(context.Context, string, int, int) ([]client.Location, error)
-	hooks       []func(context.Context, string, int, int) ([]client.Location, error)
+	defaultHook func(context.Context, string, int, int) ([]clienttypes.Location, error)
+	hooks       []func(context.Context, string, int, int) ([]clienttypes.Location, error)
 	history     []BundleClientReferencesFuncCall
 	mutex       sync.Mutex
 }
 
 // References delegates to the next hook function in the queue and stores
 // the parameter and result values of this invocation.
-func (m *MockBundleClient) References(v0 context.Context, v1 string, v2 int, v3 int) ([]client.Location, error) {
+func (m *MockBundleClient) References(v0 context.Context, v1 string, v2 int, v3 int) ([]clienttypes.Location, error) {
 	r0, r1 := m.ReferencesFunc.nextHook()(v0, v1, v2, v3)
 	m.ReferencesFunc.appendCall(BundleClientReferencesFuncCall{v0, v1, v2, v3, r0, r1})
 	return r0, r1
@@ -1064,7 +1190,7 @@ func (m *MockBundleClient) References(v0 context.Context, v1 string, v2 int, v3 
 // SetDefaultHook sets function that is called when the References method of
 // the parent MockBundleClient instance is invoked and the hook queue is
 // empty.
-func (f *BundleClientReferencesFunc) SetDefaultHook(hook func(context.Context, string, int, int) ([]client.Location, error)) {
+func (f *BundleClientReferencesFunc) SetDefaultHook(hook func(context.Context, string, int, int) ([]clienttypes.Location, error)) {
 	f.defaultHook = hook
 }
 
@@ -1072,7 +1198,7 @@ func (f *BundleClientReferencesFunc) SetDefaultHook(hook func(context.Context, s
 // References method of the parent MockBundleClient instance inovkes the
 // hook at the front of the queue and discards it. After the queue is empty,
 // the default hook function is invoked for any future action.
-func (f *BundleClientReferencesFunc) PushHook(hook func(context.Context, string, int, int) ([]client.Location, error)) {
+func (f *BundleClientReferencesFunc) PushHook(hook func(context.Context, string, int, int) ([]clienttypes.Location, error)) {
 	f.mutex.Lock()
 	f.hooks = append(f.hooks, hook)
 	f.mutex.Unlock()
@@ -1080,21 +1206,21 @@ func (f *BundleClientReferencesFunc) PushHook(hook func(context.Context, string,
 
 // SetDefaultReturn calls SetDefaultDefaultHook with a function that returns
 // the given values.
-func (f *BundleClientReferencesFunc) SetDefaultReturn(r0 []client.Location, r1 error) {
-	f.SetDefaultHook(func(context.Context, string, int, int) ([]client.Location, error) {
+func (f *BundleClientReferencesFunc) SetDefaultReturn(r0 []clienttypes.Location, r1 error) {
+	f.SetDefaultHook(func(context.Context, string, int, int) ([]clienttypes.Location, error) {
 		return r0, r1
 	})
 }
 
 // PushReturn calls PushDefaultHook with a function that returns the given
 // values.
-func (f *BundleClientReferencesFunc) PushReturn(r0 []client.Location, r1 error) {
-	f.PushHook(func(context.Context, string, int, int) ([]client.Location, error) {
+func (f *BundleClientReferencesFunc) PushReturn(r0 []clienttypes.Location, r1 error) {
+	f.PushHook(func(context.Context, string, int, int) ([]clienttypes.Location, error) {
 		return r0, r1
 	})
 }
 
-func (f *BundleClientReferencesFunc) nextHook() func(context.Context, string, int, int) ([]client.Location, error) {
+func (f *BundleClientReferencesFunc) nextHook() func(context.Context, string, int, int) ([]clienttypes.Location, error) {
 	f.mutex.Lock()
 	defer f.mutex.Unlock()
 
@@ -1141,7 +1267,7 @@ type BundleClientReferencesFuncCall struct {
 	Arg3 int
 	// Result0 is the value of the 1st result returned from this method
 	// invocation.
-	Result0 []client.Location
+	Result0 []clienttypes.Location
 	// Result1 is the value of the 2nd result returned from this method
 	// invocation.
 	Result1 error

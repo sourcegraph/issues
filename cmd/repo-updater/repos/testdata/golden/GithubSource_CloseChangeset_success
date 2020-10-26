@@ -19,6 +19,11 @@
     "AvatarURL": "https://avatars1.githubusercontent.com/u/1185253?u=35f048c505007991433b46c9c0616ccbcfbd4bff\u0026v=4",
     "Login": "mrnugget",
     "URL": "https://github.com/mrnugget"
+   },
+   {
+    "AvatarURL": "https://avatars3.githubusercontent.com/u/25610?u=416aa7bd7c7a97c714ea0a503c90a0e7e21c5e56\u0026v=4",
+    "Login": "ryanslade",
+    "URL": "https://github.com/ryanslade"
    }
   ],
   "Labels": {
@@ -77,6 +82,29 @@
      "CreatedAt": "2019-12-06T13:27:44Z",
      "URL": "https://github.com/sourcegraph/automation-testing/pull/44#event-2861366616"
     }
+   },
+   {
+    "Type": "ReopenedEvent",
+    "Item": {
+     "Actor": {
+      "AvatarURL": "https://avatars3.githubusercontent.com/u/25610?u=416aa7bd7c7a97c714ea0a503c90a0e7e21c5e56\u0026v=4",
+      "Login": "ryanslade",
+      "URL": "https://github.com/ryanslade"
+     },
+     "CreatedAt": "2020-05-08T13:19:06Z"
+    }
+   },
+   {
+    "Type": "ClosedEvent",
+    "Item": {
+     "Actor": {
+      "AvatarURL": "https://avatars3.githubusercontent.com/u/25610?u=416aa7bd7c7a97c714ea0a503c90a0e7e21c5e56\u0026v=4",
+      "Login": "ryanslade",
+      "URL": "https://github.com/ryanslade"
+     },
+     "CreatedAt": "2020-05-08T13:31:19Z",
+     "URL": "https://github.com/sourcegraph/automation-testing/pull/44#event-3316962721"
+    }
    }
   ],
   "Commits": {
@@ -115,6 +143,7 @@
     }
    ]
   },
+  "IsDraft": false,
   "CreatedAt": "2019-12-05T16:15:20Z",
-  "UpdatedAt": "2019-12-06T13:27:44Z"
+  "UpdatedAt": "2020-05-08T13:31:19Z"
  }

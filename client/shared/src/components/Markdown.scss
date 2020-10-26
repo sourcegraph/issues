@@ -1,0 +1,96 @@
+.markdown {
+    // marked wraps all content in <p>, even if there is only one child.
+    // If that is the case, treat the <p> as if it wasn't there
+    // so that the child can influence the layout (e.g. in a flexbox).
+    > p:only-child {
+        display: contents;
+    }
+
+    h1,
+    h2,
+    h3,
+    h4,
+    h5,
+    h6 {
+        /**
+         * So that the border only goes under the text, but the heading still
+         * takes up full width.
+         */
+        display: table;
+        border-bottom: 1px solid var(--border-color);
+        padding-bottom: 0.5rem;
+
+        a.anchor {
+            opacity: 0;
+            font-size: $font-size-base;
+            margin-left: -1rem;
+            padding: 0.125rem;
+            &::before {
+                content: '#';
+            }
+        }
+        &:hover a.anchor {
+            opacity: 1;
+        }
+    }
+
+    table,
+    th,
+    td {
+        border: 1px solid var(--border-color);
+        padding: 0.5rem 1rem;
+    }
+
+    table {
+        margin-bottom: 1rem;
+    }
+
+    ol,
+    ul {
+        margin-left: 0;
+    }
+
+    code,
+    pre {
+        background: var(--code-bg);
+    }
+
+    pre {
+        padding: 0.5rem;
+    }
+
+    code {
+        display: inline-block;
+        padding: 0.25rem;
+    }
+
+    p > code {
+        white-space: nowrap;
+    }
+
+    blockquote {
+        padding: 0 1rem;
+        color: var(--text-muted);
+        border-left: 4px solid var(--border-color);
+    }
+
+    img {
+        max-width: 100%;
+    }
+
+    &.search-result-match__markdown {
+        &.markdown {
+            table,
+            th,
+            td {
+                border: none;
+                padding: 0;
+            }
+            code,
+            pre {
+                background-color: transparent;
+                padding: 0;
+            }
+        }
+    }
+}

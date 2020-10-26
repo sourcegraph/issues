@@ -1,0 +1,34 @@
+.status-messages-nav-item {
+    &__dropdown-divider {
+        margin: 0.5rem 0;
+    }
+
+    &__dropdown-menu {
+        min-width: 22rem;
+        max-width: 22rem;
+        padding: 1rem 1rem 0 1rem;
+    }
+    &__dropdown-menu-content {
+        max-height: 50vh;
+        overflow-y: auto;
+    }
+    &__entry {
+        padding: 0.5rem 1rem;
+        word-wrap: break-word;
+        white-space: pre-line;
+        &-link {
+            margin-bottom: 0;
+        }
+        &--border-success {
+            border-left: 6px solid $success;
+        }
+
+        &--border-warning {
+            border-left: 6px solid $warning;
+        }
+
+        &--border-progress {
+            border-left: 6px solid $info;
+        }
+    }
+}

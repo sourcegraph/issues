@@ -4,9 +4,8 @@ import (
 	"fmt"
 	"net/url"
 
-	"github.com/sourcegraph/sourcegraph/cmd/frontend/authz"
 	"github.com/sourcegraph/sourcegraph/cmd/frontend/types"
-	iauthz "github.com/sourcegraph/sourcegraph/internal/authz"
+	"github.com/sourcegraph/sourcegraph/internal/authz"
 	"github.com/sourcegraph/sourcegraph/schema"
 )
 
@@ -46,12 +45,7 @@ func newAuthzProvider(urn string, a *schema.GitHubAuthorization, instanceURL, to
 		return nil, fmt.Errorf("Could not parse URL for GitHub instance %q: %s", instanceURL, err)
 	}
 
-	ttl, err := iauthz.ParseTTL(a.Ttl)
-	if err != nil {
-		return nil, err
-	}
-
-	return NewProvider(urn, ghURL, token, nil, ttl, nil), nil
+	return NewProvider(urn, ghURL, token, nil), nil
 }
 
 // ValidateGitHubAuthz validates the authorization fields of the given GitHub external

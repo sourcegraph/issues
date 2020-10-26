@@ -20,7 +20,7 @@ As a result, all of the great work that goes into building editor extensions is 
 
 ## How Sourcegraph extensions work
 
-To solve this problem (of seeing important contextual info when you're viewing and reviewing code), we made a way for you to write something like an editor extension--except that it can be used on GitHub, Sourcegraph, and (soon) other tools. Check out the code for [an example extension that shows a hello message in hover tooltips](https://sourcegraph.com/github.com/sourcegraph/sourcegraph-hello-world-hover@master/-/blob/src/extension.ts).
+To solve this problem (of seeing important contextual info when you're viewing and reviewing code), we made a way for you to write something like an editor extension--except that it can be used on GitHub, Sourcegraph, and (soon) other tools. Check out the code for [an example extension that shows line and character position in hover tooltips](https://sourcegraph.com/github.com/sourcegraph/sourcegraph-extension-samples/-/blob/hello-world/src/extension.ts).
 
 After writing and publishing an extension (using `src extensions publish` in the [`src` CLI tool](https://github.com/sourcegraph/src-cli)), anyone can add it and use it on GitHub or Sourcegraph. Behind the scenes (but in open source), 2 other components make this possible:
 

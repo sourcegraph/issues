@@ -14,7 +14,6 @@ INDEXFILE="${INDEXDIR}/${NAME}.${REV}.dump"
 
 # Early-out if there's already a dump file
 if [ -f "${INDEXFILE}" ]; then
-  echo "YAY"
   exit 0
 fi
 
@@ -24,7 +23,6 @@ mkdir -p "${INDEXDIR}"
 # Copy repo to temporary directory
 cp -r "${REPODIR}/${NAME}" "${REVDIR}"
 cleanup() {
-  echo "REMOVING A GUY -- ${REVDIR}"
   rm -rf "${REVDIR}"
 }
 trap cleanup EXIT
@@ -36,5 +34,4 @@ git checkout "${REV}" 2>/dev/null
 # Index revision
 go mod vendor && lsif-go -o "${INDEXFILE}"
 V=$?
-echo "!!!! $V"
 exit $V

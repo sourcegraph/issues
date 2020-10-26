@@ -201,6 +201,74 @@ func TestGithubSource_CloseChangeset(t *testing.T) {
 	}
 }
 
+func TestGithubSource_ReopenChangeset(t *testing.T) {
+	testCases := []struct {
+		name string
+		cs   *Changeset
+		err  string
+	}{
+		{
+			name: "success",
+			cs: &Changeset{
+				Changeset: &campaigns.Changeset{
+					Metadata: &github.PullRequest{
+						// https://github.com/sourcegraph/automation-testing/pull/353
+						ID: "MDExOlB1bGxSZXF1ZXN0NDg4MDI2OTk5",
+					},
+				},
+			},
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+		tc.name = "GithubSource_ReopenChangeset_" + strings.Replace(tc.name, " ", "_", -1)
+
+		t.Run(tc.name, func(t *testing.T) {
+			// The GithubSource uses the github.Client under the hood, which
+			// uses rcache, a caching layer that uses Redis.
+			// We need to clear the cache before we run the tests
+			rcache.SetupForTest(t)
+
+			cf, save := newClientFactory(t, tc.name)
+			defer save(t)
+
+			lg := log15.New()
+			lg.SetHandler(log15.DiscardHandler())
+
+			svc := &ExternalService{
+				Kind: extsvc.KindGitHub,
+				Config: marshalJSON(t, &schema.GitHubConnection{
+					Url:   "https://github.com",
+					Token: os.Getenv("GITHUB_TOKEN"),
+				}),
+			}
+
+			githubSrc, err := NewGithubSource(svc, cf)
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			ctx := context.Background()
+			if tc.err == "" {
+				tc.err = "<nil>"
+			}
+
+			err = githubSrc.ReopenChangeset(ctx, tc.cs)
+			if have, want := fmt.Sprint(err), tc.err; have != want {
+				t.Errorf("error:\nhave: %q\nwant: %q", have, want)
+			}
+
+			if err != nil {
+				return
+			}
+
+			pr := tc.cs.Changeset.Metadata.(*github.PullRequest)
+			testutil.AssertGolden(t, "testdata/golden/"+tc.name, update(tc.name), pr)
+		})
+	}
+}
+
 func TestGithubSource_UpdateChangeset(t *testing.T) {
 	testCases := []struct {
 		name string
@@ -215,7 +283,7 @@ func TestGithubSource_UpdateChangeset(t *testing.T) {
 				BaseRef: "refs/heads/master",
 				Changeset: &campaigns.Changeset{
 					Metadata: &github.PullRequest{
-						ID: "MDExOlB1bGxSZXF1ZXN0MzYwNTI5NzI0",
+						ID: "MDExOlB1bGxSZXF1ZXN0NTA0NDU4Njg1",
 					},
 				},
 			},
@@ -271,34 +339,32 @@ func TestGithubSource_UpdateChangeset(t *testing.T) {
 	}
 }
 
-func TestGithubSource_LoadChangesets(t *testing.T) {
+func TestGithubSource_LoadChangeset(t *testing.T) {
 	testCases := []struct {
 		name string
-		cs   []*Changeset
+		cs   *Changeset
 		err  string
 	}{
 		{
 			name: "found",
-			cs: []*Changeset{
-				{
-					Repo:      &Repo{Metadata: &github.Repository{NameWithOwner: "sourcegraph/sourcegraph"}},
-					Changeset: &campaigns.Changeset{ExternalID: "5550"},
-				},
-				{
-					Repo:      &Repo{Metadata: &github.Repository{NameWithOwner: "tsenart/vegeta"}},
-					Changeset: &campaigns.Changeset{ExternalID: "50"},
-				},
-				{
-					Repo:      &Repo{Metadata: &github.Repository{NameWithOwner: "sourcegraph/sourcegraph"}},
-					Changeset: &campaigns.Changeset{ExternalID: "5834"},
-				},
+			cs: &Changeset{
+				Repo:      &Repo{Metadata: &github.Repository{NameWithOwner: "sourcegraph/sourcegraph"}},
+				Changeset: &campaigns.Changeset{ExternalID: "5550"},
 			},
+		},
+		{
+			name: "not-found",
+			cs: &Changeset{
+				Repo:      &Repo{Metadata: &github.Repository{NameWithOwner: "sourcegraph/sourcegraph"}},
+				Changeset: &campaigns.Changeset{ExternalID: "100000"},
+			},
+			err: "Changeset with external ID 100000 not found",
 		},
 	}
 
 	for _, tc := range testCases {
 		tc := tc
-		tc.name = "GithubSource_LoadChangesets_" + tc.name
+		tc.name = "GithubSource_LoadChangeset_" + tc.name
 
 		t.Run(tc.name, func(t *testing.T) {
 			// The GithubSource uses the github.Client under the hood, which
@@ -330,7 +396,7 @@ func TestGithubSource_LoadChangesets(t *testing.T) {
 				tc.err = "<nil>"
 			}
 
-			err = githubSrc.LoadChangesets(ctx, tc.cs...)
+			err = githubSrc.LoadChangeset(ctx, tc.cs)
 			if have, want := fmt.Sprint(err), tc.err; have != want {
 				t.Errorf("error:\nhave: %q\nwant: %q", have, want)
 			}
@@ -339,11 +405,7 @@ func TestGithubSource_LoadChangesets(t *testing.T) {
 				return
 			}
 
-			meta := make([]*github.PullRequest, 0, len(tc.cs))
-			for _, cs := range tc.cs {
-				meta = append(meta, cs.Changeset.Metadata.(*github.PullRequest))
-			}
-
+			meta := tc.cs.Changeset.Metadata.(*github.PullRequest)
 			testutil.AssertGolden(t, "testdata/golden/"+tc.name, update(tc.name), meta)
 		})
 	}

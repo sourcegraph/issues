@@ -4,7 +4,7 @@ package resolvers
 
 import (
 	"context"
-	client "github.com/sourcegraph/sourcegraph/enterprise/internal/codeintel/bundles/client"
+	clienttypes "github.com/sourcegraph/sourcegraph/enterprise/internal/codeintel/bundles/client_types"
 	"sync"
 )
 
@@ -35,13 +35,13 @@ func NewMockPositionAdjuster() *MockPositionAdjuster {
 			},
 		},
 		AdjustPositionFunc: &PositionAdjusterAdjustPositionFunc{
-			defaultHook: func(context.Context, string, string, client.Position, bool) (string, client.Position, bool, error) {
-				return "", client.Position{}, false, nil
+			defaultHook: func(context.Context, string, string, clienttypes.Position, bool) (string, clienttypes.Position, bool, error) {
+				return "", clienttypes.Position{}, false, nil
 			},
 		},
 		AdjustRangeFunc: &PositionAdjusterAdjustRangeFunc{
-			defaultHook: func(context.Context, string, string, client.Range, bool) (string, client.Range, bool, error) {
-				return "", client.Range{}, false, nil
+			defaultHook: func(context.Context, string, string, clienttypes.Range, bool) (string, clienttypes.Range, bool, error) {
+				return "", clienttypes.Range{}, false, nil
 			},
 		},
 	}
@@ -186,15 +186,15 @@ func (c PositionAdjusterAdjustPathFuncCall) Results() []interface{} {
 // AdjustPosition method of the parent MockPositionAdjuster instance is
 // invoked.
 type PositionAdjusterAdjustPositionFunc struct {
-	defaultHook func(context.Context, string, string, client.Position, bool) (string, client.Position, bool, error)
-	hooks       []func(context.Context, string, string, client.Position, bool) (string, client.Position, bool, error)
+	defaultHook func(context.Context, string, string, clienttypes.Position, bool) (string, clienttypes.Position, bool, error)
+	hooks       []func(context.Context, string, string, clienttypes.Position, bool) (string, clienttypes.Position, bool, error)
 	history     []PositionAdjusterAdjustPositionFuncCall
 	mutex       sync.Mutex
 }
 
 // AdjustPosition delegates to the next hook function in the queue and
 // stores the parameter and result values of this invocation.
-func (m *MockPositionAdjuster) AdjustPosition(v0 context.Context, v1 string, v2 string, v3 client.Position, v4 bool) (string, client.Position, bool, error) {
+func (m *MockPositionAdjuster) AdjustPosition(v0 context.Context, v1 string, v2 string, v3 clienttypes.Position, v4 bool) (string, clienttypes.Position, bool, error) {
 	r0, r1, r2, r3 := m.AdjustPositionFunc.nextHook()(v0, v1, v2, v3, v4)
 	m.AdjustPositionFunc.appendCall(PositionAdjusterAdjustPositionFuncCall{v0, v1, v2, v3, v4, r0, r1, r2, r3})
 	return r0, r1, r2, r3
@@ -203,7 +203,7 @@ func (m *MockPositionAdjuster) AdjustPosition(v0 context.Context, v1 string, v2 
 // SetDefaultHook sets function that is called when the AdjustPosition
 // method of the parent MockPositionAdjuster instance is invoked and the
 // hook queue is empty.
-func (f *PositionAdjusterAdjustPositionFunc) SetDefaultHook(hook func(context.Context, string, string, client.Position, bool) (string, client.Position, bool, error)) {
+func (f *PositionAdjusterAdjustPositionFunc) SetDefaultHook(hook func(context.Context, string, string, clienttypes.Position, bool) (string, clienttypes.Position, bool, error)) {
 	f.defaultHook = hook
 }
 
@@ -211,7 +211,7 @@ func (f *PositionAdjusterAdjustPositionFunc) SetDefaultHook(hook func(context.Co
 // AdjustPosition method of the parent MockPositionAdjuster instance inovkes
 // the hook at the front of the queue and discards it. After the queue is
 // empty, the default hook function is invoked for any future action.
-func (f *PositionAdjusterAdjustPositionFunc) PushHook(hook func(context.Context, string, string, client.Position, bool) (string, client.Position, bool, error)) {
+func (f *PositionAdjusterAdjustPositionFunc) PushHook(hook func(context.Context, string, string, clienttypes.Position, bool) (string, clienttypes.Position, bool, error)) {
 	f.mutex.Lock()
 	f.hooks = append(f.hooks, hook)
 	f.mutex.Unlock()
@@ -219,21 +219,21 @@ func (f *PositionAdjusterAdjustPositionFunc) PushHook(hook func(context.Context,
 
 // SetDefaultReturn calls SetDefaultDefaultHook with a function that returns
 // the given values.
-func (f *PositionAdjusterAdjustPositionFunc) SetDefaultReturn(r0 string, r1 client.Position, r2 bool, r3 error) {
-	f.SetDefaultHook(func(context.Context, string, string, client.Position, bool) (string, client.Position, bool, error) {
+func (f *PositionAdjusterAdjustPositionFunc) SetDefaultReturn(r0 string, r1 clienttypes.Position, r2 bool, r3 error) {
+	f.SetDefaultHook(func(context.Context, string, string, clienttypes.Position, bool) (string, clienttypes.Position, bool, error) {
 		return r0, r1, r2, r3
 	})
 }
 
 // PushReturn calls PushDefaultHook with a function that returns the given
 // values.
-func (f *PositionAdjusterAdjustPositionFunc) PushReturn(r0 string, r1 client.Position, r2 bool, r3 error) {
-	f.PushHook(func(context.Context, string, string, client.Position, bool) (string, client.Position, bool, error) {
+func (f *PositionAdjusterAdjustPositionFunc) PushReturn(r0 string, r1 clienttypes.Position, r2 bool, r3 error) {
+	f.PushHook(func(context.Context, string, string, clienttypes.Position, bool) (string, clienttypes.Position, bool, error) {
 		return r0, r1, r2, r3
 	})
 }
 
-func (f *PositionAdjusterAdjustPositionFunc) nextHook() func(context.Context, string, string, client.Position, bool) (string, client.Position, bool, error) {
+func (f *PositionAdjusterAdjustPositionFunc) nextHook() func(context.Context, string, string, clienttypes.Position, bool) (string, clienttypes.Position, bool, error) {
 	f.mutex.Lock()
 	defer f.mutex.Unlock()
 
@@ -278,7 +278,7 @@ type PositionAdjusterAdjustPositionFuncCall struct {
 	Arg2 string
 	// Arg3 is the value of the 4th argument passed to this method
 	// invocation.
-	Arg3 client.Position
+	Arg3 clienttypes.Position
 	// Arg4 is the value of the 5th argument passed to this method
 	// invocation.
 	Arg4 bool
@@ -287,7 +287,7 @@ type PositionAdjusterAdjustPositionFuncCall struct {
 	Result0 string
 	// Result1 is the value of the 2nd result returned from this method
 	// invocation.
-	Result1 client.Position
+	Result1 clienttypes.Position
 	// Result2 is the value of the 3rd result returned from this method
 	// invocation.
 	Result2 bool
@@ -312,15 +312,15 @@ func (c PositionAdjusterAdjustPositionFuncCall) Results() []interface{} {
 // AdjustRange method of the parent MockPositionAdjuster instance is
 // invoked.
 type PositionAdjusterAdjustRangeFunc struct {
-	defaultHook func(context.Context, string, string, client.Range, bool) (string, client.Range, bool, error)
-	hooks       []func(context.Context, string, string, client.Range, bool) (string, client.Range, bool, error)
+	defaultHook func(context.Context, string, string, clienttypes.Range, bool) (string, clienttypes.Range, bool, error)
+	hooks       []func(context.Context, string, string, clienttypes.Range, bool) (string, clienttypes.Range, bool, error)
 	history     []PositionAdjusterAdjustRangeFuncCall
 	mutex       sync.Mutex
 }
 
 // AdjustRange delegates to the next hook function in the queue and stores
 // the parameter and result values of this invocation.
-func (m *MockPositionAdjuster) AdjustRange(v0 context.Context, v1 string, v2 string, v3 client.Range, v4 bool) (string, client.Range, bool, error) {
+func (m *MockPositionAdjuster) AdjustRange(v0 context.Context, v1 string, v2 string, v3 clienttypes.Range, v4 bool) (string, clienttypes.Range, bool, error) {
 	r0, r1, r2, r3 := m.AdjustRangeFunc.nextHook()(v0, v1, v2, v3, v4)
 	m.AdjustRangeFunc.appendCall(PositionAdjusterAdjustRangeFuncCall{v0, v1, v2, v3, v4, r0, r1, r2, r3})
 	return r0, r1, r2, r3
@@ -329,7 +329,7 @@ func (m *MockPositionAdjuster) AdjustRange(v0 context.Context, v1 string, v2 str
 // SetDefaultHook sets function that is called when the AdjustRange method
 // of the parent MockPositionAdjuster instance is invoked and the hook queue
 // is empty.
-func (f *PositionAdjusterAdjustRangeFunc) SetDefaultHook(hook func(context.Context, string, string, client.Range, bool) (string, client.Range, bool, error)) {
+func (f *PositionAdjusterAdjustRangeFunc) SetDefaultHook(hook func(context.Context, string, string, clienttypes.Range, bool) (string, clienttypes.Range, bool, error)) {
 	f.defaultHook = hook
 }
 
@@ -337,7 +337,7 @@ func (f *PositionAdjusterAdjustRangeFunc) SetDefaultHook(hook func(context.Conte
 // AdjustRange method of the parent MockPositionAdjuster instance inovkes
 // the hook at the front of the queue and discards it. After the queue is
 // empty, the default hook function is invoked for any future action.
-func (f *PositionAdjusterAdjustRangeFunc) PushHook(hook func(context.Context, string, string, client.Range, bool) (string, client.Range, bool, error)) {
+func (f *PositionAdjusterAdjustRangeFunc) PushHook(hook func(context.Context, string, string, clienttypes.Range, bool) (string, clienttypes.Range, bool, error)) {
 	f.mutex.Lock()
 	f.hooks = append(f.hooks, hook)
 	f.mutex.Unlock()
@@ -345,21 +345,21 @@ func (f *PositionAdjusterAdjustRangeFunc) PushHook(hook func(context.Context, st
 
 // SetDefaultReturn calls SetDefaultDefaultHook with a function that returns
 // the given values.
-func (f *PositionAdjusterAdjustRangeFunc) SetDefaultReturn(r0 string, r1 client.Range, r2 bool, r3 error) {
-	f.SetDefaultHook(func(context.Context, string, string, client.Range, bool) (string, client.Range, bool, error) {
+func (f *PositionAdjusterAdjustRangeFunc) SetDefaultReturn(r0 string, r1 clienttypes.Range, r2 bool, r3 error) {
+	f.SetDefaultHook(func(context.Context, string, string, clienttypes.Range, bool) (string, clienttypes.Range, bool, error) {
 		return r0, r1, r2, r3
 	})
 }
 
 // PushReturn calls PushDefaultHook with a function that returns the given
 // values.
-func (f *PositionAdjusterAdjustRangeFunc) PushReturn(r0 string, r1 client.Range, r2 bool, r3 error) {
-	f.PushHook(func(context.Context, string, string, client.Range, bool) (string, client.Range, bool, error) {
+func (f *PositionAdjusterAdjustRangeFunc) PushReturn(r0 string, r1 clienttypes.Range, r2 bool, r3 error) {
+	f.PushHook(func(context.Context, string, string, clienttypes.Range, bool) (string, clienttypes.Range, bool, error) {
 		return r0, r1, r2, r3
 	})
 }
 
-func (f *PositionAdjusterAdjustRangeFunc) nextHook() func(context.Context, string, string, client.Range, bool) (string, client.Range, bool, error) {
+func (f *PositionAdjusterAdjustRangeFunc) nextHook() func(context.Context, string, string, clienttypes.Range, bool) (string, clienttypes.Range, bool, error) {
 	f.mutex.Lock()
 	defer f.mutex.Unlock()
 
@@ -403,7 +403,7 @@ type PositionAdjusterAdjustRangeFuncCall struct {
 	Arg2 string
 	// Arg3 is the value of the 4th argument passed to this method
 	// invocation.
-	Arg3 client.Range
+	Arg3 clienttypes.Range
 	// Arg4 is the value of the 5th argument passed to this method
 	// invocation.
 	Arg4 bool
@@ -412,7 +412,7 @@ type PositionAdjusterAdjustRangeFuncCall struct {
 	Result0 string
 	// Result1 is the value of the 2nd result returned from this method
 	// invocation.
-	Result1 client.Range
+	Result1 clienttypes.Range
 	// Result2 is the value of the 3rd result returned from this method
 	// invocation.
 	Result2 bool

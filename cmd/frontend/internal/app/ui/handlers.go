@@ -18,9 +18,10 @@ import (
 	"github.com/sourcegraph/sourcegraph/cmd/frontend/auth"
 	"github.com/sourcegraph/sourcegraph/cmd/frontend/backend"
 	"github.com/sourcegraph/sourcegraph/cmd/frontend/envvar"
+	"github.com/sourcegraph/sourcegraph/cmd/frontend/globals"
 	"github.com/sourcegraph/sourcegraph/cmd/frontend/internal/app/assetsutil"
 	"github.com/sourcegraph/sourcegraph/cmd/frontend/internal/app/jscontext"
-	"github.com/sourcegraph/sourcegraph/cmd/frontend/internal/pkg/handlerutil"
+	"github.com/sourcegraph/sourcegraph/cmd/frontend/internal/handlerutil"
 	"github.com/sourcegraph/sourcegraph/cmd/frontend/types"
 	"github.com/sourcegraph/sourcegraph/internal/actor"
 	"github.com/sourcegraph/sourcegraph/internal/api"
@@ -109,7 +110,7 @@ func newCommon(w http.ResponseWriter, r *http.Request, title string, serveError 
 		AssetURL: assetsutil.URL("").String(),
 		Title:    title,
 		Metadata: &Metadata{
-			Title:       conf.BrandName(),
+			Title:       globals.Branding().BrandName,
 			Description: "Sourcegraph is a web-based code search and navigation tool for dev teams. Search, navigate, and review code. Find answers.",
 			ShowPreview: r.URL.Path == "/sign-in" && r.URL.RawQuery == "returnTo=%2F",
 		},
@@ -204,17 +205,20 @@ func newCommon(w http.ResponseWriter, r *http.Request, title string, serveError 
 
 type handlerFunc func(w http.ResponseWriter, r *http.Request) error
 
-func serveBrandedPageString(titles ...string) handlerFunc {
+func serveBrandedPageString(titles string, description *string) handlerFunc {
 	return serveBasicPage(func(c *Common, r *http.Request) string {
-		return brandNameSubtitle(titles...)
-	})
+		return brandNameSubtitle(titles)
+	}, description)
 }
 
-func serveBasicPage(title func(c *Common, r *http.Request) string) handlerFunc {
+func serveBasicPage(title func(c *Common, r *http.Request) string, description *string) handlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) error {
 		common, err := newCommon(w, r, "", serveError)
 		if err != nil {
 			return err
+		}
+		if description != nil {
+			common.Metadata.Description = *description
 		}
 		if common == nil {
 			return nil // request was handled
@@ -225,7 +229,7 @@ func serveBasicPage(title func(c *Common, r *http.Request) string) handlerFunc {
 }
 
 func serveHome(w http.ResponseWriter, r *http.Request) error {
-	common, err := newCommon(w, r, conf.BrandName(), serveError)
+	common, err := newCommon(w, r, globals.Branding().BrandName, serveError)
 	if err != nil {
 		return err
 	}
@@ -233,9 +237,10 @@ func serveHome(w http.ResponseWriter, r *http.Request) error {
 		return nil // request was handled
 	}
 
-	if envvar.SourcegraphDotComMode() && !actor.FromContext(r.Context()).IsAuthenticated() {
+	if envvar.SourcegraphDotComMode() && !actor.FromContext(r.Context()).IsAuthenticated() && !strings.Contains(r.UserAgent(), "Cookiebot") {
 		// The user is not signed in and tried to access Sourcegraph.com.  Redirect to
 		// about.sourcegraph.com so they see general info page.
+		// Don't redirect Cookiebot so it can scan the website without authentication.
 		http.Redirect(w, r, (&url.URL{Scheme: aboutRedirectScheme, Host: aboutRedirectHost}).String(), http.StatusTemporaryRedirect)
 		return nil
 	}

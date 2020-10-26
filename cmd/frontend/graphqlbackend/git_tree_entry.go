@@ -10,14 +10,16 @@ import (
 	"time"
 
 	"github.com/inconshreveable/log15"
+	"github.com/pkg/errors"
 	"github.com/prometheus/client_golang/prometheus"
 
 	"github.com/sourcegraph/sourcegraph/cmd/frontend/backend"
-	"github.com/sourcegraph/sourcegraph/cmd/frontend/db"
 	"github.com/sourcegraph/sourcegraph/cmd/frontend/globals"
 	"github.com/sourcegraph/sourcegraph/cmd/frontend/graphqlbackend/externallink"
 	"github.com/sourcegraph/sourcegraph/internal/api"
 	"github.com/sourcegraph/sourcegraph/internal/conf/reposource"
+	"github.com/sourcegraph/sourcegraph/internal/db"
+	"github.com/sourcegraph/sourcegraph/internal/extsvc"
 	"github.com/sourcegraph/sourcegraph/internal/highlight"
 	"github.com/sourcegraph/sourcegraph/internal/trace"
 	"github.com/sourcegraph/sourcegraph/internal/vcs/git"
@@ -205,69 +207,71 @@ func reposourceCloneURLToRepoName(ctx context.Context, cloneURL string) (repoNam
 		return repoName, nil
 	}
 
-	var repoSources []reposource.RepoSource
+	opt := db.ExternalServicesListOptions{
+		Kinds: []string{
+			extsvc.KindGitHub,
+			extsvc.KindGitLab,
+			extsvc.KindBitbucketServer,
+			extsvc.KindAWSCodeCommit,
+			extsvc.KindGitolite,
+		},
+		LimitOffset: &db.LimitOffset{
+			Limit: 500, // The number is randomly chosen
+		},
+	}
+	for {
+		svcs, err := db.ExternalServices.List(ctx, opt)
+		if err != nil {
+			return "", errors.Wrap(err, "list")
+		}
+		if len(svcs) == 0 {
+			break // No more results, exiting
+		}
+		opt.AfterID = svcs[len(svcs)-1].ID // Advance the cursor
 
-	// The following code makes serial database calls.
-	// Ideally these could be done in parallel, but the table is small
-	// and I don't think real world perf is going to be bad.
-	// It is also unclear to me if deterministic order is important here (it seems like it might be),
-	// so if this is parallelized in the future, consider whether order is important.
+		for _, svc := range svcs {
+			cfg, err := extsvc.ParseConfig(svc.Kind, svc.Config)
+			if err != nil {
+				return "", errors.Wrap(err, "parse config")
+			}
 
-	githubs, err := db.ExternalServices.ListGitHubConnections(ctx)
-	if err != nil {
-		return "", err
-	}
-	for _, c := range githubs {
-		repoSources = append(repoSources, reposource.GitHub{GitHubConnection: c.GitHubConnection})
-	}
+			var rs reposource.RepoSource
+			switch c := cfg.(type) {
+			case *schema.GitHubConnection:
+				rs = reposource.GitHub{GitHubConnection: c}
+			case *schema.GitLabConnection:
+				rs = reposource.GitLab{GitLabConnection: c}
+			case *schema.BitbucketServerConnection:
+				rs = reposource.BitbucketServer{BitbucketServerConnection: c}
+			case *schema.AWSCodeCommitConnection:
+				rs = reposource.AWS{AWSCodeCommitConnection: c}
+			case *schema.GitoliteConnection:
+				rs = reposource.Gitolite{GitoliteConnection: c}
+			default:
+				return "", errors.Errorf("unexpected connection type: %T", cfg)
+			}
 
-	gitlabs, err := db.ExternalServices.ListGitLabConnections(ctx)
-	if err != nil {
-		return "", err
-	}
-	for _, c := range gitlabs {
-		repoSources = append(repoSources, reposource.GitLab{GitLabConnection: c.GitLabConnection})
-	}
+			repoName, err := rs.CloneURLToRepoName(cloneURL)
+			if err != nil {
+				return "", err
+			}
+			if repoName != "" {
+				return repoName, nil
+			}
+		}
 
-	bitbuckets, err := db.ExternalServices.ListBitbucketServerConnections(ctx)
-	if err != nil {
-		return "", err
-	}
-	for _, c := range bitbuckets {
-		repoSources = append(repoSources, reposource.BitbucketServer{BitbucketServerConnection: c.BitbucketServerConnection})
-	}
-
-	awscodecommits, err := db.ExternalServices.ListAWSCodeCommitConnections(ctx)
-	if err != nil {
-		return "", err
-	}
-	for _, c := range awscodecommits {
-		repoSources = append(repoSources, reposource.AWS{AWSCodeCommitConnection: c.AWSCodeCommitConnection})
-	}
-
-	gitolites, err := db.ExternalServices.ListGitoliteConnections(ctx)
-	if err != nil {
-		return "", err
-	}
-	for _, c := range gitolites {
-		repoSources = append(repoSources, reposource.Gitolite{GitoliteConnection: c.GitoliteConnection})
+		if len(svcs) < opt.Limit {
+			break // Less results than limit means we've reached end
+		}
 	}
 
 	// Fallback for github.com
-	repoSources = append(repoSources, reposource.GitHub{
-		GitHubConnection: &schema.GitHubConnection{Url: "https://github.com"},
-	})
-	for _, ch := range repoSources {
-		repoName, err := ch.CloneURLToRepoName(cloneURL)
-		if err != nil {
-			return "", err
-		}
-		if repoName != "" {
-			return repoName, nil
-		}
+	rs := reposource.GitHub{
+		GitHubConnection: &schema.GitHubConnection{
+			Url: "https://github.com",
+		},
 	}
-
-	return "", nil
+	return rs.CloneURLToRepoName(cloneURL)
 }
 
 func CreateFileInfo(path string, isDir bool) os.FileInfo {

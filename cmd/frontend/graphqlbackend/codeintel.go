@@ -4,7 +4,7 @@ import (
 	"context"
 	"errors"
 
-	graphql "github.com/graph-gophers/graphql-go"
+	"github.com/graph-gophers/graphql-go"
 	"github.com/sourcegraph/sourcegraph/cmd/frontend/graphqlbackend/graphqlutil"
 	"github.com/sourcegraph/sourcegraph/cmd/frontend/types"
 	"github.com/sourcegraph/sourcegraph/internal/api"
@@ -153,6 +153,7 @@ type GitBlobLSIFDataResolver interface {
 	ToGitTreeLSIFData() (GitTreeLSIFDataResolver, bool)
 	ToGitBlobLSIFData() (GitBlobLSIFDataResolver, bool)
 
+	Ranges(ctx context.Context, args *LSIFRangesArgs) (CodeIntelligenceRangeConnectionResolver, error)
 	Definitions(ctx context.Context, args *LSIFQueryPositionArgs) (LocationConnectionResolver, error)
 	References(ctx context.Context, args *LSIFPagedQueryPositionArgs) (LocationConnectionResolver, error)
 	Hover(ctx context.Context, args *LSIFQueryPositionArgs) (HoverResolver, error)
@@ -164,6 +165,11 @@ type GitBlobLSIFDataArgs struct {
 	Path      string
 	ExactPath bool
 	ToolName  string
+}
+
+type LSIFRangesArgs struct {
+	StartLine int32
+	EndLine   int32
 }
 
 type LSIFQueryPositionArgs struct {
@@ -181,13 +187,24 @@ type LSIFDiagnosticsArgs struct {
 	graphqlutil.ConnectionArgs
 }
 
+type CodeIntelligenceRangeConnectionResolver interface {
+	Nodes(ctx context.Context) ([]CodeIntelligenceRangeResolver, error)
+}
+
+type CodeIntelligenceRangeResolver interface {
+	Range(ctx context.Context) (RangeResolver, error)
+	Definitions(ctx context.Context) (LocationConnectionResolver, error)
+	References(ctx context.Context) (LocationConnectionResolver, error)
+	Hover(ctx context.Context) (HoverResolver, error)
+}
+
 type LocationConnectionResolver interface {
 	Nodes(ctx context.Context) ([]LocationResolver, error)
 	PageInfo(ctx context.Context) (*graphqlutil.PageInfo, error)
 }
 
 type HoverResolver interface {
-	Markdown() MarkdownResolver
+	Markdown() Markdown
 	Range() RangeResolver
 }
 

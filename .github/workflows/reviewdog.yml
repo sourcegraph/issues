@@ -9,6 +9,8 @@ jobs:
         uses: actions/checkout@v2
       - name: golangci-lint
         uses: docker://reviewdog/action-golangci-lint:latest
+        env:
+          GITHUB_ACTION: reviewdog
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           filter_mode: file

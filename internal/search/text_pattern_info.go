@@ -16,16 +16,14 @@ func (p *TextPatternInfo) Validate() error {
 		}
 	}
 
-	if p.PathPatternsAreRegExps {
-		if p.ExcludePattern != "" {
-			if _, err := syntax.Parse(p.ExcludePattern, syntax.Perl); err != nil {
-				return err
-			}
+	if p.ExcludePattern != "" {
+		if _, err := syntax.Parse(p.ExcludePattern, syntax.Perl); err != nil {
+			return err
 		}
-		for _, expr := range p.IncludePatterns {
-			if _, err := syntax.Parse(expr, syntax.Perl); err != nil {
-				return err
-			}
+	}
+	for _, expr := range p.IncludePatterns {
+		if _, err := syntax.Parse(expr, syntax.Perl); err != nil {
+			return err
 		}
 	}
 

@@ -2,6 +2,7 @@ package version
 
 import (
 	"errors"
+	"expvar"
 	"fmt"
 	"math"
 	"os"
@@ -17,6 +18,11 @@ var devTimestamp = strconv.FormatInt(time.Now().Unix(), 10) // build timestamp f
 //
 // The version may not be semver-compatible, e.g. `insiders` or `65769_2020-06-05_9bd91a3`.
 var version = devVersion
+
+func init() {
+	exportedVersion := expvar.NewString("sourcegraph.version")
+	exportedVersion.Set(version)
+}
 
 // Version returns the version string configured at build time.
 func Version() string {

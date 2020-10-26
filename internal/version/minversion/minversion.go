@@ -8,7 +8,7 @@ import (
 	"runtime"
 	"strings"
 
-	version "github.com/mcuadros/go-version"
+	"github.com/mcuadros/go-version"
 )
 
 func main() {

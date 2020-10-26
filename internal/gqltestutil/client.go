@@ -28,46 +28,42 @@ func NeedsSiteInit(baseURL string) (bool, error) {
 }
 
 // SiteAdminInit initializes the instance with given admin account.
-// It returns an authenticated client as the admin for doing e2e testing.
+// It returns an authenticated client as the admin for doing testing.
 func SiteAdminInit(baseURL, email, username, password string) (*Client, error) {
-	client, err := newClient(baseURL)
-	if err != nil {
-		return nil, errors.Wrap(err, "new client")
-	}
+	return authenticate(baseURL, "/-/site-init", map[string]string{
+		"email":    email,
+		"username": username,
+		"password": password,
+	})
+}
 
-	var request = struct {
-		Email    string `json:"email"`
-		Username string `json:"username"`
-		Password string `json:"password"`
-	}{
-		Email:    email,
-		Username: username,
-		Password: password,
-	}
-	err = client.authenticate("/-/site-init", request)
-	if err != nil {
-		return nil, errors.Wrap(err, "authenticate")
-	}
-
-	return client, nil
+// SignUp signs up a new user with given credentials.
+// It returns an authenticated client as the user for doing testing.
+func SignUp(baseURL, email, username, password string) (*Client, error) {
+	return authenticate(baseURL, "/-/sign-up", map[string]string{
+		"email":    email,
+		"username": username,
+		"password": password,
+	})
 }
 
 // SignIn performs the sign in with given user credentials.
-// It returns an authenticated client as the user for doing e2e testing.
+// It returns an authenticated client as the user for doing testing.
 func SignIn(baseURL, email, password string) (*Client, error) {
+	return authenticate(baseURL, "/-/sign-in", map[string]string{
+		"email":    email,
+		"password": password,
+	})
+}
+
+// authenticate initializes an authenticated client with given request body.
+func authenticate(baseURL, path string, body interface{}) (*Client, error) {
 	client, err := newClient(baseURL)
 	if err != nil {
 		return nil, errors.Wrap(err, "new client")
 	}
 
-	var request = struct {
-		Email    string `json:"email"`
-		Password string `json:"password"`
-	}{
-		Email:    email,
-		Password: password,
-	}
-	err = client.authenticate("/-/sign-in", request)
+	err = client.authenticate(path, body)
 	if err != nil {
 		return nil, errors.Wrap(err, "authenticate")
 	}
@@ -207,7 +203,7 @@ func (c *Client) CurrentUserID(token string) (string, error) {
 			} `json:"currentUser"`
 		} `json:"data"`
 	}
-	err := c.GraphQL(token, query, nil, &resp)
+	err := c.GraphQL("", token, query, nil, &resp)
 	if err != nil {
 		return "", errors.Wrap(err, "request GraphQL")
 	}
@@ -223,7 +219,7 @@ func (c *Client) AuthenticatedUserID() string {
 // GraphQL makes a GraphQL request to the server on behalf of the user authenticated by the client.
 // An optional token can be passed to impersonate other users. A nil target will skip unmarshalling
 // the returned JSON response.
-func (c *Client) GraphQL(token, query string, variables map[string]interface{}, target interface{}) error {
+func (c *Client) GraphQL(name, token, query string, variables map[string]interface{}, target interface{}) error {
 	body, err := jsoniter.Marshal(map[string]interface{}{
 		"query":     query,
 		"variables": variables,
@@ -232,7 +228,7 @@ func (c *Client) GraphQL(token, query string, variables map[string]interface{}, 
 		return err
 	}
 
-	req, err := http.NewRequest("POST", fmt.Sprintf("%s/.api/graphql", c.baseURL), bytes.NewReader(body))
+	req, err := http.NewRequest("POST", fmt.Sprintf("%s/.api/graphql?%s", c.baseURL, name), bytes.NewReader(body))
 	if err != nil {
 		return err
 	}

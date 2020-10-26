@@ -1,0 +1,1639 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`ActivationDropdown renders the activation dropdown 1`] = `
+<ActivationDropdown
+  activation={
+    Object {
+      "completed": Object {
+        "ConnectedCodeHost": false,
+        "DidSearch": false,
+        "EnabledRepository": false,
+        "FoundReferences": false,
+      },
+      "refetch": [Function],
+      "steps": Array [
+        Object {
+          "detail": "Configure Sourcegraph to talk to your code host and fetch a list of your repositories.",
+          "id": "ConnectedCodeHost",
+          "title": "Add repositories",
+        },
+        Object {
+          "detail": <span>
+            Head to the 
+            <a
+              href="/search"
+            >
+              homepage
+            </a>
+             and perform a search query on your code.
+             
+            <strong>
+              Example:
+            </strong>
+             type 'lang:' and select a language
+          </span>,
+          "id": "DidSearch",
+          "title": "Search your code",
+        },
+        Object {
+          "detail": "To find references of a token, navigate to a code file in one of your repositories, hover over a token to activate the tooltip, and then click \\"Find references\\".",
+          "id": "FoundReferences",
+          "title": "Find some references",
+        },
+        Object {
+          "detail": "Configure a single-sign on (SSO) provider or have at least one other teammate sign up.",
+          "id": "EnabledSharing",
+          "title": "Configure SSO or share with teammates",
+        },
+      ],
+      "update": [Function],
+    }
+  }
+  alwaysShow={true}
+  history="[History]"
+>
+  <Menu>
+    <DescendantProvider
+      context={
+        Object {
+          "$$typeof": Symbol(react.context),
+          "Consumer": Object {
+            "$$typeof": Symbol(react.context),
+            "_calculateChangedBits": null,
+            "_context": "[Cyclic structure]",
+          },
+          "Provider": Object {
+            "$$typeof": Symbol(react.provider),
+            "_context": "[Cyclic structure]",
+          },
+          "_calculateChangedBits": null,
+          "_currentRenderer": Object {},
+          "_currentRenderer2": null,
+          "_currentValue": Object {
+            "descendants": Array [],
+            "registerDescendant": [Function],
+            "unregisterDescendant": [Function],
+          },
+          "_currentValue2": Object {
+            "descendants": Array [],
+            "registerDescendant": [Function],
+            "unregisterDescendant": [Function],
+          },
+          "_threadCount": 0,
+          "displayName": "MenuDescendantContext",
+        }
+      }
+      items={Array []}
+      set={[Function]}
+    >
+      <MenuButton
+        className="activation-dropdown-button activation-dropdown-button__animated-button bg-transparent align-items-center test-activation-nav-item-toggle"
+      >
+        <button
+          aria-controls="menu--1"
+          aria-haspopup={true}
+          className="activation-dropdown-button activation-dropdown-button__animated-button bg-transparent align-items-center test-activation-nav-item-toggle"
+          data-reach-menu-button=""
+          id="menu-button--menu--1"
+          onKeyDown={[Function]}
+          onMouseDown={[Function]}
+          type="button"
+        >
+          <div
+            className="activation-dropdown-button__confetti"
+          >
+            <Confetti
+              active={false}
+              config={
+                Object {
+                  "angle": 210,
+                  "colors": Array [
+                    "#a864fd",
+                    "#29cdff",
+                    "#78ff44",
+                    "#ff718d",
+                    "#fdff6a",
+                  ],
+                  "delay": 20,
+                  "dragFriction": 0.09,
+                  "duration": 3260,
+                  "elementCount": 81,
+                  "spread": 68,
+                  "startVelocity": 12,
+                }
+              }
+            >
+              <div
+                style={
+                  Object {
+                    "position": "relative",
+                  }
+                }
+              />
+            </Confetti>
+          </div>
+          Get started
+          <div
+            className="activation-dropdown-button__confetti"
+          >
+            <Confetti
+              active={false}
+              config={
+                Object {
+                  "angle": 330,
+                  "colors": Array [
+                    "#a864fd",
+                    "#29cdff",
+                    "#78ff44",
+                    "#ff718d",
+                    "#fdff6a",
+                  ],
+                  "delay": 20,
+                  "dragFriction": 0.09,
+                  "duration": 3260,
+                  "elementCount": 81,
+                  "spread": 68,
+                  "startVelocity": 12,
+                }
+              }
+            >
+              <div
+                style={
+                  Object {
+                    "position": "relative",
+                  }
+                }
+              />
+            </Confetti>
+          </div>
+          <span
+            className="activation-dropdown-button__progress-bar-container"
+          >
+            <CircularProgressbar
+              background={false}
+              backgroundPadding={0}
+              circleRatio={1}
+              className="activation-dropdown-button__circular-progress-bar test-activation-progress-bar"
+              classes={
+                Object {
+                  "background": "CircularProgressbar-background",
+                  "path": "CircularProgressbar-path",
+                  "root": "CircularProgressbar",
+                  "text": "CircularProgressbar-text",
+                  "trail": "CircularProgressbar-trail",
+                }
+              }
+              counterClockwise={false}
+              maxValue={100}
+              minValue={0}
+              strokeWidth={12}
+              styles={
+                Object {
+                  "background": Object {},
+                  "path": Object {},
+                  "root": Object {},
+                  "text": Object {},
+                  "trail": Object {},
+                }
+              }
+              text=""
+              value={0}
+            >
+              <svg
+                className="CircularProgressbar activation-dropdown-button__circular-progress-bar test-activation-progress-bar"
+                data-test-id="CircularProgressbar"
+                style={Object {}}
+                viewBox="0 0 100 100"
+              >
+                <Path
+                  className="CircularProgressbar-trail"
+                  counterClockwise={false}
+                  dashRatio={1}
+                  pathRadius={44}
+                  strokeWidth={12}
+                  style={Object {}}
+                >
+                  <path
+                    className="CircularProgressbar-trail"
+                    d="
+      M 50,50
+      m 0,-44
+      a 44,44 0 1 1 0,88
+      a 44,44 0 1 1 0,-88
+    "
+                    fillOpacity={0}
+                    strokeWidth={12}
+                    style={
+                      Object {
+                        "strokeDasharray": "276.46015351590177px 276.46015351590177px",
+                        "strokeDashoffset": "0px",
+                      }
+                    }
+                  />
+                </Path>
+                <Path
+                  className="CircularProgressbar-path"
+                  counterClockwise={false}
+                  dashRatio={0}
+                  pathRadius={44}
+                  strokeWidth={12}
+                  style={Object {}}
+                >
+                  <path
+                    className="CircularProgressbar-path"
+                    d="
+      M 50,50
+      m 0,-44
+      a 44,44 0 1 1 0,88
+      a 44,44 0 1 1 0,-88
+    "
+                    fillOpacity={0}
+                    strokeWidth={12}
+                    style={
+                      Object {
+                        "strokeDasharray": "276.46015351590177px 276.46015351590177px",
+                        "strokeDashoffset": "276.46015351590177px",
+                      }
+                    }
+                  />
+                </Path>
+              </svg>
+            </CircularProgressbar>
+          </span>
+        </button>
+      </MenuButton>
+      <MenuPopover
+        className="activation-dropdown dropdown-menu show"
+        hidden={false}
+      >
+        <Popover
+          className="activation-dropdown dropdown-menu show"
+          data-reach-menu=""
+          data-reach-menu-popover=""
+          hidden={false}
+          targetRef={
+            Object {
+              "current": <button
+                aria-controls="menu--1"
+                aria-haspopup="true"
+                class="activation-dropdown-button activation-dropdown-button__animated-button bg-transparent align-items-center test-activation-nav-item-toggle"
+                data-reach-menu-button=""
+                id="menu-button--menu--1"
+                type="button"
+              >
+                <div
+                  class="activation-dropdown-button__confetti"
+                >
+                  <div
+                    style="position: relative;"
+                  />
+                </div>
+                Get started
+                <div
+                  class="activation-dropdown-button__confetti"
+                >
+                  <div
+                    style="position: relative;"
+                  />
+                </div>
+                <span
+                  class="activation-dropdown-button__progress-bar-container"
+                >
+                  <svg
+                    class="CircularProgressbar activation-dropdown-button__circular-progress-bar test-activation-progress-bar"
+                    data-test-id="CircularProgressbar"
+                    viewBox="0 0 100 100"
+                  >
+                    <path
+                      class="CircularProgressbar-trail"
+                      d="
+      M 50,50
+      m 0,-44
+      a 44,44 0 1 1 0,88
+      a 44,44 0 1 1 0,-88
+    "
+                      fill-opacity="0"
+                      stroke-width="12"
+                      style="stroke-dasharray: 276.46015351590177px 276.46015351590177px; stroke-dashoffset: 0px;"
+                    />
+                    <path
+                      class="CircularProgressbar-path"
+                      d="
+      M 50,50
+      m 0,-44
+      a 44,44 0 1 1 0,88
+      a 44,44 0 1 1 0,-88
+    "
+                      fill-opacity="0"
+                      stroke-width="12"
+                      style="stroke-dasharray: 276.46015351590177px 276.46015351590177px; stroke-dashoffset: 276.46015351590177px;"
+                    />
+                  </svg>
+                </span>
+              </button>,
+            }
+          }
+        >
+          <Portal>
+            <Portal
+              containerInfo={
+                <reach-portal>
+                  <div
+                    class="activation-dropdown dropdown-menu show"
+                    data-reach-menu=""
+                    data-reach-menu-popover=""
+                    data-reach-popover=""
+                    style="position: absolute; left: 0px; top: 0px;"
+                  >
+                    <div
+                      class="dropdown-item-text activation-dropdown-header"
+                    >
+                      <h3
+                        class="mb-0"
+                      >
+                        Welcome to Sourcegraph
+                      </h3>
+                      <p
+                        class="mb-2"
+                      >
+                        Complete the steps below to finish onboarding!
+                      </p>
+                    </div>
+                    <div
+                      class="activation-checklist list-group list-group-flush activation-dropdown__checklist"
+                    >
+                      <div
+                        data-reach-accordion=""
+                      >
+                        <div
+                          class="activation-checklist__container list-group-item "
+                          data-reach-accordion-item=""
+                          data-state="collapsed"
+                        >
+                          <button
+                            aria-controls="panel--3--0"
+                            aria-expanded="false"
+                            class="activation-checklist__button list-group-item list-group-item-action"
+                            data-reach-accordion-button=""
+                            id="button--3--0"
+                          >
+                            <div
+                              class="activation-checklist-item d-flex justify-content-between"
+                            >
+                              <div
+                                class="d-flex align-items-center"
+                              >
+                                <span
+                                  class="activation-checklist-item__icon-container icon-inline icon-down"
+                                >
+                                  <svg
+                                    class="mdi-icon activation-checklist-item__icon"
+                                    fill="currentColor"
+                                    height="24"
+                                    viewBox="0 0 24 24"
+                                    width="24"
+                                  >
+                                    <path
+                                      d="M7.41,8.58L12,13.17L16.59,8.58L18,10L12,16L6,10L7.41,8.58Z"
+                                    />
+                                  </svg>
+                                </span>
+                                <span
+                                  class="activation-checklist-item__icon-container icon-inline icon-right"
+                                >
+                                  <svg
+                                    class="mdi-icon activation-checklist-item__icon"
+                                    fill="currentColor"
+                                    height="24"
+                                    viewBox="0 0 24 24"
+                                    width="24"
+                                  >
+                                    <path
+                                      d="M8.59,16.58L13.17,12L8.59,7.41L10,6L16,12L10,18L8.59,16.58Z"
+                                    />
+                                  </svg>
+                                </span>
+                                <a
+                                  class="activation-checklist__title"
+                                  href=""
+                                >
+                                  Add repositories
+                                </a>
+                              </div>
+                              <div>
+                                <svg
+                                  class="mdi-icon icon-inline text-muted"
+                                  fill="currentColor"
+                                  height="24"
+                                  viewBox="0 0 24 24"
+                                  width="24"
+                                >
+                                  <path
+                                    d="M12,20A8,8 0 0,1 4,12A8,8 0 0,1 12,4A8,8 0 0,1 20,12A8,8 0 0,1 12,20M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2Z"
+                                  />
+                                </svg>
+                              </div>
+                            </div>
+                          </button>
+                          <div
+                            aria-labelledby="button--3--0"
+                            class="px-2"
+                            data-reach-accordion-panel=""
+                            data-state="collapsed"
+                            hidden=""
+                            id="panel--3--0"
+                            role="region"
+                            tabindex="-1"
+                          >
+                            <div
+                              class="activation-checklist__detail pb-1"
+                            >
+                              Configure Sourcegraph to talk to your code host and fetch a list of your repositories.
+                            </div>
+                          </div>
+                        </div>
+                        <div
+                          class="activation-checklist__container list-group-item "
+                          data-reach-accordion-item=""
+                          data-state="collapsed"
+                        >
+                          <button
+                            aria-controls="panel--3--1"
+                            aria-expanded="false"
+                            class="activation-checklist__button list-group-item list-group-item-action"
+                            data-reach-accordion-button=""
+                            id="button--3--1"
+                          >
+                            <div
+                              class="activation-checklist-item d-flex justify-content-between"
+                            >
+                              <div
+                                class="d-flex align-items-center"
+                              >
+                                <span
+                                  class="activation-checklist-item__icon-container icon-inline icon-down"
+                                >
+                                  <svg
+                                    class="mdi-icon activation-checklist-item__icon"
+                                    fill="currentColor"
+                                    height="24"
+                                    viewBox="0 0 24 24"
+                                    width="24"
+                                  >
+                                    <path
+                                      d="M7.41,8.58L12,13.17L16.59,8.58L18,10L12,16L6,10L7.41,8.58Z"
+                                    />
+                                  </svg>
+                                </span>
+                                <span
+                                  class="activation-checklist-item__icon-container icon-inline icon-right"
+                                >
+                                  <svg
+                                    class="mdi-icon activation-checklist-item__icon"
+                                    fill="currentColor"
+                                    height="24"
+                                    viewBox="0 0 24 24"
+                                    width="24"
+                                  >
+                                    <path
+                                      d="M8.59,16.58L13.17,12L8.59,7.41L10,6L16,12L10,18L8.59,16.58Z"
+                                    />
+                                  </svg>
+                                </span>
+                                <a
+                                  class="activation-checklist__title"
+                                  href=""
+                                >
+                                  Search your code
+                                </a>
+                              </div>
+                              <div>
+                                <svg
+                                  class="mdi-icon icon-inline text-muted"
+                                  fill="currentColor"
+                                  height="24"
+                                  viewBox="0 0 24 24"
+                                  width="24"
+                                >
+                                  <path
+                                    d="M12,20A8,8 0 0,1 4,12A8,8 0 0,1 12,4A8,8 0 0,1 20,12A8,8 0 0,1 12,20M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2Z"
+                                  />
+                                </svg>
+                              </div>
+                            </div>
+                          </button>
+                          <div
+                            aria-labelledby="button--3--1"
+                            class="px-2"
+                            data-reach-accordion-panel=""
+                            data-state="collapsed"
+                            hidden=""
+                            id="panel--3--1"
+                            role="region"
+                            tabindex="-1"
+                          >
+                            <div
+                              class="activation-checklist__detail pb-1"
+                            >
+                              <span>
+                                Head to the 
+                                <a
+                                  href="/search"
+                                >
+                                  homepage
+                                </a>
+                                 and perform a search query on your code.
+                                 
+                                <strong>
+                                  Example:
+                                </strong>
+                                 type 'lang:' and select a language
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                        <div
+                          class="activation-checklist__container list-group-item "
+                          data-reach-accordion-item=""
+                          data-state="collapsed"
+                        >
+                          <button
+                            aria-controls="panel--3--2"
+                            aria-expanded="false"
+                            class="activation-checklist__button list-group-item list-group-item-action"
+                            data-reach-accordion-button=""
+                            id="button--3--2"
+                          >
+                            <div
+                              class="activation-checklist-item d-flex justify-content-between"
+                            >
+                              <div
+                                class="d-flex align-items-center"
+                              >
+                                <span
+                                  class="activation-checklist-item__icon-container icon-inline icon-down"
+                                >
+                                  <svg
+                                    class="mdi-icon activation-checklist-item__icon"
+                                    fill="currentColor"
+                                    height="24"
+                                    viewBox="0 0 24 24"
+                                    width="24"
+                                  >
+                                    <path
+                                      d="M7.41,8.58L12,13.17L16.59,8.58L18,10L12,16L6,10L7.41,8.58Z"
+                                    />
+                                  </svg>
+                                </span>
+                                <span
+                                  class="activation-checklist-item__icon-container icon-inline icon-right"
+                                >
+                                  <svg
+                                    class="mdi-icon activation-checklist-item__icon"
+                                    fill="currentColor"
+                                    height="24"
+                                    viewBox="0 0 24 24"
+                                    width="24"
+                                  >
+                                    <path
+                                      d="M8.59,16.58L13.17,12L8.59,7.41L10,6L16,12L10,18L8.59,16.58Z"
+                                    />
+                                  </svg>
+                                </span>
+                                <a
+                                  class="activation-checklist__title"
+                                  href=""
+                                >
+                                  Find some references
+                                </a>
+                              </div>
+                              <div>
+                                <svg
+                                  class="mdi-icon icon-inline text-muted"
+                                  fill="currentColor"
+                                  height="24"
+                                  viewBox="0 0 24 24"
+                                  width="24"
+                                >
+                                  <path
+                                    d="M12,20A8,8 0 0,1 4,12A8,8 0 0,1 12,4A8,8 0 0,1 20,12A8,8 0 0,1 12,20M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2Z"
+                                  />
+                                </svg>
+                              </div>
+                            </div>
+                          </button>
+                          <div
+                            aria-labelledby="button--3--2"
+                            class="px-2"
+                            data-reach-accordion-panel=""
+                            data-state="collapsed"
+                            hidden=""
+                            id="panel--3--2"
+                            role="region"
+                            tabindex="-1"
+                          >
+                            <div
+                              class="activation-checklist__detail pb-1"
+                            >
+                              To find references of a token, navigate to a code file in one of your repositories, hover over a token to activate the tooltip, and then click "Find references".
+                            </div>
+                          </div>
+                        </div>
+                        <div
+                          class="activation-checklist__container list-group-item "
+                          data-reach-accordion-item=""
+                          data-state="collapsed"
+                        >
+                          <button
+                            aria-controls="panel--3--3"
+                            aria-expanded="false"
+                            class="activation-checklist__button list-group-item list-group-item-action"
+                            data-reach-accordion-button=""
+                            id="button--3--3"
+                          >
+                            <div
+                              class="activation-checklist-item d-flex justify-content-between"
+                            >
+                              <div
+                                class="d-flex align-items-center"
+                              >
+                                <span
+                                  class="activation-checklist-item__icon-container icon-inline icon-down"
+                                >
+                                  <svg
+                                    class="mdi-icon activation-checklist-item__icon"
+                                    fill="currentColor"
+                                    height="24"
+                                    viewBox="0 0 24 24"
+                                    width="24"
+                                  >
+                                    <path
+                                      d="M7.41,8.58L12,13.17L16.59,8.58L18,10L12,16L6,10L7.41,8.58Z"
+                                    />
+                                  </svg>
+                                </span>
+                                <span
+                                  class="activation-checklist-item__icon-container icon-inline icon-right"
+                                >
+                                  <svg
+                                    class="mdi-icon activation-checklist-item__icon"
+                                    fill="currentColor"
+                                    height="24"
+                                    viewBox="0 0 24 24"
+                                    width="24"
+                                  >
+                                    <path
+                                      d="M8.59,16.58L13.17,12L8.59,7.41L10,6L16,12L10,18L8.59,16.58Z"
+                                    />
+                                  </svg>
+                                </span>
+                                <a
+                                  class="activation-checklist__title"
+                                  href=""
+                                >
+                                  Configure SSO or share with teammates
+                                </a>
+                              </div>
+                              <div>
+                                <svg
+                                  class="mdi-icon icon-inline text-muted"
+                                  fill="currentColor"
+                                  height="24"
+                                  viewBox="0 0 24 24"
+                                  width="24"
+                                >
+                                  <path
+                                    d="M12,20A8,8 0 0,1 4,12A8,8 0 0,1 12,4A8,8 0 0,1 20,12A8,8 0 0,1 12,20M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2Z"
+                                  />
+                                </svg>
+                              </div>
+                            </div>
+                          </button>
+                          <div
+                            aria-labelledby="button--3--3"
+                            class="px-2"
+                            data-reach-accordion-panel=""
+                            data-state="collapsed"
+                            hidden=""
+                            id="panel--3--3"
+                            role="region"
+                            tabindex="-1"
+                          >
+                            <div
+                              class="activation-checklist__detail pb-1"
+                            >
+                              Configure a single-sign on (SSO) provider or have at least one other teammate sign up.
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </reach-portal>
+              }
+            >
+              <PopoverImpl
+                className="activation-dropdown dropdown-menu show"
+                data-reach-menu=""
+                data-reach-menu-popover=""
+                hidden={false}
+                targetRef={
+                  Object {
+                    "current": <button
+                      aria-controls="menu--1"
+                      aria-haspopup="true"
+                      class="activation-dropdown-button activation-dropdown-button__animated-button bg-transparent align-items-center test-activation-nav-item-toggle"
+                      data-reach-menu-button=""
+                      id="menu-button--menu--1"
+                      type="button"
+                    >
+                      <div
+                        class="activation-dropdown-button__confetti"
+                      >
+                        <div
+                          style="position: relative;"
+                        />
+                      </div>
+                      Get started
+                      <div
+                        class="activation-dropdown-button__confetti"
+                      >
+                        <div
+                          style="position: relative;"
+                        />
+                      </div>
+                      <span
+                        class="activation-dropdown-button__progress-bar-container"
+                      >
+                        <svg
+                          class="CircularProgressbar activation-dropdown-button__circular-progress-bar test-activation-progress-bar"
+                          data-test-id="CircularProgressbar"
+                          viewBox="0 0 100 100"
+                        >
+                          <path
+                            class="CircularProgressbar-trail"
+                            d="
+      M 50,50
+      m 0,-44
+      a 44,44 0 1 1 0,88
+      a 44,44 0 1 1 0,-88
+    "
+                            fill-opacity="0"
+                            stroke-width="12"
+                            style="stroke-dasharray: 276.46015351590177px 276.46015351590177px; stroke-dashoffset: 0px;"
+                          />
+                          <path
+                            class="CircularProgressbar-path"
+                            d="
+      M 50,50
+      m 0,-44
+      a 44,44 0 1 1 0,88
+      a 44,44 0 1 1 0,-88
+    "
+                            fill-opacity="0"
+                            stroke-width="12"
+                            style="stroke-dasharray: 276.46015351590177px 276.46015351590177px; stroke-dashoffset: 276.46015351590177px;"
+                          />
+                        </svg>
+                      </span>
+                    </button>,
+                  }
+                }
+              >
+                <div
+                  className="activation-dropdown dropdown-menu show"
+                  data-reach-menu=""
+                  data-reach-menu-popover=""
+                  data-reach-popover=""
+                  hidden={false}
+                  style={
+                    Object {
+                      "left": "0px",
+                      "position": "absolute",
+                      "top": "0px",
+                    }
+                  }
+                >
+                  <div
+                    className="dropdown-item-text activation-dropdown-header"
+                  >
+                    <h3
+                      className="mb-0"
+                    >
+                      Welcome to Sourcegraph
+                    </h3>
+                    <p
+                      className="mb-2"
+                    >
+                      Complete the steps below to finish onboarding!
+                    </p>
+                  </div>
+                  <ActivationChecklist
+                    activation={
+                      Object {
+                        "completed": Object {
+                          "ConnectedCodeHost": false,
+                          "DidSearch": false,
+                          "EnabledRepository": false,
+                          "FoundReferences": false,
+                        },
+                        "refetch": [Function],
+                        "steps": Array [
+                          Object {
+                            "detail": "Configure Sourcegraph to talk to your code host and fetch a list of your repositories.",
+                            "id": "ConnectedCodeHost",
+                            "title": "Add repositories",
+                          },
+                          Object {
+                            "detail": <span>
+                              Head to the 
+                              <a
+                                href="/search"
+                              >
+                                homepage
+                              </a>
+                               and perform a search query on your code.
+                               
+                              <strong>
+                                Example:
+                              </strong>
+                               type 'lang:' and select a language
+                            </span>,
+                            "id": "DidSearch",
+                            "title": "Search your code",
+                          },
+                          Object {
+                            "detail": "To find references of a token, navigate to a code file in one of your repositories, hover over a token to activate the tooltip, and then click \\"Find references\\".",
+                            "id": "FoundReferences",
+                            "title": "Find some references",
+                          },
+                          Object {
+                            "detail": "Configure a single-sign on (SSO) provider or have at least one other teammate sign up.",
+                            "id": "EnabledSharing",
+                            "title": "Configure SSO or share with teammates",
+                          },
+                        ],
+                        "update": [Function],
+                      }
+                    }
+                    alwaysShow={true}
+                    className="activation-dropdown__checklist"
+                    completed={
+                      Object {
+                        "ConnectedCodeHost": false,
+                        "DidSearch": false,
+                        "EnabledRepository": false,
+                        "FoundReferences": false,
+                      }
+                    }
+                    history="[History]"
+                    steps={
+                      Array [
+                        Object {
+                          "detail": "Configure Sourcegraph to talk to your code host and fetch a list of your repositories.",
+                          "id": "ConnectedCodeHost",
+                          "title": "Add repositories",
+                        },
+                        Object {
+                          "detail": <span>
+                            Head to the 
+                            <a
+                              href="/search"
+                            >
+                              homepage
+                            </a>
+                             and perform a search query on your code.
+                             
+                            <strong>
+                              Example:
+                            </strong>
+                             type 'lang:' and select a language
+                          </span>,
+                          "id": "DidSearch",
+                          "title": "Search your code",
+                        },
+                        Object {
+                          "detail": "To find references of a token, navigate to a code file in one of your repositories, hover over a token to activate the tooltip, and then click \\"Find references\\".",
+                          "id": "FoundReferences",
+                          "title": "Find some references",
+                        },
+                        Object {
+                          "detail": "Configure a single-sign on (SSO) provider or have at least one other teammate sign up.",
+                          "id": "EnabledSharing",
+                          "title": "Configure SSO or share with teammates",
+                        },
+                      ]
+                    }
+                  >
+                    <div
+                      className="activation-checklist list-group list-group-flush activation-dropdown__checklist"
+                    >
+                      <Accordion
+                        collapsible={true}
+                      >
+                        <DescendantProvider
+                          context={
+                            Object {
+                              "$$typeof": Symbol(react.context),
+                              "Consumer": Object {
+                                "$$typeof": Symbol(react.context),
+                                "_calculateChangedBits": null,
+                                "_context": "[Cyclic structure]",
+                              },
+                              "Provider": Object {
+                                "$$typeof": Symbol(react.provider),
+                                "_context": "[Cyclic structure]",
+                              },
+                              "_calculateChangedBits": null,
+                              "_currentRenderer": Object {},
+                              "_currentRenderer2": null,
+                              "_currentValue": Object {
+                                "descendants": Array [],
+                                "registerDescendant": [Function],
+                                "unregisterDescendant": [Function],
+                              },
+                              "_currentValue2": Object {
+                                "descendants": Array [],
+                                "registerDescendant": [Function],
+                                "unregisterDescendant": [Function],
+                              },
+                              "_threadCount": 0,
+                              "displayName": "AccordionDescendantContext",
+                            }
+                          }
+                          items={
+                            Array [
+                              Object {
+                                "disabled": false,
+                                "element": <button
+                                  aria-controls="panel--3--0"
+                                  aria-expanded="false"
+                                  class="activation-checklist__button list-group-item list-group-item-action"
+                                  data-reach-accordion-button=""
+                                  id="button--3--0"
+                                >
+                                  <div
+                                    class="activation-checklist-item d-flex justify-content-between"
+                                  >
+                                    <div
+                                      class="d-flex align-items-center"
+                                    >
+                                      <span
+                                        class="activation-checklist-item__icon-container icon-inline icon-down"
+                                      >
+                                        <svg
+                                          class="mdi-icon activation-checklist-item__icon"
+                                          fill="currentColor"
+                                          height="24"
+                                          viewBox="0 0 24 24"
+                                          width="24"
+                                        >
+                                          <path
+                                            d="M7.41,8.58L12,13.17L16.59,8.58L18,10L12,16L6,10L7.41,8.58Z"
+                                          />
+                                        </svg>
+                                      </span>
+                                      <span
+                                        class="activation-checklist-item__icon-container icon-inline icon-right"
+                                      >
+                                        <svg
+                                          class="mdi-icon activation-checklist-item__icon"
+                                          fill="currentColor"
+                                          height="24"
+                                          viewBox="0 0 24 24"
+                                          width="24"
+                                        >
+                                          <path
+                                            d="M8.59,16.58L13.17,12L8.59,7.41L10,6L16,12L10,18L8.59,16.58Z"
+                                          />
+                                        </svg>
+                                      </span>
+                                      <a
+                                        class="activation-checklist__title"
+                                        href=""
+                                      >
+                                        Add repositories
+                                      </a>
+                                    </div>
+                                    <div>
+                                      <svg
+                                        class="mdi-icon icon-inline text-muted"
+                                        fill="currentColor"
+                                        height="24"
+                                        viewBox="0 0 24 24"
+                                        width="24"
+                                      >
+                                        <path
+                                          d="M12,20A8,8 0 0,1 4,12A8,8 0 0,1 12,4A8,8 0 0,1 20,12A8,8 0 0,1 12,20M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2Z"
+                                        />
+                                      </svg>
+                                    </div>
+                                  </div>
+                                </button>,
+                                "index": 0,
+                              },
+                              Object {
+                                "disabled": false,
+                                "element": <button
+                                  aria-controls="panel--3--1"
+                                  aria-expanded="false"
+                                  class="activation-checklist__button list-group-item list-group-item-action"
+                                  data-reach-accordion-button=""
+                                  id="button--3--1"
+                                >
+                                  <div
+                                    class="activation-checklist-item d-flex justify-content-between"
+                                  >
+                                    <div
+                                      class="d-flex align-items-center"
+                                    >
+                                      <span
+                                        class="activation-checklist-item__icon-container icon-inline icon-down"
+                                      >
+                                        <svg
+                                          class="mdi-icon activation-checklist-item__icon"
+                                          fill="currentColor"
+                                          height="24"
+                                          viewBox="0 0 24 24"
+                                          width="24"
+                                        >
+                                          <path
+                                            d="M7.41,8.58L12,13.17L16.59,8.58L18,10L12,16L6,10L7.41,8.58Z"
+                                          />
+                                        </svg>
+                                      </span>
+                                      <span
+                                        class="activation-checklist-item__icon-container icon-inline icon-right"
+                                      >
+                                        <svg
+                                          class="mdi-icon activation-checklist-item__icon"
+                                          fill="currentColor"
+                                          height="24"
+                                          viewBox="0 0 24 24"
+                                          width="24"
+                                        >
+                                          <path
+                                            d="M8.59,16.58L13.17,12L8.59,7.41L10,6L16,12L10,18L8.59,16.58Z"
+                                          />
+                                        </svg>
+                                      </span>
+                                      <a
+                                        class="activation-checklist__title"
+                                        href=""
+                                      >
+                                        Search your code
+                                      </a>
+                                    </div>
+                                    <div>
+                                      <svg
+                                        class="mdi-icon icon-inline text-muted"
+                                        fill="currentColor"
+                                        height="24"
+                                        viewBox="0 0 24 24"
+                                        width="24"
+                                      >
+                                        <path
+                                          d="M12,20A8,8 0 0,1 4,12A8,8 0 0,1 12,4A8,8 0 0,1 20,12A8,8 0 0,1 12,20M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2Z"
+                                        />
+                                      </svg>
+                                    </div>
+                                  </div>
+                                </button>,
+                                "index": 1,
+                              },
+                              Object {
+                                "disabled": false,
+                                "element": <button
+                                  aria-controls="panel--3--2"
+                                  aria-expanded="false"
+                                  class="activation-checklist__button list-group-item list-group-item-action"
+                                  data-reach-accordion-button=""
+                                  id="button--3--2"
+                                >
+                                  <div
+                                    class="activation-checklist-item d-flex justify-content-between"
+                                  >
+                                    <div
+                                      class="d-flex align-items-center"
+                                    >
+                                      <span
+                                        class="activation-checklist-item__icon-container icon-inline icon-down"
+                                      >
+                                        <svg
+                                          class="mdi-icon activation-checklist-item__icon"
+                                          fill="currentColor"
+                                          height="24"
+                                          viewBox="0 0 24 24"
+                                          width="24"
+                                        >
+                                          <path
+                                            d="M7.41,8.58L12,13.17L16.59,8.58L18,10L12,16L6,10L7.41,8.58Z"
+                                          />
+                                        </svg>
+                                      </span>
+                                      <span
+                                        class="activation-checklist-item__icon-container icon-inline icon-right"
+                                      >
+                                        <svg
+                                          class="mdi-icon activation-checklist-item__icon"
+                                          fill="currentColor"
+                                          height="24"
+                                          viewBox="0 0 24 24"
+                                          width="24"
+                                        >
+                                          <path
+                                            d="M8.59,16.58L13.17,12L8.59,7.41L10,6L16,12L10,18L8.59,16.58Z"
+                                          />
+                                        </svg>
+                                      </span>
+                                      <a
+                                        class="activation-checklist__title"
+                                        href=""
+                                      >
+                                        Find some references
+                                      </a>
+                                    </div>
+                                    <div>
+                                      <svg
+                                        class="mdi-icon icon-inline text-muted"
+                                        fill="currentColor"
+                                        height="24"
+                                        viewBox="0 0 24 24"
+                                        width="24"
+                                      >
+                                        <path
+                                          d="M12,20A8,8 0 0,1 4,12A8,8 0 0,1 12,4A8,8 0 0,1 20,12A8,8 0 0,1 12,20M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2Z"
+                                        />
+                                      </svg>
+                                    </div>
+                                  </div>
+                                </button>,
+                                "index": 2,
+                              },
+                              Object {
+                                "disabled": false,
+                                "element": <button
+                                  aria-controls="panel--3--3"
+                                  aria-expanded="false"
+                                  class="activation-checklist__button list-group-item list-group-item-action"
+                                  data-reach-accordion-button=""
+                                  id="button--3--3"
+                                >
+                                  <div
+                                    class="activation-checklist-item d-flex justify-content-between"
+                                  >
+                                    <div
+                                      class="d-flex align-items-center"
+                                    >
+                                      <span
+                                        class="activation-checklist-item__icon-container icon-inline icon-down"
+                                      >
+                                        <svg
+                                          class="mdi-icon activation-checklist-item__icon"
+                                          fill="currentColor"
+                                          height="24"
+                                          viewBox="0 0 24 24"
+                                          width="24"
+                                        >
+                                          <path
+                                            d="M7.41,8.58L12,13.17L16.59,8.58L18,10L12,16L6,10L7.41,8.58Z"
+                                          />
+                                        </svg>
+                                      </span>
+                                      <span
+                                        class="activation-checklist-item__icon-container icon-inline icon-right"
+                                      >
+                                        <svg
+                                          class="mdi-icon activation-checklist-item__icon"
+                                          fill="currentColor"
+                                          height="24"
+                                          viewBox="0 0 24 24"
+                                          width="24"
+                                        >
+                                          <path
+                                            d="M8.59,16.58L13.17,12L8.59,7.41L10,6L16,12L10,18L8.59,16.58Z"
+                                          />
+                                        </svg>
+                                      </span>
+                                      <a
+                                        class="activation-checklist__title"
+                                        href=""
+                                      >
+                                        Configure SSO or share with teammates
+                                      </a>
+                                    </div>
+                                    <div>
+                                      <svg
+                                        class="mdi-icon icon-inline text-muted"
+                                        fill="currentColor"
+                                        height="24"
+                                        viewBox="0 0 24 24"
+                                        width="24"
+                                      >
+                                        <path
+                                          d="M12,20A8,8 0 0,1 4,12A8,8 0 0,1 12,4A8,8 0 0,1 20,12A8,8 0 0,1 12,20M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2Z"
+                                        />
+                                      </svg>
+                                    </div>
+                                  </div>
+                                </button>,
+                                "index": 3,
+                              },
+                            ]
+                          }
+                          set={[Function]}
+                        >
+                          <div
+                            data-reach-accordion=""
+                          >
+                            <AccordionItem
+                              className="activation-checklist__container list-group-item "
+                              key="ConnectedCodeHost"
+                            >
+                              <div
+                                className="activation-checklist__container list-group-item "
+                                data-reach-accordion-item=""
+                                data-state="collapsed"
+                              >
+                                <AccordionButton
+                                  className="activation-checklist__button list-group-item list-group-item-action"
+                                >
+                                  <button
+                                    aria-controls="panel--3--0"
+                                    aria-expanded={false}
+                                    className="activation-checklist__button list-group-item list-group-item-action"
+                                    data-reach-accordion-button=""
+                                    id="button--3--0"
+                                    onClick={[Function]}
+                                    onKeyDown={[Function]}
+                                  >
+                                    <ActivationChecklistItem
+                                      detail="Configure Sourcegraph to talk to your code host and fetch a list of your repositories."
+                                      done={false}
+                                      history="[History]"
+                                      id="ConnectedCodeHost"
+                                      key="ConnectedCodeHost"
+                                      title="Add repositories"
+                                    >
+                                      <div
+                                        className="activation-checklist-item d-flex justify-content-between"
+                                      >
+                                        <div
+                                          className="d-flex align-items-center"
+                                        >
+                                          <span
+                                            className="activation-checklist-item__icon-container icon-inline icon-down"
+                                          >
+                                            <Memo(ChevronDownIcon)
+                                              className="activation-checklist-item__icon"
+                                            />
+                                          </span>
+                                          <span
+                                            className="activation-checklist-item__icon-container icon-inline icon-right"
+                                          >
+                                            <Memo(ChevronRightIcon)
+                                              className="activation-checklist-item__icon"
+                                            />
+                                          </span>
+                                          <a
+                                            className="activation-checklist__title"
+                                            href=""
+                                          >
+                                            Add repositories
+                                          </a>
+                                        </div>
+                                        <div>
+                                          <Memo(CheckboxBlankCircleOutlineIcon)
+                                            className="icon-inline text-muted"
+                                          />
+                                        </div>
+                                      </div>
+                                    </ActivationChecklistItem>
+                                  </button>
+                                </AccordionButton>
+                                <AccordionPanel
+                                  className="px-2"
+                                >
+                                  <div
+                                    aria-labelledby="button--3--0"
+                                    className="px-2"
+                                    data-reach-accordion-panel=""
+                                    data-state="collapsed"
+                                    hidden={true}
+                                    id="panel--3--0"
+                                    role="region"
+                                    tabIndex={-1}
+                                  >
+                                    <div
+                                      className="activation-checklist__detail pb-1"
+                                    >
+                                      Configure Sourcegraph to talk to your code host and fetch a list of your repositories.
+                                    </div>
+                                  </div>
+                                </AccordionPanel>
+                              </div>
+                            </AccordionItem>
+                            <AccordionItem
+                              className="activation-checklist__container list-group-item "
+                              key="DidSearch"
+                            >
+                              <div
+                                className="activation-checklist__container list-group-item "
+                                data-reach-accordion-item=""
+                                data-state="collapsed"
+                              >
+                                <AccordionButton
+                                  className="activation-checklist__button list-group-item list-group-item-action"
+                                >
+                                  <button
+                                    aria-controls="panel--3--1"
+                                    aria-expanded={false}
+                                    className="activation-checklist__button list-group-item list-group-item-action"
+                                    data-reach-accordion-button=""
+                                    id="button--3--1"
+                                    onClick={[Function]}
+                                    onKeyDown={[Function]}
+                                  >
+                                    <ActivationChecklistItem
+                                      detail={
+                                        <span>
+                                          Head to the 
+                                          <a
+                                            href="/search"
+                                          >
+                                            homepage
+                                          </a>
+                                           and perform a search query on your code.
+                                           
+                                          <strong>
+                                            Example:
+                                          </strong>
+                                           type 'lang:' and select a language
+                                        </span>
+                                      }
+                                      done={false}
+                                      history="[History]"
+                                      id="DidSearch"
+                                      key="DidSearch"
+                                      title="Search your code"
+                                    >
+                                      <div
+                                        className="activation-checklist-item d-flex justify-content-between"
+                                      >
+                                        <div
+                                          className="d-flex align-items-center"
+                                        >
+                                          <span
+                                            className="activation-checklist-item__icon-container icon-inline icon-down"
+                                          >
+                                            <Memo(ChevronDownIcon)
+                                              className="activation-checklist-item__icon"
+                                            />
+                                          </span>
+                                          <span
+                                            className="activation-checklist-item__icon-container icon-inline icon-right"
+                                          >
+                                            <Memo(ChevronRightIcon)
+                                              className="activation-checklist-item__icon"
+                                            />
+                                          </span>
+                                          <a
+                                            className="activation-checklist__title"
+                                            href=""
+                                          >
+                                            Search your code
+                                          </a>
+                                        </div>
+                                        <div>
+                                          <Memo(CheckboxBlankCircleOutlineIcon)
+                                            className="icon-inline text-muted"
+                                          />
+                                        </div>
+                                      </div>
+                                    </ActivationChecklistItem>
+                                  </button>
+                                </AccordionButton>
+                                <AccordionPanel
+                                  className="px-2"
+                                >
+                                  <div
+                                    aria-labelledby="button--3--1"
+                                    className="px-2"
+                                    data-reach-accordion-panel=""
+                                    data-state="collapsed"
+                                    hidden={true}
+                                    id="panel--3--1"
+                                    role="region"
+                                    tabIndex={-1}
+                                  >
+                                    <div
+                                      className="activation-checklist__detail pb-1"
+                                    >
+                                      <span>
+                                        Head to the 
+                                        <a
+                                          href="/search"
+                                        >
+                                          homepage
+                                        </a>
+                                         and perform a search query on your code.
+                                         
+                                        <strong>
+                                          Example:
+                                        </strong>
+                                         type 'lang:' and select a language
+                                      </span>
+                                    </div>
+                                  </div>
+                                </AccordionPanel>
+                              </div>
+                            </AccordionItem>
+                            <AccordionItem
+                              className="activation-checklist__container list-group-item "
+                              key="FoundReferences"
+                            >
+                              <div
+                                className="activation-checklist__container list-group-item "
+                                data-reach-accordion-item=""
+                                data-state="collapsed"
+                              >
+                                <AccordionButton
+                                  className="activation-checklist__button list-group-item list-group-item-action"
+                                >
+                                  <button
+                                    aria-controls="panel--3--2"
+                                    aria-expanded={false}
+                                    className="activation-checklist__button list-group-item list-group-item-action"
+                                    data-reach-accordion-button=""
+                                    id="button--3--2"
+                                    onClick={[Function]}
+                                    onKeyDown={[Function]}
+                                  >
+                                    <ActivationChecklistItem
+                                      detail="To find references of a token, navigate to a code file in one of your repositories, hover over a token to activate the tooltip, and then click \\"Find references\\"."
+                                      done={false}
+                                      history="[History]"
+                                      id="FoundReferences"
+                                      key="FoundReferences"
+                                      title="Find some references"
+                                    >
+                                      <div
+                                        className="activation-checklist-item d-flex justify-content-between"
+                                      >
+                                        <div
+                                          className="d-flex align-items-center"
+                                        >
+                                          <span
+                                            className="activation-checklist-item__icon-container icon-inline icon-down"
+                                          >
+                                            <Memo(ChevronDownIcon)
+                                              className="activation-checklist-item__icon"
+                                            />
+                                          </span>
+                                          <span
+                                            className="activation-checklist-item__icon-container icon-inline icon-right"
+                                          >
+                                            <Memo(ChevronRightIcon)
+                                              className="activation-checklist-item__icon"
+                                            />
+                                          </span>
+                                          <a
+                                            className="activation-checklist__title"
+                                            href=""
+                                          >
+                                            Find some references
+                                          </a>
+                                        </div>
+                                        <div>
+                                          <Memo(CheckboxBlankCircleOutlineIcon)
+                                            className="icon-inline text-muted"
+                                          />
+                                        </div>
+                                      </div>
+                                    </ActivationChecklistItem>
+                                  </button>
+                                </AccordionButton>
+                                <AccordionPanel
+                                  className="px-2"
+                                >
+                                  <div
+                                    aria-labelledby="button--3--2"
+                                    className="px-2"
+                                    data-reach-accordion-panel=""
+                                    data-state="collapsed"
+                                    hidden={true}
+                                    id="panel--3--2"
+                                    role="region"
+                                    tabIndex={-1}
+                                  >
+                                    <div
+                                      className="activation-checklist__detail pb-1"
+                                    >
+                                      To find references of a token, navigate to a code file in one of your repositories, hover over a token to activate the tooltip, and then click "Find references".
+                                    </div>
+                                  </div>
+                                </AccordionPanel>
+                              </div>
+                            </AccordionItem>
+                            <AccordionItem
+                              className="activation-checklist__container list-group-item "
+                              key="EnabledSharing"
+                            >
+                              <div
+                                className="activation-checklist__container list-group-item "
+                                data-reach-accordion-item=""
+                                data-state="collapsed"
+                              >
+                                <AccordionButton
+                                  className="activation-checklist__button list-group-item list-group-item-action"
+                                >
+                                  <button
+                                    aria-controls="panel--3--3"
+                                    aria-expanded={false}
+                                    className="activation-checklist__button list-group-item list-group-item-action"
+                                    data-reach-accordion-button=""
+                                    id="button--3--3"
+                                    onClick={[Function]}
+                                    onKeyDown={[Function]}
+                                  >
+                                    <ActivationChecklistItem
+                                      detail="Configure a single-sign on (SSO) provider or have at least one other teammate sign up."
+                                      done={false}
+                                      history="[History]"
+                                      id="EnabledSharing"
+                                      key="EnabledSharing"
+                                      title="Configure SSO or share with teammates"
+                                    >
+                                      <div
+                                        className="activation-checklist-item d-flex justify-content-between"
+                                      >
+                                        <div
+                                          className="d-flex align-items-center"
+                                        >
+                                          <span
+                                            className="activation-checklist-item__icon-container icon-inline icon-down"
+                                          >
+                                            <Memo(ChevronDownIcon)
+                                              className="activation-checklist-item__icon"
+                                            />
+                                          </span>
+                                          <span
+                                            className="activation-checklist-item__icon-container icon-inline icon-right"
+                                          >
+                                            <Memo(ChevronRightIcon)
+                                              className="activation-checklist-item__icon"
+                                            />
+                                          </span>
+                                          <a
+                                            className="activation-checklist__title"
+                                            href=""
+                                          >
+                                            Configure SSO or share with teammates
+                                          </a>
+                                        </div>
+                                        <div>
+                                          <Memo(CheckboxBlankCircleOutlineIcon)
+                                            className="icon-inline text-muted"
+                                          />
+                                        </div>
+                                      </div>
+                                    </ActivationChecklistItem>
+                                  </button>
+                                </AccordionButton>
+                                <AccordionPanel
+                                  className="px-2"
+                                >
+                                  <div
+                                    aria-labelledby="button--3--3"
+                                    className="px-2"
+                                    data-reach-accordion-panel=""
+                                    data-state="collapsed"
+                                    hidden={true}
+                                    id="panel--3--3"
+                                    role="region"
+                                    tabIndex={-1}
+                                  >
+                                    <div
+                                      className="activation-checklist__detail pb-1"
+                                    >
+                                      Configure a single-sign on (SSO) provider or have at least one other teammate sign up.
+                                    </div>
+                                  </div>
+                                </AccordionPanel>
+                              </div>
+                            </AccordionItem>
+                          </div>
+                        </DescendantProvider>
+                      </Accordion>
+                    </div>
+                  </ActivationChecklist>
+                </div>
+              </PopoverImpl>
+            </Portal>
+          </Portal>
+        </Popover>
+      </MenuPopover>
+    </DescendantProvider>
+  </Menu>
+</ActivationDropdown>
+`;

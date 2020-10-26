@@ -61,7 +61,6 @@ PACKAGES=(
   github.com/sourcegraph/sourcegraph/cmd/github-proxy
   github.com/sourcegraph/sourcegraph/cmd/gitserver
   github.com/sourcegraph/sourcegraph/cmd/query-runner
-  github.com/sourcegraph/sourcegraph/cmd/replacer
   github.com/sourcegraph/sourcegraph/cmd/searcher
   github.com/sourcegraph/sourcegraph/cmd/symbols
   github.com/google/zoekt/cmd/zoekt-archive-index
@@ -76,7 +75,6 @@ PACKAGES+=("$server_pkg")
 parallel_run go_build {} ::: "${PACKAGES[@]}"
 
 echo "--- ctags"
-cp -a ./cmd/symbols/.ctags.d "$OUTPUT"
 cp -a ./cmd/symbols/ctags-install-alpine.sh "$OUTPUT"
 cp -a ./dev/libsqlite3-pcre/install-alpine.sh "$OUTPUT/libsqlite3-pcre-install-alpine.sh"
 
@@ -88,14 +86,16 @@ else
   pushd monitoring && go generate && popd
 fi
 
-echo "--- prometheus config"
+echo "--- prometheus"
 cp -r docker-images/prometheus/config "$OUTPUT/sg_config_prometheus"
 mkdir "$OUTPUT/sg_prometheus_add_ons"
 cp dev/prometheus/linux/prometheus_targets.yml "$OUTPUT/sg_prometheus_add_ons"
+IMAGE=sourcegraph/prometheus:server CACHE=true docker-images/prometheus/build.sh
 
-echo "--- grafana config"
+echo "--- grafana"
 cp -r docker-images/grafana/config "$OUTPUT/sg_config_grafana"
 cp -r dev/grafana/linux "$OUTPUT/sg_config_grafana/provisioning/datasources"
+IMAGE=sourcegraph/grafana:server CACHE=true docker-images/grafana/build.sh
 
 echo "--- jaeger-all-in-one binary"
 cmd/server/jaeger.sh

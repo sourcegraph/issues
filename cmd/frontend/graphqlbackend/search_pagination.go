@@ -7,14 +7,14 @@ import (
 	"sync"
 	"time"
 
-	graphql "github.com/graph-gophers/graphql-go"
+	"github.com/graph-gophers/graphql-go"
 	"github.com/graph-gophers/graphql-go/relay"
 	"github.com/inconshreveable/log15"
 	otlog "github.com/opentracing/opentracing-go/log"
-	"github.com/sourcegraph/sourcegraph/cmd/frontend/db"
 	"github.com/sourcegraph/sourcegraph/cmd/frontend/graphqlbackend/graphqlutil"
 	"github.com/sourcegraph/sourcegraph/cmd/frontend/types"
 	"github.com/sourcegraph/sourcegraph/internal/api"
+	"github.com/sourcegraph/sourcegraph/internal/db"
 	"github.com/sourcegraph/sourcegraph/internal/search"
 	"github.com/sourcegraph/sourcegraph/internal/trace"
 )
@@ -132,7 +132,7 @@ func (r *searchResolver) paginatedResults(ctx context.Context) (result *SearchRe
 	ctx, cancel := context.WithTimeout(ctx, 2*time.Minute)
 	defer cancel()
 
-	repos, missingRepoRevs, _, alertResult, err := r.determineRepos(ctx, tr, start)
+	resolved, alertResult, err := r.determineRepos(ctx, tr, start)
 	if err != nil {
 		return nil, err
 	}
@@ -146,7 +146,7 @@ func (r *searchResolver) paginatedResults(ctx context.Context) (result *SearchRe
 	}
 	args := search.TextParameters{
 		PatternInfo:     p,
-		Repos:           repos,
+		RepoPromise:     (&search.Promise{}).Resolve(resolved.repoRevs),
 		Query:           r.query,
 		UseFullDeadline: false,
 		Zoekt:           r.zoekt,
@@ -170,13 +170,13 @@ func (r *searchResolver) paginatedResults(ctx context.Context) (result *SearchRe
 
 	// Since we're searching a subset of the repositories this query would
 	// search overall, we must sort the repositories deterministically.
-	for _, repoRev := range repos {
+	for _, repoRev := range resolved.repoRevs {
 		sort.Slice(repoRev.Revs, func(i, j int) bool {
 			return repoRev.Revs[i].Less(repoRev.Revs[j])
 		})
 	}
-	sort.Slice(repos, func(i, j int) bool {
-		return repoIsLess(repos[i].Repo, repos[j].Repo)
+	sort.Slice(resolved.repoRevs, func(i, j int) bool {
+		return repoIsLess(resolved.repoRevs[i].Repo, resolved.repoRevs[j].Repo)
 	})
 
 	common := searchResultsCommon{maxResultsCount: r.maxResults()}
@@ -198,8 +198,8 @@ func (r *searchResolver) paginatedResults(ctx context.Context) (result *SearchRe
 	// Alert is a potential alert shown to the user.
 	var alert *searchAlert
 
-	if len(missingRepoRevs) > 0 {
-		alert = alertForMissingRepoRevs(r.patternType, missingRepoRevs)
+	if len(resolved.missingRepoRevs) > 0 {
+		alert = alertForMissingRepoRevs(r.patternType, resolved.missingRepoRevs)
 	}
 
 	log15.Info("next cursor for paginated search request",
@@ -251,16 +251,21 @@ func repoIsLess(i, j *types.Repo) bool {
 //    2 above (in the worst case scenario).
 //
 func paginatedSearchFilesInRepos(ctx context.Context, args *search.TextParameters, pagination *searchPaginationInfo) (*searchCursor, []SearchResultResolver, *searchResultsCommon, error) {
+	repos, err := getRepos(ctx, args.RepoPromise)
+	if err != nil {
+		return nil, nil, nil, err
+	}
+
 	plan := &repoPaginationPlan{
 		pagination:          pagination,
-		repositories:        args.Repos,
+		repositories:        repos,
 		searchBucketDivisor: 8,
 		searchBucketMin:     10,
 		searchBucketMax:     1000,
 	}
 	return plan.execute(ctx, func(batch []*search.RepositoryRevisions) ([]SearchResultResolver, *searchResultsCommon, error) {
 		batchArgs := *args
-		batchArgs.Repos = batch
+		batchArgs.RepoPromise = (&search.Promise{}).Resolve(batch)
 		fileResults, fileCommon, err := searchFilesInRepos(ctx, &batchArgs)
 		// Timeouts are reported through searchResultsCommon so don't report an error for them
 		if err != nil && !(err == context.DeadlineExceeded || err == context.Canceled) {

@@ -7,12 +7,13 @@ import (
 	"fmt"
 	"net/url"
 
+	"github.com/inconshreveable/log15"
 	"github.com/pkg/errors"
-	"github.com/sourcegraph/sourcegraph/cmd/frontend/db"
 	"github.com/sourcegraph/sourcegraph/cmd/frontend/envvar"
 	"github.com/sourcegraph/sourcegraph/cmd/frontend/globals"
 	"github.com/sourcegraph/sourcegraph/cmd/frontend/internal/app/router"
 	"github.com/sourcegraph/sourcegraph/internal/conf"
+	"github.com/sourcegraph/sourcegraph/internal/db"
 	"github.com/sourcegraph/sourcegraph/internal/errcode"
 	"github.com/sourcegraph/sourcegraph/internal/txemail"
 	"github.com/sourcegraph/sourcegraph/internal/txemail/txtypes"
@@ -131,7 +132,6 @@ func (userEmails) Add(ctx context.Context, userID int32, email string) error {
 			return errors.Wrap(err, "SetLastVerificationSentAt")
 		}
 	}
-
 	return nil
 }
 
@@ -179,5 +179,50 @@ Verify your email address {{printf "%q" .Email}} on Sourcegraph by following thi
 <p>Verify your email address {{printf "%q" .Email}} on Sourcegraph by following this link:</p>
 
 <p><strong><a href="{{.URL}}">Verify email address</a></p>
+`,
+})
+
+// SendUserEmailOnFieldUpdate sends the user an email that important account information has changed.
+// The change is the information we want to provide the user about the change
+func (userEmails) SendUserEmailOnFieldUpdate(ctx context.Context, id int32, change string) error {
+	email, _, err := db.UserEmails.GetPrimaryEmail(ctx, id)
+	if err != nil {
+		log15.Warn("Failed to get user email", "error", err)
+		return err
+	}
+	usr, err := db.Users.GetByID(ctx, id)
+	if err != nil {
+		log15.Warn("Failed to get user from database", "error", err)
+		return err
+	}
+
+	return txemail.Send(ctx, txemail.Message{
+		To:       []string{email},
+		Template: updateAccountEmailTemplate,
+		Data: struct {
+			Email    string
+			Change   string
+			Username string
+		}{
+			Email:    email,
+			Change:   change,
+			Username: usr.Username,
+		},
+	})
+}
+
+var updateAccountEmailTemplate = txemail.MustValidate(txtypes.Templates{
+	Subject: `Update to your Sourcegraph account`,
+	Text: `
+Somebody (likely you) {{.Change}} for the user {{.Username}} on Sourcegraph.
+
+If this was not you please change your password immediately.
+`,
+	HTML: `
+<p>
+Somebody (likely you) <strong>{{.Change}}</strong> for the user <strong>{{.Username}}</strong> on Sourcegraph.
+</p>
+
+<p><strong>If this was not you please change your password immediately.</strong></p>
 `,
 })

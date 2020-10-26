@@ -1,0 +1,97 @@
+.tree {
+    isolation: isolate;
+    flex: 1 1 auto;
+    width: 100%;
+    overflow: auto;
+    white-space: pre;
+    line-height: 20px;
+    font-size: 14px;
+
+    user-select: none;
+
+    table {
+        border-spacing: 0;
+    }
+
+    &__cell {
+        padding-left: 0;
+        padding-right: 0;
+    }
+
+    &__row {
+        color: var(--body-color);
+        width: 100%;
+        display: table;
+
+        &:hover {
+            background-color: var(--color-bg-3);
+        }
+
+        &--selected {
+            background-color: var(--color-bg-3);
+            cursor: pointer;
+
+            &:hover {
+                background-color: var(--color-bg-3);
+            }
+        }
+
+        &--active {
+            width: 100%;
+            display: table;
+            background-color: var(--primary) !important;
+            color: $white !important;
+        }
+    }
+
+    &__row-alert {
+        display: block;
+        padding: 0.75rem 1.25rem;
+        white-space: pre-wrap;
+        margin-bottom: 0;
+    }
+
+    &__row-icon {
+        color: inherit;
+        // stylelint-disable-next-line declaration-property-unit-whitelist
+        width: 1.1em;
+    }
+
+    &__row-contents {
+        display: flex;
+        color: inherit;
+        align-items: center;
+        padding-top: 0.25rem;
+        padding-bottom: 0.25rem;
+        cursor: pointer;
+
+        &-new {
+            justify-content: space-between;
+        }
+
+        &-text {
+            display: flex;
+            align-items: center;
+        }
+    }
+
+    &__row-label {
+        margin-left: 0.25rem;
+        color: inherit;
+    }
+
+    a {
+        color: inherit !important;
+    }
+}
+
+.tree-layer {
+    width: 100%;
+
+    // Remove user-agent focus ring.
+    outline: none;
+}
+
+.tree-row {
+    width: 100%;
+}

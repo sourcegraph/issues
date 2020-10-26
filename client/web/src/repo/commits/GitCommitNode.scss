@@ -1,0 +1,109 @@
+.git-commit-node {
+    padding: 0.75rem 0.5rem 0.5rem;
+    &--compact {
+        padding-top: 0.5rem;
+    }
+
+    &__signature {
+        flex: 1 1;
+        min-width: 24rem;
+        margin-right: 1.5rem;
+    }
+    &__message {
+        display: flex;
+        align-items: center;
+        &-subject {
+            flex: 0 1 auto;
+            font-weight: bold;
+            padding-right: 0.5rem;
+            overflow: hidden;
+            white-space: nowrap;
+            text-overflow: ellipsis;
+            color: var(--body-color);
+        }
+        &-toggle {
+            flex: none;
+            font-size: 9px;
+            padding: 0 0.175rem;
+            margin-right: 0.5rem;
+        }
+        &-timestamp {
+            flex: none;
+            white-space: nowrap;
+            margin-bottom: -0.125rem;
+        }
+        &-body {
+            margin-top: 0.25rem;
+            margin-bottom: 0.75rem;
+            font-size: 12px;
+            overflow: visible;
+            max-width: 100%;
+            word-wrap: break-word;
+            white-space: pre-wrap;
+        }
+    }
+
+    &__actions {
+        flex: none;
+        display: flex;
+        align-items: center;
+        margin-bottom: 0.5rem;
+    }
+
+    &__oid {
+        // Fix vertical alignment of code text relative to the icon in the adjacent button.
+        display: block;
+        // stylelint-disable-next-line declaration-property-unit-whitelist
+        margin-top: 2px;
+    }
+
+    &__sha-and-parents {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        &-sha {
+            display: flex;
+            align-items: center;
+            padding-left: 0.5rem;
+            margin-right: 2rem;
+        }
+        &-copy {
+            font-size: 11px;
+            padding: 0.25rem;
+            &:not(:hover) {
+                opacity: 0.8;
+            }
+        }
+
+        &-label {
+            opacity: 0.7;
+        }
+        &-parent {
+            margin-left: 0.25rem;
+            font-weight: normal;
+        }
+    }
+
+    &--compact &__main {
+        justify-content: flex-start;
+    }
+    &--compact &__byline {
+        width: 25%;
+        flex: none;
+        padding-right: 1.5rem;
+        overflow: hidden;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+    }
+    &--compact &__message {
+        flex: 1;
+        min-width: 0;
+        padding-right: 1rem;
+    }
+    &--compact &__message-subject {
+        font-weight: normal;
+    }
+    &--compact &__oid {
+        flex: 0 0 auto;
+    }
+}

@@ -1,0 +1,41 @@
+.cartesian-chart-view-content {
+    .recharts-dot {
+        fill: var(--body-bg);
+    }
+
+    .recharts-cartesian-axis-line,
+    .recharts-cartesian-axis-tick-line {
+        stroke: var(--border-color);
+    }
+
+    .recharts-cartesian-axis-tick-value {
+        fill: var(--text-muted);
+    }
+
+    .recharts-tooltip-wrapper {
+        border: 1px solid var(--border-color);
+        color: var(--body-color) !important;
+        background: var(--body-bg) !important;
+    }
+    .recharts-default-tooltip,
+    .recharts-tooltip-item {
+        border: none !important;
+        color: inherit !important;
+        background: transparent !important;
+    }
+    .recharts-tooltip-label {
+        font-weight: bold;
+    }
+}
+
+.pie-chart-view-content {
+    .recharts-pie-label-line {
+        stroke: var(--body-color);
+    }
+    .recharts-pie-label-text {
+        fill: var(--body-color);
+    }
+    .recharts-sector {
+        stroke: var(--body-bg);
+    }
+}

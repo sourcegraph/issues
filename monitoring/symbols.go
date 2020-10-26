@@ -15,8 +15,9 @@ func Symbols() *Container {
 							Description:       "store fetch failures every 5m",
 							Query:             `sum(increase(symbols_store_fetch_failed[5m]))`,
 							DataMayNotExist:   true,
-							Warning:           Alert{GreaterOrEqual: 5},
+							Warning:           Alert().GreaterOrEqual(5),
 							PanelOptions:      PanelOptions().LegendFormat("failures"),
+							Owner:             ObservableOwnerCodeIntel,
 							PossibleSolutions: "none",
 						},
 						{
@@ -24,13 +25,14 @@ func Symbols() *Container {
 							Description:       "current fetch queue size",
 							Query:             `sum(symbols_store_fetch_queue_size)`,
 							DataMayNotExist:   true,
-							Warning:           Alert{GreaterOrEqual: 25},
+							Warning:           Alert().GreaterOrEqual(25),
 							PanelOptions:      PanelOptions().LegendFormat("size"),
+							Owner:             ObservableOwnerCodeIntel,
 							PossibleSolutions: "none",
 						},
 					},
 					{
-						sharedFrontendInternalAPIErrorResponses("symbols"),
+						sharedFrontendInternalAPIErrorResponses("symbols", ObservableOwnerCodeIntel),
 					},
 				},
 			},
@@ -39,9 +41,12 @@ func Symbols() *Container {
 				Hidden: true,
 				Rows: []Row{
 					{
-						sharedContainerRestarts("symbols"),
-						sharedContainerMemoryUsage("symbols"),
-						sharedContainerCPUUsage("symbols"),
+						sharedContainerCPUUsage("symbols", ObservableOwnerCodeIntel),
+						sharedContainerMemoryUsage("symbols", ObservableOwnerCodeIntel),
+					},
+					{
+						sharedContainerRestarts("symbols", ObservableOwnerCodeIntel),
+						sharedContainerFsInodes("symbols", ObservableOwnerCodeIntel),
 					},
 				},
 			},
@@ -50,12 +55,31 @@ func Symbols() *Container {
 				Hidden: true,
 				Rows: []Row{
 					{
-						sharedProvisioningCPUUsage1d("symbols"),
-						sharedProvisioningMemoryUsage1d("symbols"),
+						sharedProvisioningCPUUsageLongTerm("symbols", ObservableOwnerCodeIntel),
+						sharedProvisioningMemoryUsageLongTerm("symbols", ObservableOwnerCodeIntel),
 					},
 					{
-						sharedProvisioningCPUUsage5m("symbols"),
-						sharedProvisioningMemoryUsage5m("symbols"),
+						sharedProvisioningCPUUsageShortTerm("symbols", ObservableOwnerCodeIntel),
+						sharedProvisioningMemoryUsageShortTerm("symbols", ObservableOwnerCodeIntel),
+					},
+				},
+			},
+			{
+				Title:  "Golang runtime monitoring",
+				Hidden: true,
+				Rows: []Row{
+					{
+						sharedGoGoroutines("symbols", ObservableOwnerCodeIntel),
+						sharedGoGcDuration("symbols", ObservableOwnerCodeIntel),
+					},
+				},
+			},
+			{
+				Title:  "Kubernetes monitoring (ignore if using Docker Compose or server)",
+				Hidden: true,
+				Rows: []Row{
+					{
+						sharedKubernetesPodsAvailable("symbols", ObservableOwnerCodeIntel),
 					},
 				},
 			},

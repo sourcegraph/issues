@@ -1,0 +1,78 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`DiffStat expandedCounts 1`] = `
+<div
+  className="diff-stat"
+  data-tooltip="1 addition, 2 changes, 3 deletions"
+>
+  <span
+    className="diff-stat__total font-weight-bold"
+  >
+    <span
+      className="text-success mr-1"
+    >
+      +
+      1
+    </span>
+    <span
+      className="text-warning mr-1"
+    >
+      •
+      2
+    </span>
+    <span
+      className="text-danger mr-1"
+    >
+      −
+      3
+    </span>
+  </span>
+  <div>
+    <div
+      className="diff-stat__square bg-success"
+    />
+    <div
+      className="diff-stat__square bg-warning"
+    />
+    <div
+      className="diff-stat__square bg-danger"
+    />
+    <div
+      className="diff-stat__square bg-danger"
+    />
+    <div
+      className="diff-stat__square bg-danger"
+    />
+  </div>
+</div>
+`;
+
+exports[`DiffStat standard 1`] = `
+<div
+  className="diff-stat"
+  data-tooltip="1 addition, 2 changes, 3 deletions"
+>
+  <small
+    className="diff-stat__total"
+  >
+    8
+  </small>
+  <div>
+    <div
+      className="diff-stat__square bg-success"
+    />
+    <div
+      className="diff-stat__square bg-warning"
+    />
+    <div
+      className="diff-stat__square bg-danger"
+    />
+    <div
+      className="diff-stat__square bg-danger"
+    />
+    <div
+      className="diff-stat__square bg-danger"
+    />
+  </div>
+</div>
+`;

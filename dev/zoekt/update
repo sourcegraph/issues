@@ -4,10 +4,19 @@ set -e
 
 export GO111MODULE=on
 
+# Can specify a SHA pushed to our fork instead of master
+version="${1:-master}"
+
 upstream=github.com/google/zoekt
 fork=github.com/sourcegraph/zoekt
 
-module="$(go get ${fork}@master 2>&1 | grep -E -o ${fork}'@v0.0.0-[0-9a-z-]+')"
+oldsha="$(go mod edit -print | grep "$fork" | grep -o '[a-f0-9]*$')"
+module="$(go get "${fork}@${version}" 2>&1 | grep -E -o ${fork}'@v0.0.0-[0-9a-z-]+')"
+newsha="$(echo "$module" | grep -o '[a-f0-9]*$')"
+
+echo "https://github.com/sourcegraph/zoekt/compare/$oldsha...$newsha"
+echo "git log --pretty=format:'- https://github.com/sourcegraph/zoekt/commit/%h %s' $oldsha...$newsha"
+echo "git log --pretty=format:'- %h %s' $oldsha...$newsha"
 
 go mod edit "-replace=${upstream}=${module}"
 go mod download ${upstream}

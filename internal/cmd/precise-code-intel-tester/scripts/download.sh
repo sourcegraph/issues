@@ -1,5 +1,8 @@
 #!/usr/bin/env bash
 
+# UGH
+export CLOUDSDK_PYTHON=/usr/bin/python3
+
 set -eu
 cd "$(dirname "${BASH_SOURCE[0]}")/../../../.."
 DATADIR=$(realpath './internal/cmd/precise-code-intel-tester/testdata')

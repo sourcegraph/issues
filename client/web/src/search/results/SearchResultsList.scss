@@ -1,0 +1,35 @@
+.search-results-list {
+    overflow-y: auto;
+
+    &__more {
+        width: 100%;
+        text-align: left;
+        padding-bottom: 2rem;
+    }
+
+    &__jump-to-top {
+        color: var(--body-color);
+        background-color: var(--color-bg-2);
+        padding: 0.25rem 0.5rem;
+        text-align: center;
+        border-bottom: 1px solid var(--border-color);
+    }
+
+    // In narrow windows, make the results flush with the left/right sides,
+    // but we still need padding for the header and alerts.
+    @include media-breakpoint-down(lg) {
+        &__list {
+            padding-left: 0;
+            padding-right: 0;
+        }
+
+        &__info-row-left {
+            margin-left: 0.5rem;
+        }
+
+        &__alert {
+            padding-left: 0.5rem;
+            padding-right: 0.5rem;
+        }
+    }
+}

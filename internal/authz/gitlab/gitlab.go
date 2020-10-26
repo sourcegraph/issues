@@ -5,9 +5,8 @@ import (
 	"net/url"
 
 	"github.com/sourcegraph/sourcegraph/cmd/frontend/auth/providers"
-	"github.com/sourcegraph/sourcegraph/cmd/frontend/authz"
 	"github.com/sourcegraph/sourcegraph/cmd/frontend/types"
-	iauthz "github.com/sourcegraph/sourcegraph/internal/authz"
+	"github.com/sourcegraph/sourcegraph/internal/authz"
 	"github.com/sourcegraph/sourcegraph/internal/conf"
 	"github.com/sourcegraph/sourcegraph/schema"
 )
@@ -48,11 +47,6 @@ func newAuthzProvider(urn string, a *schema.GitLabAuthorization, instanceURL, to
 		return nil, fmt.Errorf("Could not parse URL for GitLab instance %q: %s", instanceURL, err)
 	}
 
-	ttl, err := iauthz.ParseTTL(a.Ttl)
-	if err != nil {
-		return nil, err
-	}
-
 	switch idp := a.IdentityProvider; {
 	case idp.Oauth != nil:
 		// Check that there is a GitLab authn provider corresponding to this GitLab instance
@@ -79,28 +73,16 @@ func newAuthzProvider(urn string, a *schema.GitLabAuthorization, instanceURL, to
 			return nil, fmt.Errorf("Did not find authentication provider matching %q. Check the [**site configuration**](/site-admin/configuration) to verify an entry in [`auth.providers`](https://docs.sourcegraph.com/admin/auth) exists for %s.", instanceURL, instanceURL)
 		}
 
-		minBatchThreshold := 200
-		if idp.Oauth.MinBatchingThreshold > 0 {
-			minBatchThreshold = idp.Oauth.MinBatchingThreshold
-		}
-		maxBatchRequests := 300
-		if idp.Oauth.MaxBatchRequests > 0 {
-			maxBatchRequests = idp.Oauth.MaxBatchRequests
-		}
 		return NewOAuthProvider(OAuthProviderOp{
-			URN:               urn,
-			BaseURL:           glURL,
-			Token:             token,
-			CacheTTL:          ttl,
-			MinBatchThreshold: minBatchThreshold,
-			MaxBatchRequests:  maxBatchRequests,
+			URN:     urn,
+			BaseURL: glURL,
+			Token:   token,
 		}), nil
 	case idp.Username != nil:
 		return NewSudoProvider(SudoProviderOp{
 			URN:               urn,
 			BaseURL:           glURL,
 			SudoToken:         token,
-			CacheTTL:          ttl,
 			UseNativeUsername: true,
 		}), nil
 	case idp.External != nil:
@@ -120,7 +102,6 @@ func newAuthzProvider(urn string, a *schema.GitLabAuthorization, instanceURL, to
 					},
 					GitLabProvider:    ext.GitlabProvider,
 					SudoToken:         token,
-					CacheTTL:          ttl,
 					UseNativeUsername: false,
 				}), nil
 			}

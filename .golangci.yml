@@ -48,7 +48,6 @@ linters:
     - govet
     - ineffassign
     - interfacer
-    - misspell
     - nakedret
     - nolintlint
     - rowserrcheck
@@ -66,10 +65,7 @@ run:
   timeout: 5m
 
   skip-dirs:
-    - browser
     - client
-    - web
     - ui
     - vendor
-    - shared
     - node_modules

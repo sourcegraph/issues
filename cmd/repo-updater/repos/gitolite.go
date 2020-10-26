@@ -3,7 +3,6 @@ package repos
 import (
 	"context"
 	"net/http"
-	"regexp"
 	"strings"
 
 	"github.com/sourcegraph/sourcegraph/internal/extsvc"
@@ -27,9 +26,8 @@ type GitoliteSource struct {
 	conn *schema.GitoliteConnection
 	// We ask gitserver to talk to gitolite because it holds the ssh keys
 	// required for authentication.
-	cli       *gitserver.Client
-	blacklist *regexp.Regexp
-	exclude   excludeFunc
+	cli     *gitserver.Client
+	exclude excludeFunc
 }
 
 // NewGitoliteSource returns a new GitoliteSource from the given external service.
@@ -49,13 +47,6 @@ func NewGitoliteSource(svc *ExternalService, cf *httpcli.Factory) (*GitoliteSour
 		return nil, err
 	}
 
-	var blacklist *regexp.Regexp
-	if c.Blacklist != "" {
-		if blacklist, err = regexp.Compile(c.Blacklist); err != nil {
-			return nil, err
-		}
-	}
-
 	var eb excludeBuilder
 	for _, r := range c.Exclude {
 		eb.Exact(r.Name)
@@ -67,11 +58,10 @@ func NewGitoliteSource(svc *ExternalService, cf *httpcli.Factory) (*GitoliteSour
 	}
 
 	return &GitoliteSource{
-		svc:       svc,
-		conn:      &c,
-		cli:       gitserver.NewClient(hc),
-		blacklist: blacklist,
-		exclude:   exclude,
+		svc:     svc,
+		conn:    &c,
+		cli:     gitserver.NewClient(hc),
+		exclude: exclude,
 	}, nil
 }
 
@@ -99,8 +89,7 @@ func (s GitoliteSource) ExternalServices() ExternalServices {
 
 func (s GitoliteSource) excludes(gr *gitolite.Repo, r *Repo) bool {
 	return s.exclude(gr.Name) ||
-		strings.ContainsAny(r.Name, "\\^$|()[]*?{},") ||
-		(s.blacklist != nil && s.blacklist.MatchString(r.Name))
+		strings.ContainsAny(r.Name, "\\^$|()[]*?{},")
 }
 
 func (s GitoliteSource) makeRepo(repo *gitolite.Repo) *Repo {

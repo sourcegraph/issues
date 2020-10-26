@@ -1,0 +1,44 @@
+/**
+ * Global style for user avatars.
+ */
+.user-avatar {
+    border-radius: 50%;
+}
+
+// Formats an icon so that it appears inline in the text
+// with height matching the text
+.icon-inline {
+    // SVGs already include padding to account for text baseline,
+    // so align with the bottom of the text
+    vertical-align: bottom;
+    display: inline-flex;
+    align-items: center;
+}
+
+svg.icon-inline,
+img.icon-inline,
+.icon-inline svg {
+    // TODO find a better way to scale icons that is not proportional to the font size
+    // 14px font size -> 20px icon size
+    // stylelint-disable-next-line declaration-property-unit-whitelist
+    width: (20em / 14);
+    // stylelint-disable-next-line declaration-property-unit-whitelist
+    height: (20em / 14);
+    // Match color of the text
+    fill: currentColor;
+}
+
+// Special case for the loader
+.icon-inline > .icon-loader {
+    stroke: currentColor;
+}
+
+// @sourcegraph/react-loading-spinner coloring
+.theme-light {
+    --loading-spinner-outer-color: #{rgba($gray-19, 0.3)};
+    --loading-spinner-inner-color: #{rgba($gray-19, 1)};
+}
+.theme-dark {
+    --loading-spinner-outer-color: #{rgba($white, 0.3)};
+    --loading-spinner-inner-color: #{rgba($white, 1)};
+}

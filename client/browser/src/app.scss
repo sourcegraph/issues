@@ -1,0 +1,57 @@
+@import '../../branded/src/global-styles/colors';
+
+// Bootstrap configuration before Bootstrap is imported
+$border-radius: 2px;
+$border-radius-sm: 1px;
+$border-radius-lg: 4px;
+$font-size-base: 0.875rem;
+$line-height-base: (20/14);
+
+// Media breakpoints
+$media-sm: 576px;
+$media-md: 768px;
+$media-lg: 992px;
+$media-xl: 1200px;
+
+$theme-colors-light: (
+    'secondary': $secondary-light,
+);
+
+:root {
+    --border-color: rgba(0, 0, 0, 0.125);
+}
+
+.sg-icon .icon {
+    @extend .icon-inline;
+    display: flex;
+}
+
+// Note that we define this before selection highlights so that it will override
+// the styles of symbol that has both classes applied.
+.sourcegraph-document-highlight {
+    background-color: var(--secondary);
+}
+
+.selection-highlight,
+.selection-highlight span,
+.selection-highlight-sticky,
+.selection-highlight-sticky span {
+    background-color: rgba(255, 192, 120, 0.5);
+}
+
+@import 'bootstrap/scss/functions';
+@import 'bootstrap/scss/variables';
+@import 'bootstrap/scss/mixins';
+@import 'bootstrap/scss/utilities/text';
+@import 'bootstrap/scss/utilities/screenreaders';
+@import '../../shared/src/global-styles/icons';
+@import './highlight';
+@import './shared/components/CodeViewToolbar.scss';
+@import './shared/code-hosts/bitbucket/style.scss';
+@import './shared/code-hosts/gitlab/style.scss';
+@import './shared/code-hosts/github/style.scss';
+@import './shared/code-hosts/phabricator/style.scss';
+@import './shared/code-hosts/shared/HoverOverlay.scss';
+@import './shared/code-hosts/shared/ViewOnSourcegraphButton';
+@import './shared/code-hosts/shared/nativeTooltips';
+@import './shared';

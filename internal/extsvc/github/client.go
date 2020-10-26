@@ -21,17 +21,18 @@ import (
 	"github.com/graphql-go/graphql/language/parser"
 	"github.com/graphql-go/graphql/language/visitor"
 	"github.com/pkg/errors"
+	"golang.org/x/time/rate"
+
 	"github.com/sourcegraph/sourcegraph/internal/env"
 	"github.com/sourcegraph/sourcegraph/internal/httpcli"
 	"github.com/sourcegraph/sourcegraph/internal/metrics"
 	"github.com/sourcegraph/sourcegraph/internal/ratelimit"
 	"github.com/sourcegraph/sourcegraph/internal/rcache"
 	"github.com/sourcegraph/sourcegraph/internal/trace/ot"
-	"golang.org/x/time/rate"
 )
 
 var (
-	gitHubDisable, _ = strconv.ParseBool(env.Get("SRC_GITHUB_DISABLE", "false", "disables communication with GitHub instances. Used to test GitHub service degredation"))
+	gitHubDisable, _ = strconv.ParseBool(env.Get("SRC_GITHUB_DISABLE", "false", "disables communication with GitHub instances. Used to test GitHub service degradation"))
 	githubProxyURL   = func() *url.URL {
 		url, err := url.Parse(env.Get("GITHUB_BASE_URL", "http://github-proxy", "base URL for GitHub.com API (used for github-proxy)"))
 		if err != nil {
@@ -131,7 +132,7 @@ func NewClient(apiURL *url.URL, token string, cli httpcli.Doer) *Client {
 		cli = disabledClient{}
 	}
 	if cli == nil {
-		cli = http.DefaultClient
+		cli = httpcli.ExternalDoer()
 	}
 
 	cli = requestCounter.Doer(cli, func(u *url.URL) string {
@@ -467,6 +468,9 @@ func IsNotFound(err error) bool {
 	if err == ErrNotFound || errors.Cause(err) == ErrNotFound {
 		return true
 	}
+	if _, ok := err.(ErrPullRequestNotFound); ok {
+		return true
+	}
 	if HTTPErrorCode(err) == http.StatusNotFound {
 		return true
 	}
@@ -545,3 +549,10 @@ var ErrIncompleteResults = errors.New("github repository search returned incompl
 
 // ErrPullRequestAlreadyExists is when the requested GitHub Pull Request already exists.
 var ErrPullRequestAlreadyExists = errors.New("GitHub pull request already exists")
+
+// ErrPullRequestNotFound is when the requested GitHub Pull Request doesn't exist.
+type ErrPullRequestNotFound int
+
+func (e ErrPullRequestNotFound) Error() string {
+	return fmt.Sprintf("GitHub pull requests not found: %d", e)
+}

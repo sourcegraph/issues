@@ -1,0 +1,33 @@
+@import 'bootstrap/scss/forms';
+@import 'bootstrap/scss/custom-forms';
+@import 'bootstrap/scss/input-group';
+
+.theme-dark {
+    --input-bg: #0e121b; // even darker than --color-bg-1
+    --input-disabled-bg: var(--color-bg-3);
+    --input-border-color: var(--border-color);
+    --input-color: var(--body-color);
+    --input-placeholder-color: var(--text-muted);
+    --input-group-addon-color: var(--body-color);
+    --input-group-addon-bg: var(--color-bg-4);
+    --input-group-addon-border-color: var(--color-bg-4);
+}
+
+.theme-light {
+    --input-bg: var(--color-bg-1);
+    --input-disabled-bg: var(--color-bg-3);
+    --input-border-color: var(--border-color);
+    --input-color: var(--body-color);
+    --input-placeholder-color: var(--text-muted);
+    --input-group-addon-color: var(--body-color);
+    --input-group-addon-bg: var(--color-bg-4);
+    --input-group-addon-border-color: var(--color-bg-4);
+}
+
+// Prevent Firefox's default red outline for inputs
+:not(output):-moz-ui-invalid:not(:focus) {
+    box-shadow: none;
+}
+:not(output):-moz-ui-invalid:-moz-focusring:not(:focus) {
+    box-shadow: none;
+}

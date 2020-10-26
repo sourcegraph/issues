@@ -1,0 +1,33 @@
+{
+  "extends": "../../tsconfig.json",
+  "references": [{ "path": "../shared" }, { "path": "../branded" }, { "path": "../../schema" }],
+  "compilerOptions": {
+    "module": "commonjs",
+    "baseUrl": ".",
+    "paths": {
+      "*": ["src/types/*", "../shared/src/types/*", "*"],
+    },
+    "jsx": "react",
+    "resolveJsonModule": true,
+    "rootDir": ".",
+    "outDir": "out",
+    "plugins": [
+      {
+        "name": "ts-graphql-plugin",
+        "schema": "../../cmd/frontend/graphqlbackend/schema.graphql",
+        "tag": "gql",
+      },
+    ],
+  },
+  "include": ["**/*", ".*", "src/**/*.json", "src/types/**/*.d.ts"],
+  "exclude": [
+    "out",
+    "node_modules",
+    "code-intel-extensions",
+    "../../node_modules",
+    "./build/**/*",
+    "coverage",
+    "stories", // TODO fix type errors and include
+    "src/end-to-end",
+  ],
+}

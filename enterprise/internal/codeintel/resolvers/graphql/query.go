@@ -17,6 +17,9 @@ const DefaultDiagnosticsPageSize = 100
 // ErrIllegalLimit occurs when the user requests less than one object per page.
 var ErrIllegalLimit = errors.New("illegal limit")
 
+// ErrIllegalBounds occurs when a negative or zero-width bound is supplied by the user.
+var ErrIllegalBounds = errors.New("illegal bounds")
+
 // QueryResolver is the main interface to bundle-related operations exposed to the GraphQL API. This
 // resolver concerns itself with GraphQL/API-specific behaviors (auth, validation, marshaling, etc.).
 // All code intel-specific behavior is delegated to the underlying resolver instance, which is defined
@@ -38,6 +41,22 @@ func NewQueryResolver(resolver resolvers.QueryResolver, locationResolver *Cached
 
 func (r *QueryResolver) ToGitTreeLSIFData() (gql.GitTreeLSIFDataResolver, bool) { return r, true }
 func (r *QueryResolver) ToGitBlobLSIFData() (gql.GitBlobLSIFDataResolver, bool) { return r, true }
+
+func (r *QueryResolver) Ranges(ctx context.Context, args *gql.LSIFRangesArgs) (gql.CodeIntelligenceRangeConnectionResolver, error) {
+	if args.StartLine < 0 || args.EndLine < args.StartLine {
+		return nil, ErrIllegalBounds
+	}
+
+	ranges, err := r.resolver.Ranges(ctx, int(args.StartLine), int(args.EndLine))
+	if err != nil {
+		return nil, err
+	}
+
+	return &CodeIntelligenceRangeConnectionResolver{
+		ranges:           ranges,
+		locationResolver: r.locationResolver,
+	}, nil
+}
 
 func (r *QueryResolver) Definitions(ctx context.Context, args *gql.LSIFQueryPositionArgs) (gql.LocationConnectionResolver, error) {
 	locations, err := r.resolver.Definitions(ctx, int(args.Line), int(args.Character))

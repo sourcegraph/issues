@@ -1,0 +1,169 @@
+// Media breakpoints
+$media-sm: 576px;
+$media-md: 768px;
+$media-lg: 992px;
+$media-xl: 1200px;
+
+@import './colors.scss';
+
+// Bootstrap configuration before Bootstrap is imported
+$border-radius: 2px;
+$border-radius-sm: 1px;
+$border-radius-lg: 4px;
+$font-size-base: 0.875rem;
+$line-height-base: (20/14);
+
+$box-shadow: 0 0.25rem 0.5rem rgba($gray-19, 0.07);
+
+$grid-gutter-width: 1.5rem;
+
+// No max width except for xl.
+$container-max-widths: (
+    xl: 1140px,
+);
+
+$body-color: var(--body-color);
+$body-bg: var(--body-bg);
+
+$text-muted: var(--text-muted);
+
+$border-color: var(--border-color);
+
+// Links
+
+$link-color: var(--link-color);
+$link-hover-color: var(--link-hover-color);
+
+// Alerts
+
+$alert-bg-level: 5;
+$alert-border-level: -1;
+$alert-color-level: -10;
+
+$alert-bg-level-light: -10;
+$alert-border-level-light: -9;
+$alert-color-level-light: 6;
+
+$alert-padding-y: 0.75rem;
+$alert-padding-x: 0.75rem;
+
+// Badges
+
+$badge-font-size: 0.75em;
+$badge-font-weight: 600;
+$badge-padding-y: 0.34em;
+$badge-padding-x: 0.6em;
+
+// Tooltips
+
+$tooltip-bg: $gray-19;
+
+// Forms
+
+$form-check-input-margin-y: 0.2em;
+$input-btn-focus-width: 2px;
+$input-focus-border-color: $primary;
+// The default focus ring for buttons is very hard to see, raise opacity.
+// We only show the focus ring when using the keyboard, when the focus ring
+// should be clearly visible.
+$btn-focus-box-shadow: 0 0 0 $input-btn-focus-width rgba($primary, 0.8);
+
+// Forms don't manipulate the colors at compile time,
+// which is why we can use CSS variables for theming here
+// That's nice because the forms theming CSS would otherwise
+// be way more complex than it is for other components
+$input-bg: var(--input-bg);
+$input-disabled-bg: var(--input-disabled-bg);
+$input-border-color: var(--input-border-color);
+$input-color: var(--input-color);
+$input-placeholder-color: var(--input-placeholder-color);
+$input-group-addon-color: var(--input-group-addon-color);
+$input-group-addon-bg: var(--input-group-addon-bg);
+$input-group-addon-border-color: var(--input-group-addon-border-color);
+
+// Dropdown
+$dropdown-bg: var(--dropdown-bg);
+$dropdown-border-color: var(--dropdown-border-color);
+$dropdown-divider-bg: var(--border-color);
+$dropdown-link-color: var(--body-color);
+$dropdown-link-hover-color: var(--body-color);
+$dropdown-link-hover-bg: var(--dropdown-link-hover-bg);
+$dropdown-link-active-color: #ffffff;
+$dropdown-link-active-bg: var(--primary);
+$dropdown-link-disabled-color: var(--text-muted);
+$dropdown-header-color: var(--dropdown-header-color);
+$dropdown-item-padding-y: 0.25rem;
+$dropdown-item-padding-x: 0.5rem;
+$dropdown-padding-y: $dropdown-item-padding-y;
+
+// Tables
+
+$table-cell-padding: 0.625rem;
+$table-border-color: var(--border-color);
+
+// Progress
+$progress-height: auto;
+
+// Collapsible
+$collapsible-expand-btn-width: 1.25rem;
+
+$hr-border-color: var(--border-color);
+$hr-margin-y: 0.25rem;
+
+@import 'bootstrap/scss/functions';
+@import 'bootstrap/scss/variables';
+@import 'bootstrap/scss/mixins';
+@import 'bootstrap/scss/reboot';
+@import 'bootstrap/scss/utilities';
+@import 'bootstrap/scss/grid';
+@import 'bootstrap/scss/progress';
+@import 'bootstrap/scss/tooltip';
+@import 'bootstrap/scss/transitions';
+@import '../../../shared/src/global-styles/icons';
+@import './background';
+@import './badge';
+@import './card';
+@import './dropdown';
+@import './modal';
+@import './popover';
+@import './nav';
+@import './type';
+@import './list-group';
+@import './tables';
+@import './code';
+@import './buttons';
+@import './alert';
+@import './forms';
+@import './highlight';
+@import './web-content';
+
+* {
+    box-sizing: border-box;
+}
+
+html {
+    // Base for layout rem values
+    font-size: 16px;
+}
+
+// Our simple popovers only need these styles. We don't want the caret or special font sizes from
+// Bootstrap's popover CSS.
+.popover-inner {
+    background-color: var(--body-bg);
+    border: solid 1px var(--border-color);
+    border-radius: $border-radius;
+}
+
+// Show a focus ring when performing keyboard navigation. Uses the polyfill at
+// https://github.com/WICG/focus-visible because few browsers support :focus-visible.
+:focus:not(:focus-visible) {
+    outline: none;
+}
+:focus-visible {
+    outline: 0;
+    box-shadow: $btn-focus-box-shadow;
+}
+
+.cursor-pointer {
+    cursor: pointer;
+}

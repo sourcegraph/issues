@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 
-# This function installs the comby dependency for cmd/searcher and
-# cmd/replacer. The CI pipeline calls this script to install or upgrade comby
+# This function installs the comby dependency for cmd/searcher.
+# The CI pipeline calls this script to install or upgrade comby
 # for tests or development environments.
-REQUIRE_VERSION="0.14.1"
+REQUIRE_VERSION="0.18.1"
 
 RELEASE_VERSION=$REQUIRE_VERSION
 RELEASE_TAG=$REQUIRE_VERSION

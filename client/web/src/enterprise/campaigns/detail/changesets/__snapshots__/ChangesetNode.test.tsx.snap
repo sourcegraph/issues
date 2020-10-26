@@ -1,0 +1,39 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`ChangesetNode renders ExternalChangeset 1`] = `
+<Fragment>
+  <span
+    className="changeset-node__separator"
+  />
+  <ExternalChangesetNode
+    history="[History]"
+    isLightTheme={true}
+    location="[Location path=/campaigns]"
+    node={
+      Object {
+        "__typename": "ExternalChangeset",
+      }
+    }
+    viewerCanAdminister={false}
+  />
+</Fragment>
+`;
+
+exports[`ChangesetNode renders HiddenExternalChangeset 1`] = `
+<Fragment>
+  <span
+    className="changeset-node__separator"
+  />
+  <HiddenExternalChangesetNode
+    history="[History]"
+    isLightTheme={true}
+    location="[Location path=/campaigns]"
+    node={
+      Object {
+        "__typename": "HiddenExternalChangeset",
+      }
+    }
+    viewerCanAdminister={false}
+  />
+</Fragment>
+`;

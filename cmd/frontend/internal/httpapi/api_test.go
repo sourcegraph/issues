@@ -18,7 +18,8 @@ func newTest() *httptestutil.Client {
 	return httptestutil.NewTest(NewHandler(
 		router.New(mux.NewRouter()),
 		nil,
-		enterpriseServices.GithubWebhook,
+		enterpriseServices.GitHubWebhook,
+		enterpriseServices.GitLabWebhook,
 		enterpriseServices.BitbucketServerWebhook,
 		enterpriseServices.NewCodeIntelUploadHandler,
 	))

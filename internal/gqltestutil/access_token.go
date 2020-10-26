@@ -26,7 +26,7 @@ mutation CreateAccessToken($user: ID!, $scopes: [String!]!, $note: String!) {
 			} `json:"createAccessToken"`
 		} `json:"data"`
 	}
-	err := c.GraphQL("", query, variables, &resp)
+	err := c.GraphQL("", "", query, variables, &resp)
 	if err != nil {
 		return "", errors.Wrap(err, "request GraphQL")
 	}
@@ -45,7 +45,7 @@ mutation DeleteAccessToken($token: String!) {
 	variables := map[string]interface{}{
 		"token": token,
 	}
-	err := c.GraphQL("", query, variables, nil)
+	err := c.GraphQL("", "", query, variables, nil)
 	if err != nil {
 		return errors.Wrap(err, "request GraphQL")
 	}

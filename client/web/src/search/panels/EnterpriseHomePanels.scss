@@ -1,0 +1,13 @@
+@import './PanelContainer.scss';
+@import './RecentSearchesPanel.scss';
+@import './RepositoriesPanel.scss';
+@import './RepogroupPanel.scss';
+
+.home-panels {
+    margin-top: 1rem;
+    max-width: 90%;
+
+    &__panel {
+        height: 15rem;
+    }
+}

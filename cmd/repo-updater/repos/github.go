@@ -151,25 +151,41 @@ func (s GithubSource) ExternalServices() ExternalServices {
 	return ExternalServices{s.svc}
 }
 
+// Type guards.
 var _ ChangesetSource = GithubSource{}
+var _ DraftChangesetSource = GithubSource{}
 
-// CreateChangeset creates the given *Changeset in the code host.
+// CreateChangeset creates the given changeset on the code host.
 func (s GithubSource) CreateChangeset(ctx context.Context, c *Changeset) (bool, error) {
-	var exists bool
-	repo := c.Repo.Metadata.(*github.Repository)
+	input := buildCreatePullRequestInput(c)
+	return s.createChangeset(ctx, c, input)
+}
 
-	pr, err := s.client.CreatePullRequest(ctx, &github.CreatePullRequestInput{
-		RepositoryID: repo.ID,
+// CreateDraftChangeset creates the given changeset on the code host in draft mode.
+func (s GithubSource) CreateDraftChangeset(ctx context.Context, c *Changeset) (bool, error) {
+	input := buildCreatePullRequestInput(c)
+	input.Draft = true
+	return s.createChangeset(ctx, c, input)
+}
+
+func buildCreatePullRequestInput(c *Changeset) *github.CreatePullRequestInput {
+	return &github.CreatePullRequestInput{
+		RepositoryID: c.Repo.Metadata.(*github.Repository).ID,
 		Title:        c.Title,
 		Body:         c.Body,
 		HeadRefName:  git.AbbreviateRef(c.HeadRef),
 		BaseRefName:  git.AbbreviateRef(c.BaseRef),
-	})
+	}
+}
 
+func (s GithubSource) createChangeset(ctx context.Context, c *Changeset, prInput *github.CreatePullRequestInput) (bool, error) {
+	var exists bool
+	pr, err := s.client.CreatePullRequest(ctx, prInput)
 	if err != nil {
 		if err != github.ErrPullRequestAlreadyExists {
 			return exists, err
 		}
+		repo := c.Repo.Metadata.(*github.Repository)
 		owner, name, err := github.SplitRepositoryNameWithOwner(repo.NameWithOwner)
 		if err != nil {
 			return exists, errors.Wrap(err, "getting repo owner and name")
@@ -201,36 +217,46 @@ func (s GithubSource) CloseChangeset(ctx context.Context, c *Changeset) error {
 		return err
 	}
 
-	c.Changeset.Metadata = pr
-
-	return nil
+	return c.Changeset.SetMetadata(pr)
 }
 
-// LoadChangesets loads the latest state of the given Changesets from the codehost.
-func (s GithubSource) LoadChangesets(ctx context.Context, cs ...*Changeset) error {
-	prs := make([]*github.PullRequest, len(cs))
-	for i := range cs {
-		repo := cs[i].Repo.Metadata.(*github.Repository)
-		number, err := strconv.ParseInt(cs[i].ExternalID, 10, 64)
-		if err != nil {
-			return errors.Wrap(err, "parsing changeset external id")
-		}
-
-		prs[i] = &github.PullRequest{
-			RepoWithOwner: repo.NameWithOwner,
-			Number:        number,
-		}
+// UndraftChangeset will update the Changeset on the source to be not in draft mode anymore.
+func (s GithubSource) UndraftChangeset(ctx context.Context, c *Changeset) error {
+	pr, ok := c.Changeset.Metadata.(*github.PullRequest)
+	if !ok {
+		return errors.New("Changeset is not a GitHub pull request")
 	}
 
-	err := s.client.LoadPullRequests(ctx, prs...)
+	err := s.client.MarkPullRequestReadyForReview(ctx, pr)
 	if err != nil {
 		return err
 	}
 
-	for i := range cs {
-		if err := cs[i].SetMetadata(prs[i]); err != nil {
-			return errors.Wrap(err, "setting changeset metadata")
+	return c.Changeset.SetMetadata(pr)
+}
+
+// LoadChangeset loads the latest state of the given Changeset from the codehost.
+func (s GithubSource) LoadChangeset(ctx context.Context, cs *Changeset) error {
+	repo := cs.Repo.Metadata.(*github.Repository)
+	number, err := strconv.ParseInt(cs.ExternalID, 10, 64)
+	if err != nil {
+		return errors.Wrap(err, "parsing changeset external id")
+	}
+
+	pr := &github.PullRequest{
+		RepoWithOwner: repo.NameWithOwner,
+		Number:        number,
+	}
+
+	if err := s.client.LoadPullRequest(ctx, pr); err != nil {
+		if github.IsNotFound(err) {
+			return ChangesetNotFoundError{Changeset: cs}
 		}
+		return err
+	}
+
+	if err := cs.SetMetadata(pr); err != nil {
+		return errors.Wrap(err, "setting changeset metadata")
 	}
 
 	return nil
@@ -254,9 +280,22 @@ func (s GithubSource) UpdateChangeset(ctx context.Context, c *Changeset) error {
 		return err
 	}
 
-	c.Changeset.Metadata = updated
+	return c.Changeset.SetMetadata(updated)
+}
 
-	return nil
+// ReopenChangeset reopens the given *Changeset on the code host.
+func (s GithubSource) ReopenChangeset(ctx context.Context, c *Changeset) error {
+	pr, ok := c.Changeset.Metadata.(*github.PullRequest)
+	if !ok {
+		return errors.New("Changeset is not a GitHub pull request")
+	}
+
+	err := s.client.ReopenPullRequest(ctx, pr)
+	if err != nil {
+		return err
+	}
+
+	return c.Changeset.SetMetadata(pr)
 }
 
 // GetRepo returns the Github repository with the given name and owner

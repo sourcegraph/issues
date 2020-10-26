@@ -1,0 +1,55 @@
+.suggestion {
+    height: 2.5rem;
+    padding: 0 0.5rem;
+
+    display: flex;
+    align-items: center;
+    overflow: hidden;
+
+    text-overflow: ellipsis;
+    line-height: 2.5rem;
+    white-space: nowrap;
+
+    background-color: var(--color-bg-1);
+    border-top: 1px solid var(--border-color);
+
+    &:first-child {
+        border-top: none;
+    }
+
+    cursor: pointer;
+
+    &--selected,
+    &:hover {
+        background-color: var(--color-bg-2);
+    }
+
+    &__icon {
+        flex: 0 0 auto;
+        $width-height: 1.25rem !important;
+        height: $width-height;
+        width: $width-height;
+    }
+
+    &__title {
+        margin-left: 0.25rem;
+    }
+
+    &__description {
+        flex: 1 1 auto;
+        margin-left: 0.35rem;
+        opacity: 0.6;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    &__highlighted-query {
+        color: #ffffff;
+    }
+
+    &__action {
+        flex: 0 0 auto;
+        margin-right: 0.5rem;
+    }
+}

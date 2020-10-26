@@ -2,6 +2,7 @@
 package types
 
 import (
+	"database/sql"
 	"time"
 
 	"github.com/sourcegraph/sourcegraph/internal/api"
@@ -17,17 +18,36 @@ type RepoFields struct {
 	// Description is a brief description of the repository.
 	Description string
 
-	// DEPRECATED: this field is always empty for new repositories as of
-	// https://github.com/sourcegraph/sourcegraph/issues/2586. Do not use it.
-	//
-	// Language is the primary programming language used in this repository.
-	Language string
-
 	// Fork is whether this repository is a fork of another repository.
 	Fork bool
 
 	// Archived is whether this repository has been archived.
 	Archived bool
+
+	// Cloned is whether this repository is cloned.
+	Cloned bool
+
+	// CreatedAt indicates when the repository record was created.
+	CreatedAt time.Time
+
+	// UpdatedAt is when this repository's metadata was last updated on Sourcegraph.
+	UpdatedAt time.Time
+
+	// DeletedAt is when this repository was soft-deleted from Sourcegraph.
+	DeletedAt time.Time
+
+	// Metadata contains the raw source code host JSON metadata.
+	Metadata interface{}
+
+	// Sources identifies all the repo sources this Repo belongs to.
+	// The key is a URN created by extsvc.URN
+	Sources map[string]*SourceInfo
+}
+
+// A SourceInfo represents a source a Repo belongs to (such as an external service).
+type SourceInfo struct {
+	ID       string
+	CloneURL string
 }
 
 // Repo represents a source code repository.
@@ -61,13 +81,16 @@ func (rs Repos) Swap(i, j int)      { rs[i], rs[j] = rs[j], rs[i] }
 
 // ExternalService is a connection to an external service.
 type ExternalService struct {
-	ID          int64
-	Kind        string
-	DisplayName string
-	Config      string
-	CreatedAt   time.Time
-	UpdatedAt   time.Time
-	DeletedAt   *time.Time
+	ID              int64
+	Kind            string
+	DisplayName     string
+	Config          string
+	CreatedAt       time.Time
+	UpdatedAt       time.Time
+	DeletedAt       *time.Time
+	LastSyncAt      *time.Time
+	NextSyncAt      *time.Time
+	NamespaceUserID *int32
 }
 
 // URN returns a unique resource identifier of this external service.
@@ -82,15 +105,16 @@ type GlobalState struct {
 
 // User represents a registered user.
 type User struct {
-	ID          int32
-	Username    string
-	DisplayName string
-	AvatarURL   string
-	CreatedAt   time.Time
-	UpdatedAt   time.Time
-	SiteAdmin   bool
-	BuiltinAuth bool
-	Tags        []string
+	ID                    int32
+	Username              string
+	DisplayName           string
+	AvatarURL             string
+	CreatedAt             time.Time
+	UpdatedAt             time.Time
+	SiteAdmin             bool
+	BuiltinAuth           bool
+	Tags                  []string
+	InvalidatedSessionsAt time.Time
 }
 
 type Org struct {
@@ -159,24 +183,6 @@ type SiteActivityPeriod struct {
 	RegisteredUserCount  int32
 	AnonymousUserCount   int32
 	IntegrationUserCount int32
-	Stages               *Stages
-}
-
-// NOTE: DO NOT alter this struct without making a symmetric change
-// to the updatecheck handler. This struct is marshalled and sent to
-// BigQuery, which requires the input match its schema exactly.
-type Stages struct {
-	Manage    int32 `json:"mng"`
-	Plan      int32 `json:"plan"`
-	Code      int32 `json:"code"`
-	Review    int32 `json:"rev"`
-	Verify    int32 `json:"ver"`
-	Package   int32 `json:"pkg"`
-	Deploy    int32 `json:"depl"`
-	Configure int32 `json:"conf"`
-	Monitor   int32 `json:"mtr"`
-	Secure    int32 `json:"sec"`
-	Automate  int32 `json:"auto"`
 }
 
 // NOTE: DO NOT alter this struct without making a symmetric change
@@ -222,18 +228,8 @@ type CodeIntelEventCategoryStatistics struct {
 // to the updatecheck handler. This struct is marshalled and sent to
 // BigQuery, which requires the input match its schema exactly.
 type CodeIntelEventStatistics struct {
-	UsersCount     int32
-	EventsCount    *int32
-	EventLatencies *CodeIntelEventLatencies
-}
-
-// NOTE: DO NOT alter this struct without making a symmetric change
-// to the updatecheck handler. This struct is marshalled and sent to
-// BigQuery, which requires the input match its schema exactly.
-type CodeIntelEventLatencies struct {
-	P50 float64
-	P90 float64
-	P99 float64
+	UsersCount  int32
+	EventsCount *int32
 }
 
 // NOTE: DO NOT alter this struct without making a symmetric change
@@ -371,4 +367,59 @@ type Event struct {
 	Source          string
 	Version         string
 	Timestamp       time.Time
+}
+
+// GrowthStatistics represents the total users that were created,
+// deleted, resurrected, churned and retained over the current month.
+type GrowthStatistics struct {
+	DeletedUsers     int32
+	CreatedUsers     int32
+	ResurrectedUsers int32
+	ChurnedUsers     int32
+	RetainedUsers    int32
+}
+
+// SavedSearches represents the total number of saved searches, users
+// using saved searches, and usage of saved searches.
+type SavedSearches struct {
+	TotalSavedSearches   int32
+	UniqueUsers          int32
+	NotificationsSent    int32
+	NotificationsClicked int32
+	UniqueUserPageViews  int32
+	OrgSavedSearches     int32
+}
+
+// Panel homepage represents interaction data on the
+// enterprise homepage panels.
+type HomepagePanels struct {
+	RecentFilesClickedPercentage           float64
+	RecentSearchClickedPercentage          float64
+	RecentRepositoriesClickedPercentage    float64
+	SavedSearchesClickedPercentage         float64
+	NewSavedSearchesClickedPercentage      float64
+	TotalPanelViews                        float64
+	UsersFilesClickedPercentage            float64
+	UsersSearchClickedPercentage           float64
+	UsersRepositoriesClickedPercentage     float64
+	UsersSavedSearchesClickedPercentage    float64
+	UsersNewSavedSearchesClickedPercentage float64
+	PercentUsersShown                      float64
+}
+
+// Secret represents the secrets table
+type Secret struct {
+	ID int32
+
+	// The table containing an object whose token is being encrypted.
+	SourceType sql.NullString
+
+	// The ID of the object in the SourceType table.
+	SourceID sql.NullInt32
+
+	// KeyName represents a unique key for the case where we're storing key-value pairs.
+	KeyName sql.NullString
+
+	// Value contains the encrypted string
+	Value string
 }

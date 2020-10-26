@@ -11,13 +11,14 @@ import (
 	"github.com/gorilla/schema"
 	"github.com/graph-gophers/graphql-go"
 	"github.com/inconshreveable/log15"
-	opentracing "github.com/opentracing/opentracing-go"
+	"github.com/opentracing/opentracing-go"
 	"github.com/sourcegraph/sourcegraph/cmd/frontend/backend"
 	"github.com/sourcegraph/sourcegraph/cmd/frontend/enterprise"
 	"github.com/sourcegraph/sourcegraph/cmd/frontend/envvar"
-	"github.com/sourcegraph/sourcegraph/cmd/frontend/internal/app/pkg/updatecheck"
+	"github.com/sourcegraph/sourcegraph/cmd/frontend/internal/app/updatecheck"
+	"github.com/sourcegraph/sourcegraph/cmd/frontend/internal/handlerutil"
 	apirouter "github.com/sourcegraph/sourcegraph/cmd/frontend/internal/httpapi/router"
-	"github.com/sourcegraph/sourcegraph/cmd/frontend/internal/pkg/handlerutil"
+	frontendsearch "github.com/sourcegraph/sourcegraph/cmd/frontend/internal/search"
 	"github.com/sourcegraph/sourcegraph/cmd/frontend/registry"
 	"github.com/sourcegraph/sourcegraph/internal/env"
 	"github.com/sourcegraph/sourcegraph/internal/gitserver"
@@ -31,7 +32,7 @@ import (
 //
 // 🚨 SECURITY: The caller MUST wrap the returned handler in middleware that checks authentication
 // and sets the actor in the request context.
-func NewHandler(m *mux.Router, schema *graphql.Schema, githubWebhook, bitbucketServerWebhook http.Handler, newCodeIntelUploadHandler enterprise.NewCodeIntelUploadHandler) http.Handler {
+func NewHandler(m *mux.Router, schema *graphql.Schema, githubWebhook, gitlabWebhook, bitbucketServerWebhook http.Handler, newCodeIntelUploadHandler enterprise.NewCodeIntelUploadHandler) http.Handler {
 	if m == nil {
 		m = apirouter.New(nil)
 	}
@@ -50,6 +51,7 @@ func NewHandler(m *mux.Router, schema *graphql.Schema, githubWebhook, bitbucketS
 	m.Get(apirouter.RepoRefresh).Handler(trace.TraceRoute(handler(serveRepoRefresh)))
 
 	m.Get(apirouter.GitHubWebhooks).Handler(trace.TraceRoute(githubWebhook))
+	m.Get(apirouter.GitLabWebhooks).Handler(trace.TraceRoute(gitlabWebhook))
 	m.Get(apirouter.BitbucketServerWebhooks).Handler(trace.TraceRoute(bitbucketServerWebhook))
 	m.Get(apirouter.LSIFUpload).Handler(trace.TraceRoute(newCodeIntelUploadHandler(false)))
 
@@ -58,6 +60,8 @@ func NewHandler(m *mux.Router, schema *graphql.Schema, githubWebhook, bitbucketS
 	}
 
 	m.Get(apirouter.GraphQL).Handler(trace.TraceRoute(handler(serveGraphQL(schema))))
+
+	m.Get(apirouter.SearchStream).Handler(trace.TraceRoute(http.HandlerFunc(frontendsearch.ServeStream)))
 
 	// Return the minimum src-cli version that's compatible with this instance
 	m.Get(apirouter.SrcCliVersion).Handler(trace.TraceRoute(handler(srcCliVersionServe)))
@@ -98,7 +102,6 @@ func NewInternalHandler(m *mux.Router, schema *graphql.Schema, newCodeIntelUploa
 		Repos:                 backend.Repos,
 		Indexers:              search.Indexers(),
 	}
-	m.Get(apirouter.ReposList).Handler(trace.TraceRoute(handler(reposList.serveList)))
 	m.Get(apirouter.ReposIndex).Handler(trace.TraceRoute(handler(reposList.serveIndex)))
 	m.Get(apirouter.ReposListEnabled).Handler(trace.TraceRoute(handler(serveReposListEnabled)))
 	m.Get(apirouter.ReposGetByName).Handler(trace.TraceRoute(handler(serveReposGetByName)))

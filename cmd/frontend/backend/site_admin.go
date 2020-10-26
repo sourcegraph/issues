@@ -5,9 +5,9 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/sourcegraph/sourcegraph/cmd/frontend/db"
 	"github.com/sourcegraph/sourcegraph/cmd/frontend/types"
 	"github.com/sourcegraph/sourcegraph/internal/actor"
+	"github.com/sourcegraph/sourcegraph/internal/db"
 	"github.com/sourcegraph/sourcegraph/internal/errcode"
 )
 
@@ -56,7 +56,8 @@ type InsufficientAuthorizationError struct {
 	Message string
 }
 
-func (e *InsufficientAuthorizationError) Error() string { return e.Message }
+func (e *InsufficientAuthorizationError) Error() string      { return e.Message }
+func (e *InsufficientAuthorizationError) Unauthorized() bool { return true }
 
 // CheckSiteAdminOrSameUser returns an error if the user is NEITHER (1) a
 // site admin NOR (2) the user specified by subjectUserID.

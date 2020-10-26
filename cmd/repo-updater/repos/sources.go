@@ -74,20 +74,6 @@ func NewSource(svc *ExternalService, cf *httpcli.Factory) (Source, error) {
 	}
 }
 
-// NewChangesetSource returns a new ChangesetSource from the supplied ExternalService using the supplied
-// rate limiter
-func NewChangesetSource(svc *ExternalService, cf *httpcli.Factory) (ChangesetSource, error) {
-	source, err := NewSource(svc, cf)
-	if err != nil {
-		return nil, err
-	}
-	css, ok := source.(ChangesetSource)
-	if !ok {
-		return nil, fmt.Errorf("ChangesetSource cannot be created from external service %q", svc.Kind)
-	}
-	return css, nil
-}
-
 // A Source yields repositories to be stored and analysed by Sourcegraph.
 // Successive calls to its ListRepos method may yield different results.
 type Source interface {
@@ -98,12 +84,21 @@ type Source interface {
 	ExternalServices() ExternalServices
 }
 
+// A DraftChangesetSource can create draft changesets and undraft them.
+type DraftChangesetSource interface {
+	// CreateDraftChangeset will create the Changeset on the source. If it already
+	// exists, *Changeset will be populated and the return value will be
+	// true.
+	CreateDraftChangeset(context.Context, *Changeset) (bool, error)
+	// UndraftChangeset will update the Changeset on the source to be not in draft mode anymore.
+	UndraftChangeset(context.Context, *Changeset) error
+}
+
 // A ChangesetSource can load the latest state of a list of Changesets.
 type ChangesetSource interface {
-	// LoadChangesets loads the given Changesets from the sources and updates
-	// them. If a Changeset could not be found on the source, it's included in
-	// the returned slice.
-	LoadChangesets(context.Context, ...*Changeset) error
+	// LoadChangeset loads the given Changeset from the source and updates it.
+	// If the Changeset could not be found on the source, a ChangesetNotFoundError is returned.
+	LoadChangeset(context.Context, *Changeset) error
 	// CreateChangeset will create the Changeset on the source. If it already
 	// exists, *Changeset will be populated and the return value will be
 	// true.
@@ -114,28 +109,19 @@ type ChangesetSource interface {
 	CloseChangeset(context.Context, *Changeset) error
 	// UpdateChangeset can update Changesets.
 	UpdateChangeset(context.Context, *Changeset) error
+	// ReopenChangeset will reopen the Changeset on the source, if it's closed.
+	// If not, it's a noop.
+	ReopenChangeset(context.Context, *Changeset) error
 }
 
-// ChangesetsNotFoundError is returned by LoadChangesets if any of the passed
-// Changesets could not be found on the codehost.
-type ChangesetsNotFoundError struct {
-	Changesets []*Changeset
+// ChangesetNotFoundError is returned by LoadChangeset if the changeset
+// could not be found on the codehost.
+type ChangesetNotFoundError struct {
+	Changeset *Changeset
 }
 
-func (e ChangesetsNotFoundError) Error() string {
-	if len(e.Changesets) == 1 {
-		return fmt.Sprintf("Changeset with external ID %q not found", e.Changesets[0].Changeset.ExternalID)
-	}
-
-	items := make([]string, len(e.Changesets))
-	for i := range e.Changesets {
-		items[i] = fmt.Sprintf("* %q", e.Changesets[i].Changeset.ExternalID)
-	}
-
-	return fmt.Sprintf(
-		"Changesets with the following external IDs could not be found:\n\t%s\n\n",
-		strings.Join(items, "\n\t"),
-	)
+func (e ChangesetNotFoundError) Error() string {
+	return fmt.Sprintf("Changeset with external ID %s not found", e.Changeset.Changeset.ExternalID)
 }
 
 // A SourceResult is sent by a Source over a channel for each repository it
@@ -248,8 +234,10 @@ func group(srcs []Source) map[string]Sources {
 
 // listAll calls ListRepos on the given Source and collects the SourceResults
 // the Source sends over a channel into a slice of *Repo and a single error
-func listAll(ctx context.Context, src Source, observe ...func(*Repo)) ([]*Repo, error) {
+func listAll(ctx context.Context, src Source, onSourced ...func(*Repo) error) ([]*Repo, error) {
 	results := make(chan SourceResult)
+	ctx, cancel := context.WithCancel(ctx)
+	defer cancel()
 
 	go func() {
 		src.ListRepos(ctx, results)
@@ -268,8 +256,16 @@ func listAll(ctx context.Context, src Source, observe ...func(*Repo)) ([]*Repo, 
 			}
 			continue
 		}
-		for _, o := range observe {
-			o(res.Repo)
+		for _, o := range onSourced {
+			err := o(res.Repo)
+			if err != nil {
+				// onSourced has returned an error indicating we should stop sourcing.
+				// We're being defensive here in case one of the Source implementations doesn't handle
+				// cancellation correctly. We'll continue to drain the results to ensure we don't
+				// have a goroutine leak.
+				cancel()
+				errs = multierror.Append(errs, err)
+			}
 		}
 		repos = append(repos, res.Repo)
 	}

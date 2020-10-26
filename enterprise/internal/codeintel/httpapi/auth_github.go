@@ -7,7 +7,7 @@ import (
 	"net/url"
 	"strings"
 
-	multierror "github.com/hashicorp/go-multierror"
+	"github.com/hashicorp/go-multierror"
 	"github.com/pkg/errors"
 	"github.com/sourcegraph/sourcegraph/internal/extsvc/github"
 )

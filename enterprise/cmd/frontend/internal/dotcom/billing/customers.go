@@ -6,13 +6,14 @@ import (
 	"sync"
 	"time"
 
-	multierror "github.com/hashicorp/go-multierror"
+	"github.com/hashicorp/go-multierror"
 	"github.com/inconshreveable/log15"
 	"github.com/pkg/errors"
+	"github.com/stripe/stripe-go"
+	"github.com/stripe/stripe-go/customer"
+
 	"github.com/sourcegraph/sourcegraph/cmd/frontend/graphqlbackend"
 	"github.com/sourcegraph/sourcegraph/internal/db/dbconn"
-	stripe "github.com/stripe/stripe-go"
-	"github.com/stripe/stripe-go/customer"
 )
 
 // GetOrAssignUserCustomerID returns the billing customer ID associated with the user. If no billing

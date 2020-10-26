@@ -1,0 +1,164 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`ExternalChangesetNode renders an externalchangeset 1`] = `
+<Fragment>
+  <button
+    aria-label="Expand section"
+    className="btn btn-icon test-campaigns-expand-changeset d-none d-sm-block"
+    onClick={[Function]}
+    type="button"
+  >
+    <Memo(ChevronRightIcon)
+      aria-label="Expand section"
+      className="icon-inline"
+    />
+  </button>
+  <ChangesetStatusCell
+    changeset={
+      Object {
+        "__typename": "ExternalChangeset",
+        "body": "We should remove lodash",
+        "checkState": "FAILED",
+        "createdAt": "2020-01-01T00:00:00.000Z",
+        "currentSpec": Object {
+          "id": "spec-rand-id-1",
+        },
+        "diffStat": Object {
+          "added": 100,
+          "changed": 200,
+          "deleted": 100,
+        },
+        "error": null,
+        "externalID": "123",
+        "externalState": "OPEN",
+        "externalURL": Object {
+          "url": "https://github.com/sourcegraph/sourcegraph/pull/111111",
+        },
+        "id": "TestExternalChangeset",
+        "labels": Array [
+          Object {
+            "color": "93ba13",
+            "description": "Something is broken",
+            "text": "bug",
+          },
+        ],
+        "nextSyncAt": null,
+        "publicationState": "PUBLISHED",
+        "reconcilerState": "COMPLETED",
+        "repository": Object {
+          "id": "TestRepository",
+          "name": "sourcegraph",
+          "url": "github.com/sourcegraph/sourcegraph",
+        },
+        "reviewState": "PENDING",
+        "title": "Remove lodash",
+        "updatedAt": "2020-01-01T00:00:00.000Z",
+      }
+    }
+    className="external-changeset-node__state d-block d-sm-flex"
+  />
+  <ExternalChangesetInfoCell
+    className="external-changeset-node__information"
+    node={
+      Object {
+        "__typename": "ExternalChangeset",
+        "body": "We should remove lodash",
+        "checkState": "FAILED",
+        "createdAt": "2020-01-01T00:00:00.000Z",
+        "currentSpec": Object {
+          "id": "spec-rand-id-1",
+        },
+        "diffStat": Object {
+          "added": 100,
+          "changed": 200,
+          "deleted": 100,
+        },
+        "error": null,
+        "externalID": "123",
+        "externalState": "OPEN",
+        "externalURL": Object {
+          "url": "https://github.com/sourcegraph/sourcegraph/pull/111111",
+        },
+        "id": "TestExternalChangeset",
+        "labels": Array [
+          Object {
+            "color": "93ba13",
+            "description": "Something is broken",
+            "text": "bug",
+          },
+        ],
+        "nextSyncAt": null,
+        "publicationState": "PUBLISHED",
+        "reconcilerState": "COMPLETED",
+        "repository": Object {
+          "id": "TestRepository",
+          "name": "sourcegraph",
+          "url": "github.com/sourcegraph/sourcegraph",
+        },
+        "reviewState": "PENDING",
+        "title": "Remove lodash",
+        "updatedAt": "2020-01-01T00:00:00.000Z",
+      }
+    }
+    viewerCanAdminister={true}
+  />
+  <div
+    className="d-flex d-md-none justify-content-start external-changeset-node__statuses"
+  >
+    <ChangesetCheckStatusCell
+      checkState="FAILED"
+      className="mr-3"
+    />
+    <ChangesetReviewStatusCell
+      className="mr-3"
+      reviewState="PENDING"
+    />
+    <Memo(DiffStat)
+      added={100}
+      changed={200}
+      deleted={100}
+      expandedCounts={true}
+      separateLines={true}
+    />
+  </div>
+  <span
+    className="d-none d-md-inline"
+  >
+    <ChangesetCheckStatusCell
+      checkState="FAILED"
+    />
+  </span>
+  <span
+    className="d-none d-md-inline"
+  >
+    <ChangesetReviewStatusCell
+      reviewState="PENDING"
+    />
+  </span>
+  <div
+    className="d-none d-md-flex justify-content-center"
+  >
+    <Memo(DiffStat)
+      added={100}
+      changed={200}
+      deleted={100}
+      expandedCounts={true}
+      separateLines={true}
+    />
+  </div>
+  <button
+    aria-label="Expand section"
+    className="external-changeset-node__show-details btn btn-outline-secondary d-block d-sm-none test-campaigns-expand-changeset"
+    onClick={[Function]}
+    type="button"
+  >
+    <Memo(ChevronRightIcon)
+      aria-label="Expand section"
+      className="icon-inline"
+    />
+     
+    Show
+     details
+  </button>
+</Fragment>
+`;

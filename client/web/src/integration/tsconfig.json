@@ -1,0 +1,10 @@
+{
+  "extends": "../../tsconfig.json",
+  "references": [{ "path": "../.." }, { "path": "../../../shared/src/testing" }],
+  "compilerOptions": {
+    "types": ["mocha", "node"],
+    "module": "commonjs",
+  },
+  "include": ["**/*"],
+  "exclude": [],
+}

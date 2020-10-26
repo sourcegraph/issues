@@ -1,0 +1,42 @@
+.repo-revision-sidebar-symbols {
+    flex: 1 1 auto;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+
+    &-node {
+        &__link {
+            display: block;
+            padding: 0.125rem 0.5rem;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            color: $secondary;
+            &--active,
+            &:hover {
+                background-color: var(--color-bg-3);
+            }
+        }
+
+        &__name {
+            color: var(--body-color);
+        }
+
+        &__container-name {
+            margin-left: 0.25rem;
+        }
+
+        &__path {
+            &::before {
+                content: ' – ';
+            }
+        }
+
+        &__container-name,
+        &__path {
+            .theme-dark & {
+                color: #566e9f;
+            }
+        }
+    }
+}

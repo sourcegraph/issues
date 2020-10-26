@@ -7,6 +7,9 @@ echo "--- yarn"
 yarn --mutex network --frozen-lockfile --network-timeout 60000
 yarn --mutex network --cwd dev/release --frozen-lockfile --network-timeout 60000
 
+echo "--- generate"
+yarn gulp generate
+
 for cmd in "$@"; do
   echo "--- $cmd"
   yarn -s run "$cmd"

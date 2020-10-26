@@ -1,0 +1,21 @@
+.changeset-close-action {
+    &__close-flash {
+        color: $body-color;
+        animation: changeset-close-action__flash-red 2s ease-in-out;
+    }
+}
+
+@keyframes changeset-close-action__flash-red {
+    0% {
+        color: $body-color;
+    }
+    25% {
+        color: map-get($map: $theme-colors, $key: 'danger');
+    }
+    75% {
+        color: map-get($map: $theme-colors, $key: 'danger');
+    }
+    100% {
+        color: $body-color;
+    }
+}

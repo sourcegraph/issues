@@ -41,7 +41,7 @@ func handleGetProvider(ctx context.Context, w http.ResponseWriter, id string) (p
 	}
 	if err := p.Refresh(ctx); err != nil {
 		log15.Error("Error refreshing OpenID Connect auth provider.", "id", p.ConfigID(), "error", err)
-		http.Error(w, "Unexpected error refreshing OpenID Connect authentication provider. This may be due to an incorrect issuer URL. Check the logs for more details.", http.StatusInternalServerError)
+		http.Error(w, "Unexpected error refreshing OpenID Connect authentication provider. This may be due to an incorrect issuer URL. Check the logs for more details", http.StatusInternalServerError)
 		return nil, true
 	}
 	return p, false

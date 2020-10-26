@@ -16,7 +16,7 @@ main() {
     exit 1
   fi
   local found
-  found=$(grep -EHnr '(<script|<style|style=)' "${template_dir}" | grep -v '<script src=' | grep -v '<script ignore-csp' | grep -v '<div ignore-csp' | grep -v '<style ignore-csp' | 'grep -v <iframe ignore-csp' || echo -n)
+  found=$(grep -EHnr '(<script|<style|style=)' "${template_dir}" | grep -v '<script src=' | grep -v '<script ignore-csp' | grep -v '<div ignore-csp' | grep -v '<style ignore-csp' | grep -v '<iframe ignore-csp' || echo -n)
 
   if [[ ! "$found" == "" ]]; then
     echo '!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!'

@@ -120,34 +120,47 @@ func (s *store) MaybeUpdate(rawConfig conftypes.RawUnified) (updateResult, error
 // WaitUntilInitialized blocks and only returns to the caller once the store
 // has initialized with a syntactically valid configuration file (via MaybeUpdate() or Mock()).
 func (s *store) WaitUntilInitialized() {
-	mode := getMode()
-	if mode == modeServer {
-		deadlockTimeout := 5 * time.Minute
-		if IsDev(DeployType()) {
-			deadlockTimeout = 60 * time.Second
-			disable, _ := strconv.ParseBool(os.Getenv("DISABLE_CONF_DEADLOCK_DETECTOR"))
-			if disable {
-				deadlockTimeout = 24 * 365 * time.Hour
-			}
-		}
-
-		select {
-		// Frontend has initialized its configuration server.
-		case <-configurationServerFrontendOnlyInitialized:
-		// We assume that we're in an unrecoverable deadlock if frontend hasn't
-		// started its configuration server after a while.
-		case <-time.After(deadlockTimeout):
-			// The running goroutine is not necessarily the cause of the
-			// deadlock, so ask Go to dump all goroutine stack traces.
-			debug.SetTraceback("all")
-			if IsDev(DeployType()) {
-				panic("potential deadlock detected: the frontend's configuration server hasn't started after 60s indicating a deadlock may be happening. A common cause of this is calling conf.Get or conf.Watch before the frontend has started fully (e.g. inside an init function) and if that is the case you may need to invoke those functions in a separate goroutine.")
-			}
-			panic(fmt.Sprintf("(bug) frontend configuration server failed to start after %v, this may indicate the DB is inaccessible", deadlockTimeout))
-		}
+	if getMode() == modeServer {
+		s.checkDeadlock()
 	}
 
 	<-s.ready
+}
+
+func (s *store) checkDeadlock() {
+	select {
+	// Frontend has initialized its configuration server, we can return early
+	case <-configurationServerFrontendOnlyInitialized:
+		return
+	default:
+	}
+
+	deadlockTimeout := 5 * time.Minute
+	if IsDev(DeployType()) {
+		deadlockTimeout = 60 * time.Second
+		disable, _ := strconv.ParseBool(os.Getenv("DISABLE_CONF_DEADLOCK_DETECTOR"))
+		if disable {
+			deadlockTimeout = 24 * 365 * time.Hour
+		}
+	}
+
+	timer := time.NewTimer(deadlockTimeout)
+	defer timer.Stop()
+
+	select {
+	// Frontend has initialized its configuration server.
+	case <-configurationServerFrontendOnlyInitialized:
+	// We assume that we're in an unrecoverable deadlock if frontend hasn't
+	// started its configuration server after a while.
+	case <-timer.C:
+		// The running goroutine is not necessarily the cause of the
+		// deadlock, so ask Go to dump all goroutine stack traces.
+		debug.SetTraceback("all")
+		if IsDev(DeployType()) {
+			panic("potential deadlock detected: the frontend's configuration server hasn't started after 60s indicating a deadlock may be happening. A common cause of this is calling conf.Get or conf.Watch before the frontend has started fully (e.g. inside an init function) and if that is the case you may need to invoke those functions in a separate goroutine.")
+		}
+		panic(fmt.Sprintf("(bug) frontend configuration server failed to start after %v, this may indicate the DB is inaccessible", deadlockTimeout))
+	}
 }
 
 func (s *store) initialize() {

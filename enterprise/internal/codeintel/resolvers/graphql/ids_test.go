@@ -4,7 +4,7 @@ import (
 	"encoding/base64"
 	"testing"
 
-	graphql "github.com/graph-gophers/graphql-go"
+	"github.com/graph-gophers/graphql-go"
 )
 
 func TestUploadID(t *testing.T) {

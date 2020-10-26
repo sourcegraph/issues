@@ -47,7 +47,7 @@ Run `sudo ls -la ~/.sourcegraph/config` and you should see the CA and SSL certif
 ## 3. Adding SSL support to NGINX
 
 Edit the [default
-`~/.sourcegraph/config/nginx.conf`](https://github.com/sourcegraph/sourcegraph/blob/master/cmd/server/shared/assets/nginx.conf),
+`~/.sourcegraph/config/nginx.conf`](https://github.com/sourcegraph/sourcegraph/blob/main/cmd/server/shared/assets/nginx.conf),
 so that port `7080` redirects to `7443` and `7443` is served with SSL. It should look like this:
 
 ```nginx
@@ -91,7 +91,7 @@ docker container run \
   \
   --volume ~/.sourcegraph/config:/etc/sourcegraph  \
   --volume ~/.sourcegraph/data:/var/opt/sourcegraph  \
-  sourcegraph/server:3.17.3
+  sourcegraph/server:3.21.2
 ```
 
 > NOTE: We recommend removing `--publish 7080:7080` as it's not needed and traffic sent to that port is un-encrypted.

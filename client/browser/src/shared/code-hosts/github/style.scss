@@ -1,0 +1,71 @@
+.command-palette-action-item--github {
+    // Reset GitHub's 44px min-height
+    min-height: initial;
+}
+
+.action-item--github {
+    // Match GitHub's button height even if button only contains icon
+    // (no text that would push the height)
+    height: 28px;
+}
+
+.icon--github {
+    height: 16px;
+    width: 16px;
+}
+
+.code-view-toolbar--github {
+    margin-right: 4px;
+    margin-bottom: -4px;
+    text-align: right;
+}
+
+.code-view-toolbar__item--github {
+    // The space provides enough margin
+    margin-left: 0 !important;
+    margin-bottom: 4px;
+}
+
+// Blob view
+// Make sure only our code view toolbar shrinks and wraps,
+// not GitHub's UI groups
+.repository-content {
+    // Exclude tree pages
+    > .Box:not(.Box--condensed) {
+        > .Box-header:not(.Box-header--blue) {
+            > .text-mono {
+                // only let Sourcegraph toolbar shrink
+                flex-shrink: 0 !important;
+            }
+            > div:nth-child(2) {
+                > div:not(.sourcegraph-github-file-code-view-toolbar-mount) {
+                    // only let Sourcegraph toolbar shrink
+                    flex-shrink: 0;
+                    display: flex;
+                    align-items: center;
+                }
+            }
+        }
+    }
+}
+
+// Diff views
+.diff-view {
+    .file-header {
+        // Trigger a two-row layout if file path and action items don't fit all in one row.
+        flex-wrap: wrap;
+
+        .file-info {
+            // Make sure file paths don't wrap to make space for buttons
+            // (instead trigger a two-row layout if it does not fit)
+            flex: 0 2 auto !important;
+        }
+        .file-actions {
+            flex: 1 1 auto;
+            margin-left: 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+        }
+    }
+}

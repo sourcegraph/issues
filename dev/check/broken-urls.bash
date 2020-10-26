@@ -3,9 +3,9 @@
 set -e
 cd "$(dirname "${BASH_SOURCE[0]}")"/../..
 
-# Skip on non-master branches to avoid preventing us from building historical commits (eg when
+# Skip on non-default branches to avoid preventing us from building historical commits (eg when
 # backporting fixes).
-if [ "$BUILDKITE_BRANCH" != "master" ]; then
+if [[ ! "$BUILDKITE_BRANCH" =~ ^(master|main)$ ]]; then
     exit 0
 fi
 

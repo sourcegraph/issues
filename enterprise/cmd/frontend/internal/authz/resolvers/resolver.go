@@ -8,15 +8,18 @@ import (
 
 	"github.com/RoaringBitmap/roaring"
 	"github.com/graph-gophers/graphql-go"
+	"github.com/inconshreveable/log15"
 	"github.com/pkg/errors"
-	"github.com/sourcegraph/sourcegraph/cmd/frontend/authz"
+
 	"github.com/sourcegraph/sourcegraph/cmd/frontend/backend"
-	"github.com/sourcegraph/sourcegraph/cmd/frontend/db"
 	"github.com/sourcegraph/sourcegraph/cmd/frontend/globals"
 	"github.com/sourcegraph/sourcegraph/cmd/frontend/graphqlbackend"
 	"github.com/sourcegraph/sourcegraph/cmd/frontend/types"
-	edb "github.com/sourcegraph/sourcegraph/enterprise/cmd/frontend/db"
+	edb "github.com/sourcegraph/sourcegraph/enterprise/internal/db"
+	"github.com/sourcegraph/sourcegraph/enterprise/internal/licensing"
 	"github.com/sourcegraph/sourcegraph/internal/api"
+	"github.com/sourcegraph/sourcegraph/internal/authz"
+	"github.com/sourcegraph/sourcegraph/internal/db"
 	"github.com/sourcegraph/sourcegraph/internal/db/dbutil"
 	"github.com/sourcegraph/sourcegraph/internal/errcode"
 	"github.com/sourcegraph/sourcegraph/internal/extsvc"
@@ -31,6 +34,25 @@ type Resolver struct {
 	}
 }
 
+// checkLicense returns a user-facing error if the ACLs feature is not purchased
+// with the current license or any error occurred while validating the licence.
+func (r *Resolver) checkLicense() error {
+	if !licensing.EnforceTiers {
+		return nil
+	}
+
+	err := licensing.Check(licensing.FeatureACLs)
+	if err != nil {
+		if licensing.IsFeatureNotActivated(err) {
+			return err
+		}
+
+		log15.Error("authz.Resolver.checkLicense", "err", err)
+		return errors.New("Unable to check license feature, please refer to logs for actual error message.")
+	}
+	return nil
+}
+
 func NewResolver(db dbutil.DB, clock func() time.Time) graphqlbackend.AuthzResolver {
 	return &Resolver{
 		store:             edb.NewPermsStore(db, clock),
@@ -39,6 +61,10 @@ func NewResolver(db dbutil.DB, clock func() time.Time) graphqlbackend.AuthzResol
 }
 
 func (r *Resolver) SetRepositoryPermissionsForUsers(ctx context.Context, args *graphqlbackend.RepoPermsArgs) (*graphqlbackend.EmptyResponse, error) {
+	if err := r.checkLicense(); err != nil {
+		return nil, err
+	}
+
 	// 🚨 SECURITY: Only site admins can mutate repository permissions.
 	if err := backend.CheckCurrentUserIsSiteAdmin(ctx); err != nil {
 		return nil, err
@@ -128,6 +154,10 @@ func (r *Resolver) SetRepositoryPermissionsForUsers(ctx context.Context, args *g
 }
 
 func (r *Resolver) ScheduleRepositoryPermissionsSync(ctx context.Context, args *graphqlbackend.RepositoryIDArgs) (*graphqlbackend.EmptyResponse, error) {
+	if err := r.checkLicense(); err != nil {
+		return nil, err
+	}
+
 	// 🚨 SECURITY: Only site admins can query repository permissions.
 	if err := backend.CheckCurrentUserIsSiteAdmin(ctx); err != nil {
 		return nil, err
@@ -148,6 +178,10 @@ func (r *Resolver) ScheduleRepositoryPermissionsSync(ctx context.Context, args *
 }
 
 func (r *Resolver) ScheduleUserPermissionsSync(ctx context.Context, args *graphqlbackend.UserIDArgs) (*graphqlbackend.EmptyResponse, error) {
+	if err := r.checkLicense(); err != nil {
+		return nil, err
+	}
+
 	// 🚨 SECURITY: Only site admins can query repository permissions.
 	if err := backend.CheckCurrentUserIsSiteAdmin(ctx); err != nil {
 		return nil, err

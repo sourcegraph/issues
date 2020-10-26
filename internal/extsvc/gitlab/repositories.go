@@ -53,6 +53,6 @@ func (c *Client) listTreeFromAPI(ctx context.Context, projID int, projPathWithNa
 	if err != nil {
 		return nil, err
 	}
-	_, err = c.do(ctx, req, &tree)
+	_, _, err = c.do(ctx, req, &tree)
 	return tree, err
 }

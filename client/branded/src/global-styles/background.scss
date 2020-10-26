@@ -1,0 +1,7 @@
+// Extend Bootstrap's bg-* utilities with classes for our grey/blueish theme-aware background colors.
+
+@for $number from 1 through 4 {
+    .bg-#{$number} {
+        background: var(--color-bg-#{$number});
+    }
+}

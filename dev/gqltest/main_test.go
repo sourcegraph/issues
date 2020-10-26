@@ -15,11 +15,6 @@ import (
 	"github.com/sourcegraph/sourcegraph/internal/gqltestutil"
 )
 
-/*
-	NOTE: For easier testing, run Sourcegraph instance without volume:
-			docker run --publish 7080:7080 --rm sourcegraph/server:insiders
-*/
-
 var client *gqltestutil.Client
 
 var (
@@ -28,7 +23,14 @@ var (
 	username = flag.String("username", "gqltest-admin", "The username of the admin user")
 	password = flag.String("password", "supersecurepassword", "The password of the admin user")
 
-	githubToken = flag.String("github-token", os.Getenv("GITHUB_TOKEN"), "The GitHub personal access token that will be used to authenticate a GitHub external service")
+	githubToken           = flag.String("github-token", os.Getenv("GITHUB_TOKEN"), "The GitHub personal access token that will be used to authenticate a GitHub external service")
+	awsAccessKeyID        = flag.String("aws-access-key-id", os.Getenv("AWS_ACCESS_KEY_ID"), "The AWS access key ID")
+	awsSecretAccessKey    = flag.String("aws-secret-access-key", os.Getenv("AWS_SECRET_ACCESS_KEY"), "The AWS secret access key")
+	awsCodeCommitUsername = flag.String("aws-code-commit-username", os.Getenv("AWS_CODE_COMMIT_USERNAME"), "The AWS code commit username")
+	awsCodeCommitPassword = flag.String("aws-code-commit-password", os.Getenv("AWS_CODE_COMMIT_PASSWORD"), "The AWS code commit password")
+	bbsURL                = flag.String("bbs-url", os.Getenv("BITBUCKET_SERVER_URL"), "The Bitbucket Server URL")
+	bbsToken              = flag.String("bbs-token", os.Getenv("BITBUCKET_SERVER_TOKEN"), "The Bitbucket Server token")
+	bbsUsername           = flag.String("bbs-username", os.Getenv("BITBUCKET_SERVER_USERNAME"), "The Bitbucket Server username")
 )
 
 func TestMain(m *testing.M) {

@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"hash/crc32"
 	"net/url"
+	"sort"
 	"strings"
 	"sync"
 	"time"
@@ -14,6 +15,8 @@ import (
 	"github.com/ericchiang/k8s"
 	corev1 "github.com/ericchiang/k8s/apis/core/v1"
 	"github.com/inconshreveable/log15"
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promauto"
 
 	"github.com/pkg/errors"
 )
@@ -206,6 +209,9 @@ func endpointsToMap(u *k8sURL, eps *corev1.Endpoints) (*hashMap, error) {
 			}
 		}
 	}
+	sort.Strings(urls)
+	log15.Debug("kubernetes endpoints", "service", u.Service, "urls", urls)
+	metricEndpointSize.WithLabelValues(u.Service).Set(float64(len(urls)))
 	if len(urls) == 0 {
 		return nil, errors.Errorf("no %s endpoints could be found (this may indicate more %s replicas are needed, contact support@sourcegraph.com for assistance)", u.Service, u.Service)
 	}
@@ -282,3 +288,8 @@ func loadClient() (*k8s.Client, error) {
 	*/
 	return k8s.NewInClusterClient()
 }
+
+var metricEndpointSize = promauto.NewGaugeVec(prometheus.GaugeOpts{
+	Name: "src_endpoint_k8s_size",
+	Help: "The number of urls in a watched kubernetes endpoint",
+}, []string{"service"})

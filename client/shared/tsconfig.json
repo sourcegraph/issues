@@ -1,0 +1,24 @@
+{
+  "extends": "../../tsconfig.json",
+  "references": [],
+  "compilerOptions": {
+    "jsx": "react",
+    "module": "esnext",
+    "sourceRoot": "src",
+    "baseUrl": ".",
+    "paths": {
+      "*": ["src/types/*", "*"],
+    },
+    "rootDir": ".",
+    "outDir": "./out",
+    "plugins": [
+      {
+        "name": "ts-graphql-plugin",
+        "schema": "../../cmd/frontend/graphqlbackend/schema.graphql",
+        "tag": "gql",
+      },
+    ],
+  },
+  "include": ["**/*", ".*", "./src/**/*.json"],
+  "exclude": ["../../node_modules", "./node_modules", "./out", "./src/end-to-end"],
+}

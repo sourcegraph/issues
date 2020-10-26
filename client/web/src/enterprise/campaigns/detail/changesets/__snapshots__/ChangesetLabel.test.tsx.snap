@@ -1,0 +1,49 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`ChangesetLabel renders a dark label with white text 1`] = `
+<ChangesetLabel
+  label={
+    Object {
+      "color": "330912",
+      "description": "Something is wrong",
+      "text": "bug",
+    }
+  }
+>
+  <span
+    className="badge mr-2 badge-secondary text-white"
+    data-tooltip="Something is wrong"
+    style={
+      Object {
+        "backgroundColor": "#330912",
+      }
+    }
+  >
+    bug
+  </span>
+</ChangesetLabel>
+`;
+
+exports[`ChangesetLabel renders a light label with dark text 1`] = `
+<ChangesetLabel
+  label={
+    Object {
+      "color": "acfc99",
+      "description": "Something is wrong",
+      "text": "bug",
+    }
+  }
+>
+  <span
+    className="badge mr-2 badge-secondary changeset-label__text--dark"
+    data-tooltip="Something is wrong"
+    style={
+      Object {
+        "backgroundColor": "#acfc99",
+      }
+    }
+  >
+    bug
+  </span>
+</ChangesetLabel>
+`;

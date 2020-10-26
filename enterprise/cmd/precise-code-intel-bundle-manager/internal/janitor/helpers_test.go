@@ -42,14 +42,6 @@ func makeFile(path string, mtimes time.Time) error {
 	return os.Chtimes(path, mtimes, mtimes)
 }
 
-func makeFileWithSize(path string, size int) error {
-	if err := os.MkdirAll(filepath.Dir(path), os.ModePerm); err != nil {
-		return err
-	}
-
-	return ioutil.WriteFile(path, make([]byte, size), os.ModePerm)
-}
-
 func getFilenames(root string) ([]string, error) {
 	var paths []string
 	if err := filepath.Walk(root, func(path string, info os.FileInfo, err error) error {

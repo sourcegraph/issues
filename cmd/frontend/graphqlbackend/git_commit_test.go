@@ -12,7 +12,7 @@ func TestGitCommitBody(t *testing.T) {
 		"hello\n\nworld\nfoo": "world\nfoo",
 	}
 	for input, want := range tests {
-		got := gitCommitBody(input)
+		got := GitCommitBody(input)
 		if got != want {
 			t.Errorf("got %q, want %q", got, want)
 		}

@@ -1,0 +1,8 @@
+{
+  "private": true,
+  "scripts": {
+    "eslint": "eslint --cache '**/*.[jt]s?(x)'",
+    "stylelint": "stylelint 'src/**/*.scss' --quiet",
+    "test": "jest"
+  }
+}

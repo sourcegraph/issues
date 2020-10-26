@@ -4,6 +4,10 @@ Sourcegraph natively supports all Git-based Version Control Systems (VCSs) and c
 
 >NOTE: If using Perforce, see the [Perforce repositories with Sourcegraph guide](../repo/perforce.md).
 
+## Use `src serve-git`
+
+Since Sourcegraph 3.19 we recommend users to use [`src serve-git`](src_serve_git.md). `src serve-git` only provides the serving of git repositories (no snapshotting). We found users generally wanted to control the git repos and snapshotting complicated the setup. Additionally `src serve-git` uses a fast and modern git transfer protocol.
+
 ## Installing `src-expose`
 
 Navigate to the directory that contains the Git repositories that you want to serve, then run the following commands.
@@ -110,4 +114,4 @@ For more complex setups, configure your `src-expose` by providing a local config
 src-expose -snapshot-config config.yaml
 ```
 
-See [an example YAML file containing available configuration options](https://github.com/sourcegraph/sourcegraph/blob/master/dev/src-expose/examples/example.yaml). 
+See [an example YAML file containing available configuration options](https://github.com/sourcegraph/sourcegraph/blob/main/dev/src-expose/examples/example.yaml). 

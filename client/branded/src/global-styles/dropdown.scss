@@ -1,0 +1,27 @@
+@import 'bootstrap/scss/dropdown';
+
+.dropdown-divider {
+    margin: 0.25rem 0;
+}
+
+.theme-dark {
+    --dropdown-bg: #0e121b;
+    --dropdown-border-color: var(--border-color);
+    --dropdown-link-hover-bg: var(--color-bg-2);
+    --dropdown-header-color: var(--text-muted);
+    .dropdown-menu {
+        border-radius: 4px;
+        box-shadow: 0 0 12px 0 rgba(0, 27, 76, 0.4);
+    }
+}
+
+.theme-light {
+    --dropdown-bg: #ffffff;
+    --dropdown-border-color: var(--border-color);
+    --dropdown-link-hover-bg: var(--color-bg-2);
+    --dropdown-header-color: var(--text-muted);
+    .dropdown-menu {
+        border-radius: 4px;
+        box-shadow: 0 0 12px 0 rgba(0, 27, 76, 0.085);
+    }
+}

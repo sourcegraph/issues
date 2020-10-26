@@ -1,6 +1,0 @@
---langdef=Jsonnet
---langmap=Jsonnet:.jsonnet
---langmap=Jsonnet:.libsonnet
---regex-jsonnet=/^[ \t]*local ([A-Za-z0-9_]+)/\1/v,variable/
---regex-jsonnet=/^[ \t]*([A-Za-z0-9_]+):::?/\1/m,member/
---regex-jsonnet=/^[ \t]*([A-Za-z0-9_]+)\([^)]*\):::?/\1/f,function/

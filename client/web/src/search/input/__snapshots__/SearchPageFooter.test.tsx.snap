@@ -1,0 +1,70 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`SearchPageFooter should render correctly 1`] = `
+<div>
+  <footer
+    class="test-class d-flex flex-column flex-lg-row align-items-center"
+  >
+    <h4
+      class="mb-2 mb-lg-0"
+    >
+      Explore and Extend
+    </h4>
+    <span
+      class="d-flex flex-column flex-md-row align-items-center"
+    >
+      <span
+        class="d-flex flex-row mb-2 mb-md-0"
+      >
+        <a
+          class="px-3"
+          href="https://docs.sourcegraph.com/integration/browser_extension"
+          rel="noopener noreferrer"
+          target="_blank"
+        >
+          Browser extensions
+        </a>
+        <span
+          aria-hidden="true"
+          class="border-right d-none d-md-inline"
+        />
+        <a
+          class="px-3"
+          href="/extensions"
+          target="_blank"
+        >
+          Sourcegraph extensions
+        </a>
+        <span
+          aria-hidden="true"
+          class="border-right d-none d-md-inline"
+        />
+      </span>
+      <span
+        class="d-flex flex-row"
+      >
+        <a
+          class="px-3"
+          href="https://docs.sourcegraph.com/integration/editor"
+          rel="noopener noreferrer"
+          target="_blank"
+        >
+          Editor plugins
+        </a>
+        <span
+          aria-hidden="true"
+          class="border-right d-none d-md-inline"
+        />
+        <a
+          class="pl-3"
+          href="https://docs.sourcegraph.com/admin/external_service"
+          rel="noopener noreferrer"
+          target="_blank"
+        >
+          Code host integrations
+        </a>
+      </span>
+    </span>
+  </footer>
+</div>
+`;

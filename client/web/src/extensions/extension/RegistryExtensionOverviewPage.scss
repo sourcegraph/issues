@@ -1,0 +1,14 @@
+.registry-extension-overview-page {
+    &__readme {
+        flex: 1;
+        min-width: 20rem;
+    }
+    &__sidebar {
+        width: 16rem;
+    }
+    &__tag {
+        max-width: 24ch;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+}

@@ -63,7 +63,6 @@ func TestValidateCustom(t *testing.T) {
 				}
 				return
 			}
-
 			if test.wantProblem == "" {
 				if len(problems) > 0 {
 					t.Fatalf("unexpected problems: %v", problems)

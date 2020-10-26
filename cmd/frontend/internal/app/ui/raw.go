@@ -18,8 +18,9 @@ import (
 	"github.com/inconshreveable/log15"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
+
 	"github.com/sourcegraph/sourcegraph/cmd/frontend/backend"
-	"github.com/sourcegraph/sourcegraph/internal/conf"
+	"github.com/sourcegraph/sourcegraph/cmd/frontend/globals"
 	"github.com/sourcegraph/sourcegraph/internal/gitserver"
 	"github.com/sourcegraph/sourcegraph/internal/vcs/git"
 	"github.com/sourcegraph/sourcegraph/internal/vfsutil"
@@ -69,7 +70,7 @@ func serveRaw(w http.ResponseWriter, r *http.Request) (err error) {
 		// - Gitserver content updating
 		// - Consistent error handling (permissions, revision not found, repo not found, etc).
 		//
-		common, err = newCommon(w, r, conf.BrandName(), serveError)
+		common, err = newCommon(w, r, globals.Branding().BrandName, serveError)
 		if err != nil {
 			return err
 		}

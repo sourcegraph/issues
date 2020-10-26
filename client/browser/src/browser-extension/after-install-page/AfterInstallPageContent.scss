@@ -1,0 +1,12 @@
+.after-install-page-content {
+    &__sourcegraph-logo {
+        height: 1.5rem;
+    }
+    &__code-host-logo {
+        height: 2rem !important;
+        width: 2rem !important;
+    }
+    &__code-host-titles {
+        line-height: 2rem;
+    }
+}

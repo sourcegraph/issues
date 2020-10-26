@@ -56,15 +56,15 @@ func startRecording() (*recording, func()) {
 }
 
 func TestUpdateQueue_enqueue(t *testing.T) {
-	a := configuredRepo2{ID: 1, Name: "a", URL: "a.com"}
-	a2 := configuredRepo2{ID: 1, Name: "a2", URL: "a2.com"}
-	b := configuredRepo2{ID: 2, Name: "b", URL: "b.com"}
-	c := configuredRepo2{ID: 3, Name: "c", URL: "c.com"}
-	d := configuredRepo2{ID: 4, Name: "d", URL: "d.com"}
-	e := configuredRepo2{ID: 5, Name: "e", URL: "e.com"}
+	a := configuredRepo{ID: 1, Name: "a", URL: "a.com"}
+	a2 := configuredRepo{ID: 1, Name: "a2", URL: "a2.com"}
+	b := configuredRepo{ID: 2, Name: "b", URL: "b.com"}
+	c := configuredRepo{ID: 3, Name: "c", URL: "c.com"}
+	d := configuredRepo{ID: 4, Name: "d", URL: "d.com"}
+	e := configuredRepo{ID: 5, Name: "e", URL: "e.com"}
 
 	type enqueueCall struct {
-		repo     configuredRepo2
+		repo     configuredRepo
 		priority priority
 	}
 
@@ -297,12 +297,12 @@ func TestUpdateQueue_enqueue(t *testing.T) {
 }
 
 func TestUpdateQueue_remove(t *testing.T) {
-	a := configuredRepo2{ID: 1, Name: "a", URL: "a.com"}
-	b := configuredRepo2{ID: 2, Name: "b", URL: "b.com"}
-	c := configuredRepo2{ID: 3, Name: "c", URL: "c.com"}
+	a := configuredRepo{ID: 1, Name: "a", URL: "a.com"}
+	b := configuredRepo{ID: 2, Name: "b", URL: "b.com"}
+	c := configuredRepo{ID: 3, Name: "c", URL: "c.com"}
 
 	type removeCall struct {
-		repo     configuredRepo2
+		repo     configuredRepo
 		updating bool
 	}
 
@@ -457,25 +457,25 @@ func TestUpdateQueue_remove(t *testing.T) {
 }
 
 func TestUpdateQueue_acquireNext(t *testing.T) {
-	a := configuredRepo2{ID: 1, Name: "a", URL: "a.com"}
-	b := configuredRepo2{ID: 2, Name: "b", URL: "b.com"}
+	a := configuredRepo{ID: 1, Name: "a", URL: "a.com"}
+	b := configuredRepo{ID: 2, Name: "b", URL: "b.com"}
 
 	tests := []struct {
 		name           string
 		initialQueue   []*repoUpdate
-		acquireResults []*configuredRepo2
+		acquireResults []*configuredRepo
 		finalQueue     []*repoUpdate
 	}{
 		{
 			name:           "acquire from empty queue returns nil",
-			acquireResults: []*configuredRepo2{nil},
+			acquireResults: []*configuredRepo{nil},
 		},
 		{
 			name: "acquire sets updating to true",
 			initialQueue: []*repoUpdate{
 				{Repo: a, Updating: false, Seq: 1},
 			},
-			acquireResults: []*configuredRepo2{&a},
+			acquireResults: []*configuredRepo{&a},
 			finalQueue: []*repoUpdate{
 				{Repo: a, Updating: true, Seq: 1},
 			},
@@ -486,7 +486,7 @@ func TestUpdateQueue_acquireNext(t *testing.T) {
 				{Repo: a, Updating: false, Seq: 1},
 				{Repo: b, Updating: false, Seq: 2},
 			},
-			acquireResults: []*configuredRepo2{&a},
+			acquireResults: []*configuredRepo{&a},
 			finalQueue: []*repoUpdate{
 				{Repo: b, Updating: false, Seq: 2},
 				{Repo: a, Updating: true, Seq: 1},
@@ -497,7 +497,7 @@ func TestUpdateQueue_acquireNext(t *testing.T) {
 			initialQueue: []*repoUpdate{
 				{Repo: a, Updating: true, Seq: 1},
 			},
-			acquireResults: []*configuredRepo2{nil},
+			acquireResults: []*configuredRepo{nil},
 			finalQueue: []*repoUpdate{
 				{Repo: a, Updating: true, Seq: 1},
 			},
@@ -557,8 +557,8 @@ func verifyQueue(t *testing.T, s *updateScheduler, expected []*repoUpdate) {
 }
 
 func Test_updateScheduler_UpdateFromDiff(t *testing.T) {
-	a := configuredRepo2{ID: 1, Name: "a", URL: "a.com"}
-	b := configuredRepo2{ID: 2, Name: "b", URL: "b.com"}
+	a := configuredRepo{ID: 1, Name: "a", URL: "a.com"}
+	b := configuredRepo{ID: 2, Name: "b", URL: "b.com"}
 
 	tests := []struct {
 		name            string
@@ -661,13 +661,13 @@ func Test_updateScheduler_UpdateFromDiff(t *testing.T) {
 }
 
 func TestSchedule_upsert(t *testing.T) {
-	a := configuredRepo2{ID: 1, Name: "a", URL: "a.com"}
-	a2 := configuredRepo2{ID: 1, Name: "a2", URL: "a2.com"}
-	b := configuredRepo2{ID: 2, Name: "b", URL: "b.com"}
+	a := configuredRepo{ID: 1, Name: "a", URL: "a.com"}
+	a2 := configuredRepo{ID: 1, Name: "a2", URL: "a2.com"}
+	b := configuredRepo{ID: 2, Name: "b", URL: "b.com"}
 
 	type upsertCall struct {
 		time time.Time
-		repo configuredRepo2
+		repo configuredRepo
 	}
 
 	tests := []struct {
@@ -809,9 +809,9 @@ func TestSchedule_upsert(t *testing.T) {
 }
 
 func TestUpdateQueue_setCloned(t *testing.T) {
-	cloned1 := configuredRepo2{ID: 1, Name: "cloned1"}
-	cloned2 := configuredRepo2{ID: 2, Name: "CLONED2"}
-	notcloned := configuredRepo2{ID: 3, Name: "notcloned"}
+	cloned1 := configuredRepo{ID: 1, Name: "cloned1"}
+	cloned2 := configuredRepo{ID: 2, Name: "CLONED2"}
+	notcloned := configuredRepo{ID: 3, Name: "notcloned"}
 
 	_, stop := startRecording()
 	defer stop()
@@ -828,7 +828,7 @@ func TestUpdateQueue_setCloned(t *testing.T) {
 
 	// add everything to the scheduler for the distant future.
 	mockTime(defaultTime.Add(time.Hour))
-	for _, repo := range []configuredRepo2{cloned1, cloned2, notcloned} {
+	for _, repo := range []configuredRepo{cloned1, cloned2, notcloned} {
 		s.schedule.upsert(repo)
 	}
 
@@ -843,15 +843,15 @@ func TestUpdateQueue_setCloned(t *testing.T) {
 }
 
 func TestSchedule_updateInterval(t *testing.T) {
-	a := configuredRepo2{ID: 1, Name: "a", URL: "a.com"}
-	b := configuredRepo2{ID: 2, Name: "b", URL: "b.com"}
-	c := configuredRepo2{ID: 3, Name: "c", URL: "c.com"}
-	d := configuredRepo2{ID: 4, Name: "d", URL: "d.com"}
-	e := configuredRepo2{ID: 5, Name: "e", URL: "e.com"}
+	a := configuredRepo{ID: 1, Name: "a", URL: "a.com"}
+	b := configuredRepo{ID: 2, Name: "b", URL: "b.com"}
+	c := configuredRepo{ID: 3, Name: "c", URL: "c.com"}
+	d := configuredRepo{ID: 4, Name: "d", URL: "d.com"}
+	e := configuredRepo{ID: 5, Name: "e", URL: "e.com"}
 
 	type updateCall struct {
 		time     time.Time
-		repo     configuredRepo2
+		repo     configuredRepo
 		interval time.Duration
 	}
 
@@ -1021,13 +1021,13 @@ func TestSchedule_updateInterval(t *testing.T) {
 }
 
 func TestSchedule_remove(t *testing.T) {
-	a := configuredRepo2{ID: 1, Name: "a", URL: "a.com"}
-	b := configuredRepo2{ID: 2, Name: "b", URL: "b.com"}
-	c := configuredRepo2{ID: 3, Name: "c", URL: "c.com"}
+	a := configuredRepo{ID: 1, Name: "a", URL: "a.com"}
+	b := configuredRepo{ID: 2, Name: "b", URL: "b.com"}
+	c := configuredRepo{ID: 3, Name: "c", URL: "c.com"}
 
 	type removeCall struct {
 		time time.Time
-		repo configuredRepo2
+		repo configuredRepo
 	}
 
 	tests := []struct {
@@ -1158,11 +1158,11 @@ func verifyScheduleRecording(t *testing.T, s *updateScheduler, timeAfterFuncDela
 }
 
 func TestUpdateScheduler_runSchedule(t *testing.T) {
-	a := configuredRepo2{ID: 1, Name: "a", URL: "a.com"}
-	b := configuredRepo2{ID: 2, Name: "b", URL: "b.com"}
-	c := configuredRepo2{ID: 3, Name: "c", URL: "c.com"}
-	d := configuredRepo2{ID: 4, Name: "d", URL: "d.com"}
-	e := configuredRepo2{ID: 5, Name: "e", URL: "e.com"}
+	a := configuredRepo{ID: 1, Name: "a", URL: "a.com"}
+	b := configuredRepo{ID: 2, Name: "b", URL: "b.com"}
+	c := configuredRepo{ID: 3, Name: "c", URL: "c.com"}
+	d := configuredRepo{ID: 4, Name: "d", URL: "d.com"}
+	e := configuredRepo{ID: 5, Name: "e", URL: "e.com"}
 
 	tests := []struct {
 		name                  string
@@ -1280,12 +1280,12 @@ func TestUpdateScheduler_runSchedule(t *testing.T) {
 }
 
 func TestUpdateScheduler_runUpdateLoop(t *testing.T) {
-	a := configuredRepo2{ID: 1, Name: "a", URL: "a.com"}
-	b := configuredRepo2{ID: 2, Name: "b", URL: "b.com"}
-	c := configuredRepo2{ID: 3, Name: "c", URL: "c.com"}
+	a := configuredRepo{ID: 1, Name: "a", URL: "a.com"}
+	b := configuredRepo{ID: 2, Name: "b", URL: "b.com"}
+	c := configuredRepo{ID: 3, Name: "c", URL: "c.com"}
 
 	type mockRequestRepoUpdate struct {
-		repo configuredRepo2
+		repo configuredRepo
 		resp *gitserverprotocol.RepoUpdateResponse
 		err  error
 	}
@@ -1383,7 +1383,7 @@ func TestUpdateScheduler_runUpdateLoop(t *testing.T) {
 			// intentionally don't close the channel so any further receives just block
 
 			contexts := make(chan context.Context, expectedRequestCount)
-			requestRepoUpdate = func(ctx context.Context, repo configuredRepo2, since time.Duration) (*gitserverprotocol.RepoUpdateResponse, error) {
+			requestRepoUpdate = func(ctx context.Context, repo configuredRepo, since time.Duration) (*gitserverprotocol.RepoUpdateResponse, error) {
 				select {
 				case mock := <-mockRequestRepoUpdates:
 					if !reflect.DeepEqual(mock.repo, repo) {

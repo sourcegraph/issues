@@ -31,11 +31,6 @@ const GitoliteSchemaJSON = `{
       "type": "string",
       "examples": ["git@gitolite.example.com", "ssh://git@gitolite.example.com:2222/"]
     },
-    "blacklist": {
-      "description": "DEPRECATED. Will be removed in 3.19. Use 'exclude' patterns instead. Regular expression to filter repositories from auto-discovery, so they will not get cloned automatically.",
-      "type": "string",
-      "format": "regex"
-    },
     "exclude": {
       "description": "A list of repositories to never mirror from this Gitolite instance. Supports excluding by exact name ({\"name\": \"foo\"}).",
       "type": "array",

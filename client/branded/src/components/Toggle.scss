@@ -1,0 +1,81 @@
+$toggle-width: 2rem;
+
+.toggle {
+    background: none;
+    border: none;
+    display: inline-block;
+    outline: none !important;
+    padding: 0;
+    position: relative;
+    width: $toggle-width;
+
+    &__bar,
+    &__bar-shadow {
+        border-radius: 1rem;
+        top: 2px;
+        left: 0;
+        height: 1rem;
+        width: 100%;
+        position: absolute;
+    }
+
+    &__bar {
+        opacity: 0.2;
+        background-color: var(--text-muted);
+        transition: all 0.3s;
+        transition-property: opacity;
+
+        &--on {
+            background-color: var(--primary);
+        }
+    }
+
+    &:hover:enabled &__bar {
+        opacity: 0.5;
+    }
+
+    &:focus-visible &__bar {
+        opacity: 0.5;
+        background-color: var(--text-muted);
+
+        &--on {
+            background-color: var(--primary);
+        }
+    }
+
+    &__bar-shadow {
+        background-color: transparent;
+    }
+
+    &:focus-visible &__bar-shadow {
+        opacity: 0.2;
+        box-shadow: 0 0 0 0.1875rem var(--text-muted);
+
+        &--on {
+            box-shadow: 0 0 0 0.1875rem var(--primary);
+        }
+    }
+
+    &__knob {
+        background-color: var(--text-muted);
+
+        border-radius: 0.375rem;
+        display: block;
+
+        height: 0.75rem;
+        width: 0.75rem;
+        margin-top: 0.25rem;
+        left: 0.125rem;
+
+        position: relative;
+
+        &--on {
+            background-color: var(--primary);
+            transform: translate3d(1rem, 0, 0);
+        }
+    }
+
+    &:disabled &__knob {
+        opacity: 0.2;
+    }
+}

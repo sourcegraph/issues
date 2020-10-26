@@ -1,0 +1,58 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`EditUserProfileForm simple 1`] = `
+<EditUserProfileForm
+  after="AFTER"
+  initialValue={
+    Object {
+      "avatarURL": "https://example.com/image.jpg",
+      "displayName": "d",
+      "username": "u",
+    }
+  }
+  onUpdate={[Function]}
+  user={
+    Object {
+      "id": "x",
+      "siteAdmin": false,
+      "viewerCanChangeUsername": true,
+    }
+  }
+>
+  <Form
+    className="w-100"
+    onSubmit={[Function]}
+  >
+    <form
+      className="w-100 "
+      onInvalid={[Function]}
+      onSubmit={[Function]}
+    >
+      <mock-UserProfileFormFields
+        disabled={false}
+        onChange={[Function]}
+        usernameFieldDisabled={false}
+        value={
+          Object {
+            "avatarURL": "https://example.com/image.jpg",
+            "displayName": "d",
+            "username": "u",
+          }
+        }
+      />
+      <button
+        className="btn btn-primary"
+        disabled={false}
+        id="test-EditUserProfileForm__save"
+        type="submit"
+      >
+        Save
+      </button>
+      <hr
+        className="my-4"
+      />
+      AFTER
+    </form>
+  </Form>
+</EditUserProfileForm>
+`;

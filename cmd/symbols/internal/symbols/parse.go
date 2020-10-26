@@ -12,7 +12,7 @@ import (
 	otlog "github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
 	"github.com/prometheus/client_golang/prometheus"
-	"github.com/sourcegraph/sourcegraph/cmd/symbols/internal/pkg/ctags"
+	ctags "github.com/sourcegraph/go-ctags"
 	"github.com/sourcegraph/sourcegraph/internal/api"
 	"github.com/sourcegraph/sourcegraph/internal/symbols/protocol"
 	"github.com/sourcegraph/sourcegraph/internal/trace/ot"
@@ -124,7 +124,7 @@ func (s *Service) parseUncached(ctx context.Context, repo api.RepoName, commitID
 }
 
 // parse gets a parser from the pool and uses it to satisfy the parse request.
-func (s *Service) parse(ctx context.Context, req parseRequest) (entries []ctags.Entry, err error) {
+func (s *Service) parse(ctx context.Context, req parseRequest) (entries []*ctags.Entry, err error) {
 	parseQueueSize.Inc()
 
 	select {
@@ -175,7 +175,7 @@ func (s *Service) parse(ctx context.Context, req parseRequest) (entries []ctags.
 	}
 }
 
-func entryToSymbol(e ctags.Entry) protocol.Symbol {
+func entryToSymbol(e *ctags.Entry) protocol.Symbol {
 	return protocol.Symbol{
 		Name:        e.Name,
 		Path:        e.Path,

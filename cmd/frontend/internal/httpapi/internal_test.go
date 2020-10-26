@@ -15,9 +15,9 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/sourcegraph/sourcegraph/internal/api"
 
-	"github.com/sourcegraph/sourcegraph/cmd/frontend/db"
 	apirouter "github.com/sourcegraph/sourcegraph/cmd/frontend/internal/httpapi/router"
 	"github.com/sourcegraph/sourcegraph/cmd/frontend/types"
+	"github.com/sourcegraph/sourcegraph/internal/db"
 )
 
 func TestGitServiceHandlers(t *testing.T) {
@@ -57,106 +57,6 @@ type mockAddrForRepo struct{}
 
 func (mockAddrForRepo) AddrForRepo(_ context.Context, name api.RepoName) string {
 	return strings.ReplaceAll(string(name), "/", ".") + ".gitserver"
-}
-
-func TestReposList(t *testing.T) {
-	defaultRepos := []string{"github.com/popular/foo", "github.com/popular/bar"}
-	allRepos := append(defaultRepos, "github.com/alice/foo", "github.com/alice/bar")
-
-	cases := []struct {
-		name string
-		srv  *reposListServer
-		body string
-		want []string
-	}{{
-		name: "no indexers",
-		srv: &reposListServer{
-			Repos: &mockRepos{
-				defaultRepos: defaultRepos,
-				repos:        allRepos,
-			},
-			Indexers: suffixIndexers(false),
-		},
-		body: `{"Enabled": true, "Index": true}`,
-		want: allRepos,
-	}, {
-		name: "dot-com no indexers",
-		srv: &reposListServer{
-			SourcegraphDotComMode: true,
-			Repos: &mockRepos{
-				defaultRepos: defaultRepos,
-				repos:        allRepos,
-			},
-			Indexers: suffixIndexers(false),
-		},
-		body: `{"Enabled": true, "Index": true}`,
-		want: defaultRepos,
-	}, {
-		name: "indexers",
-		srv: &reposListServer{
-			Repos: &mockRepos{
-				defaultRepos: defaultRepos,
-				repos:        allRepos,
-			},
-			Indexers: suffixIndexers(true),
-		},
-		body: `{"Hostname": "foo", "Enabled": true, "Index": true}`,
-		want: []string{"github.com/popular/foo", "github.com/alice/foo"},
-	}, {
-		name: "dot-com indexers",
-		srv: &reposListServer{
-			SourcegraphDotComMode: true,
-			Repos: &mockRepos{
-				defaultRepos: defaultRepos,
-				repos:        allRepos,
-			},
-			Indexers: suffixIndexers(true),
-		},
-		body: `{"Hostname": "foo", "Enabled": true, "Index": true}`,
-		want: []string{"github.com/popular/foo"},
-	}, {
-		name: "none",
-		srv: &reposListServer{
-			Repos: &mockRepos{
-				defaultRepos: defaultRepos,
-				repos:        allRepos,
-			},
-			Indexers: suffixIndexers(true),
-		},
-		body: `{"Hostname": "baz", "Enabled": true, "Index": true}`,
-	}}
-
-	for _, tc := range cases {
-		t.Run(tc.name, func(t *testing.T) {
-			req := httptest.NewRequest("POST", "/", bytes.NewReader([]byte(tc.body)))
-			w := httptest.NewRecorder()
-			if err := tc.srv.serveList(w, req); err != nil {
-				t.Fatal(err)
-			}
-
-			resp := w.Result()
-			body, _ := ioutil.ReadAll(resp.Body)
-
-			if resp.StatusCode != http.StatusOK {
-				t.Errorf("got status %v", resp.StatusCode)
-			}
-
-			// Parse the response as in zoekt-sourcegraph-indexserver/main.go.
-			var repos []struct{ URI string }
-			if err := json.Unmarshal(body, &repos); err != nil {
-				t.Fatal(err)
-			}
-
-			var got []string
-			for _, r := range repos {
-				got = append(got, r.URI)
-			}
-
-			if !cmp.Equal(tc.want, got) {
-				t.Fatalf("mismatch (-want +got):\n%s", cmp.Diff(tc.want, got))
-			}
-		})
-	}
 }
 
 func TestReposIndex(t *testing.T) {

@@ -1,0 +1,11 @@
+# Life of a ping
+
+Each instance of Sourcegraph periodically sends an [HTTP request](https://sourcegraph.com/search?q=repo:%5Egithub%5C.com/sourcegraph/sourcegraph%24%40b887ad1+func+check%28+file:updatecheck) to sourcegraph.com to check if an update is available and to send some [anonymized aggregated statistics](../../../admin/pings.md).
+
+On sourcegraph.com, this request is handled [here](https://sourcegraph.com/search?q=repo:%5Egithub%5C.com/sourcegraph/sourcegraph%24%40b887ad1+func+Handler+file:updatecheck) by responding with 204 No Content if the instance version is the newest available, or 200 OK with the new version string. In both cases, the request data is serialized into a JSON blob and [published](https://sourcegraph.com/search?q=repo:%5Egithub%5C.com/sourcegraph/sourcegraph%24%40b887ad1+func+Publish+file:pubsub) to a [Pub/Sub topic](https://console.cloud.google.com/cloudpubsub/topic/detail/server-update-checks?authuser=1&folder=&organizationId=&project=telligentsourcegraph).
+
+A Dataflow [job](https://console.cloud.google.com/dataflow/jobs/us-central1/2020-02-05_10_31_47-13247700157778222556?project=telligentsourcegraph&authuser=1) subscribes to the topic, transforms the message payload into a BigQuery [table](https://console.cloud.google.com/bigquery?authuser=1&project=telligentsourcegraph&p=telligentsourcegraph&d=sourcegraph_analytics&t=update_checks&page=table). This job will do a small pre-transform (defined [here](https://console.cloud.google.com/storage/browser/_details/sg-analytics-data/dataflow/pipelines/udf/transform.js?project=telligentsourcegraph&authuser=1)) before being converted into the BigQuery table's schema. These records are inserted into the table in batch.
+ 
+**Caution**: Data sent into BigQuery must match the table schema **exactly**. You cannot send extra fields or the insertion will fail, which will cause permanent data loss until the issue is fixed.
+
+BigQuery scheduled jobs are used to populate materialized views into the update checks table for easier analysis and visualization in external tools such as Looker. For example, [this scheduled query](https://console.cloud.google.com/bigquery/scheduled-queries/locations/us/configs/5c51773a-0000-2fc8-bf1f-089e08266748/details?authuser=1&project=telligentsourcegraph) populates a table with daily usage count for each instance.

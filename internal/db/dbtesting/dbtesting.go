@@ -3,6 +3,7 @@ package dbtesting
 
 import (
 	"database/sql"
+	"fmt"
 	"hash/fnv"
 	"io"
 	"log"
@@ -15,6 +16,7 @@ import (
 
 	"github.com/pkg/errors"
 	"github.com/sourcegraph/sourcegraph/internal/db/dbconn"
+	"github.com/sourcegraph/sourcegraph/internal/db/dbutil"
 )
 
 // MockHashPassword if non-nil is used instead of db.hashPassword. This is useful
@@ -52,7 +54,7 @@ var (
 // SetupGlobalTestDB creates a temporary test DB handle, sets
 // `dbconn.Global` to it and setups other test configuration.
 //
-// Callers (other than github.com/sourcegraph/sourcegraph/cmd/frontend/db) must
+// Callers (other than github.com/sourcegraph/sourcegraph/internal/db) must
 // set a name in this package's DBNameSuffix var that is unique among all other
 // test packages that call SetupGlobalTestDB, so that each package's
 // tests run in separate DBs and do not conflict.
@@ -87,7 +89,12 @@ func emptyDBPreserveSchema(t testing.TB, d *sql.DB) {
 		t.Fatalf("Table schema_migrations not found: %v", err)
 	}
 
-	rows, err := d.Query("SELECT table_name FROM information_schema.tables WHERE table_schema='public' AND table_type='BASE TABLE' AND table_name != 'schema_migrations'")
+	var conds []string
+	for _, migrationTable := range dbutil.MigrationTables {
+		conds = append(conds, fmt.Sprintf("table_name != '%s'", migrationTable))
+	}
+
+	rows, err := d.Query("SELECT table_name FROM information_schema.tables WHERE table_schema='public' AND table_type='BASE TABLE' AND " + strings.Join(conds, " AND "))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -141,9 +148,15 @@ func initTest(nameSuffix string) error {
 		}
 	}
 
-	if err := dbconn.ConnectToDB("dbname=" + dbname); err != nil {
+	if err := dbconn.SetupGlobalConnection("dbname=" + dbname); err != nil {
 		return err
 	}
 
-	return dbconn.MigrateDB(dbconn.Global, "dbname="+dbname)
+	for _, databaseName := range dbutil.DatabaseNames {
+		if err := dbconn.MigrateDB(dbconn.Global, databaseName); err != nil {
+			return err
+		}
+	}
+
+	return nil
 }

@@ -6,17 +6,10 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
-
-	"github.com/sourcegraph/sourcegraph/cmd/frontend/internal/graphqlfile"
 )
 
 func main() {
 	out, err := ioutil.ReadFile("schema.graphql")
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	out, err = graphqlfile.StripInternalComments(out)
 	if err != nil {
 		log.Fatal(err)
 	}

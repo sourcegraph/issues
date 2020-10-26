@@ -45,11 +45,6 @@ const config = {
             importNames: ['animationFrameScheduler'],
             message: 'Code using animationFrameScheduler breaks in Firefox when using Sentry.',
           },
-          {
-            name: 'rxjs/fetch',
-            message:
-              'rxjs fromFetch is broken. Until https://github.com/ReactiveX/rxjs/pull/5306 is merged, please use shared/src/graphql/fromFetch.ts',
-          },
         ],
       },
     ],
@@ -65,6 +60,7 @@ const config = {
         ],
       },
     ],
+    'react/jsx-no-target-blank': ['error', { allowReferrer: true }],
   },
   overrides: [
     {

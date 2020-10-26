@@ -40,6 +40,14 @@ func NewHandlerMetrics() HandlerMetrics {
 	}
 }
 
+// MustRegister registers all metrics in HandlerMetrics in the given
+// prometheus.Registerer. It panics in case of failure.
+func (m HandlerMetrics) MustRegister(r prometheus.Registerer) {
+	r.MustRegister(m.ServeHTTP.Count)
+	r.MustRegister(m.ServeHTTP.Duration)
+	r.MustRegister(m.ServeHTTP.Errors)
+}
+
 // ObservedHandler returns a decorator that wraps an http.Handler
 // with logging, Prometheus metrics and tracing.
 func ObservedHandler(

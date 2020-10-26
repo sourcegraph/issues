@@ -296,12 +296,46 @@ func TestRepository_ListTags(t *testing.T) {
 			t.Errorf("%s: ListTags: %s", label, err)
 			continue
 		}
+
 		sort.Sort(Tags(tags))
 		sort.Sort(Tags(test.wantTags))
 
 		if !reflect.DeepEqual(tags, test.wantTags) {
 			t.Errorf("%s: got tags == %v, want %v", label, tags, test.wantTags)
 		}
+	}
+}
+
+// See https://github.com/sourcegraph/sourcegraph/issues/5453
+func TestRepository_parseTags_WithoutCreatorDate(t *testing.T) {
+	have, err := parseTags([]byte(
+		"9ee1c939d1cb936b1f98e8d81aeffab57bae46ab\x00v2.6.12\x001119037709\n" +
+			"c39ae07f393806ccf406ef966e9a15afc43cc36a\x00v2.6.11-tree\x00\n" +
+			"c39ae07f393806ccf406ef966e9a15afc43cc36a\x00v2.6.11\x00\n",
+	))
+
+	if err != nil {
+		t.Fatalf("parseTags: have err %v, want nil", err)
+	}
+
+	want := []*Tag{
+		{
+			Name:        "v2.6.12",
+			CommitID:    "9ee1c939d1cb936b1f98e8d81aeffab57bae46ab",
+			CreatorDate: time.Unix(1119037709, 0).UTC(),
+		},
+		{
+			Name:     "v2.6.11-tree",
+			CommitID: "c39ae07f393806ccf406ef966e9a15afc43cc36a",
+		},
+		{
+			Name:     "v2.6.11",
+			CommitID: "c39ae07f393806ccf406ef966e9a15afc43cc36a",
+		},
+	}
+
+	if diff := cmp.Diff(have, want); diff != "" {
+		t.Fatal(diff)
 	}
 }
 

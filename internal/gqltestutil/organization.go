@@ -25,7 +25,7 @@ mutation CreateOrganization($name: String!, $displayName: String) {
 			} `json:"createOrganization"`
 		} `json:"data"`
 	}
-	err := c.GraphQL("", query, variables, &resp)
+	err := c.GraphQL("", "", query, variables, &resp)
 	if err != nil {
 		return "", errors.Wrap(err, "request GraphQL")
 	}
@@ -46,7 +46,7 @@ mutation DeleteOrganization($organization: ID!) {
 	variables := map[string]interface{}{
 		"organization": id,
 	}
-	err := c.GraphQL("", query, variables, nil)
+	err := c.GraphQL("", "", query, variables, nil)
 	if err != nil {
 		return errors.Wrap(err, "request GraphQL")
 	}
@@ -66,7 +66,7 @@ mutation RemoveUserFromOrganization($user: ID!, $organization: ID!) {
 		"user":         userID,
 		"organization": orgID,
 	}
-	err := c.GraphQL("", query, variables, nil)
+	err := c.GraphQL("", "", query, variables, nil)
 	if err != nil {
 		return errors.Wrap(err, "request GraphQL")
 	}

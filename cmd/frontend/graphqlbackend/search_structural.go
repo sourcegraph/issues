@@ -2,17 +2,19 @@ package graphqlbackend
 
 import (
 	"context"
-	"errors"
 	"regexp"
 	"regexp/syntax"
 	"strings"
 	"time"
+	"unicode/utf8"
 
 	zoektquery "github.com/google/zoekt/query"
 	"github.com/sourcegraph/sourcegraph/internal/api"
 	"github.com/sourcegraph/sourcegraph/internal/lazyregexp"
 	"github.com/sourcegraph/sourcegraph/internal/search"
 )
+
+var matchHoleRegexp = lazyregexp.New(splitOnHolesPattern())
 
 func splitOnHolesPattern() string {
 	word := `\w+`
@@ -31,9 +33,114 @@ func splitOnHolesPattern() string {
 	}, "|")
 }
 
-var matchHoleRegexp = lazyregexp.New(splitOnHolesPattern())
+var matchRegexpPattern = lazyregexp.New(`(\w+)?~(.*)`)
 
-// StructuralPatToRegexpQuery converts a comby pattern to a Zoekt regular
+type Term interface {
+	term()
+	String() string
+}
+
+type Literal string
+type RegexpPattern string
+
+func (Literal) term() {}
+func (t Literal) String() string {
+	return string(t)
+}
+
+func (RegexpPattern) term() {}
+func (t RegexpPattern) String() string {
+	return string(t)
+}
+
+// templateToRegexp parses a comby pattern to a list of Terms where a Term is
+// either a literal or a regular expression extracted from hole syntax.
+func templateToRegexp(buf []byte) []Term {
+	// uses `open` to track whether [] are balanced when parsing hole syntax
+	// and uses `inside` to track whether [] are balanced inside holes that
+	// contain regular expressions
+	var open, inside, advance int
+	var r rune
+	var currentLiteral, currentHole []rune
+	var result []Term
+
+	next := func() rune {
+		r, advance := utf8.DecodeRune(buf)
+		buf = buf[advance:]
+		return r
+	}
+
+	for len(buf) > 0 {
+		r = next()
+		switch r {
+		case ':':
+			if open > 0 {
+				currentHole = append(currentHole, ':')
+				continue
+			}
+			if len(buf[advance:]) > 0 {
+				if buf[advance] == ':' {
+					// maybe the start of another hole like ::[foo]
+					currentLiteral = append(currentLiteral, ':')
+					continue
+				}
+				r = next()
+				if r == '[' {
+					open++
+					result = append(result, Literal(currentLiteral))
+					currentLiteral = []rune{}
+					continue
+				}
+				currentLiteral = append(currentLiteral, ':', r)
+				continue
+			}
+			currentLiteral = append(currentLiteral, ':')
+		case '\\':
+			if len(buf[advance:]) > 0 && open > 0 {
+				// assume this is an escape sequence for a regex hole
+				r = next()
+				currentHole = append(currentHole, '\\', r)
+				continue
+			}
+			currentLiteral = append(currentLiteral, '\\')
+		case '[':
+			if open > 0 {
+				inside++
+				currentHole = append(currentHole, '[')
+				continue
+			}
+			currentLiteral = append(currentLiteral, r)
+		case ']':
+			if open > 0 && inside > 0 {
+				inside--
+				currentHole = append(currentHole, ']')
+				continue
+			}
+			if open > 0 {
+				if matchRegexpPattern.MatchString(string(currentHole)) {
+					extractedRegexp := matchRegexpPattern.ReplaceAllString(string(currentHole), `$2`)
+					currentHole = []rune{}
+					result = append(result, RegexpPattern(extractedRegexp))
+				}
+				open--
+				continue
+			}
+			currentLiteral = append(currentLiteral, r)
+		default:
+			if open > 0 {
+				currentHole = append(currentHole, r)
+			} else {
+				currentLiteral = append(currentLiteral, r)
+			}
+		}
+	}
+	result = append(result, Literal(currentLiteral))
+	return result
+}
+
+var onMatchWhitespace = lazyregexp.New(`[\s]+`)
+
+// StructuralPatToRegexpQuery converts a comby pattern to an approximate regular
 // expression query. It converts whitespace in the pattern so that content
 // across newlines can be matched in the index. As an incomplete approximation,
 // we use the regex pattern .*? to scan ahead. A shortcircuit option returns a
@@ -42,34 +149,36 @@ var matchHoleRegexp = lazyregexp.New(splitOnHolesPattern())
 //
 // Example:
 // "ParseInt(:[args]) if err != nil" -> "ParseInt(.*)\s+if\s+err!=\s+nil"
-func StructuralPatToRegexpQuery(pattern string, shortcircuit bool) (zoektquery.Q, error) {
-	substrings := matchHoleRegexp.Split(pattern, -1)
-	var children []zoektquery.Q
+func StructuralPatToRegexpQuery(pattern string, shortcircuit bool) string {
 	var pieces []string
-	for _, s := range substrings {
-		piece := regexp.QuoteMeta(s)
-		onMatchWhitespace := lazyregexp.New(`[\s]+`)
-		piece = onMatchWhitespace.ReplaceAllLiteralString(piece, `[\s]+`)
-		pieces = append(pieces, piece)
+
+	terms := templateToRegexp([]byte(pattern))
+	for _, term := range terms {
+		if term.String() == "" {
+			continue
+		}
+		switch v := term.(type) {
+		case Literal:
+			piece := regexp.QuoteMeta(v.String())
+			piece = onMatchWhitespace.ReplaceAllLiteralString(piece, `[\s]+`)
+			pieces = append(pieces, piece)
+		case RegexpPattern:
+			pieces = append(pieces, v.String())
+		default:
+			panic("Unreachable")
+		}
 	}
 
 	if len(pieces) == 0 {
-		return &zoektquery.Const{Value: true}, nil
+		// Match anything.
+		return "(.|\\s)*?"
 	}
-	var rs string
+
 	if shortcircuit {
 		// As a shortcircuit, do not match across newlines of structural search pieces.
-		rs = "(" + strings.Join(pieces, ").*?(") + ")"
-	} else {
-		rs = "(" + strings.Join(pieces, ")(.|\\s)*?(") + ")"
+		return "(" + strings.Join(pieces, ").*?(") + ")"
 	}
-	re, _ := syntax.Parse(rs, syntax.ClassNL|syntax.PerlX|syntax.UnicodeGroups)
-	children = append(children, &zoektquery.Regexp{
-		Regexp:        re,
-		CaseSensitive: true,
-		Content:       true,
-	})
-	return &zoektquery.And{Children: children}, nil
+	return "(" + strings.Join(pieces, ")(.|\\s)*?(") + ")"
 }
 
 func HandleFilePathPatterns(query *search.TextPatternInfo) (zoektquery.Q, error) {
@@ -77,9 +186,6 @@ func HandleFilePathPatterns(query *search.TextPatternInfo) (zoektquery.Q, error)
 
 	// Zoekt uses regular expressions for file paths.
 	// Unhandled cases: PathPatternsAreCaseSensitive and whitespace in file path patterns.
-	if !query.PathPatternsAreRegExps {
-		return nil, errors.New("zoekt only supports regex path patterns")
-	}
 	for _, p := range query.IncludePatterns {
 		q, err := fileRe(p, query.IsCaseSensitive)
 		if err != nil {
@@ -119,14 +225,24 @@ func HandleFilePathPatterns(query *search.TextPatternInfo) (zoektquery.Q, error)
 	return zoektquery.NewAnd(and...), nil
 }
 
-func buildQuery(args *search.TextParameters, newRepoSet *zoektquery.RepoSet, filePathPatterns zoektquery.Q, shortcircuit bool) (zoektquery.Q, error) {
-	q, err := StructuralPatToRegexpQuery(args.PatternInfo.Pattern, shortcircuit)
+func buildQuery(args *search.TextParameters, repos *indexedRepoRevs, filePathPatterns zoektquery.Q, shortcircuit bool) (zoektquery.Q, error) {
+	regexString := StructuralPatToRegexpQuery(args.PatternInfo.Pattern, shortcircuit)
+	if len(regexString) == 0 {
+		return &zoektquery.Const{Value: true}, nil
+	}
+	re, err := syntax.Parse(regexString, syntax.ClassNL|syntax.PerlX|syntax.UnicodeGroups)
 	if err != nil {
 		return nil, err
 	}
-	q = zoektquery.NewAnd(newRepoSet, filePathPatterns, q)
-	q = zoektquery.Simplify(q)
-	return q, nil
+	return zoektquery.NewAnd(
+		&zoektquery.RepoBranches{Set: repos.repoBranches},
+		filePathPatterns,
+		&zoektquery.Regexp{
+			Regexp:        re,
+			CaseSensitive: true,
+			Content:       true,
+		},
+	), nil
 }
 
 // zoektSearchHEADOnlyFiles searches repositories using zoekt, returning only the file paths containing
@@ -135,20 +251,13 @@ func buildQuery(args *search.TextParameters, newRepoSet *zoektquery.RepoSet, fil
 // Timeouts are reported through the context, and as a special case errNoResultsInTimeout
 // is returned if no results are found in the given timeout (instead of the more common
 // case of finding partial or full results in the given timeout).
-func zoektSearchHEADOnlyFiles(ctx context.Context, args *search.TextParameters, repos []*search.RepositoryRevisions, isSymbol bool, since func(t time.Time) time.Duration) (fm []*FileMatchResolver, limitHit bool, reposLimitHit map[string]struct{}, err error) {
-	if len(repos) == 0 {
+func zoektSearchHEADOnlyFiles(ctx context.Context, args *search.TextParameters, repos *indexedRepoRevs, since func(t time.Time) time.Duration) (fm []*FileMatchResolver, limitHit bool, reposLimitHit map[string]struct{}, err error) {
+	if len(repos.repoRevs) == 0 {
 		return nil, false, nil, nil
 	}
 
-	repoSet := &zoektquery.RepoSet{Set: make(map[string]bool, len(repos))}
-	repoMap := make(map[string]*search.RepositoryRevisions, len(repos))
-	for _, repoRev := range repos {
-		repoSet.Set[string(repoRev.Repo.Name)] = true
-		repoMap[string(repoRev.Repo.Name)] = repoRev
-	}
-
-	k := zoektResultCountFactor(len(repos), args.PatternInfo)
-	searchOpts := zoektSearchOpts(k, args.PatternInfo)
+	k := zoektResultCountFactor(len(repos.repoBranches), args.PatternInfo.FileMatchLimit, args.Mode == search.ZoektGlobalSearch)
+	searchOpts := zoektSearchOpts(ctx, k, args.PatternInfo)
 
 	if args.UseFullDeadline {
 		// If the user manually specified a timeout, allow zoekt to use all of the remaining timeout.
@@ -161,15 +270,8 @@ func zoektSearchHEADOnlyFiles(ctx context.Context, args *search.TextParameters, 
 		// We'll create a new context that gets cancelled if the other context is cancelled for any
 		// reason other than the deadline being exceeded. This essentially means the deadline for the new context
 		// will be `deadline + time for zoekt to cancel + network latency`.
-		cNew, cancel := context.WithCancel(context.Background())
-		go func(cOld context.Context) {
-			<-cOld.Done()
-			// cancel the new context if the old one is done for some reason other than the deadline passing.
-			if cOld.Err() != context.DeadlineExceeded {
-				cancel()
-			}
-		}(ctx)
-		ctx = cNew
+		var cancel context.CancelFunc
+		ctx, cancel = contextWithoutDeadline(ctx)
 		defer cancel()
 	}
 
@@ -179,7 +281,7 @@ func zoektSearchHEADOnlyFiles(ctx context.Context, args *search.TextParameters, 
 	}
 
 	t0 := time.Now()
-	q, err := buildQuery(args, repoSet, filePathPatterns, true)
+	q, err := buildQuery(args, repos, filePathPatterns, true)
 	if err != nil {
 		return nil, false, nil, err
 	}
@@ -196,7 +298,10 @@ func zoektSearchHEADOnlyFiles(ctx context.Context, args *search.TextParameters, 
 	// If the previous indexed search did not return a substantial number of matching file candidates or count was
 	// manually specified, run a more complete and expensive search.
 	if resp.FileCount < 10 || args.PatternInfo.FileMatchLimit != defaultMaxSearchResults {
-		q, err = buildQuery(args, repoSet, filePathPatterns, false)
+		q, err = buildQuery(args, repos, filePathPatterns, false)
+		if err != nil {
+			return nil, false, nil, err
+		}
 		resp, err = args.Zoekt.Client.Search(ctx, q, &searchOpts)
 		if err != nil {
 			return nil, false, nil, err
@@ -248,7 +353,7 @@ func zoektSearchHEADOnlyFiles(ctx context.Context, args *search.TextParameters, 
 			fileLimitHit = true
 			limitHit = true
 		}
-		repoRev := repoMap[file.Repository]
+		repoRev := repos.repoRevs[file.Repository]
 		if repoResolvers[repoRev.Repo.Name] == nil {
 			repoResolvers[repoRev.Repo.Name] = &RepositoryResolver{repo: repoRev.Repo}
 		}

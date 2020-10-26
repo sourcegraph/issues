@@ -131,6 +131,17 @@ type RepoInfoResponse struct {
 	Results map[api.RepoName]*RepoInfo
 }
 
+// ReposStats is an aggregation of statistics from a gitserver.
+type ReposStats struct {
+	// UpdatedAt is the time these statistics were computed. If UpdateAt is
+	// zero, the statistics have not yet been computed. This can happen on a
+	// new gitserver.
+	UpdatedAt time.Time
+
+	// GitDirBytes is the amount of bytes stored in .git directories.
+	GitDirBytes int64
+}
+
 // RepoCloneProgressRequest is a request for information about the clone progress of multiple
 // repositories on gitserver.
 type RepoCloneProgressRequest struct {

@@ -135,7 +135,10 @@ func TestRepositoryComparison(t *testing.T) {
 
 	t.Run("FileDiffs", func(t *testing.T) {
 		t.Run("RawDiff", func(t *testing.T) {
-			diffConnection := comp.FileDiffs(&FileDiffsConnectionArgs{})
+			diffConnection, err := comp.FileDiffs(ctx, &FileDiffsConnectionArgs{})
+			if err != nil {
+				t.Fatal(err)
+			}
 
 			rawDiff, err := diffConnection.RawDiff(ctx)
 			if err != nil {
@@ -147,7 +150,10 @@ func TestRepositoryComparison(t *testing.T) {
 		})
 
 		t.Run("DiffStat", func(t *testing.T) {
-			diffConnection := comp.FileDiffs(&FileDiffsConnectionArgs{})
+			diffConnection, err := comp.FileDiffs(ctx, &FileDiffsConnectionArgs{})
+			if err != nil {
+				t.Fatal(err)
+			}
 
 			diffStat, err := diffConnection.DiffStat(ctx)
 			if err != nil {
@@ -161,7 +167,10 @@ func TestRepositoryComparison(t *testing.T) {
 		})
 
 		t.Run("FileDiff", func(t *testing.T) {
-			diffConnection := comp.FileDiffs(&FileDiffsConnectionArgs{})
+			diffConnection, err := comp.FileDiffs(ctx, &FileDiffsConnectionArgs{})
+			if err != nil {
+				t.Fatal(err)
+			}
 
 			nodes, err := diffConnection.Nodes(ctx)
 			if err != nil {
@@ -298,7 +307,10 @@ func TestRepositoryComparison(t *testing.T) {
 					args.After = &tc.after
 				}
 
-				conn := comp.FileDiffs(args)
+				conn, err := comp.FileDiffs(ctx, args)
+				if err != nil {
+					t.Fatal(err)
+				}
 
 				nodes, err := conn.Nodes(ctx)
 				if err != nil {

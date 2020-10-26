@@ -15,8 +15,8 @@ import (
 	"github.com/xeonx/timeago"
 
 	"github.com/pkg/errors"
-	"github.com/sourcegraph/sourcegraph/cmd/frontend/db"
 	"github.com/sourcegraph/sourcegraph/cmd/frontend/types"
+	"github.com/sourcegraph/sourcegraph/internal/db"
 	"github.com/sourcegraph/sourcegraph/internal/errcode"
 	"github.com/sourcegraph/sourcegraph/internal/search"
 	"github.com/sourcegraph/sourcegraph/internal/search/query"
@@ -24,8 +24,8 @@ import (
 	"github.com/sourcegraph/sourcegraph/internal/vcs/git"
 )
 
-// commitSearchResultResolver is a resolver for the GraphQL type `CommitSearchResult`
-type commitSearchResultResolver struct {
+// CommitSearchResultResolver is a resolver for the GraphQL type `CommitSearchResult`
+type CommitSearchResultResolver struct {
 	commit         *GitCommitResolver
 	refs           []*GitRefResolver
 	sourceRefs     []*GitRefResolver
@@ -38,52 +38,48 @@ type commitSearchResultResolver struct {
 	matches        []*searchResultMatchResolver
 }
 
-func (r *commitSearchResultResolver) Commit() *GitCommitResolver         { return r.commit }
-func (r *commitSearchResultResolver) Refs() []*GitRefResolver            { return r.refs }
-func (r *commitSearchResultResolver) SourceRefs() []*GitRefResolver      { return r.sourceRefs }
-func (r *commitSearchResultResolver) MessagePreview() *highlightedString { return r.messagePreview }
-func (r *commitSearchResultResolver) DiffPreview() *highlightedString    { return r.diffPreview }
-func (r *commitSearchResultResolver) Icon() string {
+func (r *CommitSearchResultResolver) Commit() *GitCommitResolver         { return r.commit }
+func (r *CommitSearchResultResolver) Refs() []*GitRefResolver            { return r.refs }
+func (r *CommitSearchResultResolver) SourceRefs() []*GitRefResolver      { return r.sourceRefs }
+func (r *CommitSearchResultResolver) MessagePreview() *highlightedString { return r.messagePreview }
+func (r *CommitSearchResultResolver) DiffPreview() *highlightedString    { return r.diffPreview }
+func (r *CommitSearchResultResolver) Icon() string {
 	return r.icon
 }
 
-func (r *commitSearchResultResolver) Label() *markdownResolver {
-	return &markdownResolver{text: r.label}
+func (r *CommitSearchResultResolver) Label() Markdown {
+	return Markdown(r.label)
 }
 
-func (r *commitSearchResultResolver) URL() string {
+func (r *CommitSearchResultResolver) URL() string {
 	return r.url
 }
 
-func (r *commitSearchResultResolver) Detail() *markdownResolver {
-	return &markdownResolver{text: r.detail}
+func (r *CommitSearchResultResolver) Detail() Markdown {
+	return Markdown(r.detail)
 }
 
-func (r *commitSearchResultResolver) Matches() []*searchResultMatchResolver {
+func (r *CommitSearchResultResolver) Matches() []*searchResultMatchResolver {
 	return r.matches
 }
 
-func (r *commitSearchResultResolver) ToRepository() (*RepositoryResolver, bool) { return nil, false }
-func (r *commitSearchResultResolver) ToFileMatch() (*FileMatchResolver, bool)   { return nil, false }
-func (r *commitSearchResultResolver) ToCommitSearchResult() (*commitSearchResultResolver, bool) {
+func (r *CommitSearchResultResolver) ToRepository() (*RepositoryResolver, bool) { return nil, false }
+func (r *CommitSearchResultResolver) ToFileMatch() (*FileMatchResolver, bool)   { return nil, false }
+func (r *CommitSearchResultResolver) ToCommitSearchResult() (*CommitSearchResultResolver, bool) {
 	return r, true
 }
 
-func (r *commitSearchResultResolver) ToCodemodResult() (*codemodResultResolver, bool) {
-	return nil, false
-}
-
-func (r *commitSearchResultResolver) searchResultURIs() (string, string) {
+func (r *CommitSearchResultResolver) searchResultURIs() (string, string) {
 	// Diffs aren't going to be returned with other types of results
 	// and are already ordered in the desired order, so we'll just leave them in place.
 	return "~", "~" // lexicographically last in ASCII
 }
 
-func (r *commitSearchResultResolver) resultCount() int32 {
+func (r *CommitSearchResultResolver) resultCount() int32 {
 	return 1
 }
 
-func searchCommitLogInRepo(ctx context.Context, repoRevs *search.RepositoryRevisions, info *search.CommitPatternInfo, query query.QueryInfo) (results []*commitSearchResultResolver, limitHit, timedOut bool, err error) {
+func searchCommitLogInRepo(ctx context.Context, repoRevs *search.RepositoryRevisions, info *search.CommitPatternInfo, query query.QueryInfo) (results []*CommitSearchResultResolver, limitHit, timedOut bool, err error) {
 	var terms []string
 	if info.Pattern != "" {
 		terms = append(terms, info.Pattern)
@@ -97,7 +93,7 @@ func searchCommitLogInRepo(ctx context.Context, repoRevs *search.RepositoryRevis
 	})
 }
 
-func searchCommitsInRepo(ctx context.Context, op search.CommitParameters) (results []*commitSearchResultResolver, limitHit, timedOut bool, err error) {
+func searchCommitsInRepo(ctx context.Context, op search.CommitParameters) (results []*CommitSearchResultResolver, limitHit, timedOut bool, err error) {
 	tr, ctx := trace.New(ctx, "searchCommitsInRepo", fmt.Sprintf("repoRevs: %v, pattern %+v", op.RepoRevs, op.PatternInfo))
 	defer func() {
 		tr.LazyPrintf("%d results, limitHit=%v, timedOut=%v", len(results), limitHit, timedOut)
@@ -243,11 +239,11 @@ func searchCommitsInRepo(ctx context.Context, op search.CommitParameters) (resul
 	}
 
 	repoResolver := &RepositoryResolver{repo: repo}
-	results = make([]*commitSearchResultResolver, len(rawResults))
+	results = make([]*CommitSearchResultResolver, len(rawResults))
 	for i, rawResult := range rawResults {
 		commit := rawResult.Commit
 		commitResolver := toGitCommitResolver(repoResolver, &commit)
-		results[i] = &commitSearchResultResolver{commit: commitResolver}
+		results[i] = &CommitSearchResultResolver{commit: commitResolver}
 
 		addRefs := func(dst *[]*GitRefResolver, src []string) {
 			for _, ref := range src {
@@ -433,7 +429,7 @@ func searchCommitDiffsInRepos(ctx context.Context, args *search.TextParametersFo
 	var (
 		wg          sync.WaitGroup
 		mu          sync.Mutex
-		unflattened [][]*commitSearchResultResolver
+		unflattened [][]*CommitSearchResultResolver
 		common      = &searchResultsCommon{}
 	)
 	common.repos = make([]*types.Repo, len(args.Repos))
@@ -476,7 +472,7 @@ func searchCommitDiffsInRepos(ctx context.Context, args *search.TextParametersFo
 		return nil, nil, err
 	}
 
-	var flattened []*commitSearchResultResolver
+	var flattened []*CommitSearchResultResolver
 	for _, results := range unflattened {
 		flattened = append(flattened, results...)
 	}
@@ -504,7 +500,7 @@ func searchCommitLogInRepos(ctx context.Context, args *search.TextParametersForC
 	var (
 		wg          sync.WaitGroup
 		mu          sync.Mutex
-		unflattened [][]*commitSearchResultResolver
+		unflattened [][]*CommitSearchResultResolver
 		common      = &searchResultsCommon{}
 	)
 	common.repos = make([]*types.Repo, len(args.Repos))
@@ -541,14 +537,14 @@ func searchCommitLogInRepos(ctx context.Context, args *search.TextParametersForC
 		return nil, nil, err
 	}
 
-	var flattened []*commitSearchResultResolver
+	var flattened []*CommitSearchResultResolver
 	for _, results := range unflattened {
 		flattened = append(flattened, results...)
 	}
 	return commitSearchResultsToSearchResults(flattened), common, nil
 }
 
-func commitSearchResultsToSearchResults(results []*commitSearchResultResolver) []SearchResultResolver {
+func commitSearchResultsToSearchResults(results []*CommitSearchResultResolver) []SearchResultResolver {
 	// Show most recent commits first.
 	sort.Slice(results, func(i, j int) bool {
 		return results[i].commit.author.Date() > results[j].commit.author.Date()

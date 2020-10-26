@@ -65,6 +65,6 @@ func TestInvokeN(t *testing.T) {
 	}
 
 	if n != 12 {
-		fmt.Printf("expected %d values, got %d", 12, n)
+		t.Fatalf("expected %d values, got %d", 12, n)
 	}
 }

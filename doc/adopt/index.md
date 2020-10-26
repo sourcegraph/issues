@@ -1,7 +1,7 @@
 # Adopting Sourcegraph
 
 - Why should my company use Sourcegraph?
-  - [Sourcegraph user features](../user/index.md)
+  - [Sourcegraph user features](../getting-started/index.md)
   - [Code search product comparisons](https://about.sourcegraph.com/workflow#other-tools)
 - [How to run a Sourcegraph trial](trial/index.md)
   1. [Define success](trial/index.md#1-define-trial-success)

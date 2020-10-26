@@ -33,7 +33,7 @@ func (c *Client) ListUsers(ctx context.Context, urlStr string) (users []*User, n
 	if err != nil {
 		return nil, nil, err
 	}
-	respHeader, err := c.do(ctx, req, &users)
+	respHeader, _, err := c.do(ctx, req, &users)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -63,7 +63,7 @@ func (c *Client) GetUser(ctx context.Context, id string) (*User, error) {
 	if err != nil {
 		return nil, err
 	}
-	if _, err := c.do(ctx, req, &usr); err != nil {
+	if _, _, err := c.do(ctx, req, &usr); err != nil {
 		return nil, err
 	}
 	return &usr, nil

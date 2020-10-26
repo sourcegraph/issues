@@ -12,8 +12,8 @@ func GetCampaignsUsageStatistics(ctx context.Context) (*types.CampaignsUsageStat
 	const q = `
 SELECT
     (SELECT COUNT(*) FROM campaigns) AS campaigns_count,
-    COUNT(*) FILTER (WHERE created_by_campaign) AS action_changesets,
-    COUNT(*) FILTER (WHERE created_by_campaign AND external_state = 'MERGED') AS action_changesets_merged,
+    COUNT(*) FILTER (WHERE owned_by_campaign_id IS NOT NULL AND publication_state = 'PUBLISHED') AS action_changesets,
+    COUNT(*) FILTER (WHERE owned_by_campaign_id IS NOT NULL AND publication_state = 'PUBLISHED' AND external_state = 'MERGED') AS action_changesets_merged,
     COUNT(*) FILTER (WHERE added_to_campaign) AS manual_changesets,
     COUNT(*) FILTER (WHERE added_to_campaign AND external_state = 'MERGED') AS manual_changesets_merged
 FROM changesets;

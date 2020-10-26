@@ -1,8 +1,10 @@
 package search
 
 import (
+	"context"
 	"fmt"
 	"strings"
+	"sync"
 
 	"github.com/sourcegraph/sourcegraph/internal/api"
 	"github.com/sourcegraph/sourcegraph/internal/endpoint"
@@ -68,12 +70,66 @@ type SymbolsParameters struct {
 	First int
 }
 
+type GlobalSearchMode int
+
+const (
+	ZoektGlobalSearch GlobalSearchMode = iota + 1
+	SearcherOnly
+	NoFilePath
+)
+
+type Promise struct {
+	getOnce sync.Once
+	err     error
+
+	initOnce sync.Once
+	done     chan struct{}
+
+	valueOnce sync.Once
+	value     interface{}
+}
+
+func (p *Promise) init() {
+	p.initOnce.Do(func() { p.done = make(chan struct{}) })
+}
+
+// Resolve returns a promise that is resolved with a given value.
+func (p *Promise) Resolve(v interface{}) *Promise {
+	p.valueOnce.Do(func() {
+		p.init()
+		p.value = v
+		close(p.done)
+	})
+	return p
+}
+
+// Get returns the value. It blocks until the promise resolves or the context is
+// canceled. Further calls to Get will always return the original results, IE err
+// will stay nil even if the context expired between the first and the second
+// call. Vice versa, if ctx finishes while resolving, then we will always return
+// ctx.Err()
+func (p *Promise) Get(ctx context.Context) (interface{}, error) {
+	p.getOnce.Do(func() {
+		p.init()
+		select {
+		case <-ctx.Done():
+			p.err = ctx.Err()
+		case <-p.done:
+		}
+	})
+	return p.value, p.err
+}
+
 // TextParameters are the parameters passed to a search backend. It contains the Pattern
 // to search for, as well as the hydrated list of repository revisions to
 // search. It defines behavior for text search on repository names, file names, and file content.
 type TextParameters struct {
 	PatternInfo *TextPatternInfo
-	Repos       []*RepositoryRevisions
+
+	// Performance optimization: For global queries, resolving repositories and
+	// querying zoekt happens concurrently.
+	RepoPromise *Promise
+	Mode        GlobalSearchMode
 
 	// Query is the parsed query from the user. You should be using Pattern
 	// instead, but Query is useful for checking extra fields that are set and
@@ -107,6 +163,7 @@ type TextParametersForCommitParameters struct {
 // sync with pkg/searcher/protocol.PatternInfo.
 type TextPatternInfo struct {
 	Pattern         string
+	IsNegated       bool
 	IsRegExp        bool
 	IsStructuralPat bool
 	CombyRule       string
@@ -122,7 +179,6 @@ type TextPatternInfo struct {
 	FilePatternsReposMustInclude []string
 	FilePatternsReposMustExclude []string
 
-	PathPatternsAreRegExps       bool
 	PathPatternsAreCaseSensitive bool
 
 	PatternMatchesContent bool
@@ -169,10 +225,7 @@ func (p *TextPatternInfo) String() string {
 		args = append(args, fmt.Sprintf("-repositoryPathPattern:%s", dec))
 	}
 
-	path := "glob"
-	if p.PathPatternsAreRegExps {
-		path = "f"
-	}
+	path := "f"
 	if p.PathPatternsAreCaseSensitive {
 		path = "F"
 	}

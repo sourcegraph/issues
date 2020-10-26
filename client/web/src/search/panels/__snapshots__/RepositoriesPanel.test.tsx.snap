@@ -1,0 +1,1106 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`RepositoriesPanel Both r: and repo: filters are tracked 1`] = `
+<RepositoriesPanel
+  authenticatedUser={null}
+  fetchRecentSearches={[Function]}
+  telemetryService={
+    Object {
+      "log": [Function],
+      "logViewEvent": [Function],
+    }
+  }
+>
+  <PanelContainer
+    className="repositories-panel"
+    emptyContent={
+      <div
+        className="panel-container__empty-container text-muted"
+      >
+        <small
+          className="mb-2"
+        >
+          <p
+            className="mb-1"
+          >
+            Recently searched repositories will be displayed here.
+          </p>
+          <p
+            className="mb-1"
+          >
+            Search in repositories with the 
+            <strong>
+              repo:
+            </strong>
+             filter:
+          </p>
+          <p
+            className="mb-1 text-monospace"
+          >
+            <span
+              className="search-keyword"
+            >
+              repo:
+            </span>
+            sourcegraph/sourcegraph
+          </p>
+          <p
+            className="mb-1"
+          >
+            Add the code host to scope to a single repository:
+          </p>
+          <p
+            className="mb-1 text-monospace"
+          >
+            <span
+              className="search-keyword"
+            >
+              repo:
+            </span>
+            ^git\\.local/my/repo$
+          </p>
+        </small>
+      </div>
+    }
+    loadingContent={
+      <LoadingPanelView
+        text="Loading recently searched repositories"
+      />
+    }
+    populatedContent={
+      <div
+        className="mt-2"
+      >
+        <div
+          className="d-flex mb-1"
+        >
+          <small>
+            Search
+          </small>
+        </div>
+        <dd
+          className="text-monospace text-break"
+        >
+          <small>
+            <AnchorLink
+              onClick={[Function]}
+              to="/search?q=repo:sourcegraph"
+            >
+              <span
+                className="search-keyword"
+              >
+                repo:
+              </span>
+              <span
+                className="repositories-panel__search-value"
+              >
+                sourcegraph
+              </span>
+            </AnchorLink>
+          </small>
+        </dd>
+        <dd
+          className="text-monospace text-break"
+        >
+          <small>
+            <AnchorLink
+              onClick={[Function]}
+              to="/search?q=repo:test"
+            >
+              <span
+                className="search-keyword"
+              >
+                repo:
+              </span>
+              <span
+                className="repositories-panel__search-value"
+              >
+                test
+              </span>
+            </AnchorLink>
+          </small>
+        </dd>
+      </div>
+    }
+    state="populated"
+    title="Repositories"
+  >
+    <div
+      className="repositories-panel panel-container d-flex flex-column"
+    >
+      <div
+        className="panel-container__header d-flex border-bottom"
+      >
+        <h4
+          className="panel-container__header-text"
+        >
+          Repositories
+        </h4>
+      </div>
+      <div
+        className="panel-container__content h-100"
+      >
+        <div
+          className="mt-2"
+        >
+          <div
+            className="d-flex mb-1"
+          >
+            <small>
+              Search
+            </small>
+          </div>
+          <dd
+            className="text-monospace text-break"
+            key="sourcegraph-0"
+          >
+            <small>
+              <AnchorLink
+                onClick={[Function]}
+                to="/search?q=repo:sourcegraph"
+              >
+                <a
+                  href="/search?q=repo:sourcegraph"
+                  onClick={[Function]}
+                >
+                  <span
+                    className="search-keyword"
+                  >
+                    repo:
+                  </span>
+                  <span
+                    className="repositories-panel__search-value"
+                  >
+                    sourcegraph
+                  </span>
+                </a>
+              </AnchorLink>
+            </small>
+          </dd>
+          <dd
+            className="text-monospace text-break"
+            key="test-1"
+          >
+            <small>
+              <AnchorLink
+                onClick={[Function]}
+                to="/search?q=repo:test"
+              >
+                <a
+                  href="/search?q=repo:test"
+                  onClick={[Function]}
+                >
+                  <span
+                    className="search-keyword"
+                  >
+                    repo:
+                  </span>
+                  <span
+                    className="repositories-panel__search-value"
+                  >
+                    test
+                  </span>
+                </a>
+              </AnchorLink>
+            </small>
+          </dd>
+        </div>
+      </div>
+    </div>
+  </PanelContainer>
+</RepositoriesPanel>
+`;
+
+exports[`RepositoriesPanel Show More button is shown if more pages are available 1`] = `
+<RepositoriesPanel
+  authenticatedUser={null}
+  fetchRecentSearches={[Function]}
+  telemetryService={
+    Object {
+      "log": [Function],
+      "logViewEvent": [Function],
+    }
+  }
+>
+  <PanelContainer
+    className="repositories-panel"
+    emptyContent={
+      <div
+        className="panel-container__empty-container text-muted"
+      >
+        <small
+          className="mb-2"
+        >
+          <p
+            className="mb-1"
+          >
+            Recently searched repositories will be displayed here.
+          </p>
+          <p
+            className="mb-1"
+          >
+            Search in repositories with the 
+            <strong>
+              repo:
+            </strong>
+             filter:
+          </p>
+          <p
+            className="mb-1 text-monospace"
+          >
+            <span
+              className="search-keyword"
+            >
+              repo:
+            </span>
+            sourcegraph/sourcegraph
+          </p>
+          <p
+            className="mb-1"
+          >
+            Add the code host to scope to a single repository:
+          </p>
+          <p
+            className="mb-1 text-monospace"
+          >
+            <span
+              className="search-keyword"
+            >
+              repo:
+            </span>
+            ^git\\.local/my/repo$
+          </p>
+        </small>
+      </div>
+    }
+    loadingContent={
+      <LoadingPanelView
+        text="Loading recently searched repositories"
+      />
+    }
+    populatedContent={
+      <div
+        className="mt-2"
+      >
+        <div
+          className="d-flex mb-1"
+        >
+          <small>
+            Search
+          </small>
+        </div>
+        <dd
+          className="text-monospace text-break"
+        >
+          <small>
+            <AnchorLink
+              onClick={[Function]}
+              to="/search?q=repo:test"
+            >
+              <span
+                className="search-keyword"
+              >
+                repo:
+              </span>
+              <span
+                className="repositories-panel__search-value"
+              >
+                test
+              </span>
+            </AnchorLink>
+          </small>
+        </dd>
+        <dd
+          className="text-monospace text-break"
+        >
+          <small>
+            <AnchorLink
+              onClick={[Function]}
+              to="/search?q=repo:sourcegraph"
+            >
+              <span
+                className="search-keyword"
+              >
+                repo:
+              </span>
+              <span
+                className="repositories-panel__search-value"
+              >
+                sourcegraph
+              </span>
+            </AnchorLink>
+          </small>
+        </dd>
+        <dd
+          className="text-monospace text-break"
+        >
+          <small>
+            <AnchorLink
+              onClick={[Function]}
+              to="/search?q=repo:test-two"
+            >
+              <span
+                className="search-keyword"
+              >
+                repo:
+              </span>
+              <span
+                className="repositories-panel__search-value"
+              >
+                test-two
+              </span>
+            </AnchorLink>
+          </small>
+        </dd>
+        <ShowMoreButton
+          className="test-repositories-panel-show-more"
+          onClick={[Function]}
+        />
+      </div>
+    }
+    state="populated"
+    title="Repositories"
+  >
+    <div
+      className="repositories-panel panel-container d-flex flex-column"
+    >
+      <div
+        className="panel-container__header d-flex border-bottom"
+      >
+        <h4
+          className="panel-container__header-text"
+        >
+          Repositories
+        </h4>
+      </div>
+      <div
+        className="panel-container__content h-100"
+      >
+        <div
+          className="mt-2"
+        >
+          <div
+            className="d-flex mb-1"
+          >
+            <small>
+              Search
+            </small>
+          </div>
+          <dd
+            className="text-monospace text-break"
+            key="test-0"
+          >
+            <small>
+              <AnchorLink
+                onClick={[Function]}
+                to="/search?q=repo:test"
+              >
+                <a
+                  href="/search?q=repo:test"
+                  onClick={[Function]}
+                >
+                  <span
+                    className="search-keyword"
+                  >
+                    repo:
+                  </span>
+                  <span
+                    className="repositories-panel__search-value"
+                  >
+                    test
+                  </span>
+                </a>
+              </AnchorLink>
+            </small>
+          </dd>
+          <dd
+            className="text-monospace text-break"
+            key="sourcegraph-1"
+          >
+            <small>
+              <AnchorLink
+                onClick={[Function]}
+                to="/search?q=repo:sourcegraph"
+              >
+                <a
+                  href="/search?q=repo:sourcegraph"
+                  onClick={[Function]}
+                >
+                  <span
+                    className="search-keyword"
+                  >
+                    repo:
+                  </span>
+                  <span
+                    className="repositories-panel__search-value"
+                  >
+                    sourcegraph
+                  </span>
+                </a>
+              </AnchorLink>
+            </small>
+          </dd>
+          <dd
+            className="text-monospace text-break"
+            key="test-two-2"
+          >
+            <small>
+              <AnchorLink
+                onClick={[Function]}
+                to="/search?q=repo:test-two"
+              >
+                <a
+                  href="/search?q=repo:test-two"
+                  onClick={[Function]}
+                >
+                  <span
+                    className="search-keyword"
+                  >
+                    repo:
+                  </span>
+                  <span
+                    className="repositories-panel__search-value"
+                  >
+                    test-two
+                  </span>
+                </a>
+              </AnchorLink>
+            </small>
+          </dd>
+          <ShowMoreButton
+            className="test-repositories-panel-show-more"
+            onClick={[Function]}
+          >
+            <div
+              className="text-center py-3"
+            >
+              <button
+                className="btn btn-link test-repositories-panel-show-more"
+                onClick={[Function]}
+                type="button"
+              >
+                Show more
+              </button>
+            </div>
+          </ShowMoreButton>
+        </div>
+      </div>
+    </div>
+  </PanelContainer>
+</RepositoriesPanel>
+`;
+
+exports[`RepositoriesPanel Show More button loads more items 1`] = `
+<RepositoriesPanel
+  authenticatedUser={null}
+  className=""
+  fetchRecentSearches={[Function]}
+  telemetryService={
+    Object {
+      "log": [Function],
+      "logViewEvent": [Function],
+    }
+  }
+>
+  <PanelContainer
+    className="repositories-panel"
+    emptyContent={
+      <div
+        className="panel-container__empty-container text-muted"
+      >
+        <small
+          className="mb-2"
+        >
+          <p
+            className="mb-1"
+          >
+            Recently searched repositories will be displayed here.
+          </p>
+          <p
+            className="mb-1"
+          >
+            Search in repositories with the 
+            <strong>
+              repo:
+            </strong>
+             filter:
+          </p>
+          <p
+            className="mb-1 text-monospace"
+          >
+            <span
+              className="search-keyword"
+            >
+              repo:
+            </span>
+            sourcegraph/sourcegraph
+          </p>
+          <p
+            className="mb-1"
+          >
+            Add the code host to scope to a single repository:
+          </p>
+          <p
+            className="mb-1 text-monospace"
+          >
+            <span
+              className="search-keyword"
+            >
+              repo:
+            </span>
+            ^git\\.local/my/repo$
+          </p>
+        </small>
+      </div>
+    }
+    loadingContent={
+      <LoadingPanelView
+        text="Loading recently searched repositories"
+      />
+    }
+    populatedContent={
+      <div
+        className="mt-2"
+      >
+        <div
+          className="d-flex mb-1"
+        >
+          <small>
+            Search
+          </small>
+        </div>
+        <dd
+          className="text-monospace text-break"
+        >
+          <small>
+            <AnchorLink
+              onClick={[Function]}
+              to="/search?q=repo:test"
+            >
+              <span
+                className="search-keyword"
+              >
+                repo:
+              </span>
+              <span
+                className="repositories-panel__search-value"
+              >
+                test
+              </span>
+            </AnchorLink>
+          </small>
+        </dd>
+        <dd
+          className="text-monospace text-break"
+        >
+          <small>
+            <AnchorLink
+              onClick={[Function]}
+              to="/search?q=repo:sourcegraph"
+            >
+              <span
+                className="search-keyword"
+              >
+                repo:
+              </span>
+              <span
+                className="repositories-panel__search-value"
+              >
+                sourcegraph
+              </span>
+            </AnchorLink>
+          </small>
+        </dd>
+        <dd
+          className="text-monospace text-break"
+        >
+          <small>
+            <AnchorLink
+              onClick={[Function]}
+              to="/search?q=repo:test-two"
+            >
+              <span
+                className="search-keyword"
+              >
+                repo:
+              </span>
+              <span
+                className="repositories-panel__search-value"
+              >
+                test-two
+              </span>
+            </AnchorLink>
+          </small>
+        </dd>
+        <dd
+          className="text-monospace text-break"
+        >
+          <small>
+            <AnchorLink
+              onClick={[Function]}
+              to="/search?q=repo:test-three"
+            >
+              <span
+                className="search-keyword"
+              >
+                repo:
+              </span>
+              <span
+                className="repositories-panel__search-value"
+              >
+                test-three
+              </span>
+            </AnchorLink>
+          </small>
+        </dd>
+        <dd
+          className="text-monospace text-break"
+        >
+          <small>
+            <AnchorLink
+              onClick={[Function]}
+              to="/search?q=repo:r:test-four"
+            >
+              <span
+                className="search-keyword"
+              >
+                repo:
+              </span>
+              <span
+                className="repositories-panel__search-value"
+              >
+                r:test-four
+              </span>
+            </AnchorLink>
+          </small>
+        </dd>
+        <dd
+          className="text-monospace text-break"
+        >
+          <small>
+            <AnchorLink
+              onClick={[Function]}
+              to="/search?q=repo:test-five"
+            >
+              <span
+                className="search-keyword"
+              >
+                repo:
+              </span>
+              <span
+                className="repositories-panel__search-value"
+              >
+                test-five
+              </span>
+            </AnchorLink>
+          </small>
+        </dd>
+      </div>
+    }
+    state="populated"
+    title="Repositories"
+  >
+    <div
+      className="repositories-panel panel-container d-flex flex-column"
+    >
+      <div
+        className="panel-container__header d-flex border-bottom"
+      >
+        <h4
+          className="panel-container__header-text"
+        >
+          Repositories
+        </h4>
+      </div>
+      <div
+        className="panel-container__content h-100"
+      >
+        <div
+          className="mt-2"
+        >
+          <div
+            className="d-flex mb-1"
+          >
+            <small>
+              Search
+            </small>
+          </div>
+          <dd
+            className="text-monospace text-break"
+            key="test-0"
+          >
+            <small>
+              <AnchorLink
+                onClick={[Function]}
+                to="/search?q=repo:test"
+              >
+                <a
+                  href="/search?q=repo:test"
+                  onClick={[Function]}
+                >
+                  <span
+                    className="search-keyword"
+                  >
+                    repo:
+                  </span>
+                  <span
+                    className="repositories-panel__search-value"
+                  >
+                    test
+                  </span>
+                </a>
+              </AnchorLink>
+            </small>
+          </dd>
+          <dd
+            className="text-monospace text-break"
+            key="sourcegraph-1"
+          >
+            <small>
+              <AnchorLink
+                onClick={[Function]}
+                to="/search?q=repo:sourcegraph"
+              >
+                <a
+                  href="/search?q=repo:sourcegraph"
+                  onClick={[Function]}
+                >
+                  <span
+                    className="search-keyword"
+                  >
+                    repo:
+                  </span>
+                  <span
+                    className="repositories-panel__search-value"
+                  >
+                    sourcegraph
+                  </span>
+                </a>
+              </AnchorLink>
+            </small>
+          </dd>
+          <dd
+            className="text-monospace text-break"
+            key="test-two-2"
+          >
+            <small>
+              <AnchorLink
+                onClick={[Function]}
+                to="/search?q=repo:test-two"
+              >
+                <a
+                  href="/search?q=repo:test-two"
+                  onClick={[Function]}
+                >
+                  <span
+                    className="search-keyword"
+                  >
+                    repo:
+                  </span>
+                  <span
+                    className="repositories-panel__search-value"
+                  >
+                    test-two
+                  </span>
+                </a>
+              </AnchorLink>
+            </small>
+          </dd>
+          <dd
+            className="text-monospace text-break"
+            key="test-three-3"
+          >
+            <small>
+              <AnchorLink
+                onClick={[Function]}
+                to="/search?q=repo:test-three"
+              >
+                <a
+                  href="/search?q=repo:test-three"
+                  onClick={[Function]}
+                >
+                  <span
+                    className="search-keyword"
+                  >
+                    repo:
+                  </span>
+                  <span
+                    className="repositories-panel__search-value"
+                  >
+                    test-three
+                  </span>
+                </a>
+              </AnchorLink>
+            </small>
+          </dd>
+          <dd
+            className="text-monospace text-break"
+            key="r:test-four-4"
+          >
+            <small>
+              <AnchorLink
+                onClick={[Function]}
+                to="/search?q=repo:r:test-four"
+              >
+                <a
+                  href="/search?q=repo:r:test-four"
+                  onClick={[Function]}
+                >
+                  <span
+                    className="search-keyword"
+                  >
+                    repo:
+                  </span>
+                  <span
+                    className="repositories-panel__search-value"
+                  >
+                    r:test-four
+                  </span>
+                </a>
+              </AnchorLink>
+            </small>
+          </dd>
+          <dd
+            className="text-monospace text-break"
+            key="test-five-5"
+          >
+            <small>
+              <AnchorLink
+                onClick={[Function]}
+                to="/search?q=repo:test-five"
+              >
+                <a
+                  href="/search?q=repo:test-five"
+                  onClick={[Function]}
+                >
+                  <span
+                    className="search-keyword"
+                  >
+                    repo:
+                  </span>
+                  <span
+                    className="repositories-panel__search-value"
+                  >
+                    test-five
+                  </span>
+                </a>
+              </AnchorLink>
+            </small>
+          </dd>
+        </div>
+      </div>
+    </div>
+  </PanelContainer>
+</RepositoriesPanel>
+`;
+
+exports[`RepositoriesPanel consecutive searches with identical repo filters are correctly merged when rendered 1`] = `
+<RepositoriesPanel
+  authenticatedUser={null}
+  fetchRecentSearches={[Function]}
+  telemetryService={
+    Object {
+      "log": [Function],
+      "logViewEvent": [Function],
+    }
+  }
+>
+  <PanelContainer
+    className="repositories-panel"
+    emptyContent={
+      <div
+        className="panel-container__empty-container text-muted"
+      >
+        <small
+          className="mb-2"
+        >
+          <p
+            className="mb-1"
+          >
+            Recently searched repositories will be displayed here.
+          </p>
+          <p
+            className="mb-1"
+          >
+            Search in repositories with the 
+            <strong>
+              repo:
+            </strong>
+             filter:
+          </p>
+          <p
+            className="mb-1 text-monospace"
+          >
+            <span
+              className="search-keyword"
+            >
+              repo:
+            </span>
+            sourcegraph/sourcegraph
+          </p>
+          <p
+            className="mb-1"
+          >
+            Add the code host to scope to a single repository:
+          </p>
+          <p
+            className="mb-1 text-monospace"
+          >
+            <span
+              className="search-keyword"
+            >
+              repo:
+            </span>
+            ^git\\.local/my/repo$
+          </p>
+        </small>
+      </div>
+    }
+    loadingContent={
+      <LoadingPanelView
+        text="Loading recently searched repositories"
+      />
+    }
+    populatedContent={
+      <div
+        className="mt-2"
+      >
+        <div
+          className="d-flex mb-1"
+        >
+          <small>
+            Search
+          </small>
+        </div>
+        <dd
+          className="text-monospace text-break"
+        >
+          <small>
+            <AnchorLink
+              onClick={[Function]}
+              to="/search?q=repo:test"
+            >
+              <span
+                className="search-keyword"
+              >
+                repo:
+              </span>
+              <span
+                className="repositories-panel__search-value"
+              >
+                test
+              </span>
+            </AnchorLink>
+          </small>
+        </dd>
+        <dd
+          className="text-monospace text-break"
+        >
+          <small>
+            <AnchorLink
+              onClick={[Function]}
+              to="/search?q=repo:sourcegraph"
+            >
+              <span
+                className="search-keyword"
+              >
+                repo:
+              </span>
+              <span
+                className="repositories-panel__search-value"
+              >
+                sourcegraph
+              </span>
+            </AnchorLink>
+          </small>
+        </dd>
+      </div>
+    }
+    state="populated"
+    title="Repositories"
+  >
+    <div
+      className="repositories-panel panel-container d-flex flex-column"
+    >
+      <div
+        className="panel-container__header d-flex border-bottom"
+      >
+        <h4
+          className="panel-container__header-text"
+        >
+          Repositories
+        </h4>
+      </div>
+      <div
+        className="panel-container__content h-100"
+      >
+        <div
+          className="mt-2"
+        >
+          <div
+            className="d-flex mb-1"
+          >
+            <small>
+              Search
+            </small>
+          </div>
+          <dd
+            className="text-monospace text-break"
+            key="test-0"
+          >
+            <small>
+              <AnchorLink
+                onClick={[Function]}
+                to="/search?q=repo:test"
+              >
+                <a
+                  href="/search?q=repo:test"
+                  onClick={[Function]}
+                >
+                  <span
+                    className="search-keyword"
+                  >
+                    repo:
+                  </span>
+                  <span
+                    className="repositories-panel__search-value"
+                  >
+                    test
+                  </span>
+                </a>
+              </AnchorLink>
+            </small>
+          </dd>
+          <dd
+            className="text-monospace text-break"
+            key="sourcegraph-1"
+          >
+            <small>
+              <AnchorLink
+                onClick={[Function]}
+                to="/search?q=repo:sourcegraph"
+              >
+                <a
+                  href="/search?q=repo:sourcegraph"
+                  onClick={[Function]}
+                >
+                  <span
+                    className="search-keyword"
+                  >
+                    repo:
+                  </span>
+                  <span
+                    className="repositories-panel__search-value"
+                  >
+                    sourcegraph
+                  </span>
+                </a>
+              </AnchorLink>
+            </small>
+          </dd>
+        </div>
+      </div>
+    </div>
+  </PanelContainer>
+</RepositoriesPanel>
+`;

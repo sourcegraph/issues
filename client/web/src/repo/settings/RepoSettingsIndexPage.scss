@@ -1,0 +1,26 @@
+@import './components/ActionContainer';
+
+.repo-settings-index-page {
+    &__refs {
+        list-style-type: none;
+    }
+    &__ref {
+        display: flex;
+        align-items: center;
+
+        border: 1px solid var(--border-color);
+        border-radius: 0.125rem;
+        margin: 0.5rem 0;
+        padding: 0.5rem 0.75rem;
+        &-icon {
+            margin-right: 0.25rem;
+            &--current {
+                color: $success;
+            }
+        }
+    }
+
+    &__stats {
+        width: auto;
+    }
+}

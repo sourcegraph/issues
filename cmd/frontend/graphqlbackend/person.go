@@ -5,12 +5,12 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/sourcegraph/sourcegraph/cmd/frontend/db"
 	"github.com/sourcegraph/sourcegraph/cmd/frontend/types"
+	"github.com/sourcegraph/sourcegraph/internal/db"
 	"github.com/sourcegraph/sourcegraph/internal/errcode"
 )
 
-type personResolver struct {
+type PersonResolver struct {
 	name  string
 	email string
 
@@ -23,9 +23,17 @@ type personResolver struct {
 	err  error
 }
 
+func NewPersonResolver(name, email string, includeUserInfo bool) *PersonResolver {
+	return &PersonResolver{
+		name:            name,
+		email:           email,
+		includeUserInfo: includeUserInfo,
+	}
+}
+
 // resolveUser resolves the person to a user (using the email address). Not all persons can be
 // resolved to a user.
-func (r *personResolver) resolveUser(ctx context.Context) (*types.User, error) {
+func (r *PersonResolver) resolveUser(ctx context.Context) (*types.User, error) {
 	r.once.Do(func() {
 		if r.includeUserInfo && r.email != "" {
 			r.user, r.err = db.Users.GetByVerifiedEmail(ctx, r.email)
@@ -37,25 +45,26 @@ func (r *personResolver) resolveUser(ctx context.Context) (*types.User, error) {
 	return r.user, r.err
 }
 
-func (r *personResolver) Name(ctx context.Context) (string, error) {
+func (r *PersonResolver) Name(ctx context.Context) (string, error) {
 	user, err := r.resolveUser(ctx)
-	if err != nil && !errcode.IsNotFound(err) {
+	if err != nil {
 		return "", err
 	}
 	if user != nil && user.Username != "" {
-		return user.DisplayName, nil
+		return user.Username, nil
 	}
 
+	// Fall back to provided username.
 	return r.name, nil
 }
 
-func (r *personResolver) Email() string {
+func (r *PersonResolver) Email() string {
 	return r.email
 }
 
-func (r *personResolver) DisplayName(ctx context.Context) (string, error) {
+func (r *PersonResolver) DisplayName(ctx context.Context) (string, error) {
 	user, err := r.resolveUser(ctx)
-	if err != nil && !errcode.IsNotFound(err) {
+	if err != nil {
 		return "", err
 	}
 	if user != nil && user.DisplayName != "" {
@@ -71,18 +80,18 @@ func (r *personResolver) DisplayName(ctx context.Context) (string, error) {
 	return "unknown", nil
 }
 
-func (r *personResolver) AvatarURL(ctx context.Context) (string, error) {
+func (r *PersonResolver) AvatarURL(ctx context.Context) (*string, error) {
 	user, err := r.resolveUser(ctx)
-	if err != nil && !errcode.IsNotFound(err) {
-		return "", err
+	if err != nil {
+		return nil, err
 	}
 	if user != nil && user.AvatarURL != "" {
-		return user.AvatarURL, nil
+		return &user.AvatarURL, nil
 	}
-	return "", nil
+	return nil, nil
 }
 
-func (r *personResolver) User(ctx context.Context) (*UserResolver, error) {
+func (r *PersonResolver) User(ctx context.Context) (*UserResolver, error) {
 	user, err := r.resolveUser(ctx)
 	if user == nil || err != nil {
 		return nil, err

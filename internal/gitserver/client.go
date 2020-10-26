@@ -26,6 +26,7 @@ import (
 	otlog "github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
 	"github.com/prometheus/client_golang/prometheus"
+	"github.com/sourcegraph/sourcegraph/internal/actor"
 	"github.com/sourcegraph/sourcegraph/internal/api"
 	"github.com/sourcegraph/sourcegraph/internal/conf"
 	"github.com/sourcegraph/sourcegraph/internal/extsvc/gitolite"
@@ -804,6 +805,48 @@ func (c *Client) RepoInfo(ctx context.Context, repos ...api.RepoName) (*protocol
 	return &res, err.ErrorOrNil()
 }
 
+// ReposStats will return a map of the ReposStats for each gitserver in a
+// map. If we fail to fetch a stat from a gitserver, it won't be in the
+// returned map and will be appended to the error. If no errors occur err will
+// be nil.
+//
+// Note: If the statistics for a gitserver have not been computed, the
+// UpdatedAt field will be zero. This can happen for new gitservers.
+func (c *Client) ReposStats(ctx context.Context) (map[string]*protocol.ReposStats, error) {
+	stats := map[string]*protocol.ReposStats{}
+	var allErr error
+	for _, addr := range c.Addrs(ctx) {
+		stat, err := c.doReposStats(ctx, addr)
+		if err != nil {
+			allErr = multierror.Append(allErr, err)
+		} else {
+			stats[addr] = stat
+		}
+	}
+	return stats, allErr
+}
+
+func (c *Client) doReposStats(ctx context.Context, addr string) (*protocol.ReposStats, error) {
+	req, err := http.NewRequestWithContext(ctx, "GET", "http://"+addr+"/repos-stats", nil)
+	if err != nil {
+		return nil, err
+	}
+
+	resp, err := c.HTTPClient.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	var stats protocol.ReposStats
+	err = json.NewDecoder(resp.Body).Decode(&stats)
+	if err != nil {
+		return nil, err
+	}
+
+	return &stats, nil
+}
+
 // Remove removes the repository clone from gitserver.
 func (c *Client) Remove(ctx context.Context, repo api.RepoName) error {
 	req := &protocol.RepoDeleteRequest{
@@ -856,6 +899,7 @@ func (c *Client) do(ctx context.Context, repo api.RepoName, method, op string, p
 
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("User-Agent", c.UserAgent)
+	req.Header.Set("X-Sourcegraph-Actor", userFromContext(ctx))
 	req = req.WithContext(ctx)
 
 	if c.HTTPLimiter != nil {
@@ -870,6 +914,17 @@ func (c *Client) do(ctx context.Context, repo api.RepoName, method, op string, p
 	defer ht.Finish()
 
 	return c.HTTPClient.Do(req)
+}
+
+func userFromContext(ctx context.Context) string {
+	a := actor.FromContext(ctx)
+	if a == nil {
+		return "0"
+	}
+	if a.Internal {
+		return "internal"
+	}
+	return a.UIDString()
 }
 
 // CreateCommitFromPatch will attempt to create a commit from a patch

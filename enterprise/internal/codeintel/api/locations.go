@@ -6,9 +6,9 @@ import (
 )
 
 type ResolvedLocation struct {
-	Dump  store.Dump    `json:"dump"`
-	Path  string        `json:"path"`
-	Range bundles.Range `json:"range"`
+	Dump  store.Dump
+	Path  string
+	Range bundles.Range
 }
 
 func sliceLocations(locations []bundles.Location, lo, hi int) []bundles.Location {

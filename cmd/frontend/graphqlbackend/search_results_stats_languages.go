@@ -86,11 +86,11 @@ func searchResultsStatsLanguages(ctx context.Context, results []SearchResultReso
 				if filesMap[key].partialFiles == nil {
 					filesMap[key].partialFiles = map[string]uint64{}
 				}
-				filesMap[key].partialFiles[fileMatch.JPath] += uint64(len(fileMatch.LineMatches()))
+				filesMap[key].partialFiles[fileMatch.path()] += uint64(len(fileMatch.LineMatches()))
 			} else {
 				// Count entire file.
 				filesMap[key].fullEntries = append(filesMap[key].fullEntries, &fileInfo{
-					path:  fileMatch.JPath,
+					path:  fileMatch.path(),
 					isDir: fileMatch.File().IsDirectory(),
 				})
 			}

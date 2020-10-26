@@ -1,0 +1,21 @@
+[
+  "subscribe",
+  ".",
+  "gochangewatch",
+  {
+    "expression": [
+      "allof",
+      ["not", ["anyof", ["match", ".*"], ["suffix", "_test.go"], ["dirname", "dev"]]],
+      [
+        "anyof",
+        ["suffix", "go"],
+        ["dirname", "cmd/symbols"],
+        ["dirname", "schema"],
+        ["dirname", "docker-images/grafana/jsonnet"],
+        ["dirname", "monitoring"],
+        ["name", "cmd/frontend/graphqlbackend/schema.graphql", "wholename"]
+      ]
+    ],
+    "fields": ["name"]
+  }
+]

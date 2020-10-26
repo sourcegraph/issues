@@ -1,0 +1,5 @@
+/build/
+coverage/
+out/
+src/graphql-operations.ts
+code-intel-extensions/

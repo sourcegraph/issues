@@ -5,12 +5,17 @@ import (
 	"regexp"
 
 	"github.com/sourcegraph/sourcegraph/cmd/frontend/backend"
-	"github.com/sourcegraph/sourcegraph/cmd/frontend/db"
+	"github.com/sourcegraph/sourcegraph/internal/db"
 )
 
 // SearchFilterSuggestions provides search filter and default value suggestions.
 func (r *schemaResolver) SearchFilterSuggestions(ctx context.Context) (*searchFilterSuggestions, error) {
-	groupsByName, err := resolveRepoGroups(ctx)
+	settings, err := decodedViewerFinalSettings(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	groupsByName, err := resolveRepoGroups(settings)
 	if err != nil {
 		return nil, err
 	}
@@ -29,8 +34,15 @@ func (r *schemaResolver) SearchFilterSuggestions(ctx context.Context) (*searchFi
 		return nil, err
 	}
 	repoNames := make([]string, len(repos))
-	for i := range repos {
-		repoNames[i] = "^" + regexp.QuoteMeta(string(repos[i].Name)) + "$"
+
+	if getBoolPtr(settings.SearchGlobbing, false) {
+		for i := range repos {
+			repoNames[i] = string(repos[i].Name)
+		}
+	} else {
+		for i := range repos {
+			repoNames[i] = "^" + regexp.QuoteMeta(string(repos[i].Name)) + "$"
+		}
 	}
 
 	return &searchFilterSuggestions{

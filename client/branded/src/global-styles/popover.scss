@@ -1,0 +1,6 @@
+$popover-font-size: $font-size-base;
+$popover-arrow-outer-color: var(--border-color);
+$popover-arrow-color: var(--body-bg);
+$popover-max-width: auto;
+
+@import 'bootstrap/scss/popover';

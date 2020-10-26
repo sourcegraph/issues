@@ -17,7 +17,7 @@ func TestQueryResolver(t *testing.T) {
 	mockBundleManagerClient := bundlemocks.NewMockBundleManagerClient()
 	mockCodeIntelAPI := apimocks.NewMockCodeIntelAPI() // returns no dumps
 
-	resolver := NewResolver(mockStore, mockBundleManagerClient, mockCodeIntelAPI)
+	resolver := NewResolver(mockStore, mockBundleManagerClient, mockCodeIntelAPI, nil)
 	queryResolver, err := resolver.QueryResolver(context.Background(), &gql.GitBlobLSIFDataArgs{
 		Repo:      &types.Repo{ID: 50},
 		Commit:    api.CommitID("deadbeef"),

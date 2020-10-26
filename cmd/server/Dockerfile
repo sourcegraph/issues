@@ -1,15 +1,16 @@
-FROM alpine:3.10@sha256:e4355b66995c96b4b468159fc5c7e3540fcef961189ca13fee877798649f531a as libsqlite3-pcre
+FROM sourcegraph/alpine:3.12@sha256:133a0a767b836cf86a011101995641cf1b5cbefb3dd212d78d7be145adde636d as libsqlite3-pcre
 
 COPY libsqlite3-pcre-install-alpine.sh /libsqlite3-pcre-install-alpine.sh
 RUN /libsqlite3-pcre-install-alpine.sh
 
-FROM alpine:3.10@sha256:e4355b66995c96b4b468159fc5c7e3540fcef961189ca13fee877798649f531a AS ctags
-
-COPY ctags-install-alpine.sh /ctags-install-alpine.sh
-RUN /ctags-install-alpine.sh
-
-# TODO: Make this image use our sourcegraph/alpine:3.10 base image
-FROM alpine:3.10@sha256:e4355b66995c96b4b468159fc5c7e3540fcef961189ca13fee877798649f531a
+FROM sourcegraph/alpine:3.12@sha256:133a0a767b836cf86a011101995641cf1b5cbefb3dd212d78d7be145adde636d
+# TODO(security): This container should not be running as root!
+#
+# The default user in sourcegraph/alpine is a non-root `sourcegraph` user but because old deployments
+# cannot be easily migrated we have not changed this from root -> sourcegraph. See:
+# https://github.com/sourcegraph/sourcegraph/issues/13238
+# hadolint ignore=DL3002
+USER root
 
 ARG COMMIT_SHA="unknown"
 ARG DATE="unknown"
@@ -20,38 +21,50 @@ LABEL org.opencontainers.image.created=${DATE}
 LABEL org.opencontainers.image.version=${VERSION}
 LABEL com.sourcegraph.github.url=https://github.com/sourcegraph/sourcegraph/commit/${COMMIT_SHA}
 
-RUN echo "@edge http://dl-cdn.alpinelinux.org/alpine/edge/main" >> /etc/apk/repositories && \
-    echo "@edge http://dl-cdn.alpinelinux.org/alpine/edge/testing" >> /etc/apk/repositories && \
-    echo "@edge http://dl-cdn.alpinelinux.org/alpine/edge/community" >> /etc/apk/repositories && \
-    echo "http://dl-cdn.alpinelinux.org/alpine/edge/main" >> /etc/apk/repositories && \
-    echo "http://dl-cdn.alpinelinux.org/alpine/edge/testing" >> /etc/apk/repositories && \
-    echo "http://dl-cdn.alpinelinux.org/alpine/edge/community" >> /etc/apk/repositories && \
-    echo "http://dl-cdn.alpinelinux.org/alpine/v3.12/main" >> /etc/apk/repositories && \
-    echo "http://dl-cdn.alpinelinux.org/alpine/v3.12/community" >> /etc/apk/repositories
-
 # hadolint ignore=DL3018
 RUN apk update && apk add --no-cache \
     # NOTE that the Postgres version we run is different
     # from our *Minimum Supported Version* which alone dictates
     # the features we can depend on. See this link for more information:
-    # https://github.com/sourcegraph/sourcegraph/blob/master/doc/dev/postgresql.md#version-requirements
-    'bash=5.0.0-r0' 'postgresql-contrib=11.7-r0' 'postgresql=11.7-r0' \
-    'redis=5.0.9-r0' bind-tools ca-certificates git@edge \
-    mailcap nginx openssh-client pcre su-exec tini nodejs-current=12.4.0-r0 curl
+    # https://github.com/sourcegraph/sourcegraph/blob/main/doc/dev/postgresql.md#version-requirements
+    'bash=5.0.17-r0' \
+    'redis=5.0.9-r0' \
+    # Gitserver requires Git protocol v2 https://github.com/sourcegraph/sourcegraph/issues/13168
+    'git>=2.18' \
+    'nginx>=1.18.0' openssh-client pcre sqlite-libs su-exec 'nodejs-current=14.5.0-r0'
 
 # IMPORTANT: If you update the syntect_server version below, you MUST confirm
 # the ENV variables from its Dockerfile (https://github.com/sourcegraph/syntect_server/blob/master/Dockerfile)
 # have been appropriately set in cmd/server/shared/shared.go.
 # hadolint ignore=DL3022
-COPY --from=comby/comby:0.15.0@sha256:b3b57ed810be1489ccd1ef8fa42210d87d2d396e416c62cee345f615a0dcb09b /usr/local/bin/comby /usr/local/bin/comby
+COPY --from=comby/comby:0.18.4@sha256:b47ce282778bfea7f80d45f5ef0cc546ba0d6347baccebaf171a7866143b2593 /usr/local/bin/comby /usr/local/bin/comby
 # hadolint ignore=DL3022
-COPY --from=sourcegraph/syntect_server:ff37f90@sha256:aa93514b7bc3aaf7a4e9c92e5ff52ee5052db6fb101255a69f054e5b8cdb46ff /syntect_server /usr/local/bin/
-COPY --from=ctags /usr/local/bin/universal-* /usr/local/bin/
+COPY --from=sourcegraph/syntect_server:67fa4c1@sha256:e50ed88f971f7b08698abbc87a10fe18f2f8bbb6472766a15677621c59ca5185 /syntect_server /usr/local/bin/
+
+# install postgres 11
+# hadolint ignore=DL3022,DL3003,DL3018,DL3019,SC2035
+RUN wget https://storage.googleapis.com/apktmp/postgres-11-5-for-alpine-3-12-4cc8106a5e.tar.gz && \
+    tar -xzf postgres-11-5-for-alpine-3-12-4cc8106a5e.tar.gz && \
+    cd target/main/x86_64/ && \
+    apk add --allow-untrusted *.apk && \
+    cd ../../../ && \
+    rm -rf target/
+
+COPY ctags-install-alpine.sh /ctags-install-alpine.sh
+RUN /ctags-install-alpine.sh
 
 # hadolint ignore=DL3022
-COPY --from=sourcegraph/prometheus:61407_2020-04-18_9aa5791@sha256:9b31cc8832defb66cd29e5a298422983179495193745324902660073b3fdc835 /bin/prometheus /usr/local/bin
+COPY --from=sourcegraph/prometheus:server /bin/prom-wrapper /bin
 # hadolint ignore=DL3022
-COPY --from=sourcegraph/prometheus:61407_2020-04-18_9aa5791@sha256:9b31cc8832defb66cd29e5a298422983179495193745324902660073b3fdc835 /usr/share/prometheus /usr/share/prometheus
+COPY --from=sourcegraph/prometheus:server /bin/alertmanager /bin
+# hadolint ignore=DL3022
+COPY --from=sourcegraph/prometheus:server /alertmanager.sh /alertmanager.sh
+# hadolint ignore=DL3022
+COPY --from=sourcegraph/prometheus:server /bin/prometheus /bin
+# hadolint ignore=DL3022
+COPY --from=sourcegraph/prometheus:server /prometheus.sh /prometheus.sh
+# hadolint ignore=DL3022
+COPY --from=sourcegraph/prometheus:server /usr/share/prometheus /usr/share/prometheus
 
 # hadolint ignore=DL3018
 RUN set -ex && \
@@ -60,7 +73,7 @@ RUN set -ex && \
     apk add --no-cache libc6-compat ca-certificates su-exec
 
 # hadolint ignore=DL3022
-COPY --from=sourcegraph/grafana:61407_2020-04-18_9aa5791@sha256:27845c4e03643f2a774873abfe549956bdbb3a19508a6e3f96f83c80eb24d81f /usr/share/grafana /usr/share/grafana
+COPY --from=sourcegraph/grafana:server /usr/share/grafana /usr/share/grafana
 
 # hadolint ignore=DL3022
 COPY --from=libsqlite3-pcre /sqlite3-pcre/pcre.so /libsqlite3-pcre.so
@@ -68,7 +81,7 @@ ENV LIBSQLITE3_PCRE /libsqlite3-pcre.so
 COPY . /
 
 # hadolint ignore=DL3022
-COPY --from=sourcegraph/grafana:61407_2020-04-18_9aa5791@sha256:27845c4e03643f2a774873abfe549956bdbb3a19508a6e3f96f83c80eb24d81f /sg_config_grafana/provisioning/dashboards /sg_config_grafana/provisioning/dashboards
+COPY --from=sourcegraph/grafana:server /sg_config_grafana/provisioning/dashboards /sg_config_grafana/provisioning/dashboards
 
 # hadolint ignore=DL3022
 COPY --from=wrouesnel/postgres_exporter:v0.7.0@sha256:785c919627c06f540d515aac88b7966f352403f73e931e70dc2cbf783146a98b /postgres_exporter /usr/local/bin/postgres_exporter

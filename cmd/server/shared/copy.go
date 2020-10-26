@@ -1,6 +1,7 @@
 package shared
 
 import (
+	"bytes"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -79,10 +80,30 @@ type execer struct {
 
 // Command creates an exec.Command connected to stdout/stderr and runs it.
 func (e *execer) Command(name string, arg ...string) {
-	e.Run(exec.Command(name, arg...))
+	e.CommandWithFilter(defaultErrorFilter, name, arg...)
 }
 
 func (e *execer) Run(cmd *exec.Cmd) {
+	e.RunWithFilter(defaultErrorFilter, cmd)
+}
+
+type errorFilter func(err error, out string) bool
+
+func defaultErrorFilter(err error, out string) bool {
+	return true
+}
+
+// CommandWithFilter is like Command but will not set an error on the command
+// object if the given error filter returns false. The command filter is given
+// both the (non-nil) error value and the output of the command.
+func (e *execer) CommandWithFilter(errorFilter errorFilter, name string, arg ...string) {
+	e.RunWithFilter(errorFilter, exec.Command(name, arg...))
+}
+
+// RunWithFilter is like Run but will not set an error on the command object
+// if the given error filter returns false. The command filter is given both
+// the (non-nil) error value and the output of the command.
+func (e *execer) RunWithFilter(errorFilter errorFilter, cmd *exec.Cmd) {
 	if e.err != nil {
 		return
 	}
@@ -114,7 +135,13 @@ func (e *execer) Run(cmd *exec.Cmd) {
 		}
 	}
 
-	e.err = cmd.Run()
+	out := &bytes.Buffer{}
+	cmd.Stdout = io.MultiWriter(cmd.Stdout, out)
+	cmd.Stderr = io.MultiWriter(cmd.Stderr, out)
+
+	if err := cmd.Run(); err != nil && errorFilter(err, out.String()) {
+		e.err = err
+	}
 }
 
 // Error returns the first error encountered.

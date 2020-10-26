@@ -1,0 +1,314 @@
+{
+  "ID": "MDExOlB1bGxSZXF1ZXN0MzE2ODI5NDE0",
+  "Title": "Fix disableExtension flag for native integrations",
+  "Body": "This flag should only be observed in the browser extension. Calling `observeStorageKey()` breaks native integrations.",
+  "State": "MERGED",
+  "URL": "https://github.com/sourcegraph/sourcegraph/pull/5550",
+  "HeadRefOid": "30cc0384757b7d2fe9d42cf09ab7744731c8a9ea",
+  "BaseRefOid": "f7097fe19816d0a9d637dc759722f6f43fd057ea",
+  "HeadRefName": "disable-extension-native-integratin",
+  "BaseRefName": "master",
+  "Number": 5550,
+  "Author": {
+   "AvatarURL": "https://avatars2.githubusercontent.com/u/1741180?u=d126637129a1c2fae6f79de2c7cf8390059feb85\u0026v=4",
+   "Login": "lguychard",
+   "URL": "https://github.com/lguychard"
+  },
+  "Participants": [
+   {
+    "AvatarURL": "https://avatars2.githubusercontent.com/u/1741180?u=d126637129a1c2fae6f79de2c7cf8390059feb85\u0026v=4",
+    "Login": "lguychard",
+    "URL": "https://github.com/lguychard"
+   },
+   {
+    "AvatarURL": "https://avatars3.githubusercontent.com/u/2946214?u=0cdcf6f1d7de3a06e649fd5f1c40763dcc031e98\u0026v=4",
+    "Login": "unknwon",
+    "URL": "https://github.com/unknwon"
+   },
+   {
+    "AvatarURL": "https://avatars2.githubusercontent.com/u/10532611?u=b02bd4f2245dd008c4b549bf84b5a8cb6667b649\u0026v=4",
+    "Login": "felixfbecker",
+    "URL": "https://github.com/felixfbecker"
+   }
+  ],
+  "Labels": {
+   "Nodes": []
+  },
+  "TimelineItems": [
+   {
+    "Type": "ReviewRequestedEvent",
+    "Item": {
+     "Actor": {
+      "AvatarURL": "https://avatars2.githubusercontent.com/u/1741180?u=d126637129a1c2fae6f79de2c7cf8390059feb85\u0026v=4",
+      "Login": "lguychard",
+      "URL": "https://github.com/lguychard"
+     },
+     "RequestedReviewer": {
+      "AvatarURL": "https://avatars3.githubusercontent.com/u/2946214?u=0cdcf6f1d7de3a06e649fd5f1c40763dcc031e98\u0026v=4",
+      "Login": "unknwon",
+      "URL": "https://github.com/unknwon"
+     },
+     "RequestedTeam": {
+      "Name": "",
+      "URL": ""
+     },
+     "CreatedAt": "2019-09-12T10:06:09Z"
+    }
+   },
+   {
+    "Type": "ReviewRequestedEvent",
+    "Item": {
+     "Actor": {
+      "AvatarURL": "https://avatars2.githubusercontent.com/u/1741180?u=d126637129a1c2fae6f79de2c7cf8390059feb85\u0026v=4",
+      "Login": "lguychard",
+      "URL": "https://github.com/lguychard"
+     },
+     "RequestedReviewer": {
+      "AvatarURL": "https://avatars2.githubusercontent.com/u/10532611?u=b02bd4f2245dd008c4b549bf84b5a8cb6667b649\u0026v=4",
+      "Login": "felixfbecker",
+      "URL": "https://github.com/felixfbecker"
+     },
+     "RequestedTeam": {
+      "Name": "",
+      "URL": ""
+     },
+     "CreatedAt": "2019-09-12T10:06:09Z"
+    }
+   },
+   {
+    "Type": "PullRequestReview",
+    "Item": {
+     "DatabaseID": 287537086,
+     "Author": {
+      "AvatarURL": "https://avatars3.githubusercontent.com/u/2946214?u=0cdcf6f1d7de3a06e649fd5f1c40763dcc031e98\u0026v=4",
+      "Login": "unknwon",
+      "URL": "https://github.com/unknwon"
+     },
+     "AuthorAssociation": "MEMBER",
+     "Body": "Thanks for the fix! The chaining logic looks brilliant to me (as a non-FE dev).",
+     "State": "APPROVED",
+     "URL": "https://github.com/sourcegraph/sourcegraph/pull/5550#pullrequestreview-287537086",
+     "CreatedAt": "2019-09-12T15:57:28Z",
+     "UpdatedAt": "2019-09-12T15:57:28Z",
+     "Commit": {
+      "OID": "36734225c6bf58fb5c499b1489def2a7b65af45d",
+      "Message": "Fix disableExtension flag for native integrations\n\nThis flag should only be observed in the browser extension. Calling `observeStorageKey()` breaks native integrations.",
+      "MessageHeadline": "Fix disableExtension flag for native integrations",
+      "URL": "https://github.com/sourcegraph/sourcegraph/commit/36734225c6bf58fb5c499b1489def2a7b65af45d",
+      "Committer": {
+       "AvatarURL": "https://avatars1.githubusercontent.com/u/1741180?v=4",
+       "Email": "loic@sourcegraph.com",
+       "Name": "Loïc Guychard",
+       "User": {
+        "AvatarURL": "https://avatars2.githubusercontent.com/u/1741180?u=d126637129a1c2fae6f79de2c7cf8390059feb85\u0026v=4",
+        "Login": "lguychard",
+        "URL": "https://github.com/lguychard"
+       }
+      },
+      "CommittedDate": "2019-09-12T10:05:39Z",
+      "PushedDate": "2019-09-12T10:05:45Z"
+     },
+     "IncludesCreatedEdit": false
+    }
+   },
+   {
+    "Type": "PullRequestReview",
+    "Item": {
+     "DatabaseID": 287549355,
+     "Author": {
+      "AvatarURL": "https://avatars2.githubusercontent.com/u/10532611?u=b02bd4f2245dd008c4b549bf84b5a8cb6667b649\u0026v=4",
+      "Login": "felixfbecker",
+      "URL": "https://github.com/felixfbecker"
+     },
+     "AuthorAssociation": "MEMBER",
+     "Body": "",
+     "State": "COMMENTED",
+     "URL": "https://github.com/sourcegraph/sourcegraph/pull/5550#pullrequestreview-287549355",
+     "CreatedAt": "2019-09-12T16:18:08Z",
+     "UpdatedAt": "2019-09-12T16:18:58Z",
+     "Commit": {
+      "OID": "36734225c6bf58fb5c499b1489def2a7b65af45d",
+      "Message": "Fix disableExtension flag for native integrations\n\nThis flag should only be observed in the browser extension. Calling `observeStorageKey()` breaks native integrations.",
+      "MessageHeadline": "Fix disableExtension flag for native integrations",
+      "URL": "https://github.com/sourcegraph/sourcegraph/commit/36734225c6bf58fb5c499b1489def2a7b65af45d",
+      "Committer": {
+       "AvatarURL": "https://avatars1.githubusercontent.com/u/1741180?v=4",
+       "Email": "loic@sourcegraph.com",
+       "Name": "Loïc Guychard",
+       "User": {
+        "AvatarURL": "https://avatars2.githubusercontent.com/u/1741180?u=d126637129a1c2fae6f79de2c7cf8390059feb85\u0026v=4",
+        "Login": "lguychard",
+        "URL": "https://github.com/lguychard"
+       }
+      },
+      "CommittedDate": "2019-09-12T10:05:39Z",
+      "PushedDate": "2019-09-12T10:05:45Z"
+     },
+     "IncludesCreatedEdit": false
+    }
+   },
+   {
+    "Type": "PullRequestCommit",
+    "Item": {
+     "Commit": {
+      "OID": "21d1cd99699e36ab5e2b9be1cc663691d47193ef",
+      "Message": "Fix disableExtension flag for native integrations\n\nThis flag should only be observed in the browser extension. Calling `observeStorageKey()` breaks native integrations.",
+      "MessageHeadline": "Fix disableExtension flag for native integrations",
+      "URL": "https://github.com/sourcegraph/sourcegraph/commit/21d1cd99699e36ab5e2b9be1cc663691d47193ef",
+      "Committer": {
+       "AvatarURL": "https://avatars1.githubusercontent.com/u/1741180?v=4",
+       "Email": "loic@sourcegraph.com",
+       "Name": "Loïc Guychard",
+       "User": {
+        "AvatarURL": "https://avatars2.githubusercontent.com/u/1741180?u=d126637129a1c2fae6f79de2c7cf8390059feb85\u0026v=4",
+        "Login": "lguychard",
+        "URL": "https://github.com/lguychard"
+       }
+      },
+      "CommittedDate": "2019-09-13T09:13:12Z",
+      "PushedDate": "0001-01-01T00:00:00Z"
+     }
+    }
+   },
+   {
+    "Type": "PullRequestCommit",
+    "Item": {
+     "Commit": {
+      "OID": "30cc0384757b7d2fe9d42cf09ab7744731c8a9ea",
+      "Message": "No need to explicitly remove the subscription",
+      "MessageHeadline": "No need to explicitly remove the subscription",
+      "URL": "https://github.com/sourcegraph/sourcegraph/commit/30cc0384757b7d2fe9d42cf09ab7744731c8a9ea",
+      "Committer": {
+       "AvatarURL": "https://avatars1.githubusercontent.com/u/1741180?v=4",
+       "Email": "loic@sourcegraph.com",
+       "Name": "Loïc Guychard",
+       "User": {
+        "AvatarURL": "https://avatars2.githubusercontent.com/u/1741180?u=d126637129a1c2fae6f79de2c7cf8390059feb85\u0026v=4",
+        "Login": "lguychard",
+        "URL": "https://github.com/lguychard"
+       }
+      },
+      "CommittedDate": "2019-09-13T09:13:12Z",
+      "PushedDate": "2019-09-13T09:13:20Z"
+     }
+    }
+   },
+   {
+    "Type": "IssueComment",
+    "Item": {
+     "DatabaseID": 531172813,
+     "Author": {
+      "AvatarURL": "https://avatars2.githubusercontent.com/in/254?v=4",
+      "Login": "codecov",
+      "URL": "https://github.com/apps/codecov"
+     },
+     "Editor": null,
+     "AuthorAssociation": "NONE",
+     "Body": "# [Codecov](https://codecov.io/gh/sourcegraph/sourcegraph/pull/5550?src=pr\u0026el=h1) Report\n\u003e Merging [#5550](https://codecov.io/gh/sourcegraph/sourcegraph/pull/5550?src=pr\u0026el=desc) into [master](https://codecov.io/gh/sourcegraph/sourcegraph/commit/f7097fe19816d0a9d637dc759722f6f43fd057ea?src=pr\u0026el=desc) will **decrease** coverage by `\u003c.01%`.\n\u003e The diff coverage is `0%`.\n\n```diff\n@@            Coverage Diff             @@\n##           master    #5550      +/-   ##\n==========================================\n- Coverage   46.57%   46.56%   -0.01%     \n==========================================\n  Files         741      741              \n  Lines       44953    44954       +1     \n  Branches     2628     2630       +2     \n==========================================\n  Hits        20935    20935              \n- Misses      21963    21964       +1     \n  Partials     2055     2055\n```\n\n| [Impacted Files](https://codecov.io/gh/sourcegraph/sourcegraph/pull/5550?src=pr\u0026el=tree) | Coverage Δ | |\n|---|---|---|\n| [...r/src/libs/code\\_intelligence/code\\_intelligence.tsx](https://codecov.io/gh/sourcegraph/sourcegraph/pull/5550/diff?src=pr\u0026el=tree#diff-YnJvd3Nlci9zcmMvbGlicy9jb2RlX2ludGVsbGlnZW5jZS9jb2RlX2ludGVsbGlnZW5jZS50c3g=) | `67.46% \u003c0%\u003e (-0.33%)` | :arrow_down: |\n",
+     "URL": "https://github.com/sourcegraph/sourcegraph/pull/5550#issuecomment-531172813",
+     "CreatedAt": "2019-09-13T09:41:29Z",
+     "UpdatedAt": "2019-09-13T09:41:29Z",
+     "IncludesCreatedEdit": false
+    }
+   },
+   {
+    "Type": "MergedEvent",
+    "Item": {
+     "Actor": {
+      "AvatarURL": "https://avatars2.githubusercontent.com/u/1741180?u=d126637129a1c2fae6f79de2c7cf8390059feb85\u0026v=4",
+      "Login": "lguychard",
+      "URL": "https://github.com/lguychard"
+     },
+     "MergeRefName": "master",
+     "URL": "https://github.com/sourcegraph/sourcegraph/pull/5550#event-2631781468",
+     "Commit": {
+      "OID": "f66b0addcbeb51d29350f3abc2af7ffb238af48a",
+      "Message": "Fix disableExtension flag for native integrations (#5550)\n\nThis flag should only be observed in the browser extension. Calling `observeStorageKey()` breaks native integrations.",
+      "MessageHeadline": "Fix disableExtension flag for native integrations (#5550)",
+      "URL": "https://github.com/sourcegraph/sourcegraph/commit/f66b0addcbeb51d29350f3abc2af7ffb238af48a",
+      "Committer": {
+       "AvatarURL": "https://avatars3.githubusercontent.com/u/19864447?v=4",
+       "Email": "noreply@github.com",
+       "Name": "GitHub"
+      },
+      "CommittedDate": "2019-09-13T09:44:37Z",
+      "PushedDate": "2019-09-13T09:44:39Z"
+     },
+     "CreatedAt": "2019-09-13T09:44:38Z"
+    }
+   },
+   {
+    "Type": "ClosedEvent",
+    "Item": {
+     "Actor": {
+      "AvatarURL": "https://avatars2.githubusercontent.com/u/1741180?u=d126637129a1c2fae6f79de2c7cf8390059feb85\u0026v=4",
+      "Login": "lguychard",
+      "URL": "https://github.com/lguychard"
+     },
+     "CreatedAt": "2019-09-13T09:44:38Z",
+     "URL": "https://github.com/sourcegraph/sourcegraph/pull/5550#event-2631781475"
+    }
+   }
+  ],
+  "Commits": {
+   "Nodes": [
+    {
+     "Commit": {
+      "OID": "30cc0384757b7d2fe9d42cf09ab7744731c8a9ea",
+      "CheckSuites": {
+       "Nodes": [
+        {
+         "ID": "MDEwOkNoZWNrU3VpdGUyMjMwNzk1ODA=",
+         "Status": "QUEUED",
+         "Conclusion": "",
+         "ReceivedAt": "0001-01-01T00:00:00Z",
+         "CheckRuns": {
+          "Nodes": []
+         }
+        },
+        {
+         "ID": "MDEwOkNoZWNrU3VpdGUyMjMwNzk1ODE=",
+         "Status": "QUEUED",
+         "Conclusion": "",
+         "ReceivedAt": "0001-01-01T00:00:00Z",
+         "CheckRuns": {
+          "Nodes": []
+         }
+        },
+        {
+         "ID": "MDEwOkNoZWNrU3VpdGUyMjMwNzk1ODI=",
+         "Status": "QUEUED",
+         "Conclusion": "",
+         "ReceivedAt": "0001-01-01T00:00:00Z",
+         "CheckRuns": {
+          "Nodes": []
+         }
+        }
+       ]
+      },
+      "Status": {
+       "State": "SUCCESS",
+       "Contexts": [
+        {
+         "ID": "MDEzOlN0YXR1c0NvbnRleHQ3NjQ0MDU0MzIx",
+         "Context": "buildkite/sourcegraph",
+         "Description": "Build #42783 passed (15 minutes, 53 seconds)",
+         "State": "SUCCESS"
+        },
+        {
+         "ID": "MDEzOlN0YXR1c0NvbnRleHQ3NjQ0MDUzMTQ0",
+         "Context": "percy/Sourcegraph",
+         "Description": "Visual review automatically approved, no visual changes found.",
+         "State": "SUCCESS"
+        }
+       ]
+      },
+      "CommittedDate": "2019-09-13T09:13:12Z"
+     }
+    }
+   ]
+  },
+  "IsDraft": false,
+  "CreatedAt": "2019-09-12T10:06:09Z",
+  "UpdatedAt": "2019-09-13T09:44:39Z"
+ }

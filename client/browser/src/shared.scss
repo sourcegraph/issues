@@ -1,0 +1,81 @@
+// CSS for components shared with the webapp
+
+// Set this to override the icon background color in badge attachments.
+// The web's light-theme background color is slightly off-white, but the
+// box that renders the tooltip on GitHub is pure white.
+$body-bg-color-light: #ffffff;
+
+@import '../../shared/src/actions/ActionItem';
+@import '../../shared/src/actions/ActionsNavItems';
+@import '../../shared/src/commandPalette/CommandList';
+@import '../../shared/src/commandPalette/EmptyCommandList.scss';
+@import '../../shared/src/components/completion/CompletionWidget.scss';
+@import '../../shared/src/extensions/ExtensionStatus';
+@import '../../shared/src/notifications/NotificationItem';
+@import '../../shared/src/notifications/Notifications';
+
+:root {
+    --body-bg: #ffffff;
+    --text-muted: #888888;
+    --link-color: #566e9f;
+    --link-hover-color: #1d2535;
+    --dropdown-bg: var(--body-bg);
+    --dropdown-border-color: var(--border-color);
+}
+
+.command-palette-button {
+    align-self: center;
+
+    > .command-list-popover-button {
+        user-select: none;
+        position: relative;
+    }
+}
+
+.command-list {
+    @import 'bootstrap/scss/list-group';
+    @import 'bootstrap/scss/forms';
+    @import 'bootstrap/scss/input-group';
+
+    a {
+        cursor: pointer;
+    }
+}
+
+.command-list-popover {
+    isolation: isolate;
+    z-index: 1100; // high enough to prevent most things from obscuring it
+    border: 1px solid var(--dropdown-border-color);
+    border-radius: 3px;
+}
+
+.sourcegraph-extensions-global {
+    position: fixed;
+    bottom: 0;
+    right: 0;
+}
+
+.global-debug {
+    position: fixed;
+    right: 0;
+    bottom: 0;
+    z-index: 10000;
+    background-color: var(--body-bg);
+}
+
+.extension-status {
+    // TODO make the CSS classes configurable
+    background: var(--body-bg);
+}
+
+.toggle--off::-webkit-slider-runnable-track {
+    color: #eeeeee;
+}
+.toggle--off::-webkit-slider-thumb {
+    background-color: #000000;
+    opacity: 0.2;
+}
+
+.line-decoration-attachment {
+    margin-left: 0.25rem;
+}

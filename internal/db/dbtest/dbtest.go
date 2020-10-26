@@ -64,26 +64,29 @@ func NewDB(t testing.TB, dsn string) *sql.DB {
 	config.Path = "/" + dbname
 	testDB := dbConn(t, config)
 
-	m, err := dbutil.NewMigrate(testDB, dsn)
-	if err != nil {
-		t.Fatalf("failed to construct migrations: %s", err)
-	}
-	if err = dbutil.DoMigrate(m); err != nil {
-		t.Fatalf("failed to apply migrations: %s", err)
+	for _, databaseName := range dbutil.DatabaseNames {
+		m, err := dbutil.NewMigrate(testDB, databaseName)
+		if err != nil {
+			t.Fatalf("failed to construct migrations: %s", err)
+		}
+		if err = dbutil.DoMigrate(m); err != nil {
+			t.Fatalf("failed to apply migrations: %s", err)
+		}
 	}
 
 	t.Cleanup(func() {
 		defer db.Close()
 
-		if !t.Failed() {
-			if err := testDB.Close(); err != nil {
-				t.Fatalf("failed to close test database: %s", err)
-			}
-			dbExec(t, db, killClientConnsQuery, dbname)
-			dbExec(t, db, `DROP DATABASE `+pq.QuoteIdentifier(dbname))
-		} else {
+		if t.Failed() {
 			t.Logf("DATABASE %s left intact for inspection", dbname)
+			return
 		}
+
+		if err := testDB.Close(); err != nil {
+			t.Fatalf("failed to close test database: %s", err)
+		}
+		dbExec(t, db, killClientConnsQuery, dbname)
+		dbExec(t, db, `DROP DATABASE `+pq.QuoteIdentifier(dbname))
 	})
 
 	return testDB

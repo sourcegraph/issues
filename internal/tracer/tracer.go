@@ -6,48 +6,25 @@
 package tracer
 
 import (
-	"bytes"
 	"fmt"
 	"io"
-	"os"
 	"reflect"
-	"strconv"
+	"strings"
 	"sync"
-	"time"
 
-	"github.com/fatih/color"
 	"github.com/inconshreveable/log15"
-	"github.com/lightstep/lightstep-tracer-go"
+	"github.com/pkg/errors"
 	"github.com/sourcegraph/sourcegraph/internal/conf"
 	"github.com/sourcegraph/sourcegraph/internal/env"
 	"github.com/sourcegraph/sourcegraph/internal/trace"
 	"github.com/sourcegraph/sourcegraph/internal/trace/ot"
 	"go.uber.org/automaxprocs/maxprocs"
 
-	opentracing "github.com/opentracing/opentracing-go"
-	jaeger "github.com/uber/jaeger-client-go"
+	"github.com/opentracing/opentracing-go"
+	"github.com/uber/jaeger-client-go"
 	jaegercfg "github.com/uber/jaeger-client-go/config"
 	jaegerlog "github.com/uber/jaeger-client-go/log"
 	jaegermetrics "github.com/uber/jaeger-lib/metrics"
-)
-
-var (
-	lightstepIncludeSensitive, _ = strconv.ParseBool(env.Get("LIGHTSTEP_INCLUDE_SENSITIVE", "", "send span logs to LightStep"))
-	logColors                    = map[log15.Lvl]color.Attribute{
-		log15.LvlCrit:  color.FgRed,
-		log15.LvlError: color.FgRed,
-		log15.LvlWarn:  color.FgYellow,
-		log15.LvlInfo:  color.FgCyan,
-		log15.LvlDebug: color.Faint,
-	}
-	// We'd prefer these in caps, not lowercase, and don't need the 4-character alignment
-	logLabels = map[log15.Lvl]string{
-		log15.LvlCrit:  "CRITICAL",
-		log15.LvlError: "ERROR",
-		log15.LvlWarn:  "WARN",
-		log15.LvlInfo:  "INFO",
-		log15.LvlDebug: "DEBUG",
-	}
 )
 
 func init() {
@@ -62,28 +39,8 @@ func init() {
 	}
 }
 
-func condensedFormat(r *log15.Record) []byte {
-	colorAttr := logColors[r.Lvl]
-	text := logLabels[r.Lvl]
-	var msg bytes.Buffer
-	if colorAttr != 0 {
-		fmt.Print(color.New(colorAttr).Sprint(text) + " " + r.Msg)
-	} else {
-		fmt.Print(&msg, r.Msg)
-	}
-	if len(r.Ctx) > 0 {
-		for i := 0; i < len(r.Ctx); i += 2 {
-			// not as smart about printing things as log15's internal magic
-			fmt.Fprintf(&msg, ", %s: %v", r.Ctx[i].(string), r.Ctx[i+1])
-		}
-	}
-	msg.WriteByte('\n')
-	return msg.Bytes()
-}
-
 // Options control the behavior of a tracer.
 type Options struct {
-	filters     []func(*log15.Record) bool
 	serviceName string
 }
 
@@ -97,17 +54,6 @@ func ServiceName(s string) Option {
 	}
 }
 
-func Filter(f func(*log15.Record) bool) Option {
-	return func(o *Options) {
-		o.filters = append(o.filters, f)
-	}
-}
-
-func init() {
-	// Enable colors by default but support https://no-color.org/
-	color.NoColor = env.Get("NO_COLOR", "", "Disable colored output") != ""
-}
-
 func Init(options ...Option) {
 	opts := &Options{}
 	for _, setter := range options {
@@ -116,70 +62,35 @@ func Init(options ...Option) {
 	if opts.serviceName == "" {
 		opts.serviceName = env.MyName
 	}
-	var handler log15.Handler
-	switch env.LogFormat {
-	case "condensed":
-		handler = log15.StreamHandler(os.Stderr, log15.FormatFunc(condensedFormat))
-	case "logfmt":
-		fallthrough
-	default:
-		handler = log15.StreamHandler(os.Stderr, log15.LogfmtFormat())
-	}
-	for _, filter := range opts.filters {
-		handler = log15.FilterHandler(filter, handler)
-	}
-	// Filter log output by level.
-	lvl, err := log15.LvlFromString(env.LogLevel)
-	if err == nil {
-		handler = log15.LvlFilterHandler(lvl, handler)
-	}
-	log15.Root().SetHandler(log15.LvlFilterHandler(lvl, handler))
 
-	// Legacy Lightstep support
-	lightstepAccessToken := conf.Get().LightstepAccessToken
-	if lightstepAccessToken != "" {
-		log15.Info("Distributed tracing enabled", "tracer", "Lightstep")
-		opentracing.InitGlobalTracer(lightstep.NewTracer(lightstep.Options{
-			AccessToken: lightstepAccessToken,
-			UseGRPC:     true,
-			Tags: opentracing.Tags{
-				lightstep.ComponentNameKey: opts.serviceName,
-			},
-			DropSpanLogs: !lightstepIncludeSensitive,
-		}))
-		trace.SpanURL = lightStepSpanURL
+	initTracer(opts.serviceName)
+}
 
-		// Ignore warnings from the tracer about SetTag calls with unrecognized value types. The
-		// github.com/lightstep/lightstep-tracer-go package calls fmt.Sprintf("%#v", ...) on them, which is fine.
-		defaultHandler := lightstep.NewEventLogOneError()
-		lightstep.SetGlobalEventHandler(func(e lightstep.Event) {
-			if _, ok := e.(lightstep.EventUnsupportedValue); ok {
-				// ignore
-			} else {
-				defaultHandler(e)
-			}
-		})
-
-		// If Lightstep is used, don't invoke initTracer, as that will conflict with the Lightstep
-		// configuration.
-		return
-	}
-
-	initTracer(opts)
+type jaegerOpts struct {
+	ServiceName string
+	ExternalURL string
+	Enabled     bool
+	Debug       bool
 }
 
 // initTracer is a helper that should be called exactly once (from Init).
-func initTracer(opts *Options) {
+func initTracer(serviceName string) {
 	globalTracer := newSwitchableTracer()
 	opentracing.SetGlobalTracer(globalTracer)
-	var (
-		jaegerEnabledMu sync.Mutex
-		jaegerEnabled   = false
-	)
+
+	// initial tracks if its our first run of conf.Watch. This is used to
+	// prevent logging "changes" when its the first run.
+	initial := true
+
+	// Initially everything is disabled since we haven't read conf yet.
+	oldOpts := jaegerOpts{
+		ServiceName: serviceName,
+		Enabled:     false,
+		Debug:       false,
+	}
 
 	// Watch loop
-	conf.Watch(func() {
-		opentracing.SetGlobalTracer(globalTracer)
+	go conf.Watch(func() {
 		siteConfig := conf.Get()
 
 		// Set sampling strategy
@@ -196,52 +107,79 @@ func initTracer(opts *Options) {
 		} else if siteConfig.UseJaeger {
 			samplingStrategy = ot.TraceAll
 		}
-		if tracePolicy := ot.GetTracePolicy(); tracePolicy != samplingStrategy {
+		if tracePolicy := ot.GetTracePolicy(); tracePolicy != samplingStrategy && !initial {
 			log15.Info("opentracing: TracePolicy", "oldValue", tracePolicy, "newValue", samplingStrategy)
 		}
+		initial = false
 		ot.SetTracePolicy(samplingStrategy)
 
-		// Determine whether Jaeger should be enabled
-		_, lastShouldLog := globalTracer.get()
-		jaegerShouldBeEnabled := samplingStrategy == ot.TraceAll || samplingStrategy == ot.TraceSelective
+		opts := jaegerOpts{
+			ServiceName: serviceName,
+			ExternalURL: siteConfig.ExternalURL,
+			Enabled:     samplingStrategy == ot.TraceAll || samplingStrategy == ot.TraceSelective,
+			Debug:       shouldLog,
+		}
 
-		// Set global tracer (Jaeger or No-op)
-		jaegerEnabledMu.Lock()
-		defer jaegerEnabledMu.Unlock()
-		if jaegerEnabled != jaegerShouldBeEnabled {
-			log15.Info("opentracing: Jaeger enablement change", "old", jaegerEnabled, "newValue", jaegerShouldBeEnabled)
+		if opts == oldOpts {
+			// Nothing changed
+			return
 		}
-		if jaegerShouldBeEnabled && (!jaegerEnabled || lastShouldLog != shouldLog) {
-			cfg, err := jaegercfg.FromEnv()
-			cfg.ServiceName = opts.serviceName
-			if err != nil {
-				log15.Warn("Could not initialize jaeger tracer from env", "error", err.Error())
-				return
-			}
-			if reflect.DeepEqual(cfg.Sampler, &jaegercfg.SamplerConfig{}) {
-				// Default sampler configuration for when it is not specified via
-				// JAEGER_SAMPLER_* env vars. In most cases, this is sufficient
-				// enough to connect Sourcegraph to Jaeger without any env vars.
-				cfg.Sampler.Type = jaeger.SamplerTypeConst
-				cfg.Sampler.Param = 1
-			}
-			tracer, closer, err := cfg.NewTracer(
-				jaegercfg.Logger(jaegerlog.StdLogger),
-				jaegercfg.Metrics(jaegermetrics.NullFactory),
-			)
-			if err != nil {
-				log15.Warn("Could not initialize jaeger tracer", "error", err.Error())
-				return
-			}
-			globalTracer.set(tracer, closer, shouldLog)
-			trace.SpanURL = jaegerSpanURL
-			jaegerEnabled = true
-		} else if !jaegerShouldBeEnabled && jaegerEnabled {
-			globalTracer.set(opentracing.NoopTracer{}, nil, shouldLog)
-			trace.SpanURL = trace.NoopSpanURL
-			jaegerEnabled = false
+
+		oldOpts = opts
+
+		tracer, urlFunc, closer, err := newTracer(&opts)
+		if err != nil {
+			log15.Warn("Could not initialize jaeger tracer", "error", err.Error())
+			return
 		}
+
+		globalTracer.set(tracer, closer, opts.Debug)
+		trace.SetSpanURLFunc(urlFunc)
 	})
+}
+
+func newTracer(opts *jaegerOpts) (opentracing.Tracer, func(span opentracing.Span) string, io.Closer, error) {
+	if !opts.Enabled {
+		log15.Info("opentracing: Jaeger disabled")
+		return opentracing.NoopTracer{}, nil, nil, nil
+	}
+
+	log15.Info("opentracing: Jaeger enabled")
+	cfg, err := jaegercfg.FromEnv()
+	cfg.ServiceName = opts.ServiceName
+	if err != nil {
+		return nil, nil, nil, errors.Wrap(err, "jaegercfg.FromEnv failed")
+	}
+	if reflect.DeepEqual(cfg.Sampler, &jaegercfg.SamplerConfig{}) {
+		// Default sampler configuration for when it is not specified via
+		// JAEGER_SAMPLER_* env vars. In most cases, this is sufficient
+		// enough to connect Sourcegraph to Jaeger without any env vars.
+		cfg.Sampler.Type = jaeger.SamplerTypeConst
+		cfg.Sampler.Param = 1
+	}
+	tracer, closer, err := cfg.NewTracer(
+		jaegercfg.Logger(jaegerlog.StdLogger),
+		jaegercfg.Metrics(jaegermetrics.NullFactory),
+	)
+	if err != nil {
+		return nil, nil, nil, errors.Wrap(err, "jaegercfg.NewTracer failed")
+	}
+
+	// We proxy jaeger so we can construct URLs to traces.
+	jaegerURL := strings.TrimSuffix(opts.ExternalURL, "/") + "/-/debug/jaeger/trace/"
+
+	spanURL := func(span opentracing.Span) string {
+		if span == nil {
+			return tracingNotEnabledURL
+		}
+		spanCtx, ok := span.Context().(jaeger.SpanContext)
+		if !ok {
+			return tracingNotEnabledURL
+		}
+		return jaegerURL + spanCtx.TraceID().String()
+	}
+
+	return tracer, spanURL, closer, nil
 }
 
 // switchableTracer implements opentracing.Tracer. The underlying tracer used is switchable (set via
@@ -304,22 +242,3 @@ func (t *switchableTracer) get() (tracer opentracing.Tracer, log bool) {
 }
 
 const tracingNotEnabledURL = "#tracing_not_enabled_for_this_request_add_?trace=1_to_url_to_enable"
-
-func lightStepSpanURL(span opentracing.Span) string {
-	spanCtx := span.Context().(lightstep.SpanContext)
-	t := span.(interface {
-		Start() time.Time
-	}).Start().UnixNano() / 1000
-	return fmt.Sprintf("https://app.lightstep.com/%s/trace?span_guid=%x&at_micros=%d#span-%x", conf.Get().LightstepProject, spanCtx.SpanID, t, spanCtx.SpanID)
-}
-
-func jaegerSpanURL(span opentracing.Span) string {
-	if span == nil {
-		return tracingNotEnabledURL
-	}
-	spanCtx, ok := span.Context().(jaeger.SpanContext)
-	if !ok {
-		return tracingNotEnabledURL
-	}
-	return spanCtx.TraceID().String()
-}

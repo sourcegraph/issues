@@ -7,7 +7,6 @@ import (
 	"github.com/google/go-cmp/cmp"
 	bundles "github.com/sourcegraph/sourcegraph/enterprise/internal/codeintel/bundles/client"
 	bundlemocks "github.com/sourcegraph/sourcegraph/enterprise/internal/codeintel/bundles/client/mocks"
-	gitservermocks "github.com/sourcegraph/sourcegraph/enterprise/internal/codeintel/gitserver/mocks"
 	"github.com/sourcegraph/sourcegraph/enterprise/internal/codeintel/store"
 	storemocks "github.com/sourcegraph/sourcegraph/enterprise/internal/codeintel/store/mocks"
 )
@@ -16,7 +15,7 @@ func TestDiagnostics(t *testing.T) {
 	mockStore := storemocks.NewMockStore()
 	mockBundleManagerClient := bundlemocks.NewMockBundleManagerClient()
 	mockBundleClient := bundlemocks.NewMockBundleClient()
-	mockGitserverClient := gitservermocks.NewMockClient()
+	mockGitserverClient := NewMockGitserverClient()
 
 	sourceDiagnostics := []bundles.Diagnostic{
 		{
@@ -125,7 +124,7 @@ func TestDiagnostics(t *testing.T) {
 func TestDiagnosticsUnknownDump(t *testing.T) {
 	mockStore := storemocks.NewMockStore()
 	mockBundleManagerClient := bundlemocks.NewMockBundleManagerClient()
-	mockGitserverClient := gitservermocks.NewMockClient()
+	mockGitserverClient := NewMockGitserverClient()
 	setMockStoreGetDumpByID(t, mockStore, nil)
 
 	api := testAPI(mockStore, mockBundleManagerClient, mockGitserverClient)

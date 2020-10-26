@@ -4,10 +4,14 @@ Site admins can sync Git repositories hosted on [Bitbucket Cloud](https://bitbuc
 
 To connect Bitbucket Cloud to Sourcegraph:
 
-1. Go to **Site admin > Manage repositories > Add repositories**
+1. Depending on whether you are a site admin or user:
+    1. *Site admin*: Go to **Site admin > Manage repositories > Add repositories**
+    1. *User*: Go to **Settings > Manage repositories**.
 1. Select **Bitbucket.org**.
 1. Configure the connection to Bitbucket Cloud using the action buttons above the text field, and additional fields can be added using <kbd>Cmd/Ctrl+Space</kbd> for auto-completion. See the [configuration documentation below](#configuration).
 1. Press **Add repositories**.
+
+**NOTE** That adding code hosts as a user is currently in private beta.
 
 ## Repository syncing
 
@@ -28,7 +32,7 @@ Internal rate limiting can be configured to limit the rate at which requests are
 
 If enabled, the default rate is set at 7200 per hour (2 per second) which can be configured via the `requestsPerHour` field (see below). If rate limiting is configured more than once for the same code host instance, the most restrictive limit will be used.
 
-**NOTE** Internal rate limiting is only currently applied when synchronising [campaign](../../user/campaigns/index.md) changesets.
+**NOTE** Internal rate limiting is only currently applied when synchronising [campaign](../../campaigns/index.md) changesets.
 
 ## Configuration
 

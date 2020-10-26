@@ -3,35 +3,18 @@ package registry
 import (
 	"context"
 	"fmt"
-	"math/rand"
-	"net/http"
 	"net/url"
 	"strings"
-	"time"
 
 	"github.com/sourcegraph/sourcegraph/cmd/frontend/globals"
 	"github.com/sourcegraph/sourcegraph/schema"
 
-	"github.com/gregjones/httpcache"
 	"github.com/sourcegraph/sourcegraph/cmd/frontend/envvar"
 	"github.com/sourcegraph/sourcegraph/cmd/frontend/graphqlbackend"
 	"github.com/sourcegraph/sourcegraph/internal/conf"
-	"github.com/sourcegraph/sourcegraph/internal/env"
-	"github.com/sourcegraph/sourcegraph/internal/httputil"
 	"github.com/sourcegraph/sourcegraph/internal/jsonc"
 	"github.com/sourcegraph/sourcegraph/internal/registry"
 )
-
-func init() {
-	// Use a caching HTTP client for communicating with the remote registry.
-	const sleepIfUncached = false
-	if env.InsecureDev && sleepIfUncached {
-		// Also simulate latency in dev mode. See docs for sleepIfUncachedTransport for more information.
-		registry.HTTPClient = &http.Client{Transport: sleepIfUncachedTransport{httputil.CachingClient.Transport}}
-	} else {
-		registry.HTTPClient = httputil.CachingClient
-	}
-}
 
 // SplitExtensionID splits an extension ID of the form [host/]publisher/name (where [host/] is the
 // optional registry prefix), such as "alice/myextension" or
@@ -221,24 +204,6 @@ func listRemoteRegistryExtensions(ctx context.Context, query string) ([]*registr
 		x.RegistryURL = registryURL.String()
 	}
 	return xs, nil
-}
-
-// sleepIfUncachedTransport is used to simulate latency in local dev mode.
-//
-// This helps us feel the UX of not being in Northern California latency-wise and ensure that
-// Sourcegraph's communication with the remote extension registry (usually Sourcegraph.com) does not
-// block unrelated workflows.
-type sleepIfUncachedTransport struct {
-	http.RoundTripper
-}
-
-func (t sleepIfUncachedTransport) RoundTrip(req *http.Request) (*http.Response, error) {
-	resp, err := t.RoundTripper.RoundTrip(req)
-	if err != nil || resp.Header.Get(httpcache.XFromCache) == "" {
-		n := rand.Intn(750)
-		time.Sleep(time.Duration(750+n) * time.Millisecond)
-	}
-	return resp, err
 }
 
 // IsWorkInProgressExtension reports whether the extension manifest indicates that this extension is

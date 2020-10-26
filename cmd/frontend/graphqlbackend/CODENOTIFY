@@ -1,0 +1,11 @@
+# See https://github.com/sourcegraph/codenotify for documentation.
+
+observability.go @bobheadxi
+site_monitoring.go @bobheadxi
+
+# Search
+*search*.go @keegancsmith
+*zoekt*.go @keegancsmith
+
+# Campaigns
+campaigns.go @LawnGnome

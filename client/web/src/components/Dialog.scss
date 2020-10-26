@@ -1,0 +1,16 @@
+@import '~@reach/dialog/styles.css';
+
+.modal-body {
+    background-color: var(--body-bg);
+    padding: 1rem;
+    width: 32rem;
+    max-width: 100vw;
+
+    &--centered {
+        transform: translate(-50%, -50%);
+        position: absolute;
+        top: 50%;
+        margin: 0;
+        left: 50%;
+    }
+}

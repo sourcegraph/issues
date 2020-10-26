@@ -51,13 +51,16 @@ func newExternalServices(es ...api.ExternalService) []*types.ExternalService {
 
 	for _, e := range es {
 		svc := &types.ExternalService{
-			ID:          e.ID,
-			Kind:        e.Kind,
-			DisplayName: e.DisplayName,
-			Config:      e.Config,
-			CreatedAt:   e.CreatedAt,
-			UpdatedAt:   e.UpdatedAt,
-			DeletedAt:   e.DeletedAt,
+			ID:              e.ID,
+			Kind:            e.Kind,
+			DisplayName:     e.DisplayName,
+			Config:          e.Config,
+			CreatedAt:       e.CreatedAt,
+			UpdatedAt:       e.UpdatedAt,
+			DeletedAt:       e.DeletedAt,
+			LastSyncAt:      e.LastSyncAt,
+			NextSyncAt:      e.NextSyncAt,
+			NamespaceUserID: e.NamespaceUserID,
 		}
 
 		svcs = append(svcs, svc)

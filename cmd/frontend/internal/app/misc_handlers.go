@@ -5,11 +5,10 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-
 	"strconv"
 
+	"github.com/sourcegraph/sourcegraph/cmd/frontend/globals"
 	"github.com/sourcegraph/sourcegraph/cmd/frontend/internal/app/assetsutil"
-	"github.com/sourcegraph/sourcegraph/internal/conf"
 	"github.com/sourcegraph/sourcegraph/internal/env"
 )
 
@@ -35,7 +34,7 @@ func robotsTxtHelper(w io.Writer, allowRobots bool) {
 
 func favicon(w http.ResponseWriter, r *http.Request) {
 	path := assetsutil.URL("/img/favicon.png").String()
-	if branding := conf.Branding(); branding != nil && branding.Favicon != "" {
+	if branding := globals.Branding(); branding.Favicon != "" {
 		path = branding.Favicon
 	}
 	http.Redirect(w, r, path, http.StatusMovedPermanently)

@@ -5,15 +5,16 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"regexp"
 	"sort"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/inconshreveable/log15"
-	gitservermocks "github.com/sourcegraph/sourcegraph/enterprise/internal/codeintel/gitserver/mocks"
 	"github.com/sourcegraph/sourcegraph/enterprise/internal/codeintel/store"
 	storemocks "github.com/sourcegraph/sourcegraph/enterprise/internal/codeintel/store/mocks"
 	"github.com/sourcegraph/sourcegraph/internal/metrics"
+	"golang.org/x/time/rate"
 )
 
 func TestMain(m *testing.M) {
@@ -33,37 +34,39 @@ func TestUpdate(t *testing.T) {
 		{RepositoryID: 4, SearchCount: 50, PreciseCount: 100},
 	}, nil)
 
-	mockGitserverClient := gitservermocks.NewMockClient()
-	mockGitserverClient.FileExistsFunc.SetDefaultHook(func(ctx context.Context, store store.Store, repositoryID int, commit, file string) (bool, error) {
-		return repositoryID%2 == 0, nil
-	})
+	mockGitserverClient := NewMockGitserverClient()
 	mockGitserverClient.HeadFunc.SetDefaultHook(func(ctx context.Context, store store.Store, repositoryID int) (string, error) {
 		return fmt.Sprintf("c%d", repositoryID), nil
 	})
+	mockGitserverClient.ListFilesFunc.SetDefaultHook(func(ctx context.Context, store store.Store, repositoryID int, commit string, pattern *regexp.Regexp) ([]string, error) {
+		if repositoryID%2 == 0 {
+			return []string{"go.mod"}, nil
+		}
+		return nil, nil
+	})
 
 	updater := &Updater{
-		store:           mockStore,
-		gitserverClient: mockGitserverClient,
-		metrics:         NewUpdaterMetrics(metrics.TestRegisterer),
+		store:              mockStore,
+		gitserverClient:    mockGitserverClient,
+		metrics:            NewUpdaterMetrics(metrics.TestRegisterer),
+		limiter:            rate.NewLimiter(MaxGitserverRequestsPerSecond, 1),
+		enableIndexingCNCF: false,
 	}
 
-	if err := updater.update(context.Background()); err != nil {
+	if err := updater.Handle(context.Background()); err != nil {
 		t.Fatalf("unexpected error performing update: %s", err)
 	}
 
-	if len(mockGitserverClient.FileExistsFunc.History()) != 4 {
-		t.Errorf("unexpected number of calls to FileExists. want=%d have=%d", 2, len(mockGitserverClient.FileExistsFunc.History()))
+	if len(mockGitserverClient.ListFilesFunc.History()) != 4 {
+		t.Errorf("unexpected number of calls to ListFiles. want=%d have=%d", 2, len(mockGitserverClient.ListFilesFunc.History()))
 	} else {
 		var repositoryIDs []int
-		for _, call := range mockGitserverClient.FileExistsFunc.History() {
+		for _, call := range mockGitserverClient.ListFilesFunc.History() {
 			repositoryIDs = append(repositoryIDs, call.Arg2)
 			expectedCommit := fmt.Sprintf("c%d", call.Arg2)
 
 			if call.Arg3 != expectedCommit {
 				t.Errorf("unexpected commit argument. want=%q have=%q", expectedCommit, call.Arg3)
-			}
-			if call.Arg4 != "go.mod" {
-				t.Errorf("unexpected file argument. want=%q have=%q", "go.mod", call.Arg4)
 			}
 		}
 		sort.Ints(repositoryIDs)

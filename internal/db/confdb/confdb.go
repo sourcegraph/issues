@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"time"
 
-	multierror "github.com/hashicorp/go-multierror"
+	"github.com/hashicorp/go-multierror"
 
 	"github.com/keegancsmith/sqlf"
 	"github.com/sourcegraph/jsonx"

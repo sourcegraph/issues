@@ -10,31 +10,23 @@ You can [contact Sourcegraph](https://about.sourcegraph.com/contact/sales) to pu
 
 [Contact us](https://about.sourcegraph.com/contact) to ask about volume discounts for Sourcegraph Enterprise. 
 
-## How active users are counted
+## Pricing model
 
-[Sourcegraph's pricing](https://about.sourcegraph.com/pricing) is based on **monthly active users**. This count is maintained on your Sourcegraph instance, viewable and auditable on the **Site admin > Usage statistics** page, and is reported back in aggregate to Sourcegraph.com via [pings](https://docs.sourcegraph.com/admin/pings).
+[Sourcegraph's pricing](https://about.sourcegraph.com/pricing) is based on a combination of the [number of lines of code indexed](#how-lines-of-code-are-counted) and [total active user accounts](#how-user-accounts-are-counted). 
 
-A Sourcegraph active user is a person (associated with a single user account) who visits or uses your Sourcegraph while signed in over the course of the month.
+## How lines of code are counted
 
-This includes:
+We count the number of newlines (`\n`) appearing in the text search index. Our text search index contains the working copy of your default branch in all repositories synchronized by Sourcegraph. The default branch is typically called `master` or `main`. Additional branches can be configured to be indexed by site administrators. These will also be part of the newlines count.
 
-- Successfully signing in to your instance (via https://sourcegraph.example.com/sign-in).
-- Running a search on your instance.
-- Clicking a link to a page on your instance.
-- Using a Sourcegraph integration connected to your Sourcegraph instance (such as a browser extension or native code host integration) while signed in.
-- Receiving a saved search notification from your Sourcegraph instance.
+Our text search index deduplicates for paths that are the same across branches. We only count the newlines once per unique file. Forks are separately indexed. They are included in the count of new lines.
 
-This does not include:
-
-- Viewing the sign-up page (at https://sourcegraph.example.com/sign-up) without signing up
-- Viewing the sign-in page (at https://sourcegraph.example.com/sign-in) without signing in.
-- Viewing and submitting a forgotten password form.
+Sourcegraph administrators can view the lines of code count for each repository by visiting the repository and clicking on **Settings > Indexing**.
 
 ## How user accounts are counted
 
-Some customers have contracts based on **total user accounts**, rather than on monthly active users. This count is maintained on your Sourcegraph instance, viewable and auditable on the **Site admin > Users** page, and is reported back in aggregate to Sourcegraph.com via [pings](https://docs.sourcegraph.com/admin/pings).
+This count is maintained on your Sourcegraph instance, viewable and auditable on the **Site admin > Users** page, and is reported back in aggregate to Sourcegraph.com via [pings](https://docs.sourcegraph.com/admin/pings).
 
-A Sourcegraph user account is created when a user signs up or signs in for the first time. Sourcegraph user accounts can be deleted by administrators via the **Site admin > Users** page, or using the GraphQL API (including with the [Sourcegraph CLI](https://github.com/sourcegraph/src-cli), if needed).
+A Sourcegraph user account is created when a user signs up or signs in for the first time. Sourcegraph user accounts can be deleted by administrators via the **Site admin > Users** page, or using the [GraphQL API](../../api/graphql/index.md) or the [Sourcegraph CLI](https://github.com/sourcegraph/src-cli).
 
 ## Updating your license key
 

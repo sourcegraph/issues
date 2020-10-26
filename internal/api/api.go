@@ -116,13 +116,16 @@ type Settings struct {
 
 // ExternalService represents an complete external service record.
 type ExternalService struct {
-	ID          int64
-	Kind        string
-	DisplayName string
-	Config      string
-	CreatedAt   time.Time
-	UpdatedAt   time.Time
-	DeletedAt   *time.Time
+	ID              int64
+	Kind            string
+	DisplayName     string
+	Config          string
+	CreatedAt       time.Time
+	UpdatedAt       time.Time
+	DeletedAt       *time.Time
+	LastSyncAt      *time.Time
+	NextSyncAt      *time.Time
+	NamespaceUserID *int32
 }
 
 func cmp(a, b string) int {

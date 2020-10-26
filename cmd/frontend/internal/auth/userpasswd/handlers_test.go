@@ -5,7 +5,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/sourcegraph/sourcegraph/cmd/frontend/db"
+	"github.com/sourcegraph/sourcegraph/internal/db"
 )
 
 func TestCheckEmailAbuse(t *testing.T) {

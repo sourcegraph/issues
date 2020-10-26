@@ -6,30 +6,29 @@ import (
 	"time"
 
 	"github.com/google/zoekt"
-	graphql "github.com/graph-gophers/graphql-go"
+	"github.com/graph-gophers/graphql-go"
 	"github.com/pkg/errors"
 	"github.com/sourcegraph/sourcegraph/cmd/frontend/backend"
-	"github.com/sourcegraph/sourcegraph/cmd/frontend/db"
 	"github.com/sourcegraph/sourcegraph/cmd/frontend/envvar"
 	"github.com/sourcegraph/sourcegraph/cmd/frontend/graphqlbackend/graphqlutil"
 	"github.com/sourcegraph/sourcegraph/cmd/frontend/types"
 	"github.com/sourcegraph/sourcegraph/internal/api"
-	"github.com/sourcegraph/sourcegraph/internal/gitserver"
+	"github.com/sourcegraph/sourcegraph/internal/db"
 	"github.com/sourcegraph/sourcegraph/internal/repoupdater"
 	"github.com/sourcegraph/sourcegraph/internal/search"
 )
 
 func (r *schemaResolver) Repositories(args *struct {
 	graphqlutil.ConnectionArgs
-	Query           *string
-	Names           *[]string
-	Cloned          bool
-	CloneInProgress bool
-	NotCloned       bool
-	Indexed         bool
-	NotIndexed      bool
-	OrderBy         string
-	Descending      bool
+	Query      *string
+	Names      *[]string
+	Cloned     bool
+	NotCloned  bool
+	Indexed    bool
+	NotIndexed bool
+	OrderBy    string
+	Descending bool
+	After      *string
 }) (*repositoryConnectionResolver, error) {
 	opt := db.ReposListOptions{
 		OrderBy: db.RepoListOrderBy{{
@@ -43,14 +42,30 @@ func (r *schemaResolver) Repositories(args *struct {
 	if args.Query != nil {
 		opt.Query = *args.Query
 	}
+	if args.After != nil {
+		cursor, err := unmarshalRepositoryCursor(args.After)
+		if err != nil {
+			return nil, err
+		}
+		opt.CursorColumn = cursor.Column
+		opt.CursorValue = cursor.Value
+		opt.CursorDirection = cursor.Direction
+	} else {
+		opt.CursorColumn = string(toDBRepoListColumn(args.OrderBy))
+		opt.CursorValue = ""
+		if args.Descending {
+			opt.CursorDirection = "prev"
+		} else {
+			opt.CursorDirection = "next"
+		}
+	}
 	args.ConnectionArgs.Set(&opt.LimitOffset)
 	return &repositoryConnectionResolver{
-		opt:             opt,
-		cloned:          args.Cloned,
-		cloneInProgress: args.CloneInProgress,
-		notCloned:       args.NotCloned,
-		indexed:         args.Indexed,
-		notIndexed:      args.NotIndexed,
+		opt:        opt,
+		cloned:     args.Cloned,
+		notCloned:  args.NotCloned,
+		indexed:    args.Indexed,
+		notIndexed: args.NotIndexed,
 	}, nil
 }
 
@@ -67,12 +82,11 @@ type RepositoryConnectionResolver interface {
 var _ RepositoryConnectionResolver = &repositoryConnectionResolver{}
 
 type repositoryConnectionResolver struct {
-	opt             db.ReposListOptions
-	cloned          bool
-	cloneInProgress bool
-	notCloned       bool
-	indexed         bool
-	notIndexed      bool
+	opt        db.ReposListOptions
+	cloned     bool
+	notCloned  bool
+	indexed    bool
+	notIndexed bool
 
 	// cache results because they are used by multiple fields
 	once  sync.Once
@@ -93,23 +107,6 @@ func (r *repositoryConnectionResolver) compute(ctx context.Context) ([]*types.Re
 			}
 		}
 
-		if opt2.LimitOffset != nil {
-			tmp := *opt2.LimitOffset
-			opt2.LimitOffset = &tmp
-			// We purposefully load more repos into memory than requested in
-			// order to save roundtrips to gitserver in case we need to do
-			// filtering by clone status.
-			// The trade-off here is memory/cpu vs. network roundtrips to
-			// database/gitserver and we choose smaller latency over smaller
-			// memory footprint.
-			// At the end of this method we return the requested number of
-			// repos.
-			// As for the number: 1250 is the result of local benchmarks where
-			// it yielded the best performance/resources tradeoff, before
-			// diminishing returns set in
-			opt2.Limit += 1250
-		}
-
 		var indexed map[string]*zoekt.Repository
 		searchIndexEnabled := search.Indexed().Enabled()
 		isIndexed := func(repo api.RepoName) bool {
@@ -128,37 +125,38 @@ func (r *repositoryConnectionResolver) compute(ctx context.Context) ([]*types.Re
 				r.err = err
 				return
 			}
+			// ensure we fetch atleast as many repos as we have indexed.
+			if opt2.LimitOffset != nil && opt2.LimitOffset.Limit < len(indexed) {
+				opt2.LimitOffset.Limit = len(indexed) * 2
+			}
+		}
+
+		if !r.cloned {
+			opt2.NoCloned = true
+		} else if !r.notCloned {
+			// notCloned is true by default.
+			// this condition is valid only if it has been
+			// explicitly set to false by the client.
+			opt2.OnlyCloned = true
 		}
 
 		for {
+			// Cursor-based pagination requires that we fetch limit+1 records, so
+			// that we know whether or not there's an additional page (or more)
+			// beyond the current one. We reset the limit immediately afterward for
+			// any subsequent calculations.
+			if opt2.LimitOffset != nil {
+				opt2.LimitOffset.Limit++
+			}
 			repos, err := backend.Repos.List(ctx, opt2)
 			if err != nil {
 				r.err = err
 				return
 			}
-			reposFromDB := len(repos)
-
-			if !r.cloned || !r.cloneInProgress || !r.notCloned {
-				// Query gitserver to filter by repository clone status.
-				repoNames := make([]api.RepoName, len(repos))
-				for i, repo := range repos {
-					repoNames[i] = repo.Name
-				}
-				response, err := gitserver.DefaultClient.RepoCloneProgress(ctx, repoNames...)
-				if err != nil {
-					r.err = err
-					return
-				}
-				keepRepos := repos[:0]
-				for _, repo := range repos {
-					if info := response.Results[repo.Name]; info == nil {
-						continue
-					} else if (r.cloned && info.Cloned && !info.CloneInProgress) || (r.cloneInProgress && info.CloneInProgress) || (r.notCloned && !info.Cloned && !info.CloneInProgress) {
-						keepRepos = append(keepRepos, repo)
-					}
-				}
-				repos = keepRepos
+			if opt2.LimitOffset != nil {
+				opt2.LimitOffset.Limit--
 			}
+			reposFromDB := len(repos)
 
 			if !r.indexed || !r.notIndexed {
 				keepRepos := repos[:0]
@@ -176,22 +174,16 @@ func (r *repositoryConnectionResolver) compute(ctx context.Context) ([]*types.Re
 			if opt2.LimitOffset == nil {
 				break
 			} else {
-				if len(r.repos) > r.opt.Limit {
-					// Cut off the repos we additionally loaded to save
-					// roundtrips to `gitserver` and only return the number
-					// that was requested.
-					// But, when possible, we add one more so we can detect if
-					// there is a "next page" that could be loaded
-					r.repos = r.repos[:r.opt.Limit+1]
-					break
-				}
-				if reposFromDB < r.opt.Limit {
+				// check if we filtered some repos and if
+				// we need to get more from the DB
+				if len(repos) >= r.opt.Limit || reposFromDB < r.opt.Limit {
 					break
 				}
 				opt2.Offset += opt2.Limit
 			}
 		}
 	})
+
 	return r.repos, r.err
 }
 
@@ -222,7 +214,7 @@ func (r *repositoryConnectionResolver) TotalCount(ctx context.Context, args *Tot
 		return &v
 	}
 
-	if !r.cloned || !r.cloneInProgress || !r.notCloned {
+	if !r.cloned || !r.notCloned {
 		// Don't support counting if filtering by clone status.
 		return nil, nil
 	}
@@ -257,9 +249,29 @@ func (r *repositoryConnectionResolver) PageInfo(ctx context.Context) (*graphqlut
 	if err != nil {
 		return nil, err
 	}
-	return graphqlutil.HasNextPage(r.opt.LimitOffset != nil && len(repos) > r.opt.Limit), nil
+	if len(repos) == 0 || r.opt.LimitOffset == nil || len(repos) <= r.opt.Limit {
+		return graphqlutil.HasNextPage(false), nil
+	}
+
+	var value string
+	switch r.opt.CursorColumn {
+	case string(db.RepoListName):
+		value = string(repos[len(repos)-1].Name)
+	case string(db.RepoListCreatedAt):
+		value = repos[len(repos)-1].CreatedAt.Format("2006-01-02 15:04:05.999999")
+	}
+	return graphqlutil.NextPageCursor(marshalRepositoryCursor(
+		&repositoryCursor{
+			Column:    r.opt.CursorColumn,
+			Value:     value,
+			Direction: r.opt.CursorDirection,
+		},
+	)), nil
 }
 
+// SetRepositoryEnabled is a deprecated in our API. However, as of Oct 2020 we
+// still have a customer integrating permissions via this mutation. Before
+// removing check with the distribution team.
 func (r *schemaResolver) SetRepositoryEnabled(ctx context.Context, args *struct {
 	Repository graphql.ID
 	Enabled    bool

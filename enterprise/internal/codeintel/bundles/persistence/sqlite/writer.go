@@ -6,7 +6,7 @@ import (
 	"github.com/hashicorp/go-multierror"
 	"github.com/keegancsmith/sqlf"
 	"github.com/sourcegraph/sourcegraph/enterprise/internal/codeintel/bundles/persistence"
-	"github.com/sourcegraph/sourcegraph/enterprise/internal/codeintel/bundles/persistence/serialization"
+	"github.com/sourcegraph/sourcegraph/enterprise/internal/codeintel/bundles/persistence/cache"
 	gobserializer "github.com/sourcegraph/sourcegraph/enterprise/internal/codeintel/bundles/persistence/serialization/gob"
 	"github.com/sourcegraph/sourcegraph/enterprise/internal/codeintel/bundles/persistence/sqlite/batch"
 	"github.com/sourcegraph/sourcegraph/enterprise/internal/codeintel/bundles/persistence/sqlite/migrate"
@@ -14,15 +14,7 @@ import (
 	"github.com/sourcegraph/sourcegraph/enterprise/internal/codeintel/bundles/types"
 )
 
-type sqliteWriter struct {
-	store      *store.Store
-	closer     func() error
-	serializer serialization.Serializer
-}
-
-var _ persistence.Writer = &sqliteWriter{}
-
-func NewWriter(ctx context.Context, filename string) (_ persistence.Writer, err error) {
+func NewStore(ctx context.Context, filename string, cache cache.DataCache) (_ persistence.Store, err error) {
 	store, closer, err := store.Open(filename)
 	if err != nil {
 		return nil, err
@@ -35,23 +27,33 @@ func NewWriter(ctx context.Context, filename string) (_ persistence.Writer, err 
 		}
 	}()
 
-	tx, err := store.Transact(ctx)
-	if err != nil {
-		return nil, err
-	}
-
-	if err := createTables(ctx, tx); err != nil {
-		return nil, err
-	}
-
-	return &sqliteWriter{
-		store:      tx,
+	return &sqliteStore{
+		filename:   filename,
+		cache:      cache,
+		store:      store,
 		closer:     closer,
 		serializer: gobserializer.New(),
 	}, nil
 }
 
-func (w *sqliteWriter) WriteMeta(ctx context.Context, metaData types.MetaData) error {
+func (w *sqliteStore) Transact(ctx context.Context) (persistence.Store, error) {
+	tx, err := w.store.Transact(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	return &sqliteStore{
+		store:      tx,
+		closer:     w.closer,
+		serializer: w.serializer,
+	}, nil
+}
+
+func (w *sqliteStore) Done(err error) error {
+	return w.store.Done(err)
+}
+
+func (w *sqliteStore) WriteMeta(ctx context.Context, metaData types.MetaData) error {
 	queries := []*sqlf.Query{
 		sqlf.Sprintf("INSERT INTO schema_version (version) VALUES (%s)", migrate.CurrentSchemaVersion),
 		sqlf.Sprintf("INSERT INTO meta (num_result_chunks) VALUES (%s)", metaData.NumResultChunks),
@@ -66,33 +68,31 @@ func (w *sqliteWriter) WriteMeta(ctx context.Context, metaData types.MetaData) e
 	return nil
 }
 
-func (w *sqliteWriter) WriteDocuments(ctx context.Context, documents map[string]types.DocumentData) error {
+func (w *sqliteStore) WriteDocuments(ctx context.Context, documents chan persistence.KeyedDocumentData) error {
 	return batch.WriteDocuments(ctx, w.store, "documents", w.serializer, documents)
 }
 
-func (w *sqliteWriter) WriteResultChunks(ctx context.Context, resultChunks map[int]types.ResultChunkData) error {
+func (w *sqliteStore) WriteResultChunks(ctx context.Context, resultChunks chan persistence.IndexedResultChunkData) error {
 	return batch.WriteResultChunks(ctx, w.store, "result_chunks", w.serializer, resultChunks)
 }
 
-func (w *sqliteWriter) WriteDefinitions(ctx context.Context, monikerLocations []types.MonikerLocations) error {
+func (w *sqliteStore) WriteDefinitions(ctx context.Context, monikerLocations chan types.MonikerLocations) error {
 	return batch.WriteMonikerLocations(ctx, w.store, "definitions", w.serializer, monikerLocations)
 }
 
-func (w *sqliteWriter) WriteReferences(ctx context.Context, monikerLocations []types.MonikerLocations) error {
+func (w *sqliteStore) WriteReferences(ctx context.Context, monikerLocations chan types.MonikerLocations) error {
 	return batch.WriteMonikerLocations(ctx, w.store, "references", w.serializer, monikerLocations)
 }
 
-func (w *sqliteWriter) Close(err error) error {
-	err = w.store.Done(err)
-
+func (w *sqliteStore) Close(err error) error {
 	if closeErr := w.closer(); closeErr != nil {
 		err = multierror.Append(err, closeErr)
 	}
 
-	return nil
+	return err
 }
 
-func createTables(ctx context.Context, store *store.Store) error {
+func (w *sqliteStore) CreateTables(ctx context.Context) error {
 	queries := []*sqlf.Query{
 		sqlf.Sprintf(`CREATE TABLE "schema_version" ("version" text NOT NULL)`),
 		sqlf.Sprintf(`CREATE TABLE "meta" ("num_result_chunks" integer NOT NULL)`),
@@ -103,7 +103,7 @@ func createTables(ctx context.Context, store *store.Store) error {
 	}
 
 	for _, query := range queries {
-		if err := store.Exec(ctx, query); err != nil {
+		if err := w.store.Exec(ctx, query); err != nil {
 			return err
 		}
 	}

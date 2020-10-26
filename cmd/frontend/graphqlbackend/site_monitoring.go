@@ -21,12 +21,14 @@ type MonitoringAlert struct {
 	TimestampValue   DateTime
 	NameValue        string
 	ServiceNameValue string
+	OwnerValue       string
 	AverageValue     float64
 }
 
 func (r *MonitoringAlert) Timestamp() DateTime { return r.TimestampValue }
 func (r *MonitoringAlert) Name() string        { return r.NameValue }
 func (r *MonitoringAlert) ServiceName() string { return r.ServiceNameValue }
+func (r *MonitoringAlert) Owner() string       { return r.OwnerValue }
 func (r *MonitoringAlert) Average() float64    { return r.AverageValue }
 
 type MonitoringAlerts []*MonitoringAlert
@@ -80,7 +82,7 @@ func (r *siteMonitoringStatisticsResolver) Alerts(ctx context.Context) ([]*Monit
 		span.Finish()
 	}()
 
-	results, warn, err := r.prom.QueryRange(ctx, `max by (level,name,service_name)(avg_over_time(alert_count{name!=""}[12h]))`,
+	results, warn, err := r.prom.QueryRange(ctx, `max by (level,name,service_name,owner)(avg_over_time(alert_count{name!=""}[12h]))`,
 		prometheus.Range{
 			Start: time.Now().Add(-r.timespan),
 			End:   time.Now(),
@@ -105,6 +107,7 @@ func (r *siteMonitoringStatisticsResolver) Alerts(ctx context.Context) ([]*Monit
 			name        = string(sample.Metric["name"])
 			serviceName = string(sample.Metric["service_name"])
 			level       = string(sample.Metric["level"])
+			owner       = string(sample.Metric["owner"])
 			prevVal     *model.SampleValue
 		)
 		for _, p := range sample.Values {
@@ -122,6 +125,7 @@ func (r *siteMonitoringStatisticsResolver) Alerts(ctx context.Context) ([]*Monit
 			alerts = append(alerts, &MonitoringAlert{
 				NameValue:        fmt.Sprintf("%s: %s", level, name),
 				ServiceNameValue: serviceName,
+				OwnerValue:       owner,
 				TimestampValue:   DateTime{p.Timestamp.Time().UTC().Truncate(time.Hour)},
 				AverageValue:     float64(p.Value),
 			})

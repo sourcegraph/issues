@@ -14,7 +14,7 @@ type hunkResolver struct {
 
 func (r *hunkResolver) Author() signatureResolver {
 	return signatureResolver{
-		person: &personResolver{
+		person: &PersonResolver{
 			name:  r.hunk.Author.Name,
 			email: r.hunk.Author.Email,
 		},

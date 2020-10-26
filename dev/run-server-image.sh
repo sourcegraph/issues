@@ -23,11 +23,9 @@ if [ "$clean" != "n" ] && [ "$clean" != "N" ]; then
   rm -rf $DATA
 fi
 
+# docker run pulls image if not found locally
 IMAGE=${IMAGE:-sourcegraph/server:${TAG:-insiders}}
-echo "pulling docker image ${IMAGE}"
-docker pull "$IMAGE"
-
-echo "starting server..."
+echo "starting server ${IMAGE}"
 docker run "$@" \
   --publish 7080:7080 \
   --rm \

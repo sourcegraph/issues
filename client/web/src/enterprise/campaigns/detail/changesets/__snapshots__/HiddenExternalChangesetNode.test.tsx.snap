@@ -1,0 +1,120 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`HiddenExternalChangesetNode renders 1`] = `
+<HiddenExternalChangesetNode
+  node={
+    Object {
+      "externalState": "OPEN",
+      "id": "test",
+      "nextSyncAt": "2006-01-03T22:04:05.000Z",
+      "publicationState": "PUBLISHED",
+      "reconcilerState": "COMPLETED",
+      "updatedAt": "2006-01-02T22:04:05.000Z",
+    }
+  }
+>
+  <span
+    className="d-none d-sm-block"
+  />
+  <ChangesetStatusCell
+    changeset={
+      Object {
+        "externalState": "OPEN",
+        "id": "test",
+        "nextSyncAt": "2006-01-03T22:04:05.000Z",
+        "publicationState": "PUBLISHED",
+        "reconcilerState": "COMPLETED",
+        "updatedAt": "2006-01-02T22:04:05.000Z",
+      }
+    }
+    className="hidden-external-changeset-node__status d-block d-sm-flex"
+  >
+    <ChangesetStatusOpen
+      className="hidden-external-changeset-node__status d-block d-sm-flex"
+    >
+      <div
+        className="m-0 text-nowrap flex-column align-items-center justify-content-center text-success hidden-external-changeset-node__status d-block d-sm-flex"
+      >
+        <Memo(SourcePullIcon) />
+        <span
+          className="text-muted"
+        >
+          Open
+        </span>
+      </div>
+    </ChangesetStatusOpen>
+  </ChangesetStatusCell>
+  <HiddenExternalChangesetInfoCell
+    className="hidden-external-changeset-node__information"
+    node={
+      Object {
+        "externalState": "OPEN",
+        "id": "test",
+        "nextSyncAt": "2006-01-03T22:04:05.000Z",
+        "publicationState": "PUBLISHED",
+        "reconcilerState": "COMPLETED",
+        "updatedAt": "2006-01-02T22:04:05.000Z",
+      }
+    }
+  >
+    <div
+      className="d-flex flex-column hidden-external-changeset-node__information"
+    >
+      <div
+        className="m-0 mb-2"
+      >
+        <h3
+          className="m-0 d-inline"
+        >
+          <span
+            className="text-muted"
+          >
+            Changeset in a private repository
+          </span>
+        </h3>
+      </div>
+      <div>
+        <ChangesetLastSynced
+          changeset={
+            Object {
+              "externalState": "OPEN",
+              "id": "test",
+              "nextSyncAt": "2006-01-03T22:04:05.000Z",
+              "publicationState": "PUBLISHED",
+              "reconcilerState": "COMPLETED",
+              "updatedAt": "2006-01-02T22:04:05.000Z",
+            }
+          }
+          viewerCanAdminister={false}
+        >
+          <small
+            className="text-muted"
+          >
+            Last synced 
+            less than a minute
+             ago.
+             
+            <span
+              data-tooltip="Next refresh in 1 day."
+            >
+              <Memo(InfoCircleOutlineIcon)
+                className="icon-inline"
+                onClick={[Function]}
+              />
+            </span>
+          </small>
+        </ChangesetLastSynced>
+      </div>
+    </div>
+  </HiddenExternalChangesetInfoCell>
+  <span
+    className="d-none d-sm-block"
+  />
+  <span
+    className="d-none d-sm-block"
+  />
+  <span
+    className="d-none d-sm-block"
+  />
+</HiddenExternalChangesetNode>
+`;

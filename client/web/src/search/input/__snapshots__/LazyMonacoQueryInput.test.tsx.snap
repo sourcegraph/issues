@@ -1,0 +1,173 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`PlainQueryInput empty 1`] = `
+<div
+  className="query-input2 d-flex"
+>
+  <input
+    className="form-control code lazy-monaco-query-input--intermediate-input"
+    onChange={[Function]}
+    spellCheck={false}
+    type="text"
+    value=""
+  />
+  <div
+    className="query-input2__toggle-container"
+  >
+    <div
+      className="toggle-container"
+    >
+      <div
+        aria-checked={true}
+        aria-disabled={false}
+        aria-label="Case sensitivity toggle"
+        className="btn btn-icon icon-inline toggle-container__toggle test-regexp-toggle test-case-sensitivity-toggle toggle-container__toggle--active test-case-sensitivity-toggle--active"
+        data-tooltip="Disable case sensitivity"
+        onClick={[Function]}
+        role="checkbox"
+        tabIndex={0}
+      >
+        <svg
+          className="mdi-icon "
+          fill="currentColor"
+          height={24}
+          viewBox="0 0 24 24"
+          width={24}
+        >
+          <path
+            d="M20.06,18C20,17.83 19.91,17.54 19.86,17.11C19.19,17.81 18.38,18.16 17.45,18.16C16.62,18.16 15.93,17.92 15.4,17.45C14.87,17 14.6,16.39 14.6,15.66C14.6,14.78 14.93,14.1 15.6,13.61C16.27,13.12 17.21,12.88 18.43,12.88H19.83V12.24C19.83,11.75 19.68,11.36 19.38,11.07C19.08,10.78 18.63,10.64 18.05,10.64C17.53,10.64 17.1,10.76 16.75,11C16.4,11.25 16.23,11.54 16.23,11.89H14.77C14.77,11.46 14.92,11.05 15.22,10.65C15.5,10.25 15.93,9.94 16.44,9.71C16.95,9.5 17.5,9.36 18.13,9.36C19.11,9.36 19.87,9.6 20.42,10.09C20.97,10.58 21.26,11.25 21.28,12.11V16C21.28,16.8 21.38,17.42 21.58,17.88V18H20.06M17.66,16.88C18.11,16.88 18.54,16.77 18.95,16.56C19.35,16.35 19.65,16.07 19.83,15.73V14.16H18.7C16.93,14.16 16.04,14.63 16.04,15.57C16.04,16 16.19,16.3 16.5,16.53C16.8,16.76 17.18,16.88 17.66,16.88M5.46,13.71H9.53L7.5,8.29L5.46,13.71M6.64,6H8.36L13.07,18H11.14L10.17,15.43H4.82L3.86,18H1.93L6.64,6Z"
+          />
+        </svg>
+      </div>
+      <div
+        aria-checked={true}
+        aria-label="Regular expression toggle"
+        className="btn btn-icon icon-inline toggle-container__toggle test-regexp-toggle test-regexp-toggle toggle-container__toggle--active test-regexp-toggle--active"
+        data-tooltip="Disable regular expression"
+        onClick={[Function]}
+        role="checkbox"
+        tabIndex={0}
+      >
+        <svg
+          className="mdi-icon "
+          fill="currentColor"
+          height={24}
+          viewBox="0 0 24 24"
+          width={24}
+        >
+          <path
+            d="M16,16.92C15.67,16.97 15.34,17 15,17C14.66,17 14.33,16.97 14,16.92V13.41L11.5,15.89C11,15.5 10.5,15 10.11,14.5L12.59,12H9.08C9.03,11.67 9,11.34 9,11C9,10.66 9.03,10.33 9.08,10H12.59L10.11,7.5C10.3,7.25 10.5,7 10.76,6.76V6.76C11,6.5 11.25,6.3 11.5,6.11L14,8.59V5.08C14.33,5.03 14.66,5 15,5C15.34,5 15.67,5.03 16,5.08V8.59L18.5,6.11C19,6.5 19.5,7 19.89,7.5L17.41,10H20.92C20.97,10.33 21,10.66 21,11C21,11.34 20.97,11.67 20.92,12H17.41L19.89,14.5C19.7,14.75 19.5,15 19.24,15.24V15.24C19,15.5 18.75,15.7 18.5,15.89L16,13.41V16.92H16V16.92M5,19A2,2 0 0,1 7,17A2,2 0 0,1 9,19A2,2 0 0,1 7,21A2,2 0 0,1 5,19H5Z"
+          />
+        </svg>
+      </div>
+      <div
+        aria-checked={false}
+        aria-label="Structural search toggle"
+        className="btn btn-icon icon-inline toggle-container__toggle test-regexp-toggle test-structural-search-toggle test-structural-search-toggle--active"
+        data-tooltip="Enable structural search"
+        onClick={[Function]}
+        role="checkbox"
+        tabIndex={0}
+      >
+        <svg
+          className="mdi-icon "
+          fill="currentColor"
+          height={24}
+          viewBox="0 0 24 24"
+          width={24}
+        >
+          <path
+            d="M15,4V6H18V18H15V20H20V4M4,4V20H9V18H6V6H9V4H4Z"
+          />
+        </svg>
+      </div>
+    </div>
+  </div>
+</div>
+`;
+
+exports[`PlainQueryInput with query 1`] = `
+<div
+  className="query-input2 d-flex"
+>
+  <input
+    className="form-control code lazy-monaco-query-input--intermediate-input"
+    onChange={[Function]}
+    spellCheck={false}
+    type="text"
+    value="repo:jsonrpc2 file:async.go asyncHandler"
+  />
+  <div
+    className="query-input2__toggle-container"
+  >
+    <div
+      className="toggle-container"
+    >
+      <div
+        aria-checked={true}
+        aria-disabled={false}
+        aria-label="Case sensitivity toggle"
+        className="btn btn-icon icon-inline toggle-container__toggle test-regexp-toggle test-case-sensitivity-toggle toggle-container__toggle--active test-case-sensitivity-toggle--active"
+        data-tooltip="Disable case sensitivity"
+        onClick={[Function]}
+        role="checkbox"
+        tabIndex={0}
+      >
+        <svg
+          className="mdi-icon "
+          fill="currentColor"
+          height={24}
+          viewBox="0 0 24 24"
+          width={24}
+        >
+          <path
+            d="M20.06,18C20,17.83 19.91,17.54 19.86,17.11C19.19,17.81 18.38,18.16 17.45,18.16C16.62,18.16 15.93,17.92 15.4,17.45C14.87,17 14.6,16.39 14.6,15.66C14.6,14.78 14.93,14.1 15.6,13.61C16.27,13.12 17.21,12.88 18.43,12.88H19.83V12.24C19.83,11.75 19.68,11.36 19.38,11.07C19.08,10.78 18.63,10.64 18.05,10.64C17.53,10.64 17.1,10.76 16.75,11C16.4,11.25 16.23,11.54 16.23,11.89H14.77C14.77,11.46 14.92,11.05 15.22,10.65C15.5,10.25 15.93,9.94 16.44,9.71C16.95,9.5 17.5,9.36 18.13,9.36C19.11,9.36 19.87,9.6 20.42,10.09C20.97,10.58 21.26,11.25 21.28,12.11V16C21.28,16.8 21.38,17.42 21.58,17.88V18H20.06M17.66,16.88C18.11,16.88 18.54,16.77 18.95,16.56C19.35,16.35 19.65,16.07 19.83,15.73V14.16H18.7C16.93,14.16 16.04,14.63 16.04,15.57C16.04,16 16.19,16.3 16.5,16.53C16.8,16.76 17.18,16.88 17.66,16.88M5.46,13.71H9.53L7.5,8.29L5.46,13.71M6.64,6H8.36L13.07,18H11.14L10.17,15.43H4.82L3.86,18H1.93L6.64,6Z"
+          />
+        </svg>
+      </div>
+      <div
+        aria-checked={true}
+        aria-label="Regular expression toggle"
+        className="btn btn-icon icon-inline toggle-container__toggle test-regexp-toggle test-regexp-toggle toggle-container__toggle--active test-regexp-toggle--active"
+        data-tooltip="Disable regular expression"
+        onClick={[Function]}
+        role="checkbox"
+        tabIndex={0}
+      >
+        <svg
+          className="mdi-icon "
+          fill="currentColor"
+          height={24}
+          viewBox="0 0 24 24"
+          width={24}
+        >
+          <path
+            d="M16,16.92C15.67,16.97 15.34,17 15,17C14.66,17 14.33,16.97 14,16.92V13.41L11.5,15.89C11,15.5 10.5,15 10.11,14.5L12.59,12H9.08C9.03,11.67 9,11.34 9,11C9,10.66 9.03,10.33 9.08,10H12.59L10.11,7.5C10.3,7.25 10.5,7 10.76,6.76V6.76C11,6.5 11.25,6.3 11.5,6.11L14,8.59V5.08C14.33,5.03 14.66,5 15,5C15.34,5 15.67,5.03 16,5.08V8.59L18.5,6.11C19,6.5 19.5,7 19.89,7.5L17.41,10H20.92C20.97,10.33 21,10.66 21,11C21,11.34 20.97,11.67 20.92,12H17.41L19.89,14.5C19.7,14.75 19.5,15 19.24,15.24V15.24C19,15.5 18.75,15.7 18.5,15.89L16,13.41V16.92H16V16.92M5,19A2,2 0 0,1 7,17A2,2 0 0,1 9,19A2,2 0 0,1 7,21A2,2 0 0,1 5,19H5Z"
+          />
+        </svg>
+      </div>
+      <div
+        aria-checked={false}
+        aria-label="Structural search toggle"
+        className="btn btn-icon icon-inline toggle-container__toggle test-regexp-toggle test-structural-search-toggle test-structural-search-toggle--active"
+        data-tooltip="Enable structural search"
+        onClick={[Function]}
+        role="checkbox"
+        tabIndex={0}
+      >
+        <svg
+          className="mdi-icon "
+          fill="currentColor"
+          height={24}
+          viewBox="0 0 24 24"
+          width={24}
+        >
+          <path
+            d="M15,4V6H18V18H15V20H20V4M4,4V20H9V18H6V6H9V4H4Z"
+          />
+        </svg>
+      </div>
+    </div>
+  </div>
+</div>
+`;

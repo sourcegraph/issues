@@ -12,8 +12,8 @@ import (
 
 	"github.com/davecgh/go-spew/spew"
 	//"github.com/google/go-cmp/cmp"
-	"github.com/sourcegraph/sourcegraph/cmd/frontend/db"
 	"github.com/sourcegraph/sourcegraph/cmd/frontend/types"
+	"github.com/sourcegraph/sourcegraph/internal/db"
 	"github.com/sourcegraph/sourcegraph/internal/search"
 	"github.com/sourcegraph/sourcegraph/internal/search/query"
 	"github.com/sourcegraph/sourcegraph/internal/vcs/git"
@@ -73,7 +73,7 @@ func TestSearchCommitsInRepo(t *testing.T) {
 	}
 	wantCommit.once.Do(func() {}) // mark as done
 
-	if want := []*commitSearchResultResolver{
+	if want := []*CommitSearchResultResolver{
 		{
 			commit:      &wantCommit,
 			diffPreview: &highlightedString{value: "x", highlights: []*highlightedRange{}},
@@ -97,7 +97,7 @@ func TestSearchCommitsInRepo(t *testing.T) {
 	}
 }
 
-func (r *commitSearchResultResolver) String() string {
+func (r *CommitSearchResultResolver) String() string {
 	return fmt.Sprintf("{commit: %+v diffPreview: %+v messagePreview: %+v}", r.commit, r.diffPreview, r.messagePreview)
 }
 

@@ -1,0 +1,53 @@
+@import '../../../../shared/src/components/Resizable';
+
+.resizable-panel {
+    isolation: isolate;
+    min-height: 6rem;
+    max-height: calc(100% - 3rem);
+    width: 100%;
+}
+
+.panel {
+    flex: 1 1 50%;
+    min-height: 0;
+
+    overflow-x: auto;
+
+    display: flex;
+    flex-direction: column;
+
+    background-color: var(--color-bg-1);
+    border-top: 1px solid var(--border-color);
+    width: 100%;
+
+    &__empty {
+        flex: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        opacity: 0.6;
+    }
+
+    &__header {
+        flex: none;
+        padding: 0.25rem 0.25rem 0.25rem 0.5rem;
+        display: flex;
+        align-items: center;
+        &-icon {
+            flex: 0;
+            align-self: flex-start;
+            opacity: 0.6;
+        }
+    }
+
+    &__tabs {
+        flex: 1;
+        min-height: 0; /* needed for Firefox for content scrolling to work properly; See sourcegraph/sourcegraph#12340 and https://codepen.io/slimsag/pen/mjPXyN */
+        &-content {
+            flex: 1;
+            &--scroll {
+                overflow: auto;
+            }
+        }
+    }
+}

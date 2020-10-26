@@ -14,14 +14,16 @@ import (
 	"github.com/inconshreveable/log15"
 	"github.com/pkg/errors"
 	"github.com/sourcegraph/sourcegraph/cmd/frontend/backend"
-	"github.com/sourcegraph/sourcegraph/cmd/frontend/db"
 	"github.com/sourcegraph/sourcegraph/cmd/frontend/globals"
 	"github.com/sourcegraph/sourcegraph/cmd/frontend/types"
 	"github.com/sourcegraph/sourcegraph/internal/api"
 	"github.com/sourcegraph/sourcegraph/internal/conf"
+	"github.com/sourcegraph/sourcegraph/internal/db"
+	"github.com/sourcegraph/sourcegraph/internal/errcode"
 	"github.com/sourcegraph/sourcegraph/internal/gitserver"
 	"github.com/sourcegraph/sourcegraph/internal/gitserver/protocol"
 	"github.com/sourcegraph/sourcegraph/internal/jsonc"
+	searchbackend "github.com/sourcegraph/sourcegraph/internal/search/backend"
 	"github.com/sourcegraph/sourcegraph/internal/txemail"
 	"github.com/sourcegraph/sourcegraph/internal/vcs/git"
 )
@@ -68,9 +70,18 @@ func serveExternalServiceConfigs(w http.ResponseWriter, r *http.Request) error {
 	if err != nil {
 		return err
 	}
-	services, err := db.ExternalServices.List(r.Context(), db.ExternalServicesListOptions{
-		Kinds: []string{req.Kind},
-	})
+
+	options := db.ExternalServicesListOptions{
+		Kinds:   []string{req.Kind},
+		AfterID: int64(req.AfterID),
+	}
+	if req.Limit > 0 {
+		options.LimitOffset = &db.LimitOffset{
+			Limit: req.Limit,
+		}
+	}
+
+	services, err := db.ExternalServices.List(r.Context(), options)
 	if err != nil {
 		return err
 	}
@@ -112,9 +123,17 @@ func serveExternalServicesList(w http.ResponseWriter, r *http.Request) error {
 		req.Kinds = append(req.Kinds, req.Kind)
 	}
 
-	services, err := db.ExternalServices.List(r.Context(), db.ExternalServicesListOptions{
-		Kinds: req.Kinds,
-	})
+	options := db.ExternalServicesListOptions{
+		Kinds:   []string{req.Kind},
+		AfterID: int64(req.AfterID),
+	}
+	if req.Limit > 0 {
+		options.LimitOffset = &db.LimitOffset{
+			Limit: req.Limit,
+		}
+	}
+
+	services, err := db.ExternalServices.List(r.Context(), options)
 	if err != nil {
 		return err
 	}
@@ -138,18 +157,42 @@ func serveConfiguration(w http.ResponseWriter, r *http.Request) error {
 // Additionally, it only cares about certain search specific settings so this
 // search specific endpoint is used rather than serving the entire site settings
 // from /.internal/configuration.
+//
+// This endpoint also supports batch requests to avoid managing concurrency in
+// zoekt. On vertically scaled instances we have observed zoekt requesting
+// this endpoint concurrently leading to socket starvation.
 func serveSearchConfiguration(w http.ResponseWriter, r *http.Request) error {
-	opts := struct {
-		LargeFiles []string
-		Symbols    bool
-	}{
-		LargeFiles: conf.Get().SearchLargeFiles,
-		Symbols:    conf.SymbolIndexEnabled(),
+	ctx := r.Context()
+	siteConfig := conf.Get().SiteConfiguration
+	getRepoIndexOptions := func(repoName string) (*searchbackend.RepoIndexOptions, error) {
+		repo, err := db.Repos.GetByName(ctx, api.RepoName(repoName))
+		if err != nil {
+			return nil, err
+		}
+
+		getVersion := func(branch string) (string, error) {
+			// Do not to trigger a repo-updater lookup since this is a batch job.
+			commitID, err := git.ResolveRevision(ctx, gitserver.Repo{Name: repo.Name}, nil, branch, git.ResolveRevisionOptions{})
+			if err != nil && errcode.HTTP(err) == http.StatusNotFound {
+				// GetIndexOptions wants an empty rev for a missing rev or empty
+				// repo.
+				return "", nil
+			}
+			return string(commitID), err
+		}
+
+		return &searchbackend.RepoIndexOptions{
+			RepoID:     int32(repo.ID),
+			GetVersion: getVersion,
+		}, nil
 	}
-	err := json.NewEncoder(w).Encode(opts)
-	if err != nil {
-		return errors.Wrap(err, "encode")
+
+	if err := r.ParseForm(); err != nil {
+		return err
 	}
+
+	b := searchbackend.GetIndexOptions(&siteConfig, getRepoIndexOptions, r.Form["repo"]...)
+	_, _ = w.Write(b)
 	return nil
 }
 
@@ -178,67 +221,6 @@ type reposListServer struct {
 		// Enabled is true if horizontal indexed search is enabled.
 		Enabled() bool
 	}
-}
-
-// Deprecated: serveList used to be used by Zoekt to get the list of
-// repositories to index. Can be removed in 3.11.
-func (h *reposListServer) serveList(w http.ResponseWriter, r *http.Request) error {
-	var opt struct {
-		Hostname string
-		db.ReposListOptions
-	}
-	if err := json.NewDecoder(r.Body).Decode(&opt); err != nil {
-		return err
-	}
-
-	var names []string
-	if h.SourcegraphDotComMode {
-		res, err := h.Repos.ListDefault(r.Context())
-		if err != nil {
-			return errors.Wrap(err, "listing repos")
-		}
-		names = make([]string, len(res))
-		for i, r := range res {
-			names[i] = string(r.Name)
-		}
-	} else {
-		res, err := h.Repos.List(r.Context(), opt.ReposListOptions)
-		if err != nil {
-			return errors.Wrap(err, "listing repos")
-		}
-		names = make([]string, len(res))
-		for i, r := range res {
-			names[i] = string(r.Name)
-		}
-	}
-
-	if h.Indexers.Enabled() {
-		var err error
-		names, err = h.Indexers.ReposSubset(r.Context(), opt.Hostname, map[string]struct{}{}, names)
-		if err != nil {
-			return err
-		}
-	}
-
-	// BACKCOMPAT: Add a Name field that serializes to `URI` because
-	// zoekt-sourcegraph-indexserver expects one to exist (with the
-	// repository name). This is a legacy of the rename from "repo URI" to
-	// "repo name".
-	type repoWithBackcompatURIField struct {
-		Name string `json:"URI"`
-	}
-	res := make([]repoWithBackcompatURIField, len(names))
-	for i, name := range names {
-		res[i].Name = name
-	}
-
-	data, err := json.Marshal(res)
-	if err != nil {
-		return err
-	}
-	w.WriteHeader(http.StatusOK)
-	_, _ = w.Write(data)
-	return nil
 }
 
 // serveIndex is used by zoekt to get the list of repositories for it to

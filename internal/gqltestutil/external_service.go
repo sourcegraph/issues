@@ -34,13 +34,14 @@ mutation AddExternalService($input: AddExternalServiceInput!) {
 			} `json:"addExternalService"`
 		} `json:"data"`
 	}
-	err := c.GraphQL("", query, variables, &resp)
+	err := c.GraphQL("", "", query, variables, &resp)
 	if err != nil {
 		return "", errors.Wrap(err, "request GraphQL")
 	}
 
+	// Return the ID along with the warning so we can still clean up properly.
 	if resp.Data.AddExternalService.Warning != "" {
-		return "", errors.New(resp.Data.AddExternalService.Warning)
+		return resp.Data.AddExternalService.ID, errors.New(resp.Data.AddExternalService.Warning)
 	}
 	return resp.Data.AddExternalService.ID, nil
 }
@@ -59,7 +60,7 @@ mutation DeleteExternalService($externalService: ID!) {
 	variables := map[string]interface{}{
 		"externalService": id,
 	}
-	err := c.GraphQL("", query, variables, nil)
+	err := c.GraphQL("", "", query, variables, nil)
 	if err != nil {
 		return errors.Wrap(err, "request GraphQL")
 	}

@@ -1,5 +1,5 @@
 /vagrant_ansible_inventory_default
-/.vagrant
+.vagrant
 
 # Vim
 *.swp
@@ -95,22 +95,46 @@ cmd/indexer/debug
 
 /.gtm/
 
-# Web
-node_modules/
+# Client
+node_modules
 package-lock.json
 .nyc_output/
 coverage/
 out/
-shared/src/graphql/schema.ts
-web/src/schema/*
+client/shared/src/graphql/schema.ts
+client/web/src/schema/*
 puppeteer/
 package-lock.json
 /dist
 sourcegraph-webapp-*.tgz
 *.tsbuildinfo
+graphql-operations.ts
+
+# We use symlinks in the deeper node_modules to share the same .bin as the root (for CLI tools)
+# unignore node_modules itself
+!/client/web/node_modules
+!/client/shared/node_modules
+!/client/branded/node_modules
+!/client/browser/node_modules
+!/client/packages/sourcegraph-extension-api/node_modules
+!/client/packages/@sourcegraph/extension-api-types/node_modules
+# ignore everything inside node_modules
+/client/web/node_modules/*
+/client/shared/node_modules/*
+/client/branded/node_modules/*
+/client/browser/node_modules/*
+/client/packages/sourcegraph-extension-api/node_modules/*
+/client/packages/@sourcegraph/extension-api-types/node_modules/*
+# except .bin
+!/client/web/node_modules/.bin
+!/client/shared/node_modules/.bin
+!/client/branded/node_modules/.bin
+!/client/browser/node_modules/.bin
+!/client/packages/sourcegraph-extension-api/node_modules/.bin
+!/client/packages/@sourcegraph/extension-api-types/node_modules/.bin
 
 # Extensions
-/packages/sourcegraph-extension-api/dist
+/client/packages/sourcegraph-extension-api/dist
 
 # Symbols service: PCRE extension to sqlite3
 libsqlite3-pcre.dylib
@@ -137,3 +161,6 @@ storybook-static/
 # tilt files
 /dev/tilt/generated-cluster
 /dev/tilt/tilt-watch-targets
+
+# sonarqube
+.scannerwork

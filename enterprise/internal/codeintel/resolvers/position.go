@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"io/ioutil"
+	"strconv"
 	"strings"
 
 	"github.com/sourcegraph/go-diff/diff"
@@ -35,15 +36,17 @@ type PositionAdjuster interface {
 }
 
 type positionAdjuster struct {
-	repo   *types.Repo
-	commit string
+	repo      *types.Repo
+	commit    string
+	hunkCache HunkCache
 }
 
 // NewPositionAdjuster creates a new PositionAdjuster with the given repository and source commit.
-func NewPositionAdjuster(repo *types.Repo, commit string) PositionAdjuster {
+func NewPositionAdjuster(repo *types.Repo, commit string, hunkCache HunkCache) PositionAdjuster {
 	return &positionAdjuster{
-		repo:   repo,
-		commit: commit,
+		repo:      repo,
+		commit:    commit,
+		hunkCache: hunkCache,
 	}
 }
 
@@ -58,7 +61,7 @@ func (p *positionAdjuster) AdjustPath(ctx context.Context, commit, path string, 
 // indicating that the translation was successful. If revese is true, then the source and
 // target commits are swapped.
 func (p *positionAdjuster) AdjustPosition(ctx context.Context, commit, path string, px bundles.Position, reverse bool) (string, bundles.Position, bool, error) {
-	hunks, err := p.readHunks(ctx, p.repo, p.commit, commit, path, reverse)
+	hunks, err := p.readHunksCached(ctx, p.repo, p.commit, commit, path, reverse)
 	if err != nil {
 		return "", bundles.Position{}, false, err
 	}
@@ -72,7 +75,7 @@ func (p *positionAdjuster) AdjustPosition(ctx context.Context, commit, path stri
 // that the translation was successful. If revese is true, then the source and target commits
 // are swapped.
 func (p *positionAdjuster) AdjustRange(ctx context.Context, commit, path string, rx bundles.Range, reverse bool) (string, bundles.Range, bool, error) {
-	hunks, err := p.readHunks(ctx, p.repo, p.commit, commit, path, reverse)
+	hunks, err := p.readHunksCached(ctx, p.repo, p.commit, commit, path, reverse)
 	if err != nil {
 		return "", bundles.Range{}, false, err
 	}
@@ -81,10 +84,12 @@ func (p *positionAdjuster) AdjustRange(ctx context.Context, commit, path string,
 	return path, adjusted, ok, nil
 }
 
-// readHunks returns a position-ordered slice of changes (additions or deletions) of the
-// given path between the given source and target commits. If revese is true, then the
-// source and target commits are swapped.
-func (p *positionAdjuster) readHunks(ctx context.Context, repo *types.Repo, sourceCommit, targetCommit, path string, reverse bool) ([]*diff.Hunk, error) {
+// readHunksCached returns a position-ordered slice of changes (additions or deletions) of
+// the given path between the given source and target commits. If revese is true, then the
+// source and target commits are swapped. If the position adjuster has a hunk cache, it
+// will read from it before attempting to contact a remote server, and populate the cache
+// with new results
+func (p *positionAdjuster) readHunksCached(ctx context.Context, repo *types.Repo, sourceCommit, targetCommit, path string, reverse bool) ([]*diff.Hunk, error) {
 	if sourceCommit == targetCommit {
 		return nil, nil
 	}
@@ -92,12 +97,37 @@ func (p *positionAdjuster) readHunks(ctx context.Context, repo *types.Repo, sour
 		sourceCommit, targetCommit = targetCommit, sourceCommit
 	}
 
+	if p.hunkCache == nil {
+		return p.readHunks(ctx, repo, sourceCommit, targetCommit, path)
+	}
+
+	key := makeKey(strconv.FormatInt(int64(repo.ID), 10), sourceCommit, targetCommit, path)
+	if hunks, ok := p.hunkCache.Get(key); ok {
+		if hunks == nil {
+			return nil, nil
+		}
+
+		return hunks.([]*diff.Hunk), nil
+	}
+
+	hunks, err := p.readHunks(ctx, repo, sourceCommit, targetCommit, path)
+	if err != nil {
+		return nil, err
+	}
+
+	p.hunkCache.Set(key, hunks, int64(len(hunks)))
+
+	return hunks, nil
+}
+
+// readHunks returns a position-ordered slice of changes (additions or deletions) of
+// the given path between the given source and target commits.
+func (p *positionAdjuster) readHunks(ctx context.Context, repo *types.Repo, sourceCommit, targetCommit, path string) ([]*diff.Hunk, error) {
 	cachedRepo, err := backend.CachedGitRepo(ctx, repo)
 	if err != nil {
 		return nil, err
 	}
 
-	// TODO(efritz) - cache diff results
 	reader, err := git.ExecReader(ctx, *cachedRepo, []string{"diff", sourceCommit, targetCommit, "--", path})
 	if err != nil {
 		return nil, err
@@ -124,13 +154,25 @@ func (p *positionAdjuster) readHunks(ctx context.Context, repo *types.Repo, sour
 // boolean flag indicating that the translation is successful. A translation fails when the
 // line indicated by the position has been edited.
 func adjustPosition(hunks []*diff.Hunk, pos bundles.Position) (bundles.Position, bool) {
+	line, ok := adjustLine(hunks, pos.Line)
+	if !ok {
+		return bundles.Position{}, false
+	}
+
+	return bundles.Position{Line: line, Character: pos.Character}, true
+}
+
+// adjustLine translates the given line nubmerbased on the number of additions and deletions
+// that occur before that line. This function returns a boolean flag indicating that the
+// translation is successful. A translation fails when the given line has been edited.
+func adjustLine(hunks []*diff.Hunk, line int) (int, bool) {
 	// Translate from bundle/lsp zero-index to git diff one-index
-	line := pos.Line + 1
+	line = line + 1
 
 	hunk := findHunk(hunks, line)
 	if hunk == nil {
 		// Trivial case, no changes before this line
-		return pos, true
+		return line - 1, true
 	}
 
 	// If the hunk ends before this line, we can simply adjust the line offset by the
@@ -141,7 +183,7 @@ func adjustPosition(hunks []*diff.Hunk, pos bundles.Position) (bundles.Position,
 		adjustedLine := line + (endOfTargetHunk - endOfSourceHunk)
 
 		// Translate from git diff one-index to bundle/lsp zero-index
-		return bundles.Position{Line: adjustedLine - 1, Character: pos.Character}, true
+		return adjustedLine - 1, true
 	}
 
 	// These offsets start at the beginning of the hunk's delta. The following loop will
@@ -170,11 +212,11 @@ func adjustPosition(hunks []*diff.Hunk, pos bundles.Position) (bundles.Position,
 			// If it was added, then we don't have any index information for it in
 			// our source file. In any case, we won't have a precise translation.
 			if isAdded || isRemoved {
-				return bundles.Position{}, false
+				return 0, false
 			}
 
 			// Translate from git diff one-index to bundle/lsp zero-index
-			return bundles.Position{Line: targetOffset - 1, Character: pos.Character}, true
+			return targetOffset - 1, true
 		}
 
 		// A line exists in the target file if it wasn't deleted in the delta. We adjust
@@ -219,4 +261,8 @@ func adjustRange(hunks []*diff.Hunk, r bundles.Range) (bundles.Range, bool) {
 	}
 
 	return bundles.Range{Start: start, End: end}, true
+}
+
+func makeKey(parts ...string) string {
+	return strings.Join(parts, ":")
 }

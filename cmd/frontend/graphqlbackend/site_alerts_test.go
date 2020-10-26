@@ -1,9 +1,11 @@
 package graphqlbackend
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
+	"github.com/sourcegraph/sourcegraph/schema"
 )
 
 func Test_determineOutOfDateAlert(t *testing.T) {
@@ -95,6 +97,102 @@ func Test_determineOutOfDateAlert(t *testing.T) {
 			gotOnlineAdmin := determineOutOfDateAlert(true, tst.monthsOutOfDate, false)
 			if diff := cmp.Diff(tst.wantOnlineAdmin, gotOnlineAdmin); diff != "" {
 				t.Fatalf("online admin:\n%s", diff)
+			}
+		})
+	}
+}
+
+func TestObservabilityActiveAlertsAlert(t *testing.T) {
+	f := false
+	type args struct {
+		prometheusURL string
+		args          AlertFuncArgs
+	}
+	tests := []struct {
+		name string
+		args args
+		want []*Alert
+	}{
+		{
+			name: "not admin",
+			args: args{
+				args: AlertFuncArgs{
+					IsSiteAdmin: true,
+					ViewerFinalSettings: &schema.Settings{
+						AlertsHideObservabilitySiteAlerts: &f,
+					},
+				},
+			},
+			want: nil,
+		},
+		{
+			name: "prometheus disabled",
+			args: args{
+				args: AlertFuncArgs{
+					IsSiteAdmin: true,
+					ViewerFinalSettings: &schema.Settings{
+						AlertsHideObservabilitySiteAlerts: &f,
+					}},
+				prometheusURL: "",
+			},
+			want: nil,
+		},
+		{
+			name: "prometheus malformed",
+			args: args{
+				args: AlertFuncArgs{
+					IsSiteAdmin: true,
+					ViewerFinalSettings: &schema.Settings{
+						AlertsHideObservabilitySiteAlerts: &f,
+					},
+				},
+				prometheusURL: " http://prometheus:9090",
+			},
+			want: []*Alert{{
+				TypeValue:    AlertTypeWarning,
+				MessageValue: "Prometheus misconfigured",
+			}},
+		},
+		{
+			name: "prometheus unreachable",
+			args: args{
+				args: AlertFuncArgs{
+					IsSiteAdmin: true,
+					ViewerFinalSettings: &schema.Settings{
+						AlertsHideObservabilitySiteAlerts: &f,
+					},
+				},
+				prometheusURL: "http://no-prometheus:9090",
+			},
+			want: []*Alert{{
+				TypeValue:    AlertTypeWarning,
+				MessageValue: "Unable to fetch alerts status",
+			}},
+		},
+		{
+			name: "alerts disabled by default",
+			args: args{
+				args: AlertFuncArgs{
+					IsSiteAdmin: true,
+				},
+				prometheusURL: "http://no-prometheus:9090",
+			},
+			want: nil,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			fn := observabilityActiveAlertsAlert(tt.args.prometheusURL)
+			gotAlerts := fn(tt.args.args)
+			if len(gotAlerts) != len(tt.want) {
+				t.Errorf("expected %+v, got %+v", tt.want, gotAlerts)
+			}
+			// test for message substring equality
+			for i, got := range gotAlerts {
+				want := tt.want[i]
+				if got.TypeValue != want.TypeValue || got.IsDismissibleWithKeyValue != want.IsDismissibleWithKeyValue || !strings.Contains(got.MessageValue, want.MessageValue) {
+					t.Errorf("expected %+v, got %+v", want, got)
+				}
 			}
 		})
 	}

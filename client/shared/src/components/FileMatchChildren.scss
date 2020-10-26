@@ -1,0 +1,32 @@
+.file-match-children {
+    &__item {
+        text-decoration: none; // don't use cascading link style
+        display: flex;
+        align-items: center;
+        padding: 0.25rem 0.5rem;
+        background-color: var(--body-bg);
+
+        &-clickable {
+            cursor: pointer;
+        }
+
+        &:hover {
+            text-decoration: none;
+        }
+
+        &-code-wrapper {
+            position: relative;
+            overflow-x: auto;
+            &:not(:first-child) {
+                border-top: 1px solid var(--border-color);
+            }
+        }
+
+        &-badge-row {
+            position: absolute;
+            top: 0;
+            right: 0;
+            text-align: right;
+        }
+    }
+}

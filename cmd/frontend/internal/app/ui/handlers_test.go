@@ -13,7 +13,7 @@ import (
 	"github.com/sourcegraph/sourcegraph/cmd/frontend/envvar"
 	"github.com/sourcegraph/sourcegraph/cmd/frontend/globals"
 	uirouter "github.com/sourcegraph/sourcegraph/cmd/frontend/internal/app/ui/router"
-	"github.com/sourcegraph/sourcegraph/cmd/frontend/internal/pkg/siteid"
+	"github.com/sourcegraph/sourcegraph/cmd/frontend/internal/siteid"
 	"github.com/sourcegraph/sourcegraph/cmd/frontend/types"
 	"github.com/sourcegraph/sourcegraph/internal/api"
 	"github.com/sourcegraph/sourcegraph/internal/conf"
@@ -26,11 +26,12 @@ import (
 )
 
 func TestRedirects(t *testing.T) {
-	check := func(t *testing.T, path string, wantStatusCode int, wantRedirectLocation string) {
+	check := func(t *testing.T, path string, wantStatusCode int, wantRedirectLocation string, userAgent string) {
 		t.Helper()
 
 		rw := httptest.NewRecorder()
 		req, _ := http.NewRequest("GET", path, nil)
+		req.Header.Set("User-Agent", userAgent)
 		uirouter.Router.ServeHTTP(rw, req)
 		if rw.Code != wantStatusCode {
 			t.Errorf("got HTTP response code %d, want %d", rw.Code, wantStatusCode)
@@ -45,15 +46,25 @@ func TestRedirects(t *testing.T) {
 		envvar.MockSourcegraphDotComMode(true)
 		defer envvar.MockSourcegraphDotComMode(orig) // reset
 		t.Run("root", func(t *testing.T) {
-			check(t, "/", http.StatusTemporaryRedirect, "https://about.sourcegraph.com")
+			check(t, "/", http.StatusTemporaryRedirect, "https://about.sourcegraph.com", "Mozilla/5.0")
 		})
 	})
+
+	t.Run("on Sourcegraph.com from Cookiebot", func(t *testing.T) {
+		orig := envvar.SourcegraphDotComMode()
+		envvar.MockSourcegraphDotComMode(true)
+		defer envvar.MockSourcegraphDotComMode(orig) // reset
+		t.Run("root", func(t *testing.T) {
+			check(t, "/", http.StatusTemporaryRedirect, "/search", "Mozilla/5.0 Cookiebot")
+		})
+	})
+
 	t.Run("non-Sourcegraph.com", func(t *testing.T) {
 		orig := envvar.SourcegraphDotComMode()
 		envvar.MockSourcegraphDotComMode(false)
 		defer envvar.MockSourcegraphDotComMode(orig) // reset
 		t.Run("root", func(t *testing.T) {
-			check(t, "/", http.StatusTemporaryRedirect, "/search")
+			check(t, "/", http.StatusTemporaryRedirect, "/search", "Mozilla/5.0")
 		})
 	})
 }

@@ -13,6 +13,138 @@ import (
 	storemocks "github.com/sourcegraph/sourcegraph/enterprise/internal/codeintel/store/mocks"
 )
 
+func TestRanges(t *testing.T) {
+	mockStore := storemocks.NewMockStore()
+	mockBundleManagerClient := bundlemocks.NewMockBundleManagerClient()
+	mockCodeIntelAPI := apimocks.NewMockCodeIntelAPI()
+	mockPositionAdjuster := NewMockPositionAdjuster()
+
+	// path can be translated for subsequent dumps
+	mockPositionAdjuster.AdjustPathFunc.SetDefaultReturn("renamed.go", true, nil)
+
+	// first requested dump (dump 42) has no equivalent path
+	mockPositionAdjuster.AdjustPathFunc.PushReturn("", false, nil)
+
+	// second requested dump (dump 44) has some data
+	mockCodeIntelAPI.RangesFunc.PushReturn([]codeintelapi.ResolvedCodeIntelligenceRange{
+		{
+			Range:       bundles.Range{Start: bundles.Position{Line: 11, Character: 12}, End: bundles.Position{Line: 13, Character: 14}},
+			Definitions: []codeintelapi.ResolvedLocation{{Dump: store.Dump{ID: 44, RepositoryID: 50}, Path: "p1.go", Range: bundles.Range{Start: bundles.Position{Line: 111, Character: 121}, End: bundles.Position{Line: 131, Character: 141}}}},
+			References:  []codeintelapi.ResolvedLocation{{Dump: store.Dump{ID: 44, RepositoryID: 50}, Path: "p1.go", Range: bundles.Range{Start: bundles.Position{Line: 112, Character: 122}, End: bundles.Position{Line: 132, Character: 142}}}},
+			HoverText:   "ht1",
+		},
+		{
+			Range:       bundles.Range{Start: bundles.Position{Line: 21, Character: 22}, End: bundles.Position{Line: 23, Character: 24}},
+			Definitions: []codeintelapi.ResolvedLocation{{Dump: store.Dump{ID: 44, RepositoryID: 50}, Path: "p2.go", Range: bundles.Range{Start: bundles.Position{Line: 211, Character: 221}, End: bundles.Position{Line: 231, Character: 241}}}},
+			References:  []codeintelapi.ResolvedLocation{{Dump: store.Dump{ID: 44, RepositoryID: 50}, Path: "p2.go", Range: bundles.Range{Start: bundles.Position{Line: 212, Character: 222}, End: bundles.Position{Line: 232, Character: 242}}}},
+			HoverText:   "ht2",
+		},
+		{
+			Range:       bundles.Range{Start: bundles.Position{Line: 31, Character: 32}, End: bundles.Position{Line: 33, Character: 34}},
+			Definitions: []codeintelapi.ResolvedLocation{{Dump: store.Dump{ID: 44, RepositoryID: 50}, Path: "p3.go", Range: bundles.Range{Start: bundles.Position{Line: 311, Character: 321}, End: bundles.Position{Line: 331, Character: 341}}}},
+			References:  []codeintelapi.ResolvedLocation{{Dump: store.Dump{ID: 44, RepositoryID: 50}, Path: "p3.go", Range: bundles.Range{Start: bundles.Position{Line: 312, Character: 322}, End: bundles.Position{Line: 332, Character: 342}}}},
+			HoverText:   "ht3",
+		},
+	}, nil)
+
+	// first requested dump (dump 43) has no data
+	mockCodeIntelAPI.RangesFunc.PushReturn(nil, nil)
+
+	mockPositionAdjuster.AdjustRangeFunc.SetDefaultHook(func(ctx context.Context, path, commit string, r bundles.Range, reverse bool) (string, bundles.Range, bool, error) {
+		return path, bundles.Range{
+			Start: bundles.Position{Line: r.Start.Line * 10, Character: r.Start.Character * 10},
+			End:   bundles.Position{Line: r.End.Line * 10, Character: r.End.Character * 10},
+		}, true, nil
+	})
+
+	queryResolver := NewQueryResolver(
+		mockStore,
+		mockBundleManagerClient,
+		mockCodeIntelAPI,
+		mockPositionAdjuster,
+		50,
+		"deadbeef2",
+		"/foo/bar.go",
+		[]store.Dump{
+			{ID: 42, RepositoryID: 50, Commit: "deadbeef1"},
+			{ID: 43, RepositoryID: 50, Commit: "deadbeef1"},
+			{ID: 44, RepositoryID: 50, Commit: "deadbeef1"},
+			{ID: 45, RepositoryID: 50, Commit: "deadbeef1"},
+		},
+	)
+
+	ranges, err := queryResolver.Ranges(context.Background(), 10, 20)
+	if err != nil {
+		t.Fatalf("unexpected error resolving ranges: %s", err)
+	}
+
+	expectedRanges := []AdjustedCodeIntelligenceRange{
+		{
+			Range: bundles.Range{Start: bundles.Position{Line: 110, Character: 120}, End: bundles.Position{Line: 130, Character: 140}},
+			Definitions: []AdjustedLocation{
+				{
+					Dump:           store.Dump{ID: 44, RepositoryID: 50},
+					Path:           "p1.go",
+					AdjustedCommit: "deadbeef2",
+					AdjustedRange:  bundles.Range{Start: bundles.Position{Line: 1110, Character: 1210}, End: bundles.Position{Line: 1310, Character: 1410}},
+				},
+			},
+			References: []AdjustedLocation{
+				{
+					Dump:           store.Dump{ID: 44, RepositoryID: 50},
+					Path:           "p1.go",
+					AdjustedCommit: "deadbeef2",
+					AdjustedRange:  bundles.Range{Start: bundles.Position{Line: 1120, Character: 1220}, End: bundles.Position{Line: 1320, Character: 1420}},
+				},
+			},
+			HoverText: "ht1",
+		},
+		{
+			Range: bundles.Range{Start: bundles.Position{Line: 210, Character: 220}, End: bundles.Position{Line: 230, Character: 240}},
+			Definitions: []AdjustedLocation{
+				{
+					Dump:           store.Dump{ID: 44, RepositoryID: 50},
+					Path:           "p2.go",
+					AdjustedCommit: "deadbeef2",
+					AdjustedRange:  bundles.Range{Start: bundles.Position{Line: 2110, Character: 2210}, End: bundles.Position{Line: 2310, Character: 2410}},
+				},
+			},
+			References: []AdjustedLocation{
+				{
+					Dump:           store.Dump{ID: 44, RepositoryID: 50},
+					Path:           "p2.go",
+					AdjustedCommit: "deadbeef2",
+					AdjustedRange:  bundles.Range{Start: bundles.Position{Line: 2120, Character: 2220}, End: bundles.Position{Line: 2320, Character: 2420}},
+				},
+			},
+			HoverText: "ht2",
+		},
+		{
+			Range: bundles.Range{Start: bundles.Position{Line: 310, Character: 320}, End: bundles.Position{Line: 330, Character: 340}},
+			Definitions: []AdjustedLocation{
+				{
+					Dump:           store.Dump{ID: 44, RepositoryID: 50},
+					Path:           "p3.go",
+					AdjustedCommit: "deadbeef2",
+					AdjustedRange:  bundles.Range{Start: bundles.Position{Line: 3110, Character: 3210}, End: bundles.Position{Line: 3310, Character: 3410}},
+				},
+			},
+			References: []AdjustedLocation{
+				{
+					Dump:           store.Dump{ID: 44, RepositoryID: 50},
+					Path:           "p3.go",
+					AdjustedCommit: "deadbeef2",
+					AdjustedRange:  bundles.Range{Start: bundles.Position{Line: 3120, Character: 3220}, End: bundles.Position{Line: 3320, Character: 3420}},
+				},
+			},
+			HoverText: "ht3",
+		},
+	}
+	if diff := cmp.Diff(expectedRanges, ranges); diff != "" {
+		t.Errorf("unexpected ranges (-want +got):\n%s", diff)
+	}
+}
+
 func TestDefinitions(t *testing.T) {
 	mockStore := storemocks.NewMockStore()
 	mockBundleManagerClient := bundlemocks.NewMockBundleManagerClient()

@@ -12,18 +12,6 @@ cleanup() {
 }
 trap cleanup EXIT
 
-# The grafana-wrapper has a dependency on internal/conf which makes its dependency
-# tree quite complicated. Cross-compile it separately before building the image.
-export GO111MODULE=on
-export GOARCH=amd64
-export GOOS=linux
-export CGO_ENABLED=0
-go build \
-  -trimpath \
-  -installsuffix netgo \
-  -tags "dist netgo" \
-  -o "$BUILDDIR"/.bin/grafana-wrapper ./cmd/grafana-wrapper
-
 # We copy just the monitoring directory and the root go.mod/go.sum so that we
 # do not need to send the entire repository as build context to Docker. Additionally,
 # we do not use a separate go.mod/go.sum in the monitoring/ directory because

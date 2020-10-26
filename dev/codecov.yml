@@ -10,6 +10,14 @@ coverage:
           - cmd/symbols
           - enterprise/cmd/precise-code-intel-*
           - enterprise/internal/codeintel
+      campaigns:
+        informational: true
+        paths:
+          - cmd/frontend/graphqlbackend/campaigns.go
+          - enterprise/cmd/frontend/internal/campaigns
+          - internal/campaigns
+          - enterprise/internal/campaigns
+          - client/web/src/enterprise/campaigns
       typescript:
         informational: true
         flags:
@@ -25,10 +33,13 @@ coverage:
 comment:
   require_changes: yes
   layout: 'diff, flags, files'
-  # We upload at least 5 times in CI (to confirm: https://sourcegraph.com/search?q=repo:%5Egithub%5C.com/sourcegraph/sourcegraph%24+%22https://codecov.io/bash%22&patternType=regexp)
-  # Exceptions:
-  # - PRs that only update docs, we don't need Codecov there.
-  # - e2e tests, which don't run on most PRs.
-  after_n_builds: 5
+  show_carryforward_flags: true
 ignore:
   - '**/bindata.go'
+
+flags:
+  typescript:
+    carryforward: true
+
+github_checks:
+  annotations: false

@@ -26,6 +26,7 @@ const (
 	FieldPatternType        = "patterntype"
 	FieldContent            = "content"
 	FieldVisibility         = "visibility"
+	FieldRev                = "rev"
 
 	// For diff and commit search only:
 	FieldBefore    = "before"
@@ -40,7 +41,6 @@ const (
 	FieldStable    = "stable" // Forces search to return a stable result ordering (currently limited to file content matches).
 	FieldMax       = "max"    // Deprecated alias for count
 	FieldTimeout   = "timeout"
-	FieldReplace   = "replace"
 	FieldCombyRule = "rule"
 )
 
@@ -78,7 +78,6 @@ var (
 			FieldStable:    {Literal: types.BoolType, Quoted: types.BoolType, Singular: true},
 			FieldMax:       {Literal: types.StringType, Quoted: types.StringType, Singular: true},
 			FieldTimeout:   {Literal: types.StringType, Quoted: types.StringType, Singular: true},
-			FieldReplace:   {Literal: types.StringType, Quoted: types.StringType, Singular: true},
 			FieldCombyRule: {Literal: types.StringType, Quoted: types.StringType, Singular: true},
 		},
 		FieldAliases: map[string]string{

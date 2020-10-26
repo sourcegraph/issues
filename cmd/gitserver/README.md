@@ -18,7 +18,7 @@ The management of clones comprises most of the complexity in gitserver since:
 Additionally we have invested heavily in the observability of
 gitserver. Nearly every operation Sourcegraph does runs one or more git
 commands. So we have detailed oberservability in prometheus, net/event,
-lightstep, honeycomb and stderr logs.
+jaeger, honeycomb and stderr logs.
 
 We normalize repository names when storing them on disk. Always use
 `protocol.NormalizeRepo`. The `$GIT_DIR` of a repository is at

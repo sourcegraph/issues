@@ -34,8 +34,8 @@ func TestMiddleware(t *testing.T) {
 	authedHandler.Handle("/.api/", Middleware.API(h))
 	authedHandler.Handle("/", Middleware.App(h))
 
-	mockGitHubCom := newMockProvider(t, "github-com-client", "github-com-secret", "https://github.com/")
-	mockGHE := newMockProvider(t, "github-enterprise-client", "github-enterprise-secret", "https://mycompany.com/")
+	mockGitHubCom := newMockProvider(t, "githubcomclient", "githubcomsecret", "https://github.com/")
+	mockGHE := newMockProvider(t, "githubenterpriseclient", "githubenterprisesecret", "https://mycompany.com/")
 	providers.MockProviders = []providers.Provider{mockGitHubCom.Provider}
 	defer func() { providers.MockProviders = nil }()
 

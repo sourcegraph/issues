@@ -7,6 +7,8 @@ import (
 	"testing"
 
 	"github.com/inconshreveable/log15"
+
+	"github.com/sourcegraph/sourcegraph/internal/secret"
 )
 
 var updateRegex = flag.String("update", "", "Update testdata of tests matching the given regex")
@@ -23,5 +25,8 @@ func TestMain(m *testing.M) {
 	if !testing.Verbose() {
 		log15.Root().SetHandler(log15.DiscardHandler())
 	}
+
+	// NOTE: We only run tests with real encryption because calling m.Run twice will panic with duplicate metrics.
+	secret.MockDefaultEncryptor()
 	os.Exit(m.Run())
 }

@@ -1,0 +1,39 @@
+@import '../QuickLinks';
+
+.search-results-filter-bars {
+    &__row {
+        display: flex;
+        flex: 0 0 auto;
+        padding-left: 1rem;
+        align-items: center;
+
+        color: var(--text-muted);
+        background: var(--color-bg-1);
+        border-bottom: 1px solid var(--border-color);
+    }
+
+    &__filters {
+        margin-left: 0.5rem;
+        display: flex;
+        overflow-x: auto;
+
+        &::-webkit-scrollbar {
+            display: none;
+        }
+
+        &--no-label {
+            margin-left: 0;
+        }
+    }
+
+    &__quicklinks {
+        padding-top: map-get($spacers, 1);
+        padding-bottom: map-get($spacers, 1);
+        display: flex;
+        overflow-x: auto;
+
+        &::-webkit-scrollbar {
+            display: none;
+        }
+    }
+}

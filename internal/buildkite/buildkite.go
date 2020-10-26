@@ -54,7 +54,7 @@ var Plugins = make(map[string]interface{})
 // Plugins.
 var BeforeEveryStepOpts []StepOpt
 
-// AfterEveryStepOpts are e.g. that are run at the ende of every AddStep, helpful for
+// AfterEveryStepOpts are e.g. that are run at the end of every AddStep, helpful for
 // post-processing
 var AfterEveryStepOpts []StepOpt
 

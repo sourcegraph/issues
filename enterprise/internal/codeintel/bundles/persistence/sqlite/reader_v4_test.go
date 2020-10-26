@@ -11,7 +11,7 @@ import (
 const v4TestFile = "./testdata/lsif-go@70ce6dad.lsif.db"
 
 func TestReadMetaV4(t *testing.T) {
-	meta, err := testReader(t, v4TestFile).ReadMeta(context.Background())
+	meta, err := testStore(t, v4TestFile).ReadMeta(context.Background())
 	if err != nil {
 		t.Fatalf("unexpected error reading meta: %s", err)
 	}
@@ -21,7 +21,7 @@ func TestReadMetaV4(t *testing.T) {
 }
 
 func TestPathsWithPrefixV4(t *testing.T) {
-	paths, err := testReader(t, v4TestFile).PathsWithPrefix(context.Background(), "internal/")
+	paths, err := testStore(t, v4TestFile).PathsWithPrefix(context.Background(), "internal/")
 	if err != nil {
 		t.Fatalf("unexpected error fetching paths with prefix: %s", err)
 	}
@@ -37,7 +37,7 @@ func TestPathsWithPrefixV4(t *testing.T) {
 	}
 }
 func TestReadDocumentV4(t *testing.T) {
-	data, exists, err := testReader(t, v4TestFile).ReadDocument(context.Background(), "protocol/writer.go")
+	data, exists, err := testStore(t, v4TestFile).ReadDocument(context.Background(), "protocol/writer.go")
 	if err != nil {
 		t.Fatalf("unexpected error reading document: %s", err)
 	}
@@ -84,7 +84,7 @@ func TestReadDocumentV4(t *testing.T) {
 }
 
 func TestReadResultChunkV4(t *testing.T) {
-	data, exists, err := testReader(t, v4TestFile).ReadResultChunk(context.Background(), 2)
+	data, exists, err := testStore(t, v4TestFile).ReadResultChunk(context.Background(), 2)
 	if err != nil {
 		t.Fatalf("unexpected error reading result chunk: %s", err)
 	}
@@ -108,7 +108,7 @@ func TestReadResultChunkV4(t *testing.T) {
 }
 
 func TestReadDefinitionsV4(t *testing.T) {
-	definitions, totalCount, err := testReader(t, v4TestFile).ReadDefinitions(context.Background(), "gomod", "github.com/sourcegraph/lsif-go/protocol:Vertex", 0, 0)
+	definitions, totalCount, err := testStore(t, v4TestFile).ReadDefinitions(context.Background(), "gomod", "github.com/sourcegraph/lsif-go/protocol:Vertex", 0, 0)
 	if err != nil {
 		t.Fatalf("unexpected error getting definitions: %s", err)
 	}
@@ -125,7 +125,7 @@ func TestReadDefinitionsV4(t *testing.T) {
 }
 
 func TestReadReferencesV4(t *testing.T) {
-	references, totalCount, err := testReader(t, v4TestFile).ReadReferences(context.Background(), "gomod", "golang.org/x/tools/go/packages:Package", 3, 4)
+	references, totalCount, err := testStore(t, v4TestFile).ReadReferences(context.Background(), "gomod", "golang.org/x/tools/go/packages:Package", 3, 4)
 	if err != nil {
 		t.Fatalf("unexpected error getting references: %s", err)
 	}

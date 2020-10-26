@@ -4,10 +4,14 @@ Site admins can sync Git repositories hosted on [GitHub.com](https://github.com)
 
 To connect GitHub to Sourcegraph:
 
-1. Go to **Site admin > Manage repositories > Add repositories**
+1. Depending on whether you are a site admin or user:
+    1. *Site admin*: Go to **Site admin > Manage repositories > Add repositories**
+    1. *User*: Go to **Settings > Manage repositories**.
 1. Select **GitHub**.
 1. Configure the connection to GitHub using the action buttons above the text field, and additional fields can be added using <kbd>Cmd/Ctrl+Space</kbd> for auto-completion. See the [configuration documentation below](#configuration).
 1. Press **Add repositories**.
+
+**NOTE** That adding code hosts as a user is currently in private beta.
 
 ## Supported versions
 
@@ -34,7 +38,7 @@ No token scopes are required if you only want to sync public repositories and do
 
 - `repo` to sync private repositories from GitHub to Sourcegraph.
 - `read:org` to use the `"allowOrgs"` setting [with a GitHub authentication provider](../auth/index.md#github).
-- `repo`, `read:org`, and `read:discussion` to use [campaigns](../../user/campaigns/index.md) with GitHub repositories.
+- `repo`, `read:org`, and `read:discussion` to use [campaigns](../../campaigns/index.md) with GitHub repositories. See "[Code host interactions in campaigns](../../campaigns/explanations/permissions_in_campaigns.md#code-host-interactions-in-campaigns)" for details.
 
 >NOTE: If you plan to use repository permissions with background syncing, an access token that has admin access to all private repositories is required. It is because only admin can list all collaborators of a repository.
 
@@ -48,7 +52,7 @@ Internal rate limiting can be configured to limit the rate at which requests are
 
 If enabled, the default rate is set at 5000 per hour which can be configured via the `requestsPerHour` field (see below). If rate limiting is configured more than once for the same code host instance, the most restrictive limit will be used.
 
-**NOTE** Internal rate limiting is only currently applied when synchronising [campaign](../../user/campaigns/index.md) changesets.
+**NOTE** Internal rate limiting is only currently applied when synchronising [campaign](../../campaigns/index.md) changesets.
 
 ## Repository permissions
 
@@ -62,7 +66,7 @@ To configure GitHub as an authentication provider (which will enable sign-in via
 
 ## Webhooks
 
-The `webhooks` setting allows specifying the org webhook secrets necessary to authenticate incoming webhook requests to `/.api/github-webhooks`.
+The `webhooks` setting allows specifying the organization webhook secrets necessary to authenticate incoming webhook requests to `/.api/github-webhooks`.
 
 ```json
 "webhooks": [
@@ -70,27 +74,32 @@ The `webhooks` setting allows specifying the org webhook secrets necessary to au
 ]
 ```
 
-These organization webhooks are optional, but if configured on GitHub, they allow faster metadata updates than the background syncing (i.e. polling) which `repo-updater` permits.
+Using webhooks is highly recommended when using [campaigns](../../campaigns/index.md), since they speed up the syncing of pull request data between GitHub and Sourcegraph and make it more efficient.
 
-The following [webhook events](https://developer.github.com/webhooks/) are currently used:
+To set up webhooks:
 
-- Issue comments
-- Pull requests
-- Pull request reviews
-- Pull request review comments
-- Check runs
-- Check suites
-- Statuses
+1. In Sourcegraph, go to **Site admin > Manage repositories** and edit the GitHub configuration.
+1. Add the `"webhooks"` property to the configuration (you can generate a secret with `openssl rand -hex 32`):<br /> `"webhooks": [{"org": "your_org", "secret": "verylongrandomsecret"}]`
+1. Click **Update repositories**.
+1. Copy the webhook URL displayed below the **Update repositories** button.
+1. On GitHub, go to the settings page of your organization. From there, click **Settings**, then **Webhooks**, then **Add webhook**.
+1. Fill in the webhook form:
+   * **Payload URL**: the URL you copied above from Sourcegraph.
+   * **Content type**: this must be set to `application/json`.
+   * **Secret**: the secret token you configured Sourcegraph to use above.
+   * **Which events**: select **Let me select individual events**, and then enable:
+     - Issue comments
+     - Pull requests
+     - Pull request reviews
+     - Pull request review comments
+     - Check runs
+     - Check suites
+     - Statuses
+   * **Active**: ensure this is enabled.
+1. Click **Add webhook**.
+1. Confirm that the new webhook is listed.
 
-To set up a organization webhook on GitHub, go to the settings page of your organization. From there, click **Webhooks**, then **Add webhook**.
-
-Fill in the URL displayed after saving the `webhooks` setting mentioned above and make sure it is publicly available.
-
-The **Content Type** of the webhook should be `application/json`. Generate the secret with `openssl rand -hex 32` and paste it in the respective field. This value is what you need to specify in the GitHub config.
-
-Click on **Enable SSL verification** if you have configured SSL with a valid certificate in your Sourcegraph instance.
-
-Select **the events mentioned above** on the events section, ensure **Active** is checked and finally create the webhook.
+Done! Sourcegraph will now receive webhook events from GitHub and use them to sync pull request events, used by [campaigns](../../campaigns/index.md), faster and more efficiently.
 
 ## Configuration
 

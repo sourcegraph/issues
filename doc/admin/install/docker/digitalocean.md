@@ -16,7 +16,7 @@ This tutorial shows you how to deploy Sourcegraph to a single node running on Di
 1. Run the Sourcegraph Docker image as a daemon:
 
    ```
-   docker run -d --publish 80:7080 --publish 443:7443 --restart unless-stopped --volume /root/.sourcegraph/config:/etc/sourcegraph --volume /root/.sourcegraph/data:/var/opt/sourcegraph sourcegraph/server:3.17.3
+   docker run -d --publish 80:7080 --publish 443:7443 --restart unless-stopped --volume /root/.sourcegraph/config:/etc/sourcegraph --volume /root/.sourcegraph/data:/var/opt/sourcegraph sourcegraph/server:3.21.2
    ```
 1. Navigate to the droplet's IP address to finish initializing Sourcegraph. If you have configured a
    DNS entry for the IP, configure `externalURL` to reflect that.

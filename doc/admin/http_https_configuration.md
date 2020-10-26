@@ -17,7 +17,7 @@ Sourcegraph's single Docker image and Kubernetes deployments use [NGINX](https:/
 
 ### Sourcegraph single instance (Docker)
 
-The first time Sourcegraph is run, it will create an [`nginx.conf`](https://github.com/sourcegraph/sourcegraph/blob/master/cmd/server/shared/assets/nginx.conf) file at:
+The first time Sourcegraph is run, it will create an [`nginx.conf`](https://github.com/sourcegraph/sourcegraph/blob/main/cmd/server/shared/assets/nginx.conf) file at:
 
 - `~/.sourcegraph/config/nginx.conf` on the Docker/Sourcegraph host (presuming you're using the [quickstart `docker run` command](../index.md#quickstart))
 - `/etc/sourcegraph/nginx.conf` inside the container

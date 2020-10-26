@@ -4,8 +4,6 @@ import (
 	"context"
 	"fmt"
 	"net/http"
-	"net/url"
-	"path"
 	"strconv"
 	"strings"
 
@@ -14,9 +12,9 @@ import (
 	"github.com/pkg/errors"
 	"github.com/sourcegraph/sourcegraph/cmd/frontend/auth"
 	"github.com/sourcegraph/sourcegraph/cmd/frontend/auth/providers"
-	"github.com/sourcegraph/sourcegraph/cmd/frontend/db"
 	"github.com/sourcegraph/sourcegraph/enterprise/cmd/frontend/auth/oauth"
 	"github.com/sourcegraph/sourcegraph/internal/actor"
+	"github.com/sourcegraph/sourcegraph/internal/db"
 	"github.com/sourcegraph/sourcegraph/internal/extsvc"
 	githubsvc "github.com/sourcegraph/sourcegraph/internal/extsvc/github"
 	"golang.org/x/oauth2"
@@ -176,16 +174,4 @@ func (s *sessionIssuerHelper) verifyUserOrgs(ctx context.Context, ghClient *gith
 	}
 
 	return false
-}
-
-func SignOutURL(githubURL string) (string, error) {
-	if githubURL == "" {
-		githubURL = "https://github.com"
-	}
-	ghURL, err := url.Parse(githubURL)
-	if err != nil {
-		return "", err
-	}
-	ghURL.Path = path.Join(ghURL.Path, "logout")
-	return ghURL.String(), nil
 }

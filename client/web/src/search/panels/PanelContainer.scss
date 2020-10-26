@@ -1,0 +1,41 @@
+.panel-container {
+    margin-bottom: 1rem;
+
+    &__header {
+        min-height: 2rem;
+
+        &-text {
+            margin-bottom: 0.125rem;
+            flex-grow: 1;
+            align-self: flex-end;
+            font-weight: 400;
+        }
+    }
+
+    &__action-button-group {
+        margin-bottom: 0.25rem;
+    }
+
+    &__empty-container {
+        display: flex;
+        flex-direction: column;
+        text-align: center;
+        padding: 3rem;
+        justify-content: center;
+        background: var(--color-bg-2);
+        height: 100%;
+    }
+
+    &__loading-container {
+        background: none !important;
+    }
+
+    &__content {
+        overflow-y: auto;
+        overflow-x: hidden;
+    }
+
+    &__footer {
+        background: var(--color-bg-2);
+    }
+}

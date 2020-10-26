@@ -1,0 +1,15 @@
+.brand-logo {
+    &--spin {
+        &:hover {
+            animation: spin 0.5s ease-in-out 1;
+            @keyframes spin {
+                50% {
+                    transform: rotate(180deg) scale(1.2);
+                }
+                100% {
+                    transform: rotate(180deg) scale(1);
+                }
+            }
+        }
+    }
+}

@@ -31,7 +31,7 @@ mutation CreateUser($username: String!, $email: String) {
 			} `json:"createUser"`
 		} `json:"data"`
 	}
-	err := c.GraphQL("", query, variables, &resp)
+	err := c.GraphQL("", "", query, variables, &resp)
 	if err != nil {
 		return "", errors.Wrap(err, "request GraphQL")
 	}
@@ -54,7 +54,7 @@ mutation DeleteUser($user: ID!, $hard: Boolean) {
 		"user": id,
 		"hard": hard,
 	}
-	err := c.GraphQL("", query, variables, nil)
+	err := c.GraphQL("", "", query, variables, nil)
 	if err != nil {
 		return errors.Wrap(err, "request GraphQL")
 	}
@@ -88,7 +88,7 @@ query User($username: String) {
 			} `json:"user"`
 		} `json:"data"`
 	}
-	err := c.GraphQL("", query, variables, &resp)
+	err := c.GraphQL("", "", query, variables, &resp)
 	if err != nil {
 		return nil, errors.Wrap(err, "request GraphQL")
 	}

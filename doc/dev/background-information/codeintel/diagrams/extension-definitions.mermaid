@@ -1,0 +1,25 @@
+sequenceDiagram
+  Providers ->>+ LSIF Provider: DefinitionsAndHover(textDocument, position)
+
+  par
+    LSIF Provider ->>+ GraphQL API: LSIF.Ranges(position +/- W)
+    GraphQL API  -->>- LSIF Provider: ranges
+  and
+    LSIF Provider ->>+ GraphQL API: LSIF.DefinitionAndHover(position)
+    GraphQL API  -->>- LSIF Provider: {definitions, hover text}
+  end
+
+  LSIF Provider -->>- Providers: {definitions, hover text}
+
+  alt if no definitions
+    Providers       ->>+ Search Provider: Definitions(textDocument, position)
+    Search Provider ->>+ GraphQL API: Symbol Search "repo:^repo$@commit"
+    GraphQL API    -->>- Search Provider: definitions
+
+    alt if no definitions
+      Search Provider ->>+ GraphQL API: Symbol Search "-repo:^repo$"
+      GraphQL API    -->>- Search Provider: definitions
+    end
+
+    Search Provider -->>- Providers: definitions
+  end

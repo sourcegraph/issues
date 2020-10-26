@@ -115,9 +115,6 @@ type RepoInfo struct {
 
 	// ExternalRepo specifies this repository's ID on the external service where it resides (and the external
 	// service itself).
-	//
-	// TODO(sqs): make this required (non-pointer) when both sides have been upgraded to use it. It is only
-	// optional during the transition period.
 	ExternalRepo api.ExternalRepoSpec
 }
 

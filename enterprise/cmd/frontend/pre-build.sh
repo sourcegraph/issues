@@ -20,12 +20,12 @@ fi
 
 build_browser() {
   echo "--- yarn browser"
-  (cd browser && TARGETS=phabricator eval "${MAYBE_TIME_PREFIX} yarn build")
+  (cd client/browser && TARGETS=phabricator eval "${MAYBE_TIME_PREFIX} yarn build")
 }
 
 build_web() {
   echo "--- yarn web"
-  (cd web && NODE_ENV=production eval "${MAYBE_TIME_PREFIX} yarn -s run build --color")
+  NODE_ENV=production eval "${MAYBE_TIME_PREFIX} yarn -s run build-web --color"
 }
 
 export -f build_browser

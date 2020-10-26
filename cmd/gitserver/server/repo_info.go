@@ -3,9 +3,14 @@ package server
 import (
 	"context"
 	"encoding/json"
+	"fmt"
+	"io/ioutil"
 	"net/http"
+	"os"
+	"path/filepath"
 
 	"github.com/inconshreveable/log15"
+	"github.com/pkg/errors"
 	"github.com/sourcegraph/sourcegraph/internal/api"
 	"github.com/sourcegraph/sourcegraph/internal/gitserver/protocol"
 )
@@ -87,6 +92,22 @@ func (s *Server) handleRepoInfo(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
+}
+
+func (s *Server) handleReposStats(w http.ResponseWriter, r *http.Request) {
+	b, err := ioutil.ReadFile(filepath.Join(s.ReposDir, reposStatsName))
+	if err != nil && errors.Is(err, os.ErrNotExist) {
+		// When a gitserver is new this file might not have been computed
+		// yet. Clients are expected to handle this case by noticing UpdatedAt
+		// is not set.
+		b = []byte("{}")
+	} else if err != nil {
+		http.Error(w, fmt.Sprintf("failed to read %s: %v", reposStatsName, err.Error()), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json; charset=utf-8")
+	_, _ = w.Write(b)
 }
 
 func (s *Server) handleRepoCloneProgress(w http.ResponseWriter, r *http.Request) {

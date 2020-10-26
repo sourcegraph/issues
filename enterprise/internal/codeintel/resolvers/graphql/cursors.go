@@ -2,7 +2,6 @@ package graphql
 
 import (
 	"encoding/base64"
-	"fmt"
 	"strconv"
 
 	"github.com/sourcegraph/sourcegraph/cmd/frontend/graphqlbackend/graphqlutil"
@@ -44,7 +43,7 @@ func encodeIntCursor(val *int32) *graphqlutil.PageInfo {
 		return encodeCursor(nil)
 	}
 
-	str := fmt.Sprintf("%d", *val)
+	str := strconv.FormatInt(int64(*val), 10)
 	return encodeCursor(&str)
 }
 

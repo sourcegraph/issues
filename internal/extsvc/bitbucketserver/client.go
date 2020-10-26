@@ -22,12 +22,13 @@ import (
 	"github.com/opentracing-contrib/go-stdlib/nethttp"
 	"github.com/pkg/errors"
 	"github.com/segmentio/fasthash/fnv1"
+	"golang.org/x/time/rate"
+
 	"github.com/sourcegraph/sourcegraph/internal/httpcli"
 	"github.com/sourcegraph/sourcegraph/internal/metrics"
 	"github.com/sourcegraph/sourcegraph/internal/ratelimit"
 	"github.com/sourcegraph/sourcegraph/internal/trace/ot"
 	"github.com/sourcegraph/sourcegraph/schema"
-	"golang.org/x/time/rate"
 )
 
 var requestCounter = metrics.NewRequestMeter("bitbucket", "Total number of requests sent to the Bitbucket API.")
@@ -91,7 +92,7 @@ func NewClient(c *schema.BitbucketServerConnection, httpClient httpcli.Doer) (*C
 	}
 
 	if httpClient == nil {
-		httpClient = http.DefaultClient
+		httpClient = httpcli.ExternalDoer()
 	}
 	httpClient = requestCounter.Doer(httpClient, categorize)
 
@@ -540,6 +541,29 @@ func (c *Client) DeclinePullRequest(ctx context.Context, pr *PullRequest) error 
 
 	path := fmt.Sprintf(
 		"rest/api/1.0/projects/%s/repos/%s/pull-requests/%d/decline",
+		pr.ToRef.Repository.Project.Key,
+		pr.ToRef.Repository.Slug,
+		pr.ID,
+	)
+
+	qry := url.Values{"version": {strconv.Itoa(pr.Version)}}
+
+	return c.send(ctx, "POST", path, qry, nil, pr)
+}
+
+// ReopenPullRequest reopens a previously declined & closed PullRequest,
+// returning an error in case of failure.
+func (c *Client) ReopenPullRequest(ctx context.Context, pr *PullRequest) error {
+	if pr.ToRef.Repository.Slug == "" {
+		return errors.New("repository slug empty")
+	}
+
+	if pr.ToRef.Repository.Project.Key == "" {
+		return errors.New("project key empty")
+	}
+
+	path := fmt.Sprintf(
+		"rest/api/1.0/projects/%s/repos/%s/pull-requests/%d/reopen",
 		pr.ToRef.Repository.Project.Key,
 		pr.ToRef.Repository.Slug,
 		pr.ID,
@@ -1046,38 +1070,22 @@ type Ref struct {
 }
 
 type PullRequest struct {
-	ID          int    `json:"id"`
-	Version     int    `json:"version"`
-	Title       string `json:"title"`
-	Description string `json:"description"`
-	State       string `json:"state"`
-	Open        bool   `json:"open"`
-	Closed      bool   `json:"closed"`
-	CreatedDate int    `json:"createdDate"`
-	UpdatedDate int    `json:"updatedDate"`
-	FromRef     Ref    `json:"fromRef"`
-	ToRef       Ref    `json:"toRef"`
-	Locked      bool   `json:"locked"`
-	Author      struct {
-		User     *User  `json:"user"`
-		Role     string `json:"role"`
-		Approved bool   `json:"approved"`
-		Status   string `json:"status"`
-	} `json:"author"`
-	Reviewers []struct {
-		User               *User  `json:"user"`
-		LastReviewedCommit string `json:"lastReviewedCommit"`
-		Role               string `json:"role"`
-		Approved           bool   `json:"approved"`
-		Status             string `json:"status"`
-	} `json:"reviewers"`
-	Participants []struct {
-		User     *User  `json:"user"`
-		Role     string `json:"role"`
-		Approved bool   `json:"approved"`
-		Status   string `json:"status"`
-	} `json:"participants"`
-	Links struct {
+	ID           int               `json:"id"`
+	Version      int               `json:"version"`
+	Title        string            `json:"title"`
+	Description  string            `json:"description"`
+	State        string            `json:"state"`
+	Open         bool              `json:"open"`
+	Closed       bool              `json:"closed"`
+	CreatedDate  int               `json:"createdDate"`
+	UpdatedDate  int               `json:"updatedDate"`
+	FromRef      Ref               `json:"fromRef"`
+	ToRef        Ref               `json:"toRef"`
+	Locked       bool              `json:"locked"`
+	Author       PullRequestAuthor `json:"author"`
+	Reviewers    []Reviewer        `json:"reviewers"`
+	Participants []Participant     `json:"participants"`
+	Links        struct {
 		Self []struct {
 			Href string `json:"href"`
 		} `json:"self"`
@@ -1089,6 +1097,31 @@ type PullRequest struct {
 
 	// Deprecated, use CommitStatus instead. BuildStatus was not tied to individual commits
 	BuildStatuses []*BuildStatus `json:"buildstatuses,omitempty"`
+}
+
+// PullRequestAuthor is the author of a pull request.
+type PullRequestAuthor struct {
+	User     *User  `json:"user"`
+	Role     string `json:"role"`
+	Approved bool   `json:"approved"`
+	Status   string `json:"status"`
+}
+
+// Reviewer is a user that left feedback on a pull request.
+type Reviewer struct {
+	User               *User  `json:"user"`
+	LastReviewedCommit string `json:"lastReviewedCommit"`
+	Role               string `json:"role"`
+	Approved           bool   `json:"approved"`
+	Status             string `json:"status"`
+}
+
+// Participant is a user that was involved in a pull request.
+type Participant struct {
+	User     *User  `json:"user"`
+	Role     string `json:"role"`
+	Approved bool   `json:"approved"`
+	Status   string `json:"status"`
 }
 
 // Activity is a union type of all supported pull request activity items.

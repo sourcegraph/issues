@@ -1,14 +1,11 @@
 package resetter
 
-import "github.com/prometheus/client_golang/prometheus"
+import (
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/sourcegraph/sourcegraph/internal/workerutil/dbworker"
+)
 
-type ResetterMetrics struct {
-	IndexResets        prometheus.Counter
-	IndexResetFailures prometheus.Counter
-	Errors             prometheus.Counter
-}
-
-func NewResetterMetrics(r prometheus.Registerer) ResetterMetrics {
+func NewResetterMetrics(r prometheus.Registerer) dbworker.ResetterMetrics {
 	indexResets := prometheus.NewCounter(prometheus.CounterOpts{
 		Name: "src_index_queue_reset_total",
 		Help: "Total number of indexes put back into queued state",
@@ -27,9 +24,9 @@ func NewResetterMetrics(r prometheus.Registerer) ResetterMetrics {
 	})
 	r.MustRegister(errors)
 
-	return ResetterMetrics{
-		IndexResets:        indexResets,
-		IndexResetFailures: indexResetFailures,
-		Errors:             errors,
+	return dbworker.ResetterMetrics{
+		RecordResets:        indexResets,
+		RecordResetFailures: indexResetFailures,
+		Errors:              errors,
 	}
 }

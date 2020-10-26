@@ -1,0 +1,73 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`ExtensionCard renders 1`] = `
+<div
+  className="d-flex"
+>
+  <div
+    className="extension-card card position-relative flex-1"
+  >
+    <div
+      className="extension-card__shadow rounded"
+    />
+    <div
+      className="card-body extension-card__body d-flex position-relative"
+      onClick={[Function]}
+    >
+      <div
+        className="flex-shrink-0 mr-2"
+      >
+        <img
+          className="extension-card__icon"
+          src="data:image/png,abcd"
+        />
+      </div>
+      <div
+        className="text-truncate w-100"
+      >
+        <div
+          className="d-flex align-items-center"
+        >
+          <span
+            className="mb-0 mr-1 text-truncate flex-1"
+          >
+            <a
+              className="font-weight-bold"
+              href="/extensions/x/y"
+              onClick={[Function]}
+            >
+              y
+            </a>
+            <span
+              className="text-muted"
+            >
+               
+              by
+               
+              <span
+                className=""
+              >
+                x
+              </span>
+            </span>
+          </span>
+        </div>
+        <div
+          className="mt-1"
+        >
+          <div
+            className="text-truncate"
+          >
+            d
+          </div>
+        </div>
+      </div>
+      <span
+        className="text-muted small"
+      >
+        Disabled
+      </span>
+    </div>
+  </div>
+</div>
+`;

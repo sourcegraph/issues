@@ -9,6 +9,7 @@ import (
 	"runtime"
 	"strings"
 
+	"github.com/sourcegraph/sourcegraph/internal/httpcli"
 	"github.com/sourcegraph/sourcegraph/internal/lazyregexp"
 )
 
@@ -29,7 +30,7 @@ type Directory struct {
 
 var errNoMatch = errors.New("no match")
 
-func ResolveImportPath(client *http.Client, importPath string) (*Directory, error) {
+func ResolveImportPath(client httpcli.Doer, importPath string) (*Directory, error) {
 	if d, err := resolveStaticImportPath(importPath); err == nil {
 		return d, nil
 	} else if err != errNoMatch {
@@ -80,7 +81,7 @@ func resolveStaticImportPath(importPath string) (*Directory, error) {
 // popular gopkg.in
 var gopkgSrcTemplate = lazyregexp.New(`https://(github.com/[^/]*/[^/]*)/tree/([^/]*)\{/dir\}`)
 
-func resolveDynamicImportPath(client *http.Client, importPath string) (*Directory, error) {
+func resolveDynamicImportPath(client httpcli.Doer, importPath string) (*Directory, error) {
 	metaProto, im, sm, err := fetchMeta(client, importPath)
 	if err != nil {
 		return nil, err
@@ -155,7 +156,7 @@ type sourceMeta struct {
 	fileTemplate string
 }
 
-func fetchMeta(client *http.Client, importPath string) (scheme string, im *importMeta, sm *sourceMeta, err error) {
+func fetchMeta(client httpcli.Doer, importPath string) (scheme string, im *importMeta, sm *sourceMeta, err error) {
 	uri := importPath
 	if !strings.Contains(uri, "/") {
 		// Add slash for root of domain.
@@ -163,14 +164,22 @@ func fetchMeta(client *http.Client, importPath string) (scheme string, im *impor
 	}
 	uri = uri + "?go-get=1"
 
+	get := func() (*http.Response, error) {
+		req, err := http.NewRequest("GET", scheme+"://"+uri, nil)
+		if err != nil {
+			return nil, err
+		}
+		return client.Do(req)
+	}
+
 	scheme = "https"
-	resp, err := client.Get(scheme + "://" + uri)
+	resp, err := get()
 	if err != nil || resp.StatusCode != 200 {
 		if err == nil {
 			resp.Body.Close()
 		}
 		scheme = "http"
-		resp, err = client.Get(scheme + "://" + uri)
+		resp, err = get()
 		if err != nil {
 			return scheme, nil, nil, err
 		}

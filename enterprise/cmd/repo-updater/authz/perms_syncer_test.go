@@ -9,11 +9,11 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/pkg/errors"
 
-	"github.com/sourcegraph/sourcegraph/cmd/frontend/authz"
 	"github.com/sourcegraph/sourcegraph/cmd/frontend/types"
 	"github.com/sourcegraph/sourcegraph/cmd/repo-updater/repos"
-	edb "github.com/sourcegraph/sourcegraph/enterprise/cmd/frontend/db"
+	edb "github.com/sourcegraph/sourcegraph/enterprise/internal/db"
 	"github.com/sourcegraph/sourcegraph/internal/api"
+	"github.com/sourcegraph/sourcegraph/internal/authz"
 	"github.com/sourcegraph/sourcegraph/internal/extsvc"
 	"github.com/sourcegraph/sourcegraph/internal/ratelimit"
 )
@@ -59,10 +59,6 @@ type mockProvider struct {
 	fetchRepoPerms func(ctx context.Context, repo *extsvc.Repository) ([]extsvc.AccountID, error)
 }
 
-func (*mockProvider) RepoPerms(context.Context, *extsvc.Account, []*types.Repo) ([]authz.RepoPerms, error) {
-	return nil, nil
-}
-
 func (*mockProvider) FetchAccount(context.Context, *types.User, []*extsvc.Account) (*extsvc.Account, error) {
 	return nil, nil
 }
@@ -96,12 +92,40 @@ func (s *mockReposStore) ListRepos(ctx context.Context, args repos.StoreListRepo
 	return s.listRepos(ctx, args)
 }
 
+func (s *mockReposStore) ListExternalRepoSpecs(ctx context.Context) (map[api.ExternalRepoSpec]struct{}, error) {
+	return nil, nil
+}
+
+func (s *mockReposStore) InsertRepos(context.Context, ...*repos.Repo) error {
+	return nil
+}
+
+func (s *mockReposStore) DeleteRepos(context.Context, ...api.RepoID) error {
+	return nil
+}
+
 func (s *mockReposStore) UpsertRepos(context.Context, ...*repos.Repo) error {
 	return nil
 }
 
-func (s *mockReposStore) ListAllRepoNames(context.Context) ([]api.RepoName, error) {
-	return nil, nil
+func (s *mockReposStore) UpsertSources(ctx context.Context, added, modified, deleted map[api.RepoID][]repos.SourceInfo) error {
+	return nil
+}
+
+func (s *mockReposStore) SetClonedRepos(ctx context.Context, repoNames ...string) error {
+	return nil
+}
+
+func (s *mockReposStore) CountNotClonedRepos(ctx context.Context) (uint64, error) {
+	return 0, nil
+}
+
+func (s *mockReposStore) CountUserAddedRepos(ctx context.Context) (uint64, error) {
+	return 0, nil
+}
+
+func (s *mockReposStore) EnqueueSyncJobs(ctx context.Context, ignoreSiteAdmin bool) error {
+	return nil
 }
 
 func TestPermsSyncer_syncUserPerms(t *testing.T) {

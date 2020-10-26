@@ -1,0 +1,6 @@
+@import '../../../../../shared/src/hover/HoverOverlay.scss';
+
+.hover-overlay {
+    isolation: isolate;
+    z-index: 2000;
+}

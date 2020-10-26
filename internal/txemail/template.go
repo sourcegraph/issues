@@ -8,10 +8,10 @@ import (
 	"strings"
 	texttemplate "text/template"
 
+	"github.com/jordan-wright/email"
 	"github.com/microcosm-cc/bluemonday"
 	gfm "github.com/shurcooL/github_flavored_markdown"
 	"github.com/sourcegraph/sourcegraph/internal/txemail/txtypes"
-	gophermail "gopkg.in/jpoehls/gophermail.v0"
 )
 
 // MustParseTemplate calls ParseTemplate and panics if an error is returned.
@@ -53,31 +53,30 @@ func ParseTemplate(input txtypes.Templates) (*txtypes.ParsedTemplates, error) {
 	return &txtypes.ParsedTemplates{Subj: st, Text: tt, Html: ht}, nil
 }
 
-func renderTemplate(t *txtypes.ParsedTemplates, data interface{}, m *gophermail.Message) error {
+func renderTemplate(t *txtypes.ParsedTemplates, data interface{}, m *email.Email) error {
 	render := func(tmpl interface {
 		Execute(io.Writer, interface{}) error
-	}) (string, error) {
+	}) ([]byte, error) {
 		var buf bytes.Buffer
 		if err := tmpl.Execute(&buf, data); err != nil {
-			return "", err
+			return nil, err
 		}
-		return buf.String(), nil
+		return buf.Bytes(), nil
 	}
 
-	var err error
-	m.Subject, err = render(t.Subj)
+	subject, err := render(t.Subj)
 	if err != nil {
 		return err
 	}
-	m.Body, err = render(t.Text)
+	m.Subject = string(subject)
+
+	m.Text, err = render(t.Text)
 	if err != nil {
 		return err
 	}
-	m.HTMLBody, err = render(t.Html)
-	if err != nil {
-		return err
-	}
-	return nil
+
+	m.HTML, err = render(t.Html)
+	return err
 }
 
 var (

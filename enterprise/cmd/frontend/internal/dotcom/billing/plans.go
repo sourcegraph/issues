@@ -4,9 +4,10 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/sourcegraph/sourcegraph/enterprise/internal/license"
-	stripe "github.com/stripe/stripe-go"
+	"github.com/stripe/stripe-go"
 	"github.com/stripe/stripe-go/plan"
+
+	"github.com/sourcegraph/sourcegraph/enterprise/internal/license"
 )
 
 // InfoForProductPlan returns the license key tags and min/max quantities that should be used for

@@ -1,0 +1,47 @@
+@import '../../search/input/SearchButton';
+@import '../../search/input/QueryInput';
+@import './ViewGrid';
+@import './TreeEntriesSection';
+
+.tree-page {
+    overflow-y: auto;
+    padding: 1rem 2rem;
+    flex: 1;
+
+    &__title {
+        display: flex;
+        align-items: center;
+        margin-left: -0.25rem; // icon flush with left
+    }
+
+    &__section {
+        margin-bottom: 1.75rem;
+        width: 100%;
+
+        &-header {
+            margin-bottom: 0.125rem;
+        }
+
+        max-width: $media-xl;
+
+        &-search {
+            display: flex;
+            .search-help {
+                margin-left: 0.25rem;
+                // stylelint-disable-next-line declaration-property-unit-whitelist
+                margin-top: -2px;
+            }
+        }
+    }
+
+    .git-commit-node {
+        padding-left: 0;
+        padding-right: 0;
+        .git-commit-node__message-subject {
+            opacity: 0.9;
+        }
+        .btn {
+            opacity: 0.85;
+        }
+    }
+}

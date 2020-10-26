@@ -2,7 +2,6 @@ package main
 
 import (
 	"log"
-	"os"
 	"strconv"
 	"time"
 
@@ -10,28 +9,21 @@ import (
 )
 
 var (
-	rawFrontendURL, _                   = os.LookupEnv("SRC_FRONTEND_INTERNAL")
 	rawResetInterval                    = env.Get("PRECISE_CODE_INTEL_RESET_INTERVAL", "1m", "How often to reset stalled indexes.")
-	rawIndexerPollInterval              = env.Get("PRECISE_CODE_INTEL_INDEXER_POLL_INTERVAL", "1s", "Interval between queries to the index queue.")
 	rawIndexabilityUpdaterInterval      = env.Get("PRECISE_CODE_INTEL_INDEXABILITY_UPDATER_INTERVAL", "30m", "Interval between scheduled indexability updates.")
 	rawSchedulerInterval                = env.Get("PRECISE_CODE_INTEL_SCHEDULER_INTERVAL", "30m", "Interval between scheduled index updates.")
 	rawJanitorInterval                  = env.Get("PRECISE_CODE_INTEL_JANITOR_INTERVAL", "1m", "Interval between cleanup runs.")
-	rawIndexBatchSize                   = env.Get("PRECISE_CODE_INTEL_INDEX_BATCH_SIZE", "25", "Number of indexable repos to consider on each index scheduler update.")
+	rawIndexBatchSize                   = env.Get("PRECISE_CODE_INTEL_INDEX_BATCH_SIZE", "100", "Number of indexable repos to consider on each index scheduler update.")
 	rawIndexMinimumTimeSinceLastEnqueue = env.Get("PRECISE_CODE_INTEL_INDEX_MINIMUM_TIME_SINCE_LAST_ENQUEUE", "24h", "Interval between indexing runs of the same repo.")
 	rawIndexMinimumSearchCount          = env.Get("PRECISE_CODE_INTEL_INDEX_MINIMUM_SEARCH_COUNT", "50", "Minimum number of search events to trigger indexing for a repo.")
 	rawIndexMinimumSearchRatio          = env.Get("PRECISE_CODE_INTEL_INDEX_MINIMUM_SEARCH_RATIO", "50", "Minimum ratio of search events to total events to trigger indexing for a repo.")
 	rawIndexMinimumPreciseCount         = env.Get("PRECISE_CODE_INTEL_INDEX_MINIMUM_PRECISE_COUNT", "1", "Minimum number of precise events to trigger indexing for a repo.")
 	rawDisableJanitor                   = env.Get("PRECISE_CODE_INTEL_DISABLE_JANITOR", "false", "Set to true to disable the janitor process during system migrations.")
+	rawMaxTransactions                  = env.Get("PRECISE_CODE_INTEL_MAXIMUM_TRANSACTIONS", "10", "Number of index jobs that can be active at once.")
+	rawRequeueDelay                     = env.Get("PRECISE_CODE_INTEL_REQUEUE_DELAY", "1m", "The requeue delay of index jobs assigned to an unreachable indexer.")
+	rawCleanupInterval                  = env.Get("PRECISE_CODE_INTEL_CLEANUP_INTERVAL", "10s", "Interval between cleanup runs.")
+	rawMissedHeartbeats                 = env.Get("PRECISE_CODE_INTEL_MAXIMUM_MISSED_HEARTBEATS", "5", "The number of heartbeats an indexer must miss to be considered unreachable.")
 )
-
-// mustGet returns the non-empty version of the given raw value fatally logs on failure.
-func mustGet(rawValue, name string) string {
-	if rawValue == "" {
-		log.Fatalf("invalid value %q for %s: no value supplied", rawValue, name)
-	}
-
-	return rawValue
-}
 
 // mustParseInt returns the integer version of the given raw value fatally logs on failure.
 func mustParseInt(rawValue, name string) int {

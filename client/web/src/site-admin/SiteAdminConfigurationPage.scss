@@ -1,0 +1,42 @@
+.site-admin-configuration-page {
+    &__alert {
+        margin: 0.5rem 0 1rem;
+        code {
+            white-space: pre-wrap;
+        }
+        p:last-child,
+        ul:last-child {
+            margin-bottom: 0;
+        }
+
+        &-item {
+            margin-left: 1rem;
+        }
+
+        &-flex {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+    }
+
+    &__action-groups {
+        background-color: var(--color-bg-2);
+        padding-bottom: 0.5rem;
+        padding-left: 0.5rem;
+    }
+
+    &__action-group-header {
+        font-weight: bold;
+    }
+
+    &__actions {
+        display: flex;
+        flex-wrap: wrap;
+    }
+
+    &__action {
+        margin: 0.5rem 0.5rem 0 0;
+        flex: 0 auto;
+    }
+}

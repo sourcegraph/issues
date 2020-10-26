@@ -1,0 +1,14 @@
+// The theme CSS for this component is set in CompletionWidgetClassProps.
+.completion-widget-dropdown {
+    cursor: pointer;
+    overflow-y: auto;
+
+    // stylelint-disable-next-line declaration-property-unit-whitelist
+    max-height: 255.01px; // 7 items tall on Sourcegraph (approximate)
+
+    &__item-text {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+}

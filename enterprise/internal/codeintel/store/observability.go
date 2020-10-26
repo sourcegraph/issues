@@ -5,59 +5,68 @@ import (
 	"time"
 
 	"github.com/sourcegraph/sourcegraph/enterprise/internal/codeintel/bundles/types"
+	"github.com/sourcegraph/sourcegraph/internal/db/basestore"
 	"github.com/sourcegraph/sourcegraph/internal/metrics"
 	"github.com/sourcegraph/sourcegraph/internal/observation"
 )
 
 // An ObservedStore wraps another store with error logging, Prometheus metrics, and tracing.
 type ObservedStore struct {
-	store                                   Store
-	savepointOperation                      *observation.Operation
-	rollbackToSavepointOperation            *observation.Operation
-	doneOperation                           *observation.Operation
-	getUploadByIDOperation                  *observation.Operation
-	getUploadsOperation                     *observation.Operation
-	queueSizeOperation                      *observation.Operation
-	insertUploadOperation                   *observation.Operation
-	addUploadPartOperation                  *observation.Operation
-	markQueuedOperation                     *observation.Operation
-	markCompleteOperation                   *observation.Operation
-	markErroredOperation                    *observation.Operation
-	dequeueOperation                        *observation.Operation
-	requeueOperation                        *observation.Operation
-	getStatesOperation                      *observation.Operation
-	deleteUploadByIDOperation               *observation.Operation
-	deleteUploadsWithoutRepositoryOperation *observation.Operation
-	resetStalledOperation                   *observation.Operation
-	getDumpByIDOperation                    *observation.Operation
-	findClosestDumpsOperation               *observation.Operation
-	deleteOldestDumpOperation               *observation.Operation
-	updateDumpsVisibleFromTipOperation      *observation.Operation
-	deleteOverlappingDumpsOperation         *observation.Operation
-	getPackageOperation                     *observation.Operation
-	updatePackagesOperation                 *observation.Operation
-	sameRepoPagerOperation                  *observation.Operation
-	updatePackageReferencesOperation        *observation.Operation
-	packageReferencePagerOperation          *observation.Operation
-	hasCommitOperation                      *observation.Operation
-	updateCommitsOperation                  *observation.Operation
-	indexableRepositoriesOperation          *observation.Operation
-	updateIndexableRepositoryOperation      *observation.Operation
-	resetIndexableRepositoriesOperation     *observation.Operation
-	getIndexByIDOperation                   *observation.Operation
-	getIndexesOperation                     *observation.Operation
-	indexQueueSizeOperation                 *observation.Operation
-	isQueuedOperation                       *observation.Operation
-	insertIndexOperation                    *observation.Operation
-	markIndexCompleteOperation              *observation.Operation
-	markIndexErroredOperation               *observation.Operation
-	dequeueIndexOperation                   *observation.Operation
-	requeueIndexOperation                   *observation.Operation
-	deleteIndexByIdOperation                *observation.Operation
-	deleteIndexesWithoutRepositoryOperation *observation.Operation
-	resetStalledIndexesOperation            *observation.Operation
-	repoUsageStatisticsOperation            *observation.Operation
-	repoNameOperation                       *observation.Operation
+	store                                          Store
+	doneOperation                                  *observation.Operation
+	lockOperation                                  *observation.Operation
+	getUploadByIDOperation                         *observation.Operation
+	getUploadsOperation                            *observation.Operation
+	queueSizeOperation                             *observation.Operation
+	insertUploadOperation                          *observation.Operation
+	addUploadPartOperation                         *observation.Operation
+	markQueuedOperation                            *observation.Operation
+	markCompleteOperation                          *observation.Operation
+	markErroredOperation                           *observation.Operation
+	dequeueOperation                               *observation.Operation
+	requeueOperation                               *observation.Operation
+	getStatesOperation                             *observation.Operation
+	deleteUploadByIDOperation                      *observation.Operation
+	deleteUploadsWithoutRepositoryOperation        *observation.Operation
+	hardDeleteUploadByIDOperation                  *observation.Operation
+	resetStalledOperation                          *observation.Operation
+	getDumpByIDOperation                           *observation.Operation
+	findClosestDumpsOperation                      *observation.Operation
+	findClosestDumpsFromGraphFragmentOperation     *observation.Operation
+	deleteOldestDumpOperation                      *observation.Operation
+	softDeleteOldDumpsOperation                    *observation.Operation
+	deleteOverlappingDumpsOperation                *observation.Operation
+	getPackageOperation                            *observation.Operation
+	updatePackagesOperation                        *observation.Operation
+	sameRepoPagerOperation                         *observation.Operation
+	updatePackageReferencesOperation               *observation.Operation
+	packageReferencePagerOperation                 *observation.Operation
+	hasRepositoryOperation                         *observation.Operation
+	hasCommitOperation                             *observation.Operation
+	markRepositoryAsDirtyOperation                 *observation.Operation
+	dirtyRepositoriesOperation                     *observation.Operation
+	fixCommitsOperation                            *observation.Operation
+	indexableRepositoriesOperation                 *observation.Operation
+	updateIndexableRepositoryOperation             *observation.Operation
+	resetIndexableRepositoriesOperation            *observation.Operation
+	getIndexByIDOperation                          *observation.Operation
+	getIndexesOperation                            *observation.Operation
+	indexQueueSizeOperation                        *observation.Operation
+	isQueuedOperation                              *observation.Operation
+	insertIndexOperation                           *observation.Operation
+	markIndexCompleteOperation                     *observation.Operation
+	markIndexErroredOperation                      *observation.Operation
+	setIndexLogContentsOperation                   *observation.Operation
+	dequeueIndexOperation                          *observation.Operation
+	requeueIndexOperation                          *observation.Operation
+	deleteIndexByIdOperation                       *observation.Operation
+	deleteIndexesWithoutRepositoryOperation        *observation.Operation
+	resetStalledIndexesOperation                   *observation.Operation
+	repoUsageStatisticsOperation                   *observation.Operation
+	repoNameOperation                              *observation.Operation
+	getRepositoriesWithIndexConfigurationOperation *observation.Operation
+	getIndexConfigurationByRepositoryIDOperation   *observation.Operation
+	deleteUploadsStuckUploadingOperation           *observation.Operation
 }
 
 var _ Store = &ObservedStore{}
@@ -66,26 +75,21 @@ var _ Store = &ObservedStore{}
 func NewObserved(store Store, observationContext *observation.Context) Store {
 	metrics := metrics.NewOperationMetrics(
 		observationContext.Registerer,
-		"code_intel_store",
+		"code_intel_frontend_db_store",
 		metrics.WithLabels("op"),
 		metrics.WithCountHelp("Total number of results returned"),
 	)
 
 	return &ObservedStore{
 		store: store,
-		savepointOperation: observationContext.Operation(observation.Op{
-			Name:         "store.Savepoint",
-			MetricLabels: []string{"savepoint"},
-			Metrics:      metrics,
-		}),
-		rollbackToSavepointOperation: observationContext.Operation(observation.Op{
-			Name:         "store.RollbackToSavepoint",
-			MetricLabels: []string{"rollback_to_savepoint"},
-			Metrics:      metrics,
-		}),
 		doneOperation: observationContext.Operation(observation.Op{
 			Name:         "store.Done",
 			MetricLabels: []string{"done"},
+			Metrics:      metrics,
+		}),
+		lockOperation: observationContext.Operation(observation.Op{
+			Name:         "store.Lock",
+			MetricLabels: []string{"lock"},
 			Metrics:      metrics,
 		}),
 		getUploadByIDOperation: observationContext.Operation(observation.Op{
@@ -153,6 +157,11 @@ func NewObserved(store Store, observationContext *observation.Context) Store {
 			MetricLabels: []string{"delete_uploads_without_repository"},
 			Metrics:      metrics,
 		}),
+		hardDeleteUploadByIDOperation: observationContext.Operation(observation.Op{
+			Name:         "store.HardDeleteUploadByID",
+			MetricLabels: []string{"hard_delete_upload_by_i"},
+			Metrics:      metrics,
+		}),
 		resetStalledOperation: observationContext.Operation(observation.Op{
 			Name:         "store.ResetStalled",
 			MetricLabels: []string{"reset_stalled"},
@@ -168,14 +177,19 @@ func NewObserved(store Store, observationContext *observation.Context) Store {
 			MetricLabels: []string{"find_closest_dumps"},
 			Metrics:      metrics,
 		}),
+		findClosestDumpsFromGraphFragmentOperation: observationContext.Operation(observation.Op{
+			Name:         "store.FindClosestDumpsFromGraphFragment",
+			MetricLabels: []string{"find_closest_dumps_from_graph_fragment"},
+			Metrics:      metrics,
+		}),
 		deleteOldestDumpOperation: observationContext.Operation(observation.Op{
 			Name:         "store.DeleteOldestDump",
 			MetricLabels: []string{"delete_oldest_dump"},
 			Metrics:      metrics,
 		}),
-		updateDumpsVisibleFromTipOperation: observationContext.Operation(observation.Op{
-			Name:         "store.UpdateDumpsVisibleFromTip",
-			MetricLabels: []string{"update_dumps_visible_from_tip"},
+		softDeleteOldDumpsOperation: observationContext.Operation(observation.Op{
+			Name:         "store.SoftDeleteOldDumps",
+			MetricLabels: []string{"soft_delete_old_dumps"},
 			Metrics:      metrics,
 		}),
 		deleteOverlappingDumpsOperation: observationContext.Operation(observation.Op{
@@ -208,14 +222,29 @@ func NewObserved(store Store, observationContext *observation.Context) Store {
 			MetricLabels: []string{"package_reference_pager"},
 			Metrics:      metrics,
 		}),
+		hasRepositoryOperation: observationContext.Operation(observation.Op{
+			Name:         "store.HasRepository",
+			MetricLabels: []string{"has_repository"},
+			Metrics:      metrics,
+		}),
 		hasCommitOperation: observationContext.Operation(observation.Op{
 			Name:         "store.HasCommit",
 			MetricLabels: []string{"has_commit"},
 			Metrics:      metrics,
 		}),
-		updateCommitsOperation: observationContext.Operation(observation.Op{
-			Name:         "store.UpdateCommits",
-			MetricLabels: []string{"update_commits"},
+		markRepositoryAsDirtyOperation: observationContext.Operation(observation.Op{
+			Name:         "store.MarkRepositoryAsDirty",
+			MetricLabels: []string{"mark_repository_as_dirty"},
+			Metrics:      metrics,
+		}),
+		dirtyRepositoriesOperation: observationContext.Operation(observation.Op{
+			Name:         "store.DirtyRepositories",
+			MetricLabels: []string{"dirty_repositories"},
+			Metrics:      metrics,
+		}),
+		fixCommitsOperation: observationContext.Operation(observation.Op{
+			Name:         "store.FixCommits",
+			MetricLabels: []string{"fix_commits"},
 			Metrics:      metrics,
 		}),
 		indexableRepositoriesOperation: observationContext.Operation(observation.Op{
@@ -268,6 +297,11 @@ func NewObserved(store Store, observationContext *observation.Context) Store {
 			MetricLabels: []string{"mark_index_errored"},
 			Metrics:      metrics,
 		}),
+		setIndexLogContentsOperation: observationContext.Operation(observation.Op{
+			Name:         "store.SetIndexLogContents",
+			MetricLabels: []string{"set_index_log_contents"},
+			Metrics:      metrics,
+		}),
 		dequeueIndexOperation: observationContext.Operation(observation.Op{
 			Name:         "store.DequeueIndex",
 			MetricLabels: []string{"dequeue_index"},
@@ -303,6 +337,21 @@ func NewObserved(store Store, observationContext *observation.Context) Store {
 			MetricLabels: []string{"repo_name"},
 			Metrics:      metrics,
 		}),
+		getRepositoriesWithIndexConfigurationOperation: observationContext.Operation(observation.Op{
+			Name:         "store.GetRepositoriesWithIndeConfiguration",
+			MetricLabels: []string{"get_repositories_with_index_configuration"},
+			Metrics:      metrics,
+		}),
+		getIndexConfigurationByRepositoryIDOperation: observationContext.Operation(observation.Op{
+			Name:         "store.GetIndexConfigurationByRepositoryID",
+			MetricLabels: []string{"get_index_configuration_by_repository_id"},
+			Metrics:      metrics,
+		}),
+		deleteUploadsStuckUploadingOperation: observationContext.Operation(observation.Op{
+			Name:         "store.DeleteUploadsStuckUploading",
+			MetricLabels: []string{"delete_uploads_stuck_uploading"},
+			Metrics:      metrics,
+		}),
 	}
 }
 
@@ -313,54 +362,72 @@ func (s *ObservedStore) wrap(other Store) Store {
 	}
 
 	return &ObservedStore{
-		store:                                   other,
-		savepointOperation:                      s.savepointOperation,
-		rollbackToSavepointOperation:            s.rollbackToSavepointOperation,
-		doneOperation:                           s.doneOperation,
-		getUploadByIDOperation:                  s.getUploadByIDOperation,
-		deleteUploadsWithoutRepositoryOperation: s.deleteUploadsWithoutRepositoryOperation,
-		getUploadsOperation:                     s.getUploadsOperation,
-		queueSizeOperation:                      s.queueSizeOperation,
-		insertUploadOperation:                   s.insertUploadOperation,
-		addUploadPartOperation:                  s.addUploadPartOperation,
-		markQueuedOperation:                     s.markQueuedOperation,
-		markCompleteOperation:                   s.markCompleteOperation,
-		markErroredOperation:                    s.markErroredOperation,
-		dequeueOperation:                        s.dequeueOperation,
-		requeueOperation:                        s.requeueOperation,
-		getStatesOperation:                      s.getStatesOperation,
-		deleteUploadByIDOperation:               s.deleteUploadByIDOperation,
-		resetStalledOperation:                   s.resetStalledOperation,
-		getDumpByIDOperation:                    s.getDumpByIDOperation,
-		findClosestDumpsOperation:               s.findClosestDumpsOperation,
-		deleteOldestDumpOperation:               s.deleteOldestDumpOperation,
-		updateDumpsVisibleFromTipOperation:      s.updateDumpsVisibleFromTipOperation,
-		deleteOverlappingDumpsOperation:         s.deleteOverlappingDumpsOperation,
-		getPackageOperation:                     s.getPackageOperation,
-		updatePackagesOperation:                 s.updatePackagesOperation,
-		sameRepoPagerOperation:                  s.sameRepoPagerOperation,
-		updatePackageReferencesOperation:        s.updatePackageReferencesOperation,
-		packageReferencePagerOperation:          s.packageReferencePagerOperation,
-		hasCommitOperation:                      s.hasCommitOperation,
-		updateCommitsOperation:                  s.updateCommitsOperation,
-		indexableRepositoriesOperation:          s.indexableRepositoriesOperation,
-		updateIndexableRepositoryOperation:      s.updateIndexableRepositoryOperation,
-		resetIndexableRepositoriesOperation:     s.resetIndexableRepositoriesOperation,
-		getIndexByIDOperation:                   s.getIndexByIDOperation,
-		getIndexesOperation:                     s.getIndexesOperation,
-		indexQueueSizeOperation:                 s.indexQueueSizeOperation,
-		isQueuedOperation:                       s.isQueuedOperation,
-		insertIndexOperation:                    s.insertIndexOperation,
-		markIndexCompleteOperation:              s.markIndexCompleteOperation,
-		markIndexErroredOperation:               s.markIndexErroredOperation,
-		dequeueIndexOperation:                   s.dequeueIndexOperation,
-		requeueIndexOperation:                   s.requeueIndexOperation,
-		deleteIndexByIdOperation:                s.deleteIndexByIdOperation,
-		deleteIndexesWithoutRepositoryOperation: s.deleteIndexesWithoutRepositoryOperation,
-		resetStalledIndexesOperation:            s.resetStalledIndexesOperation,
-		repoUsageStatisticsOperation:            s.repoUsageStatisticsOperation,
-		repoNameOperation:                       s.repoNameOperation,
+		store:                                          other,
+		doneOperation:                                  s.doneOperation,
+		lockOperation:                                  s.lockOperation,
+		getUploadByIDOperation:                         s.getUploadByIDOperation,
+		deleteUploadsWithoutRepositoryOperation:        s.deleteUploadsWithoutRepositoryOperation,
+		hardDeleteUploadByIDOperation:                  s.hardDeleteUploadByIDOperation,
+		getUploadsOperation:                            s.getUploadsOperation,
+		queueSizeOperation:                             s.queueSizeOperation,
+		insertUploadOperation:                          s.insertUploadOperation,
+		addUploadPartOperation:                         s.addUploadPartOperation,
+		markQueuedOperation:                            s.markQueuedOperation,
+		markCompleteOperation:                          s.markCompleteOperation,
+		markErroredOperation:                           s.markErroredOperation,
+		dequeueOperation:                               s.dequeueOperation,
+		requeueOperation:                               s.requeueOperation,
+		getStatesOperation:                             s.getStatesOperation,
+		deleteUploadByIDOperation:                      s.deleteUploadByIDOperation,
+		resetStalledOperation:                          s.resetStalledOperation,
+		getDumpByIDOperation:                           s.getDumpByIDOperation,
+		findClosestDumpsOperation:                      s.findClosestDumpsOperation,
+		findClosestDumpsFromGraphFragmentOperation:     s.findClosestDumpsFromGraphFragmentOperation,
+		deleteOldestDumpOperation:                      s.deleteOldestDumpOperation,
+		softDeleteOldDumpsOperation:                    s.softDeleteOldDumpsOperation,
+		deleteOverlappingDumpsOperation:                s.deleteOverlappingDumpsOperation,
+		getPackageOperation:                            s.getPackageOperation,
+		updatePackagesOperation:                        s.updatePackagesOperation,
+		sameRepoPagerOperation:                         s.sameRepoPagerOperation,
+		updatePackageReferencesOperation:               s.updatePackageReferencesOperation,
+		packageReferencePagerOperation:                 s.packageReferencePagerOperation,
+		hasRepositoryOperation:                         s.hasRepositoryOperation,
+		hasCommitOperation:                             s.hasCommitOperation,
+		markRepositoryAsDirtyOperation:                 s.markRepositoryAsDirtyOperation,
+		dirtyRepositoriesOperation:                     s.dirtyRepositoriesOperation,
+		fixCommitsOperation:                            s.fixCommitsOperation,
+		indexableRepositoriesOperation:                 s.indexableRepositoriesOperation,
+		updateIndexableRepositoryOperation:             s.updateIndexableRepositoryOperation,
+		resetIndexableRepositoriesOperation:            s.resetIndexableRepositoriesOperation,
+		getIndexByIDOperation:                          s.getIndexByIDOperation,
+		getIndexesOperation:                            s.getIndexesOperation,
+		indexQueueSizeOperation:                        s.indexQueueSizeOperation,
+		isQueuedOperation:                              s.isQueuedOperation,
+		insertIndexOperation:                           s.insertIndexOperation,
+		markIndexCompleteOperation:                     s.markIndexCompleteOperation,
+		markIndexErroredOperation:                      s.markIndexErroredOperation,
+		setIndexLogContentsOperation:                   s.setIndexLogContentsOperation,
+		dequeueIndexOperation:                          s.dequeueIndexOperation,
+		requeueIndexOperation:                          s.requeueIndexOperation,
+		deleteIndexByIdOperation:                       s.deleteIndexByIdOperation,
+		deleteIndexesWithoutRepositoryOperation:        s.deleteIndexesWithoutRepositoryOperation,
+		resetStalledIndexesOperation:                   s.resetStalledIndexesOperation,
+		repoUsageStatisticsOperation:                   s.repoUsageStatisticsOperation,
+		repoNameOperation:                              s.repoNameOperation,
+		getRepositoriesWithIndexConfigurationOperation: s.getRepositoriesWithIndexConfigurationOperation,
+		getIndexConfigurationByRepositoryIDOperation:   s.getIndexConfigurationByRepositoryIDOperation,
+		deleteUploadsStuckUploadingOperation:           s.deleteUploadsStuckUploadingOperation,
 	}
+}
+
+// Handle calls into the inner store and wraps the resulting value in an ObservedStore.
+func (s *ObservedStore) Handle() *basestore.TransactableHandle {
+	return s.store.Handle()
+}
+
+// With calls into the inner store and wraps the resulting value in an ObservedStore.
+func (s *ObservedStore) With(other basestore.ShareableStore) Store {
+	return s.wrap(s.store.With(other))
 }
 
 // Transact calls into the inner store and wraps the resulting value in an ObservedStore.
@@ -371,20 +438,6 @@ func (s *ObservedStore) Transact(ctx context.Context) (Store, error) {
 	}
 
 	return s.wrap(tx), nil
-}
-
-// Savepoint calls into the inner store and registers the observed results.
-func (s *ObservedStore) Savepoint(ctx context.Context) (_ string, err error) {
-	ctx, endObservation := s.savepointOperation.With(ctx, &err, observation.Args{})
-	defer endObservation(1, observation.Args{})
-	return s.store.Savepoint(ctx)
-}
-
-// RollbackToSavepoint calls into the inner store and registers the observed results.
-func (s *ObservedStore) RollbackToSavepoint(ctx context.Context, name string) (err error) {
-	ctx, endObservation := s.rollbackToSavepointOperation.With(ctx, &err, observation.Args{})
-	defer endObservation(1, observation.Args{})
-	return s.store.RollbackToSavepoint(ctx, name)
 }
 
 // Done calls into the inner store and registers the observed results.
@@ -399,6 +452,13 @@ func (s *ObservedStore) Done(e error) error {
 		observedErr = err
 	}
 	return err
+}
+
+// Lock calls into the inner store and registers the observed results.
+func (s *ObservedStore) Lock(ctx context.Context, key int, blocking bool) (_ bool, _ UnlockFunc, err error) {
+	ctx, endObservation := s.lockOperation.With(ctx, &err, observation.Args{})
+	defer endObservation(1, observation.Args{})
+	return s.store.Lock(ctx, key, blocking)
 }
 
 // GetUploadByID calls into the inner store and registers the observed results.
@@ -437,10 +497,10 @@ func (s *ObservedStore) AddUploadPart(ctx context.Context, uploadID, partIndex i
 }
 
 // MarkQueued calls into the inner store and registers the observed result.
-func (s *ObservedStore) MarkQueued(ctx context.Context, uploadID int) (err error) {
+func (s *ObservedStore) MarkQueued(ctx context.Context, uploadID int, uploadSize *int) (err error) {
 	ctx, endObservation := s.markQueuedOperation.With(ctx, &err, observation.Args{})
 	defer endObservation(1, observation.Args{})
-	return s.store.MarkQueued(ctx, uploadID)
+	return s.store.MarkQueued(ctx, uploadID, uploadSize)
 }
 
 // MarkComplete calls into the inner store and registers the observed results.
@@ -458,11 +518,11 @@ func (s *ObservedStore) MarkErrored(ctx context.Context, id int, failureMessage 
 }
 
 // Dequeue calls into the inner store and registers the observed results.
-func (s *ObservedStore) Dequeue(ctx context.Context) (_ Upload, _ Store, _ bool, err error) {
+func (s *ObservedStore) Dequeue(ctx context.Context, maxSize int64) (_ Upload, _ Store, _ bool, err error) {
 	ctx, endObservation := s.dequeueOperation.With(ctx, &err, observation.Args{})
 	defer endObservation(1, observation.Args{})
 
-	upload, tx, ok, err := s.store.Dequeue(ctx)
+	upload, tx, ok, err := s.store.Dequeue(ctx, maxSize)
 	return upload, s.wrap(tx), ok, err
 }
 
@@ -481,10 +541,10 @@ func (s *ObservedStore) GetStates(ctx context.Context, ids []int) (states map[in
 }
 
 // DeleteUploadByID calls into the inner store and registers the observed results.
-func (s *ObservedStore) DeleteUploadByID(ctx context.Context, id int, getTipCommit GetTipCommitFunc) (_ bool, err error) {
+func (s *ObservedStore) DeleteUploadByID(ctx context.Context, id int) (_ bool, err error) {
 	ctx, endObservation := s.deleteUploadByIDOperation.With(ctx, &err, observation.Args{})
 	defer endObservation(1, observation.Args{})
-	return s.store.DeleteUploadByID(ctx, id, getTipCommit)
+	return s.store.DeleteUploadByID(ctx, id)
 }
 
 // DeleteUploadsWithoutRepository calls into the inner store and registers the observed results.
@@ -499,6 +559,13 @@ func (s *ObservedStore) DeleteUploadsWithoutRepository(ctx context.Context, now 
 	}()
 
 	return s.store.DeleteUploadsWithoutRepository(ctx, now)
+}
+
+// HardDeleteUploadByID calls into the inner store and registers the observed results.
+func (s *ObservedStore) HardDeleteUploadByID(ctx context.Context, ids ...int) (err error) {
+	ctx, endObservation := s.hardDeleteUploadByIDOperation.With(ctx, &err, observation.Args{})
+	defer endObservation(1, observation.Args{})
+	return s.store.HardDeleteUploadByID(ctx, ids...)
 }
 
 // ResetStalled calls into the inner store and registers the observed results.
@@ -522,6 +589,13 @@ func (s *ObservedStore) FindClosestDumps(ctx context.Context, repositoryID int, 
 	return s.store.FindClosestDumps(ctx, repositoryID, commit, path, rootMustEnclosePath, indexer)
 }
 
+// FindClosestDumpsFromGraphFragment calls into the inner store and registers the observed results.
+func (s *ObservedStore) FindClosestDumpsFromGraphFragment(ctx context.Context, repositoryID int, commit, path string, rootMustEnclosePath bool, indexer string, graph map[string][]string) (dumps []Dump, err error) {
+	ctx, endObservation := s.findClosestDumpsFromGraphFragmentOperation.With(ctx, &err, observation.Args{})
+	defer func() { endObservation(float64(len(dumps)), observation.Args{}) }()
+	return s.store.FindClosestDumpsFromGraphFragment(ctx, repositoryID, commit, path, rootMustEnclosePath, indexer, graph)
+}
+
 // DeleteOldestDump calls into the inner store and registers the observed results.
 func (s *ObservedStore) DeleteOldestDump(ctx context.Context) (_ int, _ bool, err error) {
 	ctx, endObservation := s.deleteOldestDumpOperation.With(ctx, &err, observation.Args{})
@@ -529,11 +603,11 @@ func (s *ObservedStore) DeleteOldestDump(ctx context.Context) (_ int, _ bool, er
 	return s.store.DeleteOldestDump(ctx)
 }
 
-// UpdateDumpsVisibleFromTip calls into the inner store and registers the observed results.
-func (s *ObservedStore) UpdateDumpsVisibleFromTip(ctx context.Context, repositoryID int, tipCommit string) (err error) {
-	ctx, endObservation := s.updateDumpsVisibleFromTipOperation.With(ctx, &err, observation.Args{})
-	defer endObservation(1, observation.Args{})
-	return s.store.UpdateDumpsVisibleFromTip(ctx, repositoryID, tipCommit)
+// SoftDeleteOldDumps calls into the inner store and registers the observed results.
+func (s *ObservedStore) SoftDeleteOldDumps(ctx context.Context, maxAge time.Duration, now time.Time) (count int, err error) {
+	ctx, endObservation := s.softDeleteOldDumpsOperation.With(ctx, &err, observation.Args{})
+	defer func() { endObservation(float64(count), observation.Args{}) }()
+	return s.store.SoftDeleteOldDumps(ctx, maxAge, now)
 }
 
 // DeleteOverlappingDumps calls into the inner store and registers the observed results.
@@ -578,6 +652,13 @@ func (s *ObservedStore) PackageReferencePager(ctx context.Context, scheme, name,
 	return s.store.PackageReferencePager(ctx, scheme, name, version, repositoryID, limit)
 }
 
+// HasRepository calls into the inner store and registers the observed results.
+func (s *ObservedStore) HasRepository(ctx context.Context, repositoryID int) (_ bool, err error) {
+	ctx, endObservation := s.hasRepositoryOperation.With(ctx, &err, observation.Args{})
+	defer endObservation(1, observation.Args{})
+	return s.store.HasRepository(ctx, repositoryID)
+}
+
 // HasCommit calls into the inner store and registers the observed results.
 func (s *ObservedStore) HasCommit(ctx context.Context, repositoryID int, commit string) (_ bool, err error) {
 	ctx, endObservation := s.hasCommitOperation.With(ctx, &err, observation.Args{})
@@ -585,11 +666,25 @@ func (s *ObservedStore) HasCommit(ctx context.Context, repositoryID int, commit 
 	return s.store.HasCommit(ctx, repositoryID, commit)
 }
 
-// UpdateCommits calls into the inner store and registers the observed results.
-func (s *ObservedStore) UpdateCommits(ctx context.Context, repositoryID int, commits map[string][]string) (err error) {
-	ctx, endObservation := s.updateCommitsOperation.With(ctx, &err, observation.Args{})
+// MarkRepositoryAsDirty calls into the inner store and registers the observed results.
+func (s *ObservedStore) MarkRepositoryAsDirty(ctx context.Context, repositoryID int) (err error) {
+	ctx, endObservation := s.markRepositoryAsDirtyOperation.With(ctx, &err, observation.Args{})
 	defer endObservation(1, observation.Args{})
-	return s.store.UpdateCommits(ctx, repositoryID, commits)
+	return s.store.MarkRepositoryAsDirty(ctx, repositoryID)
+}
+
+// DirtyRepositories calls into the inner store and registers the observed results.
+func (s *ObservedStore) DirtyRepositories(ctx context.Context) (repositoryIDs map[int]int, err error) {
+	ctx, endObservation := s.dirtyRepositoriesOperation.With(ctx, &err, observation.Args{})
+	defer func() { endObservation(float64(len(repositoryIDs)), observation.Args{}) }()
+	return s.store.DirtyRepositories(ctx)
+}
+
+// CalculateVisibleUploads calls into the inner store and registers the observed results.
+func (s *ObservedStore) CalculateVisibleUploads(ctx context.Context, repositoryID int, graph map[string][]string, tipCommit string, dirtyToken int) (err error) {
+	ctx, endObservation := s.fixCommitsOperation.With(ctx, &err, observation.Args{})
+	defer endObservation(1, observation.Args{})
+	return s.store.CalculateVisibleUploads(ctx, repositoryID, graph, tipCommit, dirtyToken)
 }
 
 // IndexableRepositories calls into the inner store and registers the observed results.
@@ -621,9 +716,9 @@ func (s *ObservedStore) GetIndexByID(ctx context.Context, id int) (_ Index, _ bo
 }
 
 // GetIndexes calls into the inner store and registers the observed results.
-func (s *ObservedStore) GetIndexes(ctx context.Context, opts GetIndexesOptions) (_ []Index, _ int, err error) {
+func (s *ObservedStore) GetIndexes(ctx context.Context, opts GetIndexesOptions) (indexes []Index, _ int, err error) {
 	ctx, endObservation := s.getIndexesOperation.With(ctx, &err, observation.Args{})
-	defer endObservation(1, observation.Args{})
+	defer func() { endObservation(float64(len(indexes)), observation.Args{}) }()
 	return s.store.GetIndexes(ctx, opts)
 }
 
@@ -660,6 +755,13 @@ func (s *ObservedStore) MarkIndexErrored(ctx context.Context, id int, failureMes
 	ctx, endObservation := s.markIndexErroredOperation.With(ctx, &err, observation.Args{})
 	defer endObservation(1, observation.Args{})
 	return s.store.MarkIndexErrored(ctx, id, failureMessage)
+}
+
+// SetIndexLogContents calls into the inner store and registers the observed results.
+func (s *ObservedStore) SetIndexLogContents(ctx context.Context, id int, contents string) (err error) {
+	ctx, endObservation := s.setIndexLogContentsOperation.With(ctx, &err, observation.Args{})
+	defer endObservation(1, observation.Args{})
+	return s.store.SetIndexLogContents(ctx, id, contents)
 }
 
 // DequeueIndex calls into the inner store and registers the observed results.
@@ -716,4 +818,25 @@ func (s *ObservedStore) RepoName(ctx context.Context, repositoryID int) (_ strin
 	ctx, endObservation := s.repoNameOperation.With(ctx, &err, observation.Args{})
 	defer endObservation(1, observation.Args{})
 	return s.store.RepoName(ctx, repositoryID)
+}
+
+// GetRepositoriesWithIndexConfiguration calls into the inner store and registers the observed results.
+func (s *ObservedStore) GetRepositoriesWithIndexConfiguration(ctx context.Context) (_ []int, err error) {
+	ctx, endObservation := s.getRepositoriesWithIndexConfigurationOperation.With(ctx, &err, observation.Args{})
+	defer endObservation(1, observation.Args{})
+	return s.store.GetRepositoriesWithIndexConfiguration(ctx)
+}
+
+// GetIndexConfigurationByRepositoryID calls into the inner store and registers the observed results.
+func (s *ObservedStore) GetIndexConfigurationByRepositoryID(ctx context.Context, repositoryID int) (_ IndexConfiguration, _ bool, err error) {
+	ctx, endObservation := s.getIndexConfigurationByRepositoryIDOperation.With(ctx, &err, observation.Args{})
+	defer endObservation(1, observation.Args{})
+	return s.store.GetIndexConfigurationByRepositoryID(ctx, repositoryID)
+}
+
+// DeleteUploadsStuckUploading calls into the inner store and registers the observed results.
+func (s *ObservedStore) DeleteUploadsStuckUploading(ctx context.Context, uploadedBefore time.Time) (_ int, err error) {
+	ctx, endObservation := s.deleteUploadsStuckUploadingOperation.With(ctx, &err, observation.Args{})
+	defer endObservation(1, observation.Args{})
+	return s.store.DeleteUploadsStuckUploading(ctx, uploadedBefore)
 }

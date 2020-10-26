@@ -5,9 +5,10 @@ import (
 
 	"github.com/graph-gophers/graphql-go"
 	"github.com/pkg/errors"
-	"github.com/sourcegraph/sourcegraph/cmd/frontend/authz"
 	"github.com/sourcegraph/sourcegraph/cmd/frontend/backend"
-	"github.com/sourcegraph/sourcegraph/cmd/frontend/db"
+	"github.com/sourcegraph/sourcegraph/cmd/frontend/external/session"
+	"github.com/sourcegraph/sourcegraph/internal/authz"
+	"github.com/sourcegraph/sourcegraph/internal/db"
 	"github.com/sourcegraph/sourcegraph/internal/extsvc"
 )
 
@@ -141,4 +142,22 @@ func (*schemaResolver) SetUserIsSiteAdmin(ctx context.Context, args *struct {
 		return nil, err
 	}
 	return &EmptyResponse{}, nil
+}
+
+func (r *schemaResolver) InvalidateSessionsByID(ctx context.Context, args *struct {
+	UserID graphql.ID
+}) (*EmptyResponse, error) {
+	// 🚨 SECURITY: Only the site admin can invalidate the sessions of a user
+	if err := backend.CheckCurrentUserIsSiteAdmin(ctx); err != nil {
+		return nil, err
+	}
+	userID, err := UnmarshalUserID(args.UserID)
+	if err != nil {
+		return nil, err
+	}
+	if err := session.InvalidateSessionsByID(ctx, userID); err != nil {
+		return nil, err
+	}
+	return &EmptyResponse{}, nil
+
 }

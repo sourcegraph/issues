@@ -59,15 +59,12 @@ func searchRepositories(ctx context.Context, args *search.TextParameters, limit 
 	}
 
 	// Filter args.Repos by matching their names against the query pattern.
-	common = &searchResultsCommon{}
-	common.repos = make([]*types.Repo, len(args.Repos))
-	var repos []*search.RepositoryRevisions
-	for i, r := range args.Repos {
-		common.repos[i] = r.Repo
-		if pattern.MatchString(string(r.Repo.Name)) {
-			repos = append(repos, r)
-		}
+	resolved, err := getRepos(ctx, args.RepoPromise)
+	if err != nil {
+		return nil, nil, err
 	}
+
+	common, repos := matchRepos(pattern, resolved)
 
 	// Filter the repos if there is a repohasfile: or -repohasfile field.
 	if len(args.PatternInfo.FilePatternsReposMustExclude) > 0 || len(args.PatternInfo.FilePatternsReposMustInclude) > 0 {
@@ -84,12 +81,81 @@ func searchRepositories(ctx context.Context, args *search.TextParameters, limit 
 			common.limitHit = true
 			break
 		}
-		for _, rev := range r.RevSpecs() {
+
+		var revs []string
+		revs, err = r.ExpandedRevSpecs(ctx)
+		if err != nil { // fallback to just return revspecs
+			revs = r.RevSpecs()
+		}
+		for _, rev := range revs {
 			results = append(results, &RepositoryResolver{repo: r.Repo, icon: repoIcon, rev: rev})
 		}
 	}
 
 	return results, common, nil
+}
+
+func matchRepos(pattern *regexp.Regexp, resolved []*search.RepositoryRevisions) (*searchResultsCommon, []*search.RepositoryRevisions) {
+	/*
+		Local benchmarks showed diminishing returns for higher levels of concurrency.
+		5 workers seems to be a good trade-off for now. We might want to revisit this
+		benchmark over time.
+
+		go test -cpu 1,2,3,4,5,6,7,8,9,10 -count=5 -bench=SearchRepo .
+
+		   goos: darwin
+		   goarch: amd64
+		   pkg: github.com/sourcegraph/sourcegraph/cmd/frontend/graphqlbackend
+		   BenchmarkSearchRepositories       	      13	 132088878 ns/op
+		   BenchmarkSearchRepositories-2     	      16	  69968357 ns/op
+		   BenchmarkSearchRepositories-3     	      24	  48294832 ns/op
+		   BenchmarkSearchRepositories-4     	      28	  42497674 ns/op
+		   BenchmarkSearchRepositories-5     	      27	  42851670 ns/op
+		   BenchmarkSearchRepositories-6     	      28	  39327860 ns/op
+		   BenchmarkSearchRepositories-7     	      27	  38198665 ns/op
+		   BenchmarkSearchRepositories-8     	      28	  38877182 ns/op
+		   BenchmarkSearchRepositories-9     	      26	  42457771 ns/op
+		   BenchmarkSearchRepositories-10    	      26	  40519692 ns/op
+	*/
+	step := len(resolved) / 5 // for benchmarking, replace 5 with runtime.GOMAXPROCS(0)
+	if step == 0 {
+		step = len(resolved)
+	} else {
+		step += 1
+	}
+
+	results := make(chan []*search.RepositoryRevisions)
+	workers := 0
+	offset := 0
+	for offset < len(resolved) {
+		next := offset + step
+		if next > len(resolved) {
+			next = len(resolved)
+		}
+		workers++
+		go func(repos []*search.RepositoryRevisions) {
+			var matched []*search.RepositoryRevisions
+			for _, r := range repos {
+				if pattern.MatchString(string(r.Repo.Name)) {
+					matched = append(matched, r)
+				}
+			}
+			results <- matched
+		}(resolved[offset:next])
+		offset = next
+	}
+
+	repos := make([]*types.Repo, len(resolved))
+	for i := range resolved {
+		repos[i] = resolved[i].Repo
+	}
+
+	var matched []*search.RepositoryRevisions
+	for w := 0; w < workers; w++ {
+		matched = append(matched, <-results...)
+	}
+
+	return &searchResultsCommon{repos: repos}, matched
 }
 
 // reposToAdd determines which repositories should be included in the result set based on whether they fit in the subset
@@ -101,14 +167,14 @@ func reposToAdd(ctx context.Context, args *search.TextParameters, repos []*searc
 			// The high FileMatchLimit here is to make sure we get all the repo matches we can. Setting it to
 			// len(repos) could mean we miss some repos since there could be for example len(repos) file matches in
 			// the first repo and some more in other repos.
-			p := search.TextPatternInfo{IsRegExp: true, FileMatchLimit: math.MaxInt32, IncludePatterns: []string{pattern}, PathPatternsAreRegExps: true, PathPatternsAreCaseSensitive: false, PatternMatchesContent: true, PatternMatchesPath: true}
+			p := search.TextPatternInfo{IsRegExp: true, FileMatchLimit: math.MaxInt32, IncludePatterns: []string{pattern}, PathPatternsAreCaseSensitive: false, PatternMatchesContent: true, PatternMatchesPath: true}
 			q, err := query.ParseAndCheck("file:" + pattern)
 			if err != nil {
 				return nil, err
 			}
 			newArgs := *args
 			newArgs.PatternInfo = &p
-			newArgs.Repos = repos
+			newArgs.RepoPromise = (&search.Promise{}).Resolve(repos)
 			newArgs.Query = q
 			newArgs.UseFullDeadline = true
 			matches, _, err := searchFilesInRepos(ctx, &newArgs)
@@ -128,14 +194,15 @@ func reposToAdd(ctx context.Context, args *search.TextParameters, repos []*searc
 
 	if len(args.PatternInfo.FilePatternsReposMustExclude) > 0 {
 		for _, pattern := range args.PatternInfo.FilePatternsReposMustExclude {
-			p := search.TextPatternInfo{IsRegExp: true, FileMatchLimit: math.MaxInt32, IncludePatterns: []string{pattern}, PathPatternsAreRegExps: true, PathPatternsAreCaseSensitive: false, PatternMatchesContent: true, PatternMatchesPath: true}
+			p := search.TextPatternInfo{IsRegExp: true, FileMatchLimit: math.MaxInt32, IncludePatterns: []string{pattern}, PathPatternsAreCaseSensitive: false, PatternMatchesContent: true, PatternMatchesPath: true}
 			q, err := query.ParseAndCheck("file:" + pattern)
 			if err != nil {
 				return nil, err
 			}
 			newArgs := *args
 			newArgs.PatternInfo = &p
-			newArgs.Repos = repos
+			rp := (&search.Promise{}).Resolve(repos)
+			newArgs.RepoPromise = rp
 			newArgs.Query = q
 			newArgs.UseFullDeadline = true
 			matches, _, err := searchFilesInRepos(ctx, &newArgs)

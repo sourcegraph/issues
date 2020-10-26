@@ -1,0 +1,69 @@
+@import './RepositoriesPopover';
+@import './RepoHeaderBreadcrumbNavItem';
+
+.repo-header {
+    flex: none;
+    padding: 0;
+    align-items: stretch;
+    border-color: var(--border-color);
+    border-style: solid;
+    border-width: 0 0 1px;
+
+    &--alert {
+        border-width: 1px 0;
+    }
+
+    &__action-list-item {
+        // Have a small gap between buttons so they are visually distinct when pressed
+        // stylelint-disable-next-line declaration-property-unit-whitelist
+        margin-left: 1px;
+
+        &:hover {
+            background: var(--color-bg-1);
+        }
+    }
+
+    &__action-item--pressed {
+        color: var(--body-color);
+        background-color: var(--color-bg-2);
+    }
+
+    .navbar-nav {
+        white-space: nowrap;
+
+        .nav-item {
+            display: flex;
+            align-items: stretch;
+
+            .nav-link {
+                user-select: none;
+            }
+        }
+    }
+
+    &__alert {
+        margin: 0 0.25rem;
+        padding: 0.125rem 0.25rem;
+        cursor: default;
+        user-select: none;
+    }
+
+    &__icon-chevron {
+        opacity: 0.6;
+        margin: auto;
+    }
+
+    .copy-link-action {
+        opacity: 0;
+    }
+    &:hover,
+    &:focus-within {
+        .copy-link-action {
+            opacity: 1;
+        }
+    }
+
+    &__spacer {
+        flex: 1 1 0;
+    }
+}

@@ -27,6 +27,42 @@ If you encounter performance or instability issues with Sourcegraph, we may ask 
 
 The metrics dump includes non-sensitive aggregate statistics of Sourcegraph like CPU & memory usage, number of successful and error requests between Sourcegraph services, and more. It does NOT contain sensitive information like code, repository names, user names, etc.
 
+#### Docker Compose deployments
+
+To create a metrics dump from a docker-compose deployment, follow these steps:
+
+* Open a shell to the running `prometheus` container:
+
+```sh
+docker exec -it prometheus /bin/bash
+```
+
+* Inside the container bash shell trigger the creation of a Prometheus snapshot:  
+
+```sh
+wget --post-data "" http://localhost:9090/api/v1/admin/tsdb/snapshot
+```
+
+* Find the created snapshot's name:
+
+```sh
+ls /prometheus/snapshots/
+```
+
+* Tar up the created snapshot
+
+```sh
+cd /prometheus/snapshots && tar -czvf /tmp/sourcegraph-metrics-dump.tgz <snapshot-name>
+```
+
+* Switch back to local shell (`exit`) and copy the metrics dump file to the host machine:
+
+```sh
+docker cp prometheus:/tmp/sourcegraph-metrics-dump.tgz sourcegraph-metrics-dump.tgz
+```
+
+Please then upload the `sourcegraph-metrics-dump.tgz` file to Sourcegraph support so we can inspect it.
+
 #### Single-container `sourcegraph/server` deployments
 
 To create a metrics dump from a single-container `sourcegraph/server` deployment, follow these steps:

@@ -1,0 +1,8 @@
+# See https://github.com/sourcegraph/codenotify for documentation.
+
+**/* @bobheadxi
+**/* @slimsag
+
+frontend.go @efritz
+precise_code_intel_* @efritz
+precise_code_intel_* @sourcegraph/code-intelligence

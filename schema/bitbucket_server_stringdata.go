@@ -62,7 +62,7 @@ const BitbucketServerSchemaJSON = `{
       "examples": ["https://bitbucket.example.com"]
     },
     "token": {
-      "description": "A Bitbucket Server personal access token with Read scope. Create one at https://[your-bitbucket-hostname]/plugins/servlet/access-tokens/add. Also set the corresponding \"username\" field.\n\nFor Bitbucket Server instances that don't support personal access tokens (Bitbucket Server version 5.4 and older), specify user-password credentials in the \"username\" and \"password\" fields.",
+      "description": "A Bitbucket Server personal access token with Read permissions. When using campaigns, the token needs Write permissions. Create one at https://[your-bitbucket-hostname]/plugins/servlet/access-tokens/add. Also set the corresponding \"username\" field.\n\nFor Bitbucket Server instances that don't support personal access tokens (Bitbucket Server version 5.4 and older), specify user-password credentials in the \"username\" and \"password\" fields.",
       "type": "string",
       "minLength": 1
     },
@@ -156,9 +156,9 @@ const BitbucketServerSchemaJSON = `{
       "minItems": 1,
       "items": {
         "type": "string",
-        "pattern": "^[\\w-]+/[\\w.-]+$"
+        "pattern": "^~?[\\w-]+/[\\w.-]+$"
       },
-      "examples": [["myproject/myrepo", "myproject/myotherrepo"]]
+      "examples": [["myproject/myrepo", "myproject/myotherrepo", "~USER/theirrepo"]]
     },
     "exclude": {
       "description": "A list of repositories to never mirror from this Bitbucket Server instance. Takes precedence over \"repos\" and \"repositoryQuery\".\n\nSupports excluding by name ({\"name\": \"projectKey/repositorySlug\"}) or by ID ({\"id\": 42}).",
@@ -173,7 +173,7 @@ const BitbucketServerSchemaJSON = `{
           "name": {
             "description": "The name of a Bitbucket Server repo (\"projectKey/repositorySlug\") to exclude from mirroring.",
             "type": "string",
-            "pattern": "^[\\w-]+/[\\w.-]+$"
+            "pattern": "^~?[\\w-]+/[\\w.-]+$"
           },
           "id": {
             "description": "The ID of a Bitbucket Server repo (as returned by the Bitbucket Server instance's API) to exclude from mirroring.",
@@ -188,7 +188,12 @@ const BitbucketServerSchemaJSON = `{
       },
       "examples": [
         [{ "name": "myproject/myrepo" }, { "id": 42 }],
-        [{ "name": "myproject/myrepo" }, { "name": "myproject/myotherrepo" }, { "pattern": "^topsecretproject/.*" }]
+        [
+          { "name": "myproject/myrepo" },
+          { "name": "myproject/myotherrepo" },
+          { "name": "~USER/theirrepo" },
+          { "pattern": "^topsecretproject/.*" }
+        ]
       ]
     },
     "initialRepositoryEnablement": {
@@ -237,16 +242,6 @@ const BitbucketServerSchemaJSON = `{
               "minLength": 1
             }
           }
-        },
-        "ttl": {
-          "description": "Duration after which a user's cached permissions will be updated in the background (during which time the previously cached permissions will be used). This is 3 hours by default.\n\nDecreasing the TTL will increase the load on the code host API. If you have X repos on your instance, it will take ~X/1000 API requests to fetch the complete list for 1 user.  If you have Y users, you will incur X*Y/1000 API requests per cache refresh period.\n\nIf set to zero, Sourcegraph will sync a user's entire accessible repository list on every request (NOT recommended).",
-          "type": "string",
-          "default": "3h"
-        },
-        "hardTTL": {
-          "description": "Duration after which a user's cached permissions must be updated before authorizing any user actions. This is 3 days by default.",
-          "type": "string",
-          "default": "72h"
         }
       }
     }

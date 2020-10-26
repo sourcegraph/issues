@@ -2,7 +2,7 @@
 - - :restrict
   - unknown
   - &1
-    :who:
+    :who: 
     :why: Import licenses-npm.sh FAIL_ON
     :versions: []
     :when: 2020-06-05 18:25:53.630259000 Z
@@ -30,7 +30,7 @@
 - - :permit
   - 0BSD
   - &2
-    :who:
+    :who: 
     :why: Import approved licenses from ThirdPartyLicensesNpm.csv
     :versions: []
     :when: 2020-06-05 19:02:14.987331000 Z
@@ -99,7 +99,7 @@
   - *2
 - - :ignore_group
   - devDependencies
-  - :who:
+  - :who: 
     :why: Exclude development dependencies that are not included in bundles
     :versions: []
     :when: 2020-06-05 21:28:58.197862000 Z
@@ -107,8 +107,8 @@
   - sourcegraph
   - Apache-2.0
   - &3
-    :who:
-    :why:
+    :who: 
+    :why: 
     :versions: []
     :when: 2020-06-15 06:45:58.540797000 Z
 - - :homepage
@@ -293,26 +293,38 @@
   - *3
 - - :ignore
   - github.com/OpenPeeDeeP/depguard
-  - :who:
+  - :who: 
     :why: Development dependency
     :versions: []
     :when: 2020-06-16 02:19:49.896604000 Z
 - - :ignore
   - github.com/golangci/check
-  - :who:
+  - :who: 
     :why: Development dependency
     :versions: []
     :when: 2020-06-16 02:20:06.274998000 Z
 - - :name_project
   - sourcegraph/sourcegraph
-  - :who:
-    :why:
+  - :who: 
+    :why: 
     :versions: []
     :when: 2020-06-16 02:20:33.870044000 Z
 - - :approve
   - mdi-react
-  - :who:
+  - :who: 
     :why: Seems to be a bug approving this dependency, despite its license already
       being on the approvelist
     :versions: []
     :when: 2020-07-02 01:16:22.339839000 Z
+- - :license
+  - github.com/sourcegraph/gosaml2
+  - Apache 2.0
+  - :who: 
+    :why: 
+    :versions: []
+    :when: 2020-08-12 08:03:13.360476000 Z
+- - :permit
+  - CC-BY-4.0
+  - :who:
+    :why: Used by caniuse-lite
+    :when: 2020-09-23 12:14:34.205000000 Z

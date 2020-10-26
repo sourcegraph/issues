@@ -3,16 +3,17 @@ package txemail
 
 import (
 	"context"
+	"crypto/tls"
 	"errors"
 	"fmt"
 	"net"
-	"net/mail"
 	"net/smtp"
+	"net/textproto"
 	"strconv"
 
+	"github.com/jordan-wright/email"
 	"github.com/sourcegraph/sourcegraph/internal/conf"
 	"github.com/sourcegraph/sourcegraph/internal/txemail/txtypes"
-	gophermail "gopkg.in/jpoehls/gophermail.v0"
 )
 
 // Message describes an email message to be sent.
@@ -28,23 +29,23 @@ type Message struct {
 }
 
 // render returns the rendered message contents without sending email.
-func render(message Message) (*gophermail.Message, error) {
-	m := gophermail.Message{
-		From: mail.Address{
-			Name: "Sourcegraph",
-		},
-		Headers: mail.Header{},
+func render(message Message) (*email.Email, error) {
+	m := email.Email{
+		To:      message.To,
+		From:    "Sourcegraph",
+		Headers: make(textproto.MIMEHeader),
 	}
 	if message.ReplyTo != nil {
-		if err := m.SetReplyTo(*message.ReplyTo); err != nil {
-			return nil, err
-		}
+		m.ReplyTo = []string{*message.ReplyTo}
 	}
 	if message.MessageID != nil {
 		m.Headers["Message-ID"] = []string{*message.MessageID}
 	}
+	if message.FromName != "" {
+		m.From = message.FromName
+	}
 	if len(message.References) > 0 {
-		// gophermail does not support lists, so we must build it ourself.
+		// jordan-wright/email does not support lists, so we must build it ourself.
 		var refsList string
 		for _, ref := range message.References {
 			if refsList != "" {
@@ -62,18 +63,6 @@ func render(message Message) (*gophermail.Message, error) {
 
 	if err := renderTemplate(parsed, message.Data, &m); err != nil {
 		return nil, err
-	}
-
-	if message.FromName != "" {
-		m.From.Name = message.FromName
-	}
-
-	for _, to := range message.To {
-		toAddr, err := mail.ParseAddress(to)
-		if err != nil {
-			return nil, err
-		}
-		m.To = append(m.To, *toAddr)
 	}
 
 	return &m, nil
@@ -103,7 +92,7 @@ func Send(ctx context.Context, message Message) error {
 	if err != nil {
 		return err
 	}
-	m.From.Address = conf.EmailAddress
+	m.From = conf.EmailAddress
 
 	// Disable Mandrill features, because they make the emails look sketchy.
 	if conf.EmailSmtp.Host == "smtp.mandrillapp.com" {
@@ -128,10 +117,19 @@ func Send(ctx context.Context, message Message) error {
 		return fmt.Errorf("invalid SMTP authentication type %q", conf.EmailSmtp.Authentication)
 	}
 
-	return gophermail.SendMail(
+	if conf.EmailSmtp.DisableTLS {
+		return m.SendWithStartTLS(
+			net.JoinHostPort(conf.EmailSmtp.Host, strconv.Itoa(conf.EmailSmtp.Port)),
+			smtpAuth,
+			&tls.Config{
+				InsecureSkipVerify: true,
+			},
+		)
+	}
+
+	return m.Send(
 		net.JoinHostPort(conf.EmailSmtp.Host, strconv.Itoa(conf.EmailSmtp.Port)),
 		smtpAuth,
-		m,
 	)
 }
 

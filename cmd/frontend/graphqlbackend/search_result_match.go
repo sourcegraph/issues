@@ -11,8 +11,8 @@ func (m *searchResultMatchResolver) URL() string {
 	return m.url
 }
 
-func (m *searchResultMatchResolver) Body() *markdownResolver {
-	return &markdownResolver{text: m.body}
+func (m *searchResultMatchResolver) Body() Markdown {
+	return Markdown(m.body)
 }
 
 func (m *searchResultMatchResolver) Highlights() []*highlightedRange {

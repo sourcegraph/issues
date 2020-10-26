@@ -1,0 +1,185 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`PanelContainer content state 1`] = `
+<PanelContainer
+  emptyContent={
+    <div>
+      Empty
+    </div>
+  }
+  loadingContent={
+    <div>
+      Loading
+    </div>
+  }
+  populatedContent={
+    <div>
+      Content
+    </div>
+  }
+  state="populated"
+  title="Test Panel"
+>
+  <div
+    className="panel-container d-flex flex-column"
+  >
+    <div
+      className="panel-container__header d-flex border-bottom"
+    >
+      <h4
+        className="panel-container__header-text"
+      >
+        Test Panel
+      </h4>
+    </div>
+    <div
+      className="panel-container__content h-100"
+    >
+      <div>
+        Content
+      </div>
+    </div>
+  </div>
+</PanelContainer>
+`;
+
+exports[`PanelContainer empty state 1`] = `
+<PanelContainer
+  emptyContent={
+    <div>
+      Empty
+    </div>
+  }
+  loadingContent={
+    <div>
+      Loading
+    </div>
+  }
+  populatedContent={
+    <div>
+      Content
+    </div>
+  }
+  state="empty"
+  title="Test Panel"
+>
+  <div
+    className="panel-container d-flex flex-column"
+  >
+    <div
+      className="panel-container__header d-flex border-bottom"
+    >
+      <h4
+        className="panel-container__header-text"
+      >
+        Test Panel
+      </h4>
+    </div>
+    <div
+      className="panel-container__content h-100"
+    >
+      <div>
+        Empty
+      </div>
+    </div>
+  </div>
+</PanelContainer>
+`;
+
+exports[`PanelContainer loading state 1`] = `
+<PanelContainer
+  emptyContent={
+    <div>
+      Empty
+    </div>
+  }
+  loadingContent={
+    <div>
+      Loading
+    </div>
+  }
+  populatedContent={
+    <div>
+      Content
+    </div>
+  }
+  state="loading"
+  title="Test Panel"
+>
+  <div
+    className="panel-container d-flex flex-column"
+  >
+    <div
+      className="panel-container__header d-flex border-bottom"
+    >
+      <h4
+        className="panel-container__header-text"
+      >
+        Test Panel
+      </h4>
+    </div>
+    <div
+      className="panel-container__content h-100"
+    >
+      <div>
+        Loading
+      </div>
+    </div>
+  </div>
+</PanelContainer>
+`;
+
+exports[`PanelContainer with action buttons 1`] = `
+<PanelContainer
+  actionButtons={
+    <button
+      type="button"
+    >
+      Button
+    </button>
+  }
+  emptyContent={
+    <div>
+      Empty
+    </div>
+  }
+  loadingContent={
+    <div>
+      Loading
+    </div>
+  }
+  populatedContent={
+    <div>
+      Content
+    </div>
+  }
+  state="populated"
+  title="Test Panel"
+>
+  <div
+    className="panel-container d-flex flex-column"
+  >
+    <div
+      className="panel-container__header d-flex border-bottom"
+    >
+      <h4
+        className="panel-container__header-text"
+      >
+        Test Panel
+      </h4>
+      <button
+        type="button"
+      >
+        Button
+      </button>
+    </div>
+    <div
+      className="panel-container__content h-100"
+    >
+      <div>
+        Content
+      </div>
+    </div>
+  </div>
+</PanelContainer>
+`;

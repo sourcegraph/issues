@@ -23,7 +23,7 @@ var acronymsReplacer *strings.Replacer
 func init() {
 	var pairs []string
 	for _, acronym := range commonAcronyms {
-		pairs = append(pairs, acronym, fmt.Sprintf("%c%s", acronym[0], strings.ToLower((acronym[1:]))))
+		pairs = append(pairs, acronym, fmt.Sprintf("%c%s", acronym[0], strings.ToLower(acronym[1:])))
 	}
 
 	acronymsReplacer = strings.NewReplacer(pairs...)

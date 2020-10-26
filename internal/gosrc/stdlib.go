@@ -1,11 +1,33 @@
 package gosrc
 
+import "strings"
+
 // IsStdlibPkg returns true if the package path is part of the stdlib. This
 // uses a static copy of the output of "go list std", so may be out of date as
 // new versions of Go are released.
 func IsStdlibPkg(importPath string) bool {
-	_, ok := stdlibPackagePaths[importPath]
-	return ok
+	if _, ok := stdlibPackagePaths[importPath]; ok {
+		return ok
+	}
+	for _, prefix := range stdlibInternalPackagePrefixes {
+		if strings.HasPrefix(strings.ToLower(importPath), prefix) {
+			return true
+		}
+	}
+	return false
+}
+
+// find path/to/golang/source -name internal | awk -F '/' '{ print "\"" $2 "/\"," }' | sort | uniq | grep -v vendor
+var stdlibInternalPackagePrefixes = []string{
+	"cmd/",
+	"crypto/",
+	"go/",
+	"image/",
+	"internal/",
+	"net/",
+	"os/",
+	"runtime/",
+	"testing/",
 }
 
 // go list std | awk '{ print "\"" $1 "\": struct{}{}," }'

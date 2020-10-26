@@ -1,6 +1,7 @@
 package janitor
 
 import (
+	"context"
 	"path/filepath"
 	"testing"
 	"time"
@@ -30,10 +31,7 @@ func TestRemoveOldUploadFiles(t *testing.T) {
 		maxUploadAge: time.Minute,
 		metrics:      NewJanitorMetrics(metrics.TestRegisterer),
 	}
-
-	if err := j.removeOldUploadFiles(); err != nil {
-		t.Fatalf("unexpected error cleaning failed uploads: %s", err)
-	}
+	j.removeOldUploadFiles(context.Background())
 
 	names, err := getFilenames(filepath.Join(bundleDir, "uploads"))
 	if err != nil {
@@ -67,49 +65,9 @@ func TestRemoveOldUploadPartFiles(t *testing.T) {
 		maxUploadPartAge: time.Minute,
 		metrics:          NewJanitorMetrics(metrics.TestRegisterer),
 	}
-
-	if err := j.removeOldUploadPartFiles(); err != nil {
-		t.Fatalf("unexpected error cleaning old upload part files: %s", err)
-	}
+	j.removeOldUploadPartFiles(context.Background())
 
 	names, err := getFilenames(filepath.Join(bundleDir, "upload-parts"))
-	if err != nil {
-		t.Fatalf("unexpected error listing directory: %s", err)
-	}
-
-	expected := []string{"43.0", "43.1"}
-	if diff := cmp.Diff(expected, names); diff != "" {
-		t.Errorf("unexpected directory contents (-want +got):\n%s", diff)
-	}
-}
-
-func TestRemoveOldDatabasePartFiles(t *testing.T) {
-	bundleDir := testRoot(t)
-	mtimes := map[string]time.Time{
-		"42.0": time.Now().Local().Add(-time.Minute * 3),  // older than 1m
-		"42.1": time.Now().Local().Add(-time.Minute * 2),  // older than 1m
-		"43.0": time.Now().Local().Add(-time.Second * 30), // newer than 1m
-		"43.1": time.Now().Local().Add(-time.Second * 20), // newer than 1m
-	}
-
-	for name, mtime := range mtimes {
-		path := filepath.Join(bundleDir, "db-parts", name)
-		if err := makeFile(path, mtime); err != nil {
-			t.Fatalf("unexpected error creating file %s: %s", path, err)
-		}
-	}
-
-	j := &Janitor{
-		bundleDir:          bundleDir,
-		maxDatabasePartAge: time.Minute,
-		metrics:            NewJanitorMetrics(metrics.TestRegisterer),
-	}
-
-	if err := j.removeOldDatabasePartFiles(); err != nil {
-		t.Fatalf("unexpected error cleaning old db part files: %s", err)
-	}
-
-	names, err := getFilenames(filepath.Join(bundleDir, "db-parts"))
 	if err != nil {
 		t.Fatalf("unexpected error listing directory: %s", err)
 	}

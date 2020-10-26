@@ -1,0 +1,119 @@
+@import 'open-color/open-color.scss'; // Sass variables
+@import '~open-color/open-color.css'; // CSS variables
+
+// General reusable colors from our custom color palette
+
+// Gray (blueish) palette
+$white: #ffffff;
+$gray-01: #f2f4f8;
+$gray-02: #e4e9f1;
+$gray-03: #d7ddea;
+$gray-04: #cad2e2;
+$gray-05: #bdc7db;
+$gray-06: #afbcd4;
+$gray-07: #a2b0cd;
+$gray-08: #95a5c6;
+$gray-09: #889abf;
+$gray-10: #7a8fb8;
+$gray-11: #6d84b0;
+$gray-12: #6078a9;
+$gray-13: #566e9f;
+$gray-14: #4f6592;
+$gray-15: #475c85;
+$gray-16: #405377;
+$gray-17: #39496a;
+$gray-18: #32405d;
+$gray-19: #2b3750;
+$gray-20: #242e42;
+$gray-21: #1d2535;
+$gray-22: #151c28;
+$gray-23: #0e121b;
+$black: #07090d;
+
+// Tell Bootstrap to use colors from OpenColor
+$blue: $oc-blue-7;
+$indigo: $oc-indigo-7;
+$purple: $oc-violet-7;
+$pink: $oc-pink-7;
+$red: $oc-red-7;
+$orange: $oc-orange-7;
+$yellow: $oc-yellow-7;
+$green: $oc-green-7;
+$teal: $oc-teal-7;
+$cyan: $oc-cyan-3;
+
+$primary: $blue;
+$secondary: #2b3750;
+$success: $green;
+$info: $cyan;
+$warning: $yellow;
+$danger: $red;
+$secondary-light: darken($gray-01, 5%);
+$merged: $purple;
+
+// Added to bg- and text- utilities because it is commonly needed in our app.
+$theme-colors: (
+    'merged': $merged,
+);
+
+$theme-colors-light: (
+    'secondary': $secondary-light,
+);
+
+$body-color: var(--body-color);
+$body-bg: var(--body-bg);
+
+$text-muted: var(--text-muted);
+
+:root {
+    --primary: #{$primary};
+    --secondary: #{$secondary-light};
+    --success: #{$success};
+    --info: #{$info};
+    --warning: #{$warning};
+    --danger: #{$danger};
+    --merged: #{$merged};
+}
+.theme-light {
+    // Affects default browser styles
+    color-scheme: light;
+
+    --body-color: #{$gray-19};
+    --body-bg: #fbfdff;
+    --color-bg-1: #ffffff;
+    --color-bg-2: #{$gray-01};
+    --color-bg-3: #{$gray-04};
+    --color-bg-4: #{$gray-02};
+    --color-bg-5: #{$gray-13};
+    --text-muted: #6d727c;
+    --line-number-color: #{$gray-05};
+    --header-icon-color: #{$gray-13};
+    --link-color: #{$gray-13};
+    --link-active-color: #{$gray-18};
+    --link-hover-color: #{$gray-21};
+    --border-color: #{$gray-04};
+    --border-color-2: #{$gray-02};
+    --sourcegraph-logo-text-color: #242427;
+}
+.theme-dark {
+    // Affects default browser styles
+    color-scheme: dark;
+
+    --secondary: #{$secondary};
+    --border-color: #{$gray-19};
+    --border-color-2: #1b1730;
+    --body-color: #ffffff;
+    --body-bg: #04070e;
+    --color-bg-1: #{$gray-22};
+    --color-bg-2: #{$gray-21};
+    --color-bg-3: #{$gray-19};
+    --color-bg-4: #{$gray-22};
+    --color-bg-5: #{$gray-17};
+    --text-muted: #{$gray-07};
+    --line-number-color: #{$gray-18};
+    --header-icon-color: #{$gray-11};
+    --link-color: #{$gray-07};
+    --link-active-color: #{$gray-02};
+    --link-hover-color: #ffffff;
+    --sourcegraph-logo-text-color: #ffffff;
+}

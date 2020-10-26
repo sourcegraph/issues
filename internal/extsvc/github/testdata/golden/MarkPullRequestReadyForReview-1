@@ -1,0 +1,86 @@
+{
+  "ID": "MDExOlB1bGxSZXF1ZXN0NTA2MDg0ODU2",
+  "Title": "This is a test PR, feel free to ignore",
+  "Body": "I'm opening this PR to test something. Please ignore.",
+  "State": "OPEN",
+  "URL": "https://github.com/sourcegraph/automation-testing/pull/362",
+  "HeadRefOid": "74097e5da1cf90978bcd25689fa76bd87bde8006",
+  "BaseRefOid": "6274d04b734de9f057bb5f196a5046a9e86ba992",
+  "HeadRefName": "test-pr-3",
+  "BaseRefName": "master",
+  "Number": 362,
+  "Author": {
+   "AvatarURL": "https://avatars0.githubusercontent.com/u/19534377?v=4",
+   "Login": "eseliger",
+   "URL": "https://github.com/eseliger"
+  },
+  "Participants": [
+   {
+    "AvatarURL": "https://avatars0.githubusercontent.com/u/19534377?v=4",
+    "Login": "eseliger",
+    "URL": "https://github.com/eseliger"
+   }
+  ],
+  "Labels": {
+   "Nodes": []
+  },
+  "TimelineItems": [
+   {
+    "Type": "PullRequestCommit",
+    "Item": {
+     "Commit": {
+      "OID": "74097e5da1cf90978bcd25689fa76bd87bde8006",
+      "Message": "Update README.md",
+      "MessageHeadline": "Update README.md",
+      "URL": "https://github.com/sourcegraph/automation-testing/commit/74097e5da1cf90978bcd25689fa76bd87bde8006",
+      "Committer": {
+       "AvatarURL": "https://avatars3.githubusercontent.com/u/19864447?v=4",
+       "Email": "noreply@github.com",
+       "Name": "GitHub"
+      },
+      "CommittedDate": "2020-10-19T15:45:22Z",
+      "PushedDate": "2020-10-19T15:45:24Z"
+     }
+    }
+   }
+  ],
+  "Commits": {
+   "Nodes": [
+    {
+     "Commit": {
+      "OID": "74097e5da1cf90978bcd25689fa76bd87bde8006",
+      "CheckSuites": {
+       "Nodes": [
+        {
+         "ID": "MDEwOkNoZWNrU3VpdGUxMzYzNjUyMzc3",
+         "Status": "QUEUED",
+         "Conclusion": "",
+         "ReceivedAt": "0001-01-01T00:00:00Z",
+         "CheckRuns": {
+          "Nodes": []
+         }
+        },
+        {
+         "ID": "MDEwOkNoZWNrU3VpdGUxMzYzNjUyMzgx",
+         "Status": "QUEUED",
+         "Conclusion": "",
+         "ReceivedAt": "0001-01-01T00:00:00Z",
+         "CheckRuns": {
+          "Nodes": []
+         }
+        }
+       ]
+      },
+      "Status": {
+       "State": "",
+       "Contexts": null
+      },
+      "CommittedDate": "2020-10-19T15:45:22Z"
+     }
+    }
+   ]
+  },
+  "IsDraft": false,
+  "CreatedAt": "2020-10-19T15:45:29Z",
+  "UpdatedAt": "2020-10-19T15:45:29Z"
+ }

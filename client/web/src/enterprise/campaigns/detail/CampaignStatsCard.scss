@@ -1,0 +1,36 @@
+.campaign-stats-card {
+    &__changesets-pill {
+        // Should be the same height as plain mdi icons.
+        /* stylelint-disable declaration-property-unit-whitelist */
+        height: 24px;
+    }
+    &__completeness {
+        @include media-breakpoint-down(xs) {
+            // Emulate h4 size on xs devices.
+            font-size: 14px;
+            line-height: 20px;
+        }
+    }
+    &__state-badge {
+        @include media-breakpoint-down(sm) {
+            // Emulate h4 on sm and xs devices.
+            font-size: 14px;
+            line-height: 20px;
+            font-weight: 600;
+        }
+    }
+    &__stat {
+        min-width: 0;
+        @include media-breakpoint-down(sm) {
+            flex-basis: 33%;
+            padding-top: 1rem;
+            padding-left: 0.5rem;
+            padding-right: 0.5rem;
+        }
+        @include media-breakpoint-down(xs) {
+            flex-basis: 49.9%;
+            padding-left: 0.5rem;
+            padding-right: 0.5rem;
+        }
+    }
+}

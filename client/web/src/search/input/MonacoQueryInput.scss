@@ -1,0 +1,87 @@
+.monaco-query-input-container {
+    position: relative;
+    border: 1px solid $input-border-color;
+    // Match padding from the regular query input.
+    padding-left: 0.75rem;
+    background-color: var(--input-bg);
+    display: flex;
+    align-items: center;
+    flex: 1 1 auto;
+    min-width: 12rem;
+    &:focus-within {
+        border: 1px solid $input-focus-border-color;
+        box-shadow: 0 0 0 2px rgba(28, 126, 214, 0.25);
+    }
+
+    .monaco-editor {
+        // stylelint-disable-next-line selector-class-pattern
+        .decorationsOverviewRuler {
+            display: none;
+        }
+        .view-overlays {
+            .current-line {
+                border: none;
+            }
+        }
+        .view-lines {
+            border: none;
+        }
+        .monaco-editor-background {
+            width: 100% !important;
+            overflow: visible !important;
+        }
+        .monaco-editor-hover-content {
+            padding: 0.25rem;
+            .status-bar {
+                display: none;
+            }
+        }
+
+        // Override our :focus-visible style, which gets applied to the textarea
+        .inputarea.focus-visible {
+            box-shadow: none;
+        }
+
+        // Show keyboard tip to press Tab to complete
+        .suggest-widget .monaco-list .monaco-list-row.focused::after {
+            content: 'Tab';
+            display: flex;
+            align-items: center;
+            border: 1px solid var(--text-muted);
+            border-radius: 0.25rem;
+            height: 1.25rem;
+            margin-top: 0.375rem;
+            // stylelint-disable-next-line declaration-property-unit-whitelist
+            font-size: 0.65rem;
+            line-height: 1;
+            padding: 0.25rem 0.375rem;
+            color: var(--text-muted);
+            opacity: 0.75;
+        }
+    }
+
+    &__toggle-container {
+        padding-right: 0.35rem;
+        padding-left: 0.35rem;
+    }
+}
+
+.theme-dark {
+    .monaco-icon-label.suggest-icon.customcolor::before {
+        background-image: url(data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIGNsYXNzPSJtZGktaWNvbiAiIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgZmlsbD0id2hpdGUiIHZpZXdCb3g9IjAgMCAyNCAyNCI+PHBhdGggZD0iTTE0LDEyVjE5Ljg4QzE0LjA0LDIwLjE4IDEzLjk0LDIwLjUgMTMuNzEsMjAuNzFDMTMuMzIsMjEuMSAxMi42OSwyMS4xIDEyLjMsMjAuNzFMMTAuMjksMTguN0MxMC4wNiwxOC40NyA5Ljk2LDE4LjE2IDEwLDE3Ljg3VjEySDkuOTdMNC4yMSw0LjYyQzMuODcsNC4xOSAzLjk1LDMuNTYgNC4zOCwzLjIyQzQuNTcsMy4wOCA0Ljc4LDMgNSwzVjNIMTlWM0MxOS4yMiwzIDE5LjQzLDMuMDggMTkuNjIsMy4yMkMyMC4wNSwzLjU2IDIwLjEzLDQuMTkgMTkuNzksNC42MkwxNC4wMywxMkgxNFoiLz48L3N2Zz4=) !important;
+    }
+
+    .monaco-icon-label.suggest-icon.color::before {
+        background-image: url(data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIGNsYXNzPSJtZGktaWNvbiAiIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgZmlsbD0id2hpdGUiIHZpZXdCb3g9IjAgMCAyNCAyNCI+PHBhdGggZD0iTTYsMkgxOEEyLDIgMCAwLDEgMjAsNFYyMEEyLDIgMCAwLDEgMTgsMjJINkEyLDIgMCAwLDEgNCwyMFY0QTIsMiAwIDAsMSA2LDJNMTIuNzUsMTMuNUMxNS41LDEzLjUgMTYuMjQsMTEuNDcgMTYuNDMsMTAuNEMxNy4zNCwxMC4xMSAxOCw5LjI2IDE4LDguMjVDMTgsNyAxNyw2IDE1Ljc1LDZDMTQuNSw2IDEzLjUsNyAxMy41LDguMjVDMTMuNSw5LjE5IDE0LjA3LDEwIDE0Ljg5LDEwLjMzQzE0LjY3LDExIDE0LDEyIDEyLDEyQzEwLjYyLDEyIDkuNjYsMTIuMzUgOSwxMi44NFY4Ljg3QzkuODcsOC41NiAxMC41LDcuNzMgMTAuNSw2Ljc1QzEwLjUsNS41IDkuNSw0LjUgOC4yNSw0LjVDNyw0LjUgNiw1LjUgNiw2Ljc1QzYsNy43MyA2LjYzLDguNTYgNy41LDguODdWMTUuMTNDNi42MywxNS40NCA2LDE2LjI3IDYsMTcuMjVDNiwxOC41IDcsMTkuNSA4LjI1LDE5LjVDOS41LDE5LjUgMTAuNSwxOC41IDEwLjUsMTcuMjVDMTAuNSwxNi4zMiA5Ljk0LDE1LjUgOS4xMywxNS4xOEM5LjQxLDE0LjUgMTAuMjMsMTMuNSAxMi43NSwxMy41TTguMjUsMTYuNUEwLjc1LDAuNzUgMCAwLDEgOSwxNy4yNUEwLjc1LDAuNzUgMCAwLDEgOC4yNSwxOEEwLjc1LDAuNzUgMCAwLDEgNy41LDE3LjI1QTAuNzUsMC43NSAwIDAsMSA4LjI1LDE2LjVNOC4yNSw2QTAuNzUsMC43NSAwIDAsMSA5LDYuNzVBMC43NSwwLjc1IDAgMCwxIDguMjUsNy41QTAuNzUsMC43NSAwIDAsMSA3LjUsNi43NUEwLjc1LDAuNzUgMCAwLDEgOC4yNSw2TTE1Ljc1LDcuNUEwLjc1LDAuNzUgMCAwLDEgMTYuNSw4LjI1QTAuNzUsMC43NSAwIDAsMSAxNS43NSw5QTAuNzUsMC43NSAwIDAsMSAxNSw4LjI1QTAuNzUsMC43NSAwIDAsMSAxNS43NSw3LjVaIi8+PC9zdmc+) !important;
+    }
+}
+
+.theme-light {
+    .monaco-icon-label.suggest-icon.customcolor::before {
+        background-image: url(data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIGNsYXNzPSJtZGktaWNvbiAiIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgZmlsbD0iIzJiMzc1MCIgdmlld0JveD0iMCAwIDI0IDI0Ij48cGF0aCBkPSJNMTQsMTJWMTkuODhDMTQuMDQsMjAuMTggMTMuOTQsMjAuNSAxMy43MSwyMC43MUMxMy4zMiwyMS4xIDEyLjY5LDIxLjEgMTIuMywyMC43MUwxMC4yOSwxOC43QzEwLjA2LDE4LjQ3IDkuOTYsMTguMTYgMTAsMTcuODdWMTJIOS45N0w0LjIxLDQuNjJDMy44Nyw0LjE5IDMuOTUsMy41NiA0LjM4LDMuMjJDNC41NywzLjA4IDQuNzgsMyA1LDNWM0gxOVYzQzE5LjIyLDMgMTkuNDMsMy4wOCAxOS42MiwzLjIyQzIwLjA1LDMuNTYgMjAuMTMsNC4xOSAxOS43OSw0LjYyTDE0LjAzLDEySDE0WiIvPjwvc3ZnPg==) !important;
+    }
+
+    .monaco-icon-label.suggest-icon.color::before {
+        background-image: url(data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIGNsYXNzPSJtZGktaWNvbiAiIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgZmlsbD0iIzJiMzc1MCIgdmlld0JveD0iMCAwIDI0IDI0Ij48cGF0aCBkPSJNNiwySDE4QTIsMiAwIDAsMSAyMCw0VjIwQTIsMiAwIDAsMSAxOCwyMkg2QTIsMiAwIDAsMSA0LDIwVjRBMiwyIDAgMCwxIDYsMk0xMi43NSwxMy41QzE1LjUsMTMuNSAxNi4yNCwxMS40NyAxNi40MywxMC40QzE3LjM0LDEwLjExIDE4LDkuMjYgMTgsOC4yNUMxOCw3IDE3LDYgMTUuNzUsNkMxNC41LDYgMTMuNSw3IDEzLjUsOC4yNUMxMy41LDkuMTkgMTQuMDcsMTAgMTQuODksMTAuMzNDMTQuNjcsMTEgMTQsMTIgMTIsMTJDMTAuNjIsMTIgOS42NiwxMi4zNSA5LDEyLjg0VjguODdDOS44Nyw4LjU2IDEwLjUsNy43MyAxMC41LDYuNzVDMTAuNSw1LjUgOS41LDQuNSA4LjI1LDQuNUM3LDQuNSA2LDUuNSA2LDYuNzVDNiw3LjczIDYuNjMsOC41NiA3LjUsOC44N1YxNS4xM0M2LjYzLDE1LjQ0IDYsMTYuMjcgNiwxNy4yNUM2LDE4LjUgNywxOS41IDguMjUsMTkuNUM5LjUsMTkuNSAxMC41LDE4LjUgMTAuNSwxNy4yNUMxMC41LDE2LjMyIDkuOTQsMTUuNSA5LjEzLDE1LjE4QzkuNDEsMTQuNSAxMC4yMywxMy41IDEyLjc1LDEzLjVNOC4yNSwxNi41QTAuNzUsMC43NSAwIDAsMSA5LDE3LjI1QTAuNzUsMC43NSAwIDAsMSA4LjI1LDE4QTAuNzUsMC43NSAwIDAsMSA3LjUsMTcuMjVBMC43NSwwLjc1IDAgMCwxIDguMjUsMTYuNU04LjI1LDZBMC43NSwwLjc1IDAgMCwxIDksNi43NUEwLjc1LDAuNzUgMCAwLDEgOC4yNSw3LjVBMC43NSwwLjc1IDAgMCwxIDcuNSw2Ljc1QTAuNzUsMC43NSAwIDAsMSA4LjI1LDZNMTUuNzUsNy41QTAuNzUsMC43NSAwIDAsMSAxNi41LDguMjVBMC43NSwwLjc1IDAgMCwxIDE1Ljc1LDlBMC43NSwwLjc1IDAgMCwxIDE1LDguMjVBMC43NSwwLjc1IDAgMCwxIDE1Ljc1LDcuNVoiLz48L3N2Zz4=) !important;
+    }
+}

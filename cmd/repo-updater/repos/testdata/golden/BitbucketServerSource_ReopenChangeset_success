@@ -1,0 +1,55 @@
+{
+  "id": 95,
+  "version": 2,
+  "title": "Replace fmt.Sprintf with equivalent strconv.Itoa",
+  "description": "This campaign replaces `fmt.Sprintf` with `strconv.Itoa`",
+  "state": "OPEN",
+  "open": true,
+  "closed": false,
+  "createdDate": 1600256487945,
+  "updatedDate": 1600950914772,
+  "fromRef": {
+   "id": "refs/heads/campaigns-demo/sprintf-to-itoa",
+   "repository": {
+    "id": 10070,
+    "slug": "automation-testing",
+    "project": {
+     "key": "SOUR"
+    }
+   }
+  },
+  "toRef": {
+   "id": "refs/heads/master",
+   "repository": {
+    "id": 10070,
+    "slug": "automation-testing",
+    "project": {
+     "key": "SOUR"
+    }
+   }
+  },
+  "locked": false,
+  "author": {
+   "user": {
+    "name": "thorsten",
+    "emailAddress": "thorsten@sourcegraph.com",
+    "id": 104,
+    "displayName": "thorsten",
+    "active": true,
+    "slug": "thorsten",
+    "type": "NORMAL"
+   },
+   "role": "AUTHOR",
+   "approved": false,
+   "status": "UNAPPROVED"
+  },
+  "reviewers": [],
+  "participants": [],
+  "links": {
+   "self": [
+    {
+     "href": "https://bitbucket.sgdev.org/projects/SOUR/repos/automation-testing/pull-requests/95"
+    }
+   ]
+  }
+ }

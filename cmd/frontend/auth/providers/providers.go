@@ -15,8 +15,8 @@ import (
 // "auth.providers" array.
 //
 // An authentication provider implementation can have multiple Provider instances. For example, a
-// site may support OpenID Connect authentication either via G Suite or Okta, each of which would be
-// represented by its own Provider instance.
+// site may support OpenID Connect authentication either via Google Workspace or Okta, each of which
+// would be represented by its own Provider instance.
 type Provider interface {
 	// ConfigID returns the identifier for this provider's config in the auth.providers site
 	// configuration array.

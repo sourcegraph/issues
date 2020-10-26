@@ -1,0 +1,96 @@
+{
+  "ID": "MDExOlB1bGxSZXF1ZXN0NTA2MzUzMDQw",
+  "Title": "This is a test PR, feel free to ignore",
+  "Body": "I'm opening this PR to test something. Please ignore.",
+  "State": "OPEN",
+  "URL": "https://github.com/sourcegraph/automation-testing/pull/366",
+  "HeadRefOid": "05e562cc5d8ab50b5fcab8dfd5dfa5db13a48e80",
+  "BaseRefOid": "6274d04b734de9f057bb5f196a5046a9e86ba992",
+  "HeadRefName": "test-pr-4",
+  "BaseRefName": "master",
+  "Number": 366,
+  "Author": {
+   "AvatarURL": "https://avatars0.githubusercontent.com/u/19534377?v=4",
+   "Login": "eseliger",
+   "URL": "https://github.com/eseliger"
+  },
+  "Participants": [
+   {
+    "AvatarURL": "https://avatars0.githubusercontent.com/u/19534377?v=4",
+    "Login": "eseliger",
+    "URL": "https://github.com/eseliger"
+   },
+   {
+    "AvatarURL": "https://avatars1.githubusercontent.com/u/1185253?u=35f048c505007991433b46c9c0616ccbcfbd4bff\u0026v=4",
+    "Login": "mrnugget",
+    "URL": "https://github.com/mrnugget"
+   }
+  ],
+  "Labels": {
+   "Nodes": []
+  },
+  "TimelineItems": [
+   {
+    "Type": "PullRequestCommit",
+    "Item": {
+     "Commit": {
+      "OID": "05e562cc5d8ab50b5fcab8dfd5dfa5db13a48e80",
+      "Message": "Add foobar.md file",
+      "MessageHeadline": "Add foobar.md file",
+      "URL": "https://github.com/sourcegraph/automation-testing/commit/05e562cc5d8ab50b5fcab8dfd5dfa5db13a48e80",
+      "Committer": {
+       "AvatarURL": "https://avatars3.githubusercontent.com/u/1185253?v=4",
+       "Email": "mrnugget@gmail.com",
+       "Name": "Thorsten Ball",
+       "User": {
+        "AvatarURL": "https://avatars1.githubusercontent.com/u/1185253?u=35f048c505007991433b46c9c0616ccbcfbd4bff\u0026v=4",
+        "Login": "mrnugget",
+        "URL": "https://github.com/mrnugget"
+       }
+      },
+      "CommittedDate": "2019-11-12T12:57:33Z",
+      "PushedDate": "2019-11-12T13:00:07Z"
+     }
+    }
+   }
+  ],
+  "Commits": {
+   "Nodes": [
+    {
+     "Commit": {
+      "OID": "05e562cc5d8ab50b5fcab8dfd5dfa5db13a48e80",
+      "CheckSuites": {
+       "Nodes": [
+        {
+         "ID": "MDEwOkNoZWNrU3VpdGUzMDY5MDkzMzM=",
+         "Status": "QUEUED",
+         "Conclusion": "",
+         "ReceivedAt": "0001-01-01T00:00:00Z",
+         "CheckRuns": {
+          "Nodes": []
+         }
+        },
+        {
+         "ID": "MDEwOkNoZWNrU3VpdGUzMDY5MDkzMzY=",
+         "Status": "QUEUED",
+         "Conclusion": "",
+         "ReceivedAt": "0001-01-01T00:00:00Z",
+         "CheckRuns": {
+          "Nodes": []
+         }
+        }
+       ]
+      },
+      "Status": {
+       "State": "",
+       "Contexts": null
+      },
+      "CommittedDate": "2019-11-12T12:57:33Z"
+     }
+    }
+   ]
+  },
+  "IsDraft": true,
+  "CreatedAt": "2020-10-19T23:58:41Z",
+  "UpdatedAt": "2020-10-19T23:58:41Z"
+ }

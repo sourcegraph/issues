@@ -50,12 +50,12 @@
     # precise-code-intel-indexer
     - 127.0.0.1:6089
 - labels:
+    job: precise-code-intel-indexer-vm
+  targets:
+    # precise-code-intel-indexer-vm
+    - 127.0.0.1:6090
+- labels:
     job: postgres_exporter
   targets:
     # postgres exporter
     - 127.0.0.1:9187
-- labels:
-    job: replacer
-  targets:
-    # replacer
-    - 127.0.0.1:6076

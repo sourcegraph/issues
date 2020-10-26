@@ -1,0 +1,57 @@
+.toast {
+    position: fixed;
+    right: 2rem;
+    bottom: 2rem;
+    z-index: 100; // Overlay repository/blob contents and search results
+    display: flex;
+    align-items: flex-start;
+    border-radius: 0.25rem;
+    border: 1px solid var(--border-color);
+
+    &__logo {
+        flex: 0 0 auto;
+        width: 2rem;
+        height: 2rem;
+
+        .icon,
+        .logo-icon {
+            width: 2rem;
+            height: 2rem;
+        }
+
+        .icon {
+            fill: currentColor;
+        }
+    }
+
+    &__contents {
+        flex: 1 1 auto;
+        margin: 0 0.5rem;
+        display: flex;
+        flex-direction: column;
+        max-width: 400px;
+    }
+
+    &__contents-cta {
+        margin-top: 1rem;
+    }
+
+    &__rating-btn {
+        width: 2rem;
+        padding: 0.5rem 0;
+    }
+
+    &__rating-btn:not(:first-of-type) {
+        border-top-left-radius: 0;
+        border-bottom-left-radius: 0;
+    }
+
+    &__rating-btn:not(:last-of-type) {
+        border-top-right-radius: 0;
+        border-bottom-right-radius: 0;
+    }
+
+    &__close-button {
+        flex: 0 0 auto;
+    }
+}

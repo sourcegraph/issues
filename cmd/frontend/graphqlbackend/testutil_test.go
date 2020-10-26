@@ -2,7 +2,7 @@ package graphqlbackend
 
 import (
 	"github.com/sourcegraph/sourcegraph/cmd/frontend/backend"
-	"github.com/sourcegraph/sourcegraph/cmd/frontend/db"
+	"github.com/sourcegraph/sourcegraph/internal/db"
 )
 
 func resetMocks() {

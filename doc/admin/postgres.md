@@ -39,7 +39,7 @@ docker run -p 7080:7080 -p 2633:2633 --rm \
   -v ~/.sourcegraph/config:/etc/sourcegraph \
   -v ~/.sourcegraph/data:/var/opt/sourcegraph \
   -v /var/run/docker.sock:/var/run/docker.sock:ro \
-  sourcegraph/server:3.17.3
+  sourcegraph/server:3.21.2
 ```
 
 **3.** When the upgrade has been completed, stop the Sourcegraph container, then run again using the original `docker run` command (without mounting the Docker socket).

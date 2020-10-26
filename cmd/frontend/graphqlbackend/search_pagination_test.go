@@ -42,9 +42,7 @@ func TestSearchPagination_sliceSearchResults(t *testing.T) {
 	repo := func(name string) *types.Repo {
 		return &types.Repo{Name: api.RepoName(name)}
 	}
-	result := func(repo *types.Repo, path string) *FileMatchResolver {
-		return &FileMatchResolver{JPath: path, Repo: &RepositoryResolver{repo: repo}}
-	}
+	result := mkFileMatch
 	format := func(r slicedSearchResults) string {
 		var b bytes.Buffer
 		fmt.Fprintln(&b, "results:")
@@ -273,7 +271,9 @@ func TestSearchPagination_repoPaginationPlan(t *testing.T) {
 		return &types.Repo{Name: api.RepoName(name)}
 	}
 	result := func(repo *types.Repo, path, rev string) *FileMatchResolver {
-		return &FileMatchResolver{JPath: path, Repo: &RepositoryResolver{repo: repo}, InputRev: &rev}
+		fm := mkFileMatch(repo, path)
+		fm.InputRev = &rev
+		return fm
 	}
 	repoRevs := func(name string, rev ...string) *search.RepositoryRevisions {
 		return &search.RepositoryRevisions{
@@ -296,11 +296,7 @@ func TestSearchPagination_repoPaginationPlan(t *testing.T) {
 			for _, rev := range repoRev.Revs {
 				rev := rev.RevSpec
 				for i := 0; i < 3; i++ {
-					results = append(results, &FileMatchResolver{
-						JPath:    fmt.Sprintf("some/file%d.go", i),
-						Repo:     &RepositoryResolver{repo: repoRev.Repo},
-						InputRev: &rev,
-					})
+					results = append(results, result(repoRev.Repo, fmt.Sprintf("some/file%d.go", i), rev))
 				}
 			}
 			common.repos = append(common.repos, repoRev.Repo)
@@ -490,9 +486,7 @@ func TestSearchPagination_issue_6287(t *testing.T) {
 	repo := func(name string) *types.Repo {
 		return &types.Repo{Name: api.RepoName(name)}
 	}
-	result := func(repo *types.Repo, path string) *FileMatchResolver {
-		return &FileMatchResolver{JPath: path, Repo: &RepositoryResolver{repo: repo}}
-	}
+	result := mkFileMatch
 	repoRevs := func(name string, rev ...string) *search.RepositoryRevisions {
 		return &search.RepositoryRevisions{
 			Repo: repo(name),
@@ -608,9 +602,7 @@ func TestSearchPagination_cloning_missing(t *testing.T) {
 	repo := func(name string) *types.Repo {
 		return &types.Repo{Name: api.RepoName(name)}
 	}
-	result := func(repo *types.Repo, path string) *FileMatchResolver {
-		return &FileMatchResolver{JPath: path, Repo: &RepositoryResolver{repo: repo}}
-	}
+	result := mkFileMatch
 	repoRevs := func(name string, rev ...string) *search.RepositoryRevisions {
 		return &search.RepositoryRevisions{
 			Repo: repo(name),

@@ -37,6 +37,9 @@ module.exports = api => {
             'web.immediate',
             // Avoids issues with RxJS interop
             'esnext.symbol.observable',
+            // Webpack v4 chokes on optional chaining and nullish coalescing syntax, fix will be released with webpack v5.
+            '@babel/plugin-proposal-optional-chaining',
+            '@babel/plugin-proposal-nullish-coalescing-operator',
           ],
           // See https://github.com/zloirock/core-js#babelpreset-env
           corejs: semver.minVersion(require('./package.json').dependencies['core-js']),

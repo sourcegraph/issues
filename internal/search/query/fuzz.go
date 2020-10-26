@@ -2,6 +2,11 @@
 
 package query
 
+import (
+	"math/rand"
+	"time"
+)
+
 // Fuzz is an entry point for fuzzing the parser with https://github.com/dvyukov/go-fuzz.
 // Run go-fuzz-build and then go-fuzz in this directory.
 //
@@ -11,7 +16,14 @@ package query
 // be added to corpus even if gives new coverage; and 0 otherwise; other values
 // are reserved for future use.
 func Fuzz(data []byte) int {
-	_, err := ProcessAndOr(string(data))
+	options := []ParserOptions{
+		{SearchType: SearchTypeLiteral},
+		{SearchType: SearchTypeRegex},
+		{SearchType: SearchTypeRegex, Globbing: true},
+	}
+	rand.Seed(time.Now().UnixNano())
+	option := options[rand.Intn(3)]
+	_, err := ProcessAndOr(string(data), option)
 	if err != nil {
 		return 0
 	}

@@ -1,0 +1,163 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`SiteInitPage normal 1`] = `
+<div
+  className="site-init-page"
+>
+  <div
+    className="site-init-page__content card"
+  >
+    <div
+      className="card-body p-4"
+    >
+      <img
+        className="brand-logo w-100 mb-3"
+        src="/img/sourcegraph-light-head-logo.svg?v2"
+      />
+      <h2
+        className="site-init-page__header"
+      >
+        Welcome
+      </h2>
+      <p>
+        Create an admin account to start using Sourcegraph.
+      </p>
+      <form
+        className="signin-signup-form signup-form test-signup-form rounded p-4 text-left mt-4 w-100"
+        noValidate={true}
+        onSubmit={[Function]}
+      >
+        <div
+          className="form-group d-flex flex-column align-content-start"
+        >
+          <label
+            className="align-self-start"
+            htmlFor="email"
+          >
+            Email
+          </label>
+          <div
+            className="loader-input__container"
+          >
+            <input
+              autoComplete="email"
+              autoFocus={true}
+              className="form-control signin-signup-form__input"
+              disabled={false}
+              id="email"
+              name="email"
+              onChange={[Function]}
+              placeholder=" "
+              required={true}
+              spellCheck={false}
+              type="email"
+              value=""
+            />
+          </div>
+        </div>
+        <div
+          className="form-group d-flex flex-column align-content-start"
+        >
+          <label
+            className="align-self-start"
+            htmlFor="username"
+          >
+            Username
+          </label>
+          <div
+            className="loader-input__container"
+          >
+            <input
+              autoCapitalize="off"
+              autoComplete="username"
+              className="form-control signin-signup-form__input"
+              disabled={false}
+              id="username"
+              maxLength={255}
+              name="username"
+              onChange={[Function]}
+              pattern="^[\\\\dA-Za-z](?:[\\\\dA-Za-z]|[.-](?=[\\\\dA-Za-z]))*-?$"
+              placeholder=" "
+              required={true}
+              spellCheck={false}
+              type="text"
+              value=""
+            />
+          </div>
+        </div>
+        <div
+          className="form-group d-flex flex-column align-content-start"
+        >
+          <label
+            className="align-self-start"
+            htmlFor="password"
+          >
+            Password
+          </label>
+          <div
+            className="loader-input__container"
+          >
+            <input
+              autoComplete="new-password"
+              className="form-control signin-signup-form__input"
+              disabled={false}
+              formNoValidate={true}
+              id="password"
+              minLength={12}
+              name="password"
+              onChange={[Function]}
+              onInvalid={[Function]}
+              placeholder=" "
+              required={true}
+              type="password"
+              value=""
+            />
+          </div>
+          <small
+            className="form-text text-muted"
+          >
+            At least 12 characters
+          </small>
+        </div>
+        <div
+          className="form-group mb-0"
+        >
+          <button
+            className="btn btn-primary btn-block"
+            disabled={true}
+            type="submit"
+          >
+            Create admin account & continue
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+`;
+
+exports[`SiteInitPage unexpected authed user 1`] = `
+<div
+  className="site-init-page"
+>
+  <div
+    className="site-init-page__content card"
+  >
+    <div
+      className="card-body p-4"
+    >
+      <img
+        className="brand-logo w-100 mb-3"
+        src="/img/sourcegraph-light-head-logo.svg?v2"
+      />
+      <p>
+        You're signed in as 
+        <strong>
+          alice
+        </strong>
+        . A site admin must initialize Sourcegraph before you can continue.
+      </p>
+    </div>
+  </div>
+</div>
+`;

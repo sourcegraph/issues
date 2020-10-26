@@ -1,0 +1,12 @@
+{
+  "private": true,
+  "scripts": {
+    "eslint": "eslint --cache '**/*.[jt]s?(x)'",
+    "stylelint": "stylelint 'src/**/*.scss' --quiet",
+    "test": "jest",
+    "graphql": "gulp graphQlSchema",
+    "schema": "gulp schema",
+    "watch-schema": "gulp watchSchema"
+  },
+  "sideEffects": true
+}

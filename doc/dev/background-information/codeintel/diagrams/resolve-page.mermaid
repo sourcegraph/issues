@@ -1,0 +1,53 @@
+sequenceDiagram
+  alt sameDumpCursor
+    Code Intel API           ->>+ Reference Page Resolver: resolvePage(cursor)
+    Reference Page Resolver  ->>+ Bundle Manager: References(cursor.dump, cursor.adjusted file, cursor.adjusted position)
+    Bundle Manager          -->>- Reference Page Resolver: locations
+    Reference Page Resolver -->>- Code Intel API: locations, cursor'
+  end
+
+  alt sameDumpMonikersCursor
+    Code Intel API ->>+ Reference Page Resolver: resolvePage(cursor)
+    loop for each cursor.monikers[i]
+      Reference Page Resolver  ->>+ Bundle Manager: MonikerResults(cursor.dump, cursor.monikers[i])
+      Bundle Manager          -->>- Reference Page Resolver: locations[i]
+    end
+    Reference Page Resolver -->>- Code Intel API: locations[0] + ... + locations[n], cursor'
+  end
+
+  alt definitionMonikersCursor
+    Code Intel API ->>+ Reference Page Resolver: resolvePage(cursor)
+    loop for each cursor.monikers[i], (while no dump')
+      Reference Page Resolver ->>+ Bundle Manager: PackageInformation(cursor.monikers[i])
+      Bundle Manager         -->>- Reference Page Resolver: package information
+      Reference Page Resolver ->>+ Store: GetPackage(package information)
+      Store                  -->>- Reference Page Resolver: dump'
+    end
+    Note right of Reference Page Resolver: cursor.monikers[k] has package information
+
+    Reference Page Resolver   ->>+ Bundle Manager: MonikerResults(dump', cursor.monikers[k])
+    Bundle Manager            ->>- Reference Page Resolver: locations
+    Reference Page Resolver  -->>- Code Intel API: locations, cursor'
+  end
+
+  alt sameRepoCursor
+    Code Intel API           ->>+ Reference Page Resolver: resolvePage(cursor)
+    Reference Page Resolver  ->>+ Store: SameRepoPager(cursor.monikers[k])
+    Store                   -->>- Reference Page Resolver: dumps'
+    loop for each dumps'[i]
+      Reference Page Resolver ->>+ Bundle Manager: MonikerResults(dumps'[i], cursor.monikers[k])
+      Bundle Manager         -->>- Reference Page Resolver: locations[i]
+    end
+    Reference Page Resolver -->>- Code Intel API: locations[0] + ... + locations[n], cursor'
+  end
+
+  alt remoteRepoCursor
+    Code Intel API          ->>+ Reference Page Resolver: resolvePage(cursor)
+    Reference Page Resolver ->>+ Store: PackageReferencePager(cursor.monikers[k])
+    Store                  -->>- Reference Page Resolver: dumps'
+    loop for each dumps'[i]
+      Reference Page Resolver ->>+ Bundle Manager: MonikerResults(dumps'[i], cursor.monikers[k])
+      Bundle Manager         -->>- Reference Page Resolver: locations[i]
+    end
+    Reference Page Resolver -->>- Code Intel API: locations[0] + ... + locations[n], cursor'
+  end

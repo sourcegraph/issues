@@ -31,7 +31,7 @@ indexserver)
     ;;
 
 webserver)
-    exec zoekt-webserver -index "$index" -pprof -rpc -listen ":$webport"
+    exec env JAEGER_DISABLED=false zoekt-webserver -index "$index" -pprof -rpc -listen ":$webport"
     ;;
 
 *)

@@ -1,0 +1,79 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`TreeEntriesSection should render a grid of tree entries at the root 1`] = `
+<div>
+  <a
+    class="tree-entry font-weight-bold test-tree-entry-directory"
+    href="/github.com/sourcegraph/codeintellify/-/tree/src"
+    title="src"
+  >
+    src/
+  </a>
+  <a
+    class="tree-entry font-weight-bold test-tree-entry-directory"
+    href="/github.com/sourcegraph/codeintellify/-/tree/testdata"
+    title="testdata"
+  >
+    testdata/
+  </a>
+  <a
+    class="tree-entry test-tree-entry-file"
+    href="/github.com/sourcegraph/codeintellify/-/blob/.editorconfig"
+    title=".editorconfig"
+  >
+    .editorconfig
+  </a>
+  <a
+    class="tree-entry test-tree-entry-file"
+    href="/github.com/sourcegraph/codeintellify/-/blob/.eslintrc.json"
+    title=".eslintrc.json"
+  >
+    .eslintrc.json
+  </a>
+</div>
+`;
+
+exports[`TreeEntriesSection should render a grid of tree entries in a subdirectory 1`] = `
+<div>
+  <a
+    class="tree-entry font-weight-bold test-tree-entry-directory"
+    href="/github.com/sourcegraph/codeintellify/-/tree/src/testutils"
+    title="src/testutils"
+  >
+    testutils/
+  </a>
+  <a
+    class="tree-entry font-weight-bold test-tree-entry-directory"
+    href="/github.com/sourcegraph/codeintellify/-/tree/src/typings"
+    title="src/typings"
+  >
+    typings/
+  </a>
+  <a
+    class="tree-entry test-tree-entry-file"
+    href="/github.com/sourcegraph/codeintellify/-/blob/src/errors.ts"
+    title="src/errors.ts"
+  >
+    errors.ts
+  </a>
+  <a
+    class="tree-entry test-tree-entry-file"
+    href="/github.com/sourcegraph/codeintellify/-/blob/src/helpers.ts"
+    title="src/helpers.ts"
+  >
+    helpers.ts
+  </a>
+</div>
+`;
+
+exports[`TreeEntriesSection should render only direct children 1`] = `
+<div>
+  <a
+    class="tree-entry font-weight-bold test-tree-entry-directory"
+    href="/github.com/vanadium/core/-/tree/x/ref"
+    title="x/ref"
+  >
+    ref/
+  </a>
+</div>
+`;

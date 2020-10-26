@@ -5,16 +5,17 @@ import (
 
 	"github.com/keegancsmith/sqlf"
 	"github.com/sourcegraph/sourcegraph/enterprise/internal/codeintel/bundles/types"
+	"github.com/sourcegraph/sourcegraph/internal/db/batch"
 )
 
 // GetPackage returns the dump that provides the package with the given scheme, name, and version and a flag indicating its existence.
 func (s *store) GetPackage(ctx context.Context, scheme, name, version string) (Dump, bool, error) {
-	return scanFirstDump(s.query(ctx, sqlf.Sprintf(`
+	return scanFirstDump(s.Store.Query(ctx, sqlf.Sprintf(`
 		SELECT
 			d.id,
 			d.commit,
 			d.root,
-			d.visible_at_tip,
+			EXISTS (SELECT 1 FROM lsif_uploads_visible_at_tip where repository_id = d.repository_id and upload_id = d.id) AS visible_at_tip,
 			d.uploaded_at,
 			d.state,
 			d.failure_message,
@@ -22,6 +23,7 @@ func (s *store) GetPackage(ctx context.Context, scheme, name, version string) (D
 			d.finished_at,
 			d.process_after,
 			d.num_resets,
+			d.num_failures,
 			d.repository_id,
 			d.repository_name,
 			d.indexer
@@ -39,10 +41,12 @@ func (s *store) UpdatePackages(ctx context.Context, packages []types.Package) (e
 		return nil
 	}
 
-	var values []*sqlf.Query
+	inserter := batch.NewBatchInserter(ctx, s.Store.Handle().DB(), "lsif_packages", "dump_id", "scheme", "name", "version")
 	for _, p := range packages {
-		values = append(values, sqlf.Sprintf("(%s, %s, %s, %s)", p.DumpID, p.Scheme, p.Name, p.Version))
+		if err := inserter.Insert(ctx, p.DumpID, p.Scheme, p.Name, p.Version); err != nil {
+			return err
+		}
 	}
 
-	return s.queryForEffect(ctx, sqlf.Sprintf(`INSERT INTO lsif_packages (dump_id, scheme, name, version) VALUES %s`, sqlf.Join(values, ",")))
+	return inserter.Flush(ctx)
 }

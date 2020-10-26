@@ -6,6 +6,7 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/sourcegraph/sourcegraph/enterprise/internal/codeintel/bundles/types"
+	"github.com/sourcegraph/sourcegraph/internal/db/basestore"
 	"github.com/sourcegraph/sourcegraph/internal/db/dbconn"
 	"github.com/sourcegraph/sourcegraph/internal/db/dbtesting"
 )
@@ -25,6 +26,37 @@ func TestSameRepoPager(t *testing.T) {
 		Upload{ID: 5, Commit: makeCommit(2), Root: "sub5/"},
 	)
 
+	insertNearestUploads(t, dbconn.Global, 50, map[string][]UploadMeta{
+		makeCommit(1): {
+			{UploadID: 1, Root: "sub1/", Distance: 1},
+			{UploadID: 2, Root: "sub2/", Distance: 2},
+			{UploadID: 3, Root: "sub3/", Distance: 3},
+			{UploadID: 4, Root: "sub4/", Distance: 2},
+			{UploadID: 5, Root: "sub5/", Distance: 1},
+		},
+		makeCommit(2): {
+			{UploadID: 1, Root: "sub1/", Distance: 0},
+			{UploadID: 2, Root: "sub2/", Distance: 1},
+			{UploadID: 3, Root: "sub3/", Distance: 2},
+			{UploadID: 4, Root: "sub4/", Distance: 1},
+			{UploadID: 5, Root: "sub5/", Distance: 0},
+		},
+		makeCommit(3): {
+			{UploadID: 1, Root: "sub1/", Distance: 1},
+			{UploadID: 2, Root: "sub2/", Distance: 0},
+			{UploadID: 3, Root: "sub3/", Distance: 1},
+			{UploadID: 4, Root: "sub4/", Distance: 0},
+			{UploadID: 5, Root: "sub5/", Distance: 1},
+		},
+		makeCommit(4): {
+			{UploadID: 1, Root: "sub1/", Distance: 2},
+			{UploadID: 2, Root: "sub2/", Distance: 1},
+			{UploadID: 3, Root: "sub3/", Distance: 0},
+			{UploadID: 4, Root: "sub4/", Distance: 1},
+			{UploadID: 5, Root: "sub5/", Distance: 2},
+		},
+	})
+
 	expected := []types.PackageReference{
 		{DumpID: 1, Scheme: "gomod", Name: "leftpad", Version: "0.1.0", Filter: []byte("f1")},
 		{DumpID: 2, Scheme: "gomod", Name: "leftpad", Version: "0.1.0", Filter: []byte("f2")},
@@ -33,15 +65,6 @@ func TestSameRepoPager(t *testing.T) {
 		{DumpID: 5, Scheme: "gomod", Name: "leftpad", Version: "0.1.0", Filter: []byte("f5")},
 	}
 	insertPackageReferences(t, store, expected)
-
-	if err := store.UpdateCommits(context.Background(), 50, map[string][]string{
-		makeCommit(1): {},
-		makeCommit(2): {makeCommit(1)},
-		makeCommit(3): {makeCommit(2)},
-		makeCommit(4): {makeCommit(3)},
-	}); err != nil {
-		t.Fatalf("unexpected error updating commits: %s", err)
-	}
 
 	totalCount, pager, err := store.SameRepoPager(context.Background(), 50, makeCommit(1), "gomod", "leftpad", "0.1.0", 5)
 	if err != nil {
@@ -97,6 +120,20 @@ func TestSameRepoPagerMultiplePages(t *testing.T) {
 		Upload{ID: 9, Commit: makeCommit(1), Root: "sub9/"},
 	)
 
+	insertNearestUploads(t, dbconn.Global, 50, map[string][]UploadMeta{
+		makeCommit(1): {
+			{UploadID: 1, Root: "sub1/", Distance: 0},
+			{UploadID: 2, Root: "sub2/", Distance: 0},
+			{UploadID: 3, Root: "sub3/", Distance: 0},
+			{UploadID: 4, Root: "sub4/", Distance: 0},
+			{UploadID: 5, Root: "sub5/", Distance: 0},
+			{UploadID: 6, Root: "sub6/", Distance: 0},
+			{UploadID: 7, Root: "sub7/", Distance: 0},
+			{UploadID: 8, Root: "sub8/", Distance: 0},
+			{UploadID: 9, Root: "sub9/", Distance: 0},
+		},
+	})
+
 	expected := []types.PackageReference{
 		{DumpID: 1, Scheme: "gomod", Name: "leftpad", Version: "0.1.0", Filter: []byte("f1")},
 		{DumpID: 2, Scheme: "gomod", Name: "leftpad", Version: "0.1.0", Filter: []byte("f2")},
@@ -109,12 +146,6 @@ func TestSameRepoPagerMultiplePages(t *testing.T) {
 		{DumpID: 9, Scheme: "gomod", Name: "leftpad", Version: "0.1.0", Filter: []byte("f9")},
 	}
 	insertPackageReferences(t, store, expected)
-
-	if err := store.UpdateCommits(context.Background(), 50, map[string][]string{
-		makeCommit(1): {},
-	}); err != nil {
-		t.Fatalf("unexpected error updating commits: %s", err)
-	}
 
 	totalCount, pager, err := store.SameRepoPager(context.Background(), 50, makeCommit(1), "gomod", "leftpad", "0.1.0", 3)
 	if err != nil {
@@ -155,6 +186,19 @@ func TestSameRepoPagerVisibility(t *testing.T) {
 		Upload{ID: 5, Commit: makeCommit(5), Root: "sub5/"},
 	)
 
+	insertNearestUploads(t, dbconn.Global, 50, map[string][]UploadMeta{
+		makeCommit(1): {{UploadID: 1, Root: "sub1/", Distance: 0}},
+		makeCommit(2): {{UploadID: 2, Root: "sub2/", Distance: 0}},
+		makeCommit(3): {{UploadID: 3, Root: "sub1/", Distance: 0}},
+		makeCommit(4): {{UploadID: 4, Root: "sub2/", Distance: 0}},
+		makeCommit(5): {{UploadID: 5, Root: "sub5/", Distance: 0}},
+		makeCommit(6): {
+			{UploadID: 3, Root: "sub1/", Distance: 3},
+			{UploadID: 4, Root: "sub2/", Distance: 2},
+			{UploadID: 5, Root: "sub5/", Distance: 1},
+		},
+	})
+
 	expected := []types.PackageReference{
 		{DumpID: 3, Scheme: "gomod", Name: "leftpad", Version: "0.1.0", Filter: []byte("f3")},
 		{DumpID: 4, Scheme: "gomod", Name: "leftpad", Version: "0.1.0", Filter: []byte("f4")},
@@ -164,17 +208,6 @@ func TestSameRepoPagerVisibility(t *testing.T) {
 		{DumpID: 1, Scheme: "gomod", Name: "leftpad", Version: "0.1.0", Filter: []byte("f1")},
 		{DumpID: 2, Scheme: "gomod", Name: "leftpad", Version: "0.1.0", Filter: []byte("f2")},
 	}, expected...))
-
-	if err := store.UpdateCommits(context.Background(), 50, map[string][]string{
-		makeCommit(1): {},
-		makeCommit(2): {makeCommit(1)},
-		makeCommit(3): {makeCommit(2)},
-		makeCommit(4): {makeCommit(3)},
-		makeCommit(5): {makeCommit(4)},
-		makeCommit(6): {makeCommit(5)},
-	}); err != nil {
-		t.Fatalf("unexpected error updating commits: %s", err)
-	}
 
 	totalCount, pager, err := store.SameRepoPager(context.Background(), 50, makeCommit(6), "gomod", "leftpad", "0.1.0", 5)
 	if err != nil {
@@ -201,14 +234,20 @@ func TestPackageReferencePager(t *testing.T) {
 	store := testStore()
 
 	insertUploads(t, dbconn.Global,
-		Upload{ID: 1, Commit: makeCommit(1), VisibleAtTip: true},
-		Upload{ID: 2, Commit: makeCommit(2), VisibleAtTip: true, RepositoryID: 51},
-		Upload{ID: 3, Commit: makeCommit(3), VisibleAtTip: true, RepositoryID: 52},
-		Upload{ID: 4, Commit: makeCommit(4), VisibleAtTip: true, RepositoryID: 53},
-		Upload{ID: 5, Commit: makeCommit(5), VisibleAtTip: true, RepositoryID: 54},
-		Upload{ID: 6, Commit: makeCommit(6), VisibleAtTip: false, RepositoryID: 55},
-		Upload{ID: 7, Commit: makeCommit(6), VisibleAtTip: true, RepositoryID: 56},
+		Upload{ID: 1, Commit: makeCommit(1)},
+		Upload{ID: 2, Commit: makeCommit(2), RepositoryID: 51},
+		Upload{ID: 3, Commit: makeCommit(3), RepositoryID: 52},
+		Upload{ID: 4, Commit: makeCommit(4), RepositoryID: 53},
+		Upload{ID: 5, Commit: makeCommit(5), RepositoryID: 54},
+		Upload{ID: 6, Commit: makeCommit(6), RepositoryID: 55},
+		Upload{ID: 7, Commit: makeCommit(6), RepositoryID: 56},
 	)
+	insertVisibleAtTip(t, dbconn.Global, 50, 1)
+	insertVisibleAtTip(t, dbconn.Global, 51, 2)
+	insertVisibleAtTip(t, dbconn.Global, 52, 3)
+	insertVisibleAtTip(t, dbconn.Global, 53, 4)
+	insertVisibleAtTip(t, dbconn.Global, 54, 5)
+	insertVisibleAtTip(t, dbconn.Global, 56, 7)
 
 	expected := []types.PackageReference{
 		{DumpID: 2, Scheme: "gomod", Name: "leftpad", Version: "0.1.0", Filter: []byte("f2")},
@@ -265,16 +304,25 @@ func TestPackageReferencePagerPages(t *testing.T) {
 	store := testStore()
 
 	insertUploads(t, dbconn.Global,
-		Upload{ID: 1, Commit: makeCommit(1), VisibleAtTip: true, RepositoryID: 51},
-		Upload{ID: 2, Commit: makeCommit(2), VisibleAtTip: true, RepositoryID: 52},
-		Upload{ID: 3, Commit: makeCommit(3), VisibleAtTip: true, RepositoryID: 53},
-		Upload{ID: 4, Commit: makeCommit(4), VisibleAtTip: true, RepositoryID: 54},
-		Upload{ID: 5, Commit: makeCommit(5), VisibleAtTip: true, RepositoryID: 55},
-		Upload{ID: 6, Commit: makeCommit(6), VisibleAtTip: true, RepositoryID: 56},
-		Upload{ID: 7, Commit: makeCommit(7), VisibleAtTip: true, RepositoryID: 57},
-		Upload{ID: 8, Commit: makeCommit(8), VisibleAtTip: true, RepositoryID: 58},
-		Upload{ID: 9, Commit: makeCommit(9), VisibleAtTip: true, RepositoryID: 59},
+		Upload{ID: 1, Commit: makeCommit(1), RepositoryID: 51},
+		Upload{ID: 2, Commit: makeCommit(2), RepositoryID: 52},
+		Upload{ID: 3, Commit: makeCommit(3), RepositoryID: 53},
+		Upload{ID: 4, Commit: makeCommit(4), RepositoryID: 54},
+		Upload{ID: 5, Commit: makeCommit(5), RepositoryID: 55},
+		Upload{ID: 6, Commit: makeCommit(6), RepositoryID: 56},
+		Upload{ID: 7, Commit: makeCommit(7), RepositoryID: 57},
+		Upload{ID: 8, Commit: makeCommit(8), RepositoryID: 58},
+		Upload{ID: 9, Commit: makeCommit(9), RepositoryID: 59},
 	)
+	insertVisibleAtTip(t, dbconn.Global, 51, 1)
+	insertVisibleAtTip(t, dbconn.Global, 52, 2)
+	insertVisibleAtTip(t, dbconn.Global, 53, 3)
+	insertVisibleAtTip(t, dbconn.Global, 54, 4)
+	insertVisibleAtTip(t, dbconn.Global, 55, 5)
+	insertVisibleAtTip(t, dbconn.Global, 56, 6)
+	insertVisibleAtTip(t, dbconn.Global, 57, 7)
+	insertVisibleAtTip(t, dbconn.Global, 58, 8)
+	insertVisibleAtTip(t, dbconn.Global, 59, 9)
 
 	expected := []types.PackageReference{
 		{DumpID: 1, Scheme: "gomod", Name: "leftpad", Version: "0.1.0", Filter: []byte("f1")},
@@ -349,7 +397,7 @@ func TestUpdatePackageReferences(t *testing.T) {
 		t.Fatalf("unexpected error updating references: %s", err)
 	}
 
-	count, _, err := scanFirstInt(dbconn.Global.Query("SELECT COUNT(*) FROM lsif_references"))
+	count, _, err := basestore.ScanFirstInt(dbconn.Global.Query("SELECT COUNT(*) FROM lsif_references"))
 	if err != nil {
 		t.Fatalf("unexpected error checking reference count: %s", err)
 	}
@@ -369,7 +417,7 @@ func TestUpdatePackageReferencesEmpty(t *testing.T) {
 		t.Fatalf("unexpected error updating references: %s", err)
 	}
 
-	count, _, err := scanFirstInt(dbconn.Global.Query("SELECT COUNT(*) FROM lsif_references"))
+	count, _, err := basestore.ScanFirstInt(dbconn.Global.Query("SELECT COUNT(*) FROM lsif_references"))
 	if err != nil {
 		t.Fatalf("unexpected error checking reference count: %s", err)
 	}
@@ -410,7 +458,7 @@ func TestUpdatePackageReferencesWithDuplicates(t *testing.T) {
 		t.Fatalf("unexpected error updating references: %s", err)
 	}
 
-	count, _, err := scanFirstInt(dbconn.Global.Query("SELECT COUNT(*) FROM lsif_references"))
+	count, _, err := basestore.ScanFirstInt(dbconn.Global.Query("SELECT COUNT(*) FROM lsif_references"))
 	if err != nil {
 		t.Fatalf("unexpected error checking reference count: %s", err)
 	}

@@ -36,8 +36,8 @@ func TestParseConfig(t *testing.T) {
 			args: args{cfg: &conf.Unified{SiteConfiguration: schema.SiteConfiguration{
 				AuthProviders: []schema.AuthProviders{{
 					Github: &schema.GitHubAuthProvider{
-						ClientID:     "my-client-id",
-						ClientSecret: "my-client-secret",
+						ClientID:     "myclientid",
+						ClientSecret: "myclientsecret",
 						DisplayName:  "GitHub",
 						Type:         extsvc.TypeGitHub,
 						Url:          "https://github.com",
@@ -48,16 +48,16 @@ func TestParseConfig(t *testing.T) {
 			wantProviders: []Provider{
 				{
 					GitHubAuthProvider: &schema.GitHubAuthProvider{
-						ClientID:     "my-client-id",
-						ClientSecret: "my-client-secret",
+						ClientID:     "myclientid",
+						ClientSecret: "myclientsecret",
 						DisplayName:  "GitHub",
 						Type:         extsvc.TypeGitHub,
 						Url:          "https://github.com",
 						AllowOrgs:    []string{"myorg"},
 					},
 					Provider: provider("https://github.com/", oauth2.Config{
-						ClientID:     "my-client-id",
-						ClientSecret: "my-client-secret",
+						ClientID:     "myclientid",
+						ClientSecret: "myclientsecret",
 						Endpoint: oauth2.Endpoint{
 							AuthURL:  "https://github.com/login/oauth/authorize",
 							TokenURL: "https://github.com/login/oauth/access_token",
@@ -72,8 +72,8 @@ func TestParseConfig(t *testing.T) {
 			args: args{cfg: &conf.Unified{SiteConfiguration: schema.SiteConfiguration{
 				AuthProviders: []schema.AuthProviders{{
 					Github: &schema.GitHubAuthProvider{
-						ClientID:     "my-client-id",
-						ClientSecret: "my-client-secret",
+						ClientID:     "myclientid",
+						ClientSecret: "myclientsecret",
 						DisplayName:  "GitHub",
 						Type:         extsvc.TypeGitHub,
 						Url:          "https://github.com",
@@ -81,8 +81,8 @@ func TestParseConfig(t *testing.T) {
 					},
 				}, {
 					Github: &schema.GitHubAuthProvider{
-						ClientID:     "my-client-id-2",
-						ClientSecret: "my-client-secret-2",
+						ClientID:     "myclientid2",
+						ClientSecret: "myclientsecret2",
 						DisplayName:  "GitHub Enterprise",
 						Type:         extsvc.TypeGitHub,
 						Url:          "https://mycompany.com",
@@ -92,16 +92,16 @@ func TestParseConfig(t *testing.T) {
 			wantProviders: []Provider{
 				{
 					GitHubAuthProvider: &schema.GitHubAuthProvider{
-						ClientID:     "my-client-id",
-						ClientSecret: "my-client-secret",
+						ClientID:     "myclientid",
+						ClientSecret: "myclientsecret",
 						DisplayName:  "GitHub",
 						Type:         extsvc.TypeGitHub,
 						Url:          "https://github.com",
 						AllowOrgs:    []string{"myorg"},
 					},
 					Provider: provider("https://github.com/", oauth2.Config{
-						ClientID:     "my-client-id",
-						ClientSecret: "my-client-secret",
+						ClientID:     "myclientid",
+						ClientSecret: "myclientsecret",
 						Endpoint: oauth2.Endpoint{
 							AuthURL:  "https://github.com/login/oauth/authorize",
 							TokenURL: "https://github.com/login/oauth/access_token",
@@ -111,15 +111,15 @@ func TestParseConfig(t *testing.T) {
 				},
 				{
 					GitHubAuthProvider: &schema.GitHubAuthProvider{
-						ClientID:     "my-client-id-2",
-						ClientSecret: "my-client-secret-2",
+						ClientID:     "myclientid2",
+						ClientSecret: "myclientsecret2",
 						DisplayName:  "GitHub Enterprise",
 						Type:         extsvc.TypeGitHub,
 						Url:          "https://mycompany.com",
 					},
 					Provider: provider("https://mycompany.com/", oauth2.Config{
-						ClientID:     "my-client-id-2",
-						ClientSecret: "my-client-secret-2",
+						ClientID:     "myclientid2",
+						ClientSecret: "myclientsecret2",
 						Endpoint: oauth2.Endpoint{
 							AuthURL:  "https://mycompany.com/login/oauth/authorize",
 							TokenURL: "https://mycompany.com/login/oauth/access_token",

@@ -1,0 +1,12 @@
+.extensions-list {
+    &__cards {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(18rem, 1fr));
+        grid-auto-rows: minmax(4rem, auto);
+        gap: $spacer * 0.75;
+    }
+
+    &__category {
+        margin-top: 2rem;
+    }
+}

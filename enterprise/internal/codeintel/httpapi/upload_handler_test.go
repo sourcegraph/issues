@@ -32,6 +32,8 @@ func TestMain(m *testing.M) {
 	os.Exit(m.Run())
 }
 
+const testCommit = "deadbeef01deadbeef02deadbeef03deadbeef04"
+
 func TestHandleEnqueueSinglePayload(t *testing.T) {
 	setupRepoMocks(t)
 
@@ -46,7 +48,7 @@ func TestHandleEnqueueSinglePayload(t *testing.T) {
 		t.Fatalf("unexpected error constructing url: %s", err)
 	}
 	testURL.RawQuery = (url.Values{
-		"commit":      []string{"deadbeef"},
+		"commit":      []string{testCommit},
 		"root":        []string{"proj/"},
 		"repository":  []string{"github.com/test/test"},
 		"indexerName": []string{"lsif-go"},
@@ -80,8 +82,8 @@ func TestHandleEnqueueSinglePayload(t *testing.T) {
 		t.Errorf("unexpected number of InsertUploadFunc calls. want=%d have=%d", 1, len(mockStore.InsertUploadFunc.History()))
 	} else {
 		call := mockStore.InsertUploadFunc.History()[0]
-		if call.Arg1.Commit != "deadbeef" {
-			t.Errorf("unexpected commit. want=%q have=%q", "deadbeef", call.Arg1.Commit)
+		if call.Arg1.Commit != testCommit {
+			t.Errorf("unexpected commit. want=%q have=%q", testCommit, call.Arg1.Commit)
 		}
 		if call.Arg1.Root != "proj/" {
 			t.Errorf("unexpected root. want=%q have=%q", "proj/", call.Arg1.Root)
@@ -127,7 +129,7 @@ func TestHandleEnqueueSinglePayloadNoIndexerName(t *testing.T) {
 		t.Fatalf("unexpected error constructing url: %s", err)
 	}
 	testURL.RawQuery = (url.Values{
-		"commit":     []string{"deadbeef"},
+		"commit":     []string{testCommit},
 		"root":       []string{"proj/"},
 		"repository": []string{"github.com/test/test"},
 	}).Encode()
@@ -193,7 +195,7 @@ func TestHandleEnqueueMultipartSetup(t *testing.T) {
 		t.Fatalf("unexpected error constructing url: %s", err)
 	}
 	testURL.RawQuery = (url.Values{
-		"commit":      []string{"deadbeef"},
+		"commit":      []string{testCommit},
 		"root":        []string{"proj/"},
 		"repository":  []string{"github.com/test/test"},
 		"indexerName": []string{"lsif-go"},
@@ -224,8 +226,8 @@ func TestHandleEnqueueMultipartSetup(t *testing.T) {
 		t.Errorf("unexpected number of InsertUploadFunc calls. want=%d have=%d", 1, len(mockStore.InsertUploadFunc.History()))
 	} else {
 		call := mockStore.InsertUploadFunc.History()[0]
-		if call.Arg1.Commit != "deadbeef" {
-			t.Errorf("unexpected commit. want=%q have=%q", "deadbeef", call.Arg1.Commit)
+		if call.Arg1.Commit != testCommit {
+			t.Errorf("unexpected commit. want=%q have=%q", testCommit, call.Arg1.Commit)
 		}
 		if call.Arg1.Root != "proj/" {
 			t.Errorf("unexpected root. want=%q have=%q", "proj/", call.Arg1.Root)
@@ -421,8 +423,8 @@ func setupRepoMocks(t *testing.T) {
 	}
 
 	backend.Mocks.Repos.ResolveRev = func(ctx context.Context, repo *types.Repo, rev string) (api.CommitID, error) {
-		if rev != "deadbeef" {
-			t.Errorf("unexpected commit. want=%s have=%s", "deadbeef", rev)
+		if rev != testCommit {
+			t.Errorf("unexpected commit. want=%s have=%s", testCommit, rev)
 		}
 		return "", nil
 	}

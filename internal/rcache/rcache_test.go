@@ -2,6 +2,7 @@ package rcache
 
 import (
 	"reflect"
+	"strconv"
 	"testing"
 )
 
@@ -133,6 +134,48 @@ func TestCache_multi(t *testing.T) {
 
 	c.Delete("k0")
 	if got, exp := c.GetMulti("k0", "k1", "k2"), [][]byte{nil, []byte("y"), []byte("z")}; !reflect.DeepEqual(exp, got) {
+		t.Errorf("Expected %v, but got %v", exp, got)
+	}
+}
+
+func TestCache_deleteKeysWithPrefix(t *testing.T) {
+	SetupForTest(t)
+
+	// decrease the deleteBatchSize
+	oldV := deleteBatchSize
+	deleteBatchSize = 2
+	defer func() { deleteBatchSize = oldV }()
+
+	c := New("some_prefix")
+	var aKeys, bKeys []string
+	var key string
+	for i := 0; i < 10; i++ {
+		if i%2 == 0 {
+			key = "a:" + strconv.Itoa(i)
+			aKeys = append(aKeys, key)
+		} else {
+			key = "b:" + strconv.Itoa(i)
+			bKeys = append(bKeys, key)
+		}
+
+		c.SetMulti([2]string{key, strconv.Itoa(i)})
+	}
+
+	conn := pool.Get()
+	defer conn.Close()
+
+	err := deleteKeysWithPrefix(conn, c.rkeyPrefix()+"a")
+	if err != nil {
+		t.Error(err)
+	}
+
+	vals := c.GetMulti(aKeys...)
+	if got, exp := vals, [][]byte{nil, nil, nil, nil, nil}; !reflect.DeepEqual(exp, got) {
+		t.Errorf("Expected %v, but got %v", exp, got)
+	}
+
+	vals = c.GetMulti(bKeys...)
+	if got, exp := vals, bytes("1", "3", "5", "7", "9"); !reflect.DeepEqual(exp, got) {
 		t.Errorf("Expected %v, but got %v", exp, got)
 	}
 }

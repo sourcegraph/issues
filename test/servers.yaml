@@ -1,0 +1,14 @@
+---
+- name: sourcegraph-e2e
+  box: google/gce
+  machine_type: "custom-16-20480"
+  project_id: sourcegraph-ci
+  external_ip: false
+  use_private_ip: true
+  network: default
+  username: buildkite
+  ssh_key_path: "~/.ssh/id_rsa"
+  shell_commands:
+    - |
+       cd /sourcegraph
+       ./test/e2e/test.sh

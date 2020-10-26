@@ -1,0 +1,27 @@
+.git-ref-tag {
+    display: inline-flex;
+    align-items: center;
+
+    max-width: 8rem;
+    padding: 0 0.175rem;
+    margin: 0 0.175rem;
+
+    border: solid 1px var(--border-color);
+    border-radius: 0.125rem;
+
+    .icon-git-hub {
+        margin-right: 0.125rem;
+    }
+
+    &__display-name {
+        word-wrap: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+}
+
+.git-ref-tag-2 {
+    background-color: var(--color-bg-3);
+    padding: 0.125rem 0.25rem;
+    font-weight: bold;
+}

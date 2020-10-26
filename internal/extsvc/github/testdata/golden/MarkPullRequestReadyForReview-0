@@ -1,0 +1,141 @@
+{
+  "ID": "MDExOlB1bGxSZXF1ZXN0NTA0NDczNDU1",
+  "Title": "Open a draft PR (hopefully)",
+  "Body": "This is a draft changeset created by a campaign.\n\n[_Created by Sourcegraph campaign `eseliger/le-very-first-draft-pr`._](https://sourcegraph.test:3443/users/eseliger/campaigns/le-very-first-draft-pr)",
+  "State": "OPEN",
+  "URL": "https://github.com/sourcegraph/automation-testing/pull/361",
+  "HeadRefOid": "b8330ebc3ab38f165c858e7d488b678d7358aa27",
+  "BaseRefOid": "6274d04b734de9f057bb5f196a5046a9e86ba992",
+  "HeadRefName": "campaigns/le-veery-first-draft-pr",
+  "BaseRefName": "master",
+  "Number": 361,
+  "Author": {
+   "AvatarURL": "https://avatars0.githubusercontent.com/u/19534377?v=4",
+   "Login": "eseliger",
+   "URL": "https://github.com/eseliger"
+  },
+  "Participants": [
+   {
+    "AvatarURL": "https://avatars0.githubusercontent.com/u/19534377?v=4",
+    "Login": "eseliger",
+    "URL": "https://github.com/eseliger"
+   }
+  ],
+  "Labels": {
+   "Nodes": []
+  },
+  "TimelineItems": [
+   {
+    "Type": "PullRequestCommit",
+    "Item": {
+     "Commit": {
+      "OID": "b8330ebc3ab38f165c858e7d488b678d7358aa27",
+      "Message": "Create draft PR",
+      "MessageHeadline": "Create draft PR",
+      "URL": "https://github.com/sourcegraph/automation-testing/commit/b8330ebc3ab38f165c858e7d488b678d7358aa27",
+      "Committer": {
+       "AvatarURL": "https://camo.githubusercontent.com/33d4c509ae479643c65ba8967c16b869c1558e90/68747470733a2f2f322e67726176617461722e636f6d2f6176617461722f34366333653536396163366530356264326136366339313661396666343934633f643d68747470732533412532462532466769746875622e6769746875626173736574732e636f6d253246696d6167657325324667726176617461727325324667726176617461722d757365722d3432302e706e6726723d67",
+       "Email": "campaigns@sourcegraph.com",
+       "Name": "Sourcegraph"
+      },
+      "CommittedDate": "2020-10-16T00:36:26Z",
+      "PushedDate": "2020-10-16T00:36:47Z"
+     }
+    }
+   },
+   {
+    "Type": "ReadyForReviewEvent",
+    "Item": {
+     "Actor": {
+      "AvatarURL": "https://avatars0.githubusercontent.com/u/19534377?v=4",
+      "Login": "eseliger",
+      "URL": "https://github.com/eseliger"
+     },
+     "CreatedAt": "2020-10-19T14:53:34Z"
+    }
+   },
+   {
+    "Type": "ConvertToDraftEvent",
+    "Item": {
+     "Actor": {
+      "AvatarURL": "https://avatars0.githubusercontent.com/u/19534377?v=4",
+      "Login": "eseliger",
+      "URL": "https://github.com/eseliger"
+     },
+     "CreatedAt": "2020-10-19T14:53:52Z"
+    }
+   },
+   {
+    "Type": "ReadyForReviewEvent",
+    "Item": {
+     "Actor": {
+      "AvatarURL": "https://avatars0.githubusercontent.com/u/19534377?v=4",
+      "Login": "eseliger",
+      "URL": "https://github.com/eseliger"
+     },
+     "CreatedAt": "2020-10-19T21:34:38Z"
+    }
+   },
+   {
+    "Type": "ConvertToDraftEvent",
+    "Item": {
+     "Actor": {
+      "AvatarURL": "https://avatars0.githubusercontent.com/u/19534377?v=4",
+      "Login": "eseliger",
+      "URL": "https://github.com/eseliger"
+     },
+     "CreatedAt": "2020-10-19T21:40:39Z"
+    }
+   },
+   {
+    "Type": "ReadyForReviewEvent",
+    "Item": {
+     "Actor": {
+      "AvatarURL": "https://avatars0.githubusercontent.com/u/19534377?v=4",
+      "Login": "eseliger",
+      "URL": "https://github.com/eseliger"
+     },
+     "CreatedAt": "2020-10-19T21:42:18Z"
+    }
+   }
+  ],
+  "Commits": {
+   "Nodes": [
+    {
+     "Commit": {
+      "OID": "b8330ebc3ab38f165c858e7d488b678d7358aa27",
+      "CheckSuites": {
+       "Nodes": [
+        {
+         "ID": "MDEwOkNoZWNrU3VpdGUxMzQ4Mjc0NTI4",
+         "Status": "QUEUED",
+         "Conclusion": "",
+         "ReceivedAt": "0001-01-01T00:00:00Z",
+         "CheckRuns": {
+          "Nodes": []
+         }
+        },
+        {
+         "ID": "MDEwOkNoZWNrU3VpdGUxMzQ4Mjc0NTMw",
+         "Status": "QUEUED",
+         "Conclusion": "",
+         "ReceivedAt": "0001-01-01T00:00:00Z",
+         "CheckRuns": {
+          "Nodes": []
+         }
+        }
+       ]
+      },
+      "Status": {
+       "State": "",
+       "Contexts": null
+      },
+      "CommittedDate": "2020-10-16T00:36:26Z"
+     }
+    }
+   ]
+  },
+  "IsDraft": false,
+  "CreatedAt": "2020-10-16T00:36:48Z",
+  "UpdatedAt": "2020-10-19T21:42:18Z"
+ }

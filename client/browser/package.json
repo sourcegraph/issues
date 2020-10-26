@@ -1,0 +1,51 @@
+{
+  "private": true,
+  "version": "1.0.0",
+  "engines": {
+    "yarn": ">1.10.0"
+  },
+  "scripts": {
+    "fetch-code-intel-extensions": "node scripts/fetch-code-intel-extensions",
+    "build-inline-extensions": "node scripts/build-inline-extensions",
+    "dev": "yarn run build-inline-extensions && NODE_ENV=development NODE_OPTIONS=--max_old_space_size=4096 TS_NODE_COMPILER_OPTIONS=\"{\\\"module\\\":\\\"commonjs\\\"}\" node -r ts-node/register scripts/development",
+    "dev:no-reload": "AUTO_RELOAD=false yarn run dev",
+    "dev:firefox": "if type web-ext 2>/dev/null; then web-ext run --source-dir ./build/firefox; else echo 'web-ext not found. Install it with: yarn global add web-ext'; exit 1; fi",
+    "build": "yarn --cwd ../.. generate && yarn run build-inline-extensions && NODE_ENV=production NODE_OPTIONS=--max_old_space_size=4096 TS_NODE_COMPILER_OPTIONS=\"{\\\"module\\\":\\\"commonjs\\\"}\" node -r ts-node/register scripts/build",
+    "release": "yarn release:chrome",
+    "release:chrome": "webstore upload --auto-publish --source build/bundles/chrome-bundle.zip --extension-id dgjhfomjieaadpoljlnidmbgkdffpack --client-id $GOOGLE_CLIENT_ID --client-secret $GOOGLE_CLIENT_SECRET --refresh-token $GOOGLE_REFRESH_TOKEN",
+    "release:ff": "./scripts/release-ff.sh",
+    "release:npm": "TS_NODE_COMPILER_OPTIONS=\"{\\\"module\\\":\\\"commonjs\\\"}\" ts-node ./scripts/publish-npm.ts",
+    "lint": "yarn run eslint && yarn run stylelint",
+    "eslint": "eslint --cache '**/*.[jt]s?(x)'",
+    "stylelint": "stylelint 'src/**/*.scss'",
+    "clean": "rm -rf build/ dist/ *.zip *.xpi .checksum",
+    "test": "jest --testPathIgnorePatterns end-to-end",
+    "test-e2e": "mocha './src/end-to-end/**/*.test.ts'",
+    "bundlesize": "GITHUB_TOKEN= bundlesize",
+    "create-source-zip": "node scripts/create-source-zip"
+  },
+  "browserslist": [
+    "last 3 Chrome versions",
+    "last 3 Firefox versions"
+  ],
+  "bundlesize": [
+    {
+      "path": "./build/dist/js/background.bundle.js"
+    },
+    {
+      "path": "./build/dist/js/inject.bundle.js"
+    },
+    {
+      "path": "./build/dist/js/integration.bundle.js"
+    },
+    {
+      "path": "./build/dist/js/phabricator.bundle.js"
+    },
+    {
+      "path": "./build/dist/css/style.bundle.css"
+    },
+    {
+      "path": "./build/dist/css/branded-style.bundle.css"
+    }
+  ]
+}

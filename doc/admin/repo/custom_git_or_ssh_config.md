@@ -11,7 +11,7 @@ For cluster environments, we have guides for configuring SSH cloning. These can 
 Upon the Sourcegraph Docker image container start, it copies all files from `/etc/sourcegraph/{ssh,gitconfig,netrc}` into its own `$HOME` directory. Alternatively you can create a new Docker image which inherits from Sourcegraph and then mutates the environment:
 
 ``` dockerfile
-FROM sourcegraph/server:3.17.3
+FROM sourcegraph/server:3.21.2
 
 COPY gitconfig /etc/gitconfig
 COPY ssh /root/.ssh

@@ -1,0 +1,11 @@
+$list-group-bg: transparent;
+$list-group-border-color: var(--border-color);
+$list-group-item-padding-y: 0.25rem;
+$list-group-item-padding-x: 0.5rem;
+$list-group-action-color: var(--body-color);
+$list-group-action-hover-color: var(--body-color);
+$list-group-hover-bg: var(--color-bg-2);
+$list-group-action-active-color: var(--body-color);
+$list-group-action-active-bg: var(--color-bg-3);
+
+@import 'bootstrap/scss/list-group';

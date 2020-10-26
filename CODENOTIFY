@@ -1,0 +1,11 @@
+# See https://github.com/sourcegraph/codenotify for documentation.
+
+**/CODENOTIFY @nicksnyder
+**/CODEOWNERS @nicksnyder
+
+cmd/frontend/graphqlbackend/campaigns.go @eseliger
+enterprise/internal/campaigns/**/* @eseliger
+enterprise/cmd/frontend/internal/campaigns/**/* @eseliger
+internal/campaigns/**/* @eseliger
+client/web/src/enterprise/campaigns/**/* @eseliger
+client/web/src/integration/campaigns.test.ts @eseliger

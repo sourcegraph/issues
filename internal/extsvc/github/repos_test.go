@@ -625,7 +625,7 @@ repo8: repository(owner: "sourcegraph", name: "contains.dot") { ... on Repositor
 
 	mock := mockHTTPResponseBody{responseBody: ""}
 	c := newTestClient(t, &mock)
-	query, err := c.buildGetReposBatchQuery(context.Background(), repos)
+	query, err := c.buildGetReposBatchQuery(repos)
 	if err != nil {
 		t.Fatal(err)
 	}

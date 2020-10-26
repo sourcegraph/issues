@@ -18,6 +18,9 @@ type CodeIntelAPI interface {
 	// Definitions, References, and Hover.
 	FindClosestDumps(ctx context.Context, repositoryID int, commit, path string, exactPath bool, indexer string) ([]store.Dump, error)
 
+	// Ranges returns definition, reference, and hover data for each range within the given span of lines.
+	Ranges(ctx context.Context, file string, startLine, endLine, uploadID int) ([]ResolvedCodeIntelligenceRange, error)
+
 	// Definitions returns the list of source locations that define the symbol at the given position.
 	// This may include remote definitions if the remote repository is also indexed.
 	Definitions(ctx context.Context, file string, line, character, uploadID int) ([]ResolvedLocation, error)
@@ -36,14 +39,18 @@ type CodeIntelAPI interface {
 type codeIntelAPI struct {
 	store               store.Store
 	bundleManagerClient bundles.BundleManagerClient
-	gitserverClient     gitserver.Client
+	gitserverClient     gitserverClient
+}
+
+type gitserverClient interface {
+	CommitGraph(ctx context.Context, store store.Store, repositoryID int, options gitserver.CommitGraphOptions) (map[string][]string, error)
 }
 
 var _ CodeIntelAPI = &codeIntelAPI{}
 
 var ErrMissingDump = errors.New("missing dump")
 
-func New(store store.Store, bundleManagerClient bundles.BundleManagerClient, gitserverClient gitserver.Client) CodeIntelAPI {
+func New(store store.Store, bundleManagerClient bundles.BundleManagerClient, gitserverClient gitserverClient) CodeIntelAPI {
 	return &codeIntelAPI{
 		store:               store,
 		bundleManagerClient: bundleManagerClient,

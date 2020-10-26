@@ -3,8 +3,8 @@ package usagestats
 import (
 	"context"
 
-	"github.com/sourcegraph/sourcegraph/cmd/frontend/db"
 	"github.com/sourcegraph/sourcegraph/cmd/frontend/types"
+	"github.com/sourcegraph/sourcegraph/internal/db"
 )
 
 func GetSiteUsageStats(ctx context.Context, monthsOnly bool) (*types.SiteUsageStatistics, error) {
@@ -26,7 +26,6 @@ func groupSiteUsageStats(summary types.SiteUsageSummary, monthsOnly bool) *types
 				RegisteredUserCount:  summary.RegisteredUniquesDay,
 				AnonymousUserCount:   summary.UniquesDay - summary.RegisteredUniquesDay,
 				IntegrationUserCount: summary.IntegrationUniquesDay,
-				Stages:               &types.Stages{},
 			},
 		},
 		WAUs: []*types.SiteActivityPeriod{
@@ -36,12 +35,6 @@ func groupSiteUsageStats(summary types.SiteUsageSummary, monthsOnly bool) *types
 				RegisteredUserCount:  summary.RegisteredUniquesWeek,
 				AnonymousUserCount:   summary.UniquesWeek - summary.RegisteredUniquesWeek,
 				IntegrationUserCount: summary.IntegrationUniquesWeek,
-				Stages: &types.Stages{
-					Manage:  summary.ManageUniquesWeek,
-					Code:    summary.CodeUniquesWeek,
-					Verify:  summary.VerifyUniquesWeek,
-					Monitor: summary.MonitorUniquesWeek,
-				},
 			},
 		},
 		MAUs: []*types.SiteActivityPeriod{
@@ -51,12 +44,6 @@ func groupSiteUsageStats(summary types.SiteUsageSummary, monthsOnly bool) *types
 				RegisteredUserCount:  summary.RegisteredUniquesMonth,
 				AnonymousUserCount:   summary.UniquesMonth - summary.RegisteredUniquesMonth,
 				IntegrationUserCount: summary.IntegrationUniquesMonth,
-				Stages: &types.Stages{
-					Manage:  summary.ManageUniquesMonth,
-					Code:    summary.CodeUniquesMonth,
-					Verify:  summary.VerifyUniquesMonth,
-					Monitor: summary.MonitorUniquesMonth,
-				},
 			},
 		},
 	}
@@ -124,32 +111,20 @@ func insertCodeIntelEventStatistics(event types.AggregatedEvent, statistics *typ
 		return
 	}
 
-	makeLatencies := func(values []float64) *types.CodeIntelEventLatencies {
-		for len(values) < 3 {
-			// If event logs didn't have samples, add zero values
-			values = append(values, 0)
-		}
-
-		return &types.CodeIntelEventLatencies{P50: values[0], P90: values[1], P99: values[2]}
-	}
-
 	statistics.Monthly[0].StartTime = event.Month
 	month := extractor(statistics.Monthly[0])
 	month.EventsCount = &event.TotalMonth
 	month.UsersCount = event.UniquesMonth
-	month.EventLatencies = makeLatencies(event.LatenciesMonth)
 
 	statistics.Weekly[0].StartTime = event.Week
 	week := extractor(statistics.Weekly[0])
 	week.EventsCount = &event.TotalWeek
 	week.UsersCount = event.UniquesWeek
-	week.EventLatencies = makeLatencies(event.LatenciesWeek)
 
 	statistics.Daily[0].StartTime = event.Day
 	day := extractor(statistics.Daily[0])
 	day.EventsCount = &event.TotalDay
 	day.UsersCount = event.UniquesDay
-	day.EventLatencies = makeLatencies(event.LatenciesDay)
 }
 
 func newSearchUsagePeriod() *types.SearchUsagePeriod {
@@ -210,7 +185,7 @@ func newCodeIntelEventCategory() *types.CodeIntelEventCategoryStatistics {
 }
 
 func codeIntelEventStatistics() *types.CodeIntelEventStatistics {
-	return &types.CodeIntelEventStatistics{EventLatencies: &types.CodeIntelEventLatencies{}}
+	return &types.CodeIntelEventStatistics{}
 }
 
 func newSearchEventPeriod() *types.SearchUsagePeriod {

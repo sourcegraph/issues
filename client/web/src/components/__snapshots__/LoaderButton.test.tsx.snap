@@ -1,0 +1,19 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`LoaderButton should not render a loading spinner when loading prop is false 1`] = `
+<button
+  type="button"
+>
+  Test
+</button>
+`;
+
+exports[`LoaderButton should render a loading spinner when loading prop is true 1`] = `
+<button
+  type="button"
+>
+  <LoadingSpinner
+    className="icon-inline"
+  />
+</button>
+`;

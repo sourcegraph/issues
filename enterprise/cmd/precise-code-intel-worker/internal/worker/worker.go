@@ -2,107 +2,50 @@ package worker
 
 import (
 	"context"
-	"sync"
+	"database/sql"
 	"time"
 
-	"github.com/inconshreveable/log15"
-	"github.com/pkg/errors"
+	"github.com/sourcegraph/sourcegraph/enterprise/cmd/precise-code-intel-worker/internal/metrics"
 	bundles "github.com/sourcegraph/sourcegraph/enterprise/internal/codeintel/bundles/client"
-	"github.com/sourcegraph/sourcegraph/enterprise/internal/codeintel/gitserver"
+	"github.com/sourcegraph/sourcegraph/enterprise/internal/codeintel/bundles/persistence"
+	"github.com/sourcegraph/sourcegraph/enterprise/internal/codeintel/bundles/persistence/postgres"
 	"github.com/sourcegraph/sourcegraph/enterprise/internal/codeintel/store"
 	"github.com/sourcegraph/sourcegraph/internal/actor"
+	"github.com/sourcegraph/sourcegraph/internal/observation"
+	"github.com/sourcegraph/sourcegraph/internal/workerutil"
+	"github.com/sourcegraph/sourcegraph/internal/workerutil/dbworker"
 )
 
-type Worker struct {
-	store        store.Store
-	processor    Processor
-	pollInterval time.Duration
-	metrics      WorkerMetrics
-	done         chan struct{}
-	once         sync.Once
-}
-
 func NewWorker(
-	store store.Store,
+	s store.Store,
+	codeIntelDB *sql.DB,
 	bundleManagerClient bundles.BundleManagerClient,
-	gitserverClient gitserver.Client,
+	gitserverClient gitserverClient,
 	pollInterval time.Duration,
-	metrics WorkerMetrics,
-) *Worker {
-	processor := &processor{
+	numProcessorRoutines int,
+	budgetMax int64,
+	metrics metrics.WorkerMetrics,
+	observationContext *observation.Context,
+) *workerutil.Worker {
+	rootContext := actor.WithActor(context.Background(), &actor.Actor{Internal: true})
+
+	handler := &handler{
+		store:               s,
 		bundleManagerClient: bundleManagerClient,
 		gitserverClient:     gitserverClient,
+		metrics:             metrics,
+		enableBudget:        budgetMax > 0,
+		budgetRemaining:     budgetMax,
+		createStore: func(id int) persistence.Store {
+			return persistence.NewObserved(postgres.NewStore(codeIntelDB, id), observationContext)
+		},
 	}
 
-	return &Worker{
-		store:        store,
-		processor:    processor,
-		pollInterval: pollInterval,
-		metrics:      metrics,
-		done:         make(chan struct{}),
-	}
-}
-
-func (w *Worker) Start() {
-	ctx := actor.WithActor(context.Background(), &actor.Actor{Internal: true})
-
-	for {
-		if ok, _ := w.dequeueAndProcess(ctx); !ok {
-			select {
-			case <-time.After(w.pollInterval):
-			case <-w.done:
-				return
-			}
-		} else {
-			select {
-			case <-w.done:
-				return
-			default:
-			}
-		}
-	}
-}
-
-func (w *Worker) Stop() {
-	w.once.Do(func() {
-		close(w.done)
+	return dbworker.NewWorker(rootContext, store.WorkerutilUploadStore(s), handler, workerutil.WorkerOptions{
+		NumHandlers: numProcessorRoutines,
+		Interval:    pollInterval,
+		Metrics: workerutil.WorkerMetrics{
+			HandleOperation: metrics.ProcessOperation,
+		},
 	})
-}
-
-// TODO(efritz) - use cancellable context
-
-// dequeueAndProcess pulls a job from the queue and processes it. If there
-// were no jobs ready to process, this method returns a false-valued flag.
-func (w *Worker) dequeueAndProcess(ctx context.Context) (_ bool, err error) {
-	start := time.Now()
-
-	upload, store, ok, err := w.store.Dequeue(ctx)
-	if err != nil || !ok {
-		return false, errors.Wrap(err, "store.Dequeue")
-	}
-	defer func() {
-		err = store.Done(err)
-
-		// TODO(efritz) - set error if correlation failed
-		w.metrics.Processor.Observe(time.Since(start).Seconds(), 1, &err)
-	}()
-
-	log15.Info("Dequeued upload for processing", "id", upload.ID)
-
-	if requeued, processErr := w.processor.Process(ctx, store, upload); processErr == nil {
-		if requeued {
-			log15.Info("Requeueing upload", "id", upload.ID)
-		} else {
-			log15.Info("Processed upload", "id", upload.ID)
-		}
-	} else {
-		// TODO(efritz) - distinguish between correlation and system errors
-		log15.Warn("Failed to process upload", "id", upload.ID, "err", processErr)
-
-		if markErr := store.MarkErrored(ctx, upload.ID, processErr.Error()); markErr != nil {
-			return true, errors.Wrap(markErr, "store.MarkErrored")
-		}
-	}
-
-	return true, nil
 }

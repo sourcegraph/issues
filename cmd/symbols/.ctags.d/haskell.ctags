@@ -1,8 +1,0 @@
-# See additional-language.ctags for maintaining this file
---langdef=haskell
---langmap=haskell:.hs
---regex-haskell=/^module[ \t]*([A-Z][a-zA-Z0-9'_.]*)/\1/m,module/
---regex-haskell=/^type[ \t]*([A-Z][a-zA-Z0-9'_]*)./\1/a,alias/
---regex-haskell=/^class[ \t]*([A-Z][a-zA-Z0-9'_]*)/\1/c,class/
---regex-haskell=/^(data|newtype)[ \t]*([A-Z][a-zA-Z0-9'_]*)/\2/t,type/
---regex-haskell=/^([a-z_][a-zA-Z0-9'_]*) ::/\1/v,constant/

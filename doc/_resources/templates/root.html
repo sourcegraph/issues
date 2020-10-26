@@ -1,118 +1,155 @@
 {{define "root"}}
-<html>
-<head>
-    <title>{{block "title" .}}Home{{end}} - Sourcegraph docs</title>
-    <link rel="icon" type="image/png" href="https://about.sourcegraph.com/sourcegraph-mark.png" />
-    <link rel="stylesheet" href="{{asset "bootstrap.min.css"}}?4.3.1" />
-    <link rel="stylesheet" href="{{asset "layout.css"}}?19" />
-    <link rel="stylesheet" href="{{asset "search.css"}}?19" />
-    <link rel="stylesheet" href="{{asset "content.css"}}?19" />
-    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no, viewport-fit=cover" />
-    {{block "head" .}}{{end}}
-</head>
-<body class="theme theme-light">
-    <div class="global-navbar">
-        <input type="checkbox" id="nav-state" class="nav-state" />
-        <div class="nav-content">
-            <div class="nav-container flex-container">
-                <div class="nav-header">
-                    <a href="/" class="nav-logo">
-                        <img class="nav-logo-image small-hidden" src="/assets/sourcegraph-logo-docs.svg" alt="Sourcegraph Documentation">
-                        <img class="nav-logo-image-small large-hidden medium-hidden" src="/assets/sourcegraph-logo-docs-small.svg" alt="Sourcegraph Documentation">
-                    </a>
-                    {{block "versionSelector" .}}{{end}}
-                </div>
-                <span class="mobile-nav-button"></span>
-                <div class="nav-links">
-                    <ul class="nav-link-container">
-                        <li class="nav-link"><a href="https://about.sourcegraph.com">About</a></li>
-                        <li class="nav-link"><a href="https://github.com/sourcegraph/sourcegraph">Code</a></li>
-                        <li class="nav-link"><a href="https://sourcegraph.com">Sourcegraph.com</a></li>
-                    </ul>
-                    <form class="search-form form-inline small-hidden" method="get" action="/search">
-                        <input type="text" name="q" class="nav-search form-control" id="search" value="{{block "query" .}}{{end}}" placeholder="Search docs..." spellcheck="false">
+<!--
+     TODO(sqs): broken: http://localhost:5080/user/search/language
+-->
+
+	<!DOCTYPE html>
+	<html lang="en">
+
+		<head>
+			<title>{{block "title" .}}Home{{end}} - Sourcegraph docs</title>
+            <link rel="icon" type="image/png" href="https://about.sourcegraph.com/sourcegraph-mark.png" />
+			<link rel="stylesheet" type="text/css" href="{{asset "docsite.css"}}" />
+            <script src="{{asset "docsite.js"}}"></script>
+			<meta name="viewport" content="width=device-width, initial-scale=1" />
+
+            <!-- Google Tag Manager -->
+            <script>(function (w, d, s, l, i) {
+                    w[l] = w[l] || []; w[l].push({
+                        'gtm.start':
+                            new Date().getTime(), event: 'gtm.js'
+                    }); var f = d.getElementsByTagName(s)[0],
+                        j = d.createElement(s), dl = l != 'dataLayer' ? '&l=' + l : ''; j.async = true; j.src =
+                            'https://www.googletagmanager.com/gtm.js?id=' + i + dl; f.parentNode.insertBefore(j, f);
+                })(window, document, 'script', 'dataLayer', 'GTM-TB4NLS7');</script>
+            <!-- End Google Tag Manager -->
+
+			{{block "head" .}}{{end}}
+		</head>
+
+        <!-- Default to light theme if no JavaScript -->
+		<body class="theme-light">
+            <!-- Google Tag Manager (noscript) -->
+            <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-TB4NLS7" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+            <!-- End Google Tag Manager (noscript) -->
+
+			<aside id="sidebar">
+                <header>
+				    <h1 id="logo"><a href="/">
+                        <img src="{{asset "logo-theme-light.svg"}}" class="theme-light" alt="Sourcegraph docs"/>
+                        <img src="{{asset "logo-theme-dark.svg"}}" class="theme-dark" alt="Sourcegraph docs"/>
+                    </a></h1>
+                    <form id="search-form" method="get" action="/search">
+                        <svg class="search-icon" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24"><path fill="currentColor" d="M21.172 24l-7.387-7.387c-1.388.874-3.024 1.387-4.785 1.387-4.971 0-9-4.029-9-9s4.029-9 9-9 9 4.029 9 9c0 1.761-.514 3.398-1.387 4.785l7.387 7.387-2.828 2.828zm-12.172-8c3.859 0 7-3.14 7-7s-3.141-7-7-7-7 3.14-7 7 3.141 7 7 7z"/></svg>
+					    <input type="text" id="search" name="q" value="{{block "query" .}}{{end}}" placeholder="" spellcheck="false" aria-label="Query" />
                         <input type="hidden" name="v" value="{{block "version" .}}{{end}}">
-                        <button class="btn btn-primary nav-search-button ml-2" id="search-button" type="submit">Search</button>
-                    </form>
-                </div>
-            </div>
-            {{block "breadcrumb" .}}{{end}}
-        </div>
-    </div>
-    {{block "content" .}}{{end}}
-    {{/* Keep up-to-date with Sourcegraph.com */}}
-    <div class="footer-container column large-12">
-        <div class="footer__block">
-            <footer class="footer pt-6 pb-2">
-                <div class="footer__container container">
-                    <div class="row footer__nav-sections">
-                        <div class="col-12 col-lg-3 mb-5">
-                            <a aria-current="page" class="" href="https://about.sourcegraph.com/"><img class="footer__logo" src="https://d33wubrfki0l68.cloudfront.net/3ec402edbb475d12a54b840445834e4943985e74/c29e2/sourcegraph/logo--light.svg"></a>
-                            <ul class="nav footer__social mt-1">
-                                <li class="nav-item"><a href="https://github.com/sourcegraph" target="_blank"><svg class="mdi-icon " width="24" height="24" fill="currentColor" viewBox="0 0 24 24"><path d="M12,2C6.48,2 2,6.48 2,12C2,16.42 4.87,20.17 8.84,21.5C9.34,21.58 9.5,21.27 9.5,21C9.5,20.77 9.5,20.14 9.5,19.31C6.73,19.91 6.14,17.97 6.14,17.97C5.68,16.81 5.03,16.5 5.03,16.5C4.12,15.88 5.1,15.9 5.1,15.9C6.1,15.97 6.63,16.93 6.63,16.93C7.5,18.45 8.97,18 9.54,17.76C9.63,17.11 9.89,16.67 10.17,16.42C7.95,16.17 5.62,15.31 5.62,11.5C5.62,10.39 6,9.5 6.65,8.79C6.55,8.54 6.2,7.5 6.75,6.15C6.75,6.15 7.59,5.88 9.5,7.17C10.29,6.95 11.15,6.84 12,6.84C12.85,6.84 13.71,6.95 14.5,7.17C16.41,5.88 17.25,6.15 17.25,6.15C17.8,7.5 17.45,8.54 17.35,8.79C18,9.5 18.38,10.39 18.38,11.5C18.38,15.32 16.04,16.16 13.81,16.41C14.17,16.72 14.5,17.33 14.5,18.26C14.5,19.6 14.5,20.68 14.5,21C14.5,21.27 14.66,21.59 15.17,21.5C19.14,20.16 22,16.42 22,12C22,6.48 17.52,2 12,2Z"></path></svg></a></li>
-                                <li class="nav-item"><a href="https://twitter.com/srcgraph" target="_blank"><svg class="mdi-icon " width="24" height="24" fill="currentColor" viewBox="0 0 24 24"><path d="M22.46,6C21.69,6.35 20.86,6.58 20,6.69C20.88,6.16 21.56,5.32 21.88,4.31C21.05,4.81 20.13,5.16 19.16,5.36C18.37,4.5 17.26,4 16,4C13.65,4 11.73,5.92 11.73,8.29C11.73,8.63 11.77,8.96 11.84,9.27C8.28,9.09 5.11,7.38 3,4.79C2.63,5.42 2.42,6.16 2.42,6.94C2.42,8.43 3.17,9.75 4.33,10.5C3.62,10.5 2.96,10.3 2.38,10C2.38,10 2.38,10 2.38,10.03C2.38,12.11 3.86,13.85 5.82,14.24C5.46,14.34 5.08,14.39 4.69,14.39C4.42,14.39 4.15,14.36 3.89,14.31C4.43,16 6,17.26 7.89,17.29C6.43,18.45 4.58,19.13 2.56,19.13C2.22,19.13 1.88,19.11 1.54,19.07C3.44,20.29 5.7,21 8.12,21C16,21 20.33,14.46 20.33,8.79C20.33,8.6 20.33,8.42 20.32,8.23C21.16,7.63 21.88,6.87 22.46,6Z"></path></svg></a></li>
-                                <li class="nav-item"><a href="https://www.linkedin.com/company/4803356/" target="_blank"><svg class="mdi-icon " width="24" height="24" fill="currentColor" viewBox="0 0 24 24"><path d="M19,3C20.1,3 21,3.9 21,5V19C21,20.1 20.1,21 19,21H5C3.9,21 3,20.1 3,19V5C3,3.9 3.9,3 5,3H19M18.5,18.5V13.2C18.5,11.4 17.04,9.94 15.24,9.94C14.39,9.94 13.4,10.46 12.92,11.24V10.13H10.13V18.5H12.92V13.57C12.92,12.8 13.54,12.17 14.31,12.17C15.08,12.17 15.71,12.8 15.71,13.57V18.5H18.5M6.88,8.56C7.81,8.56 8.56,7.81 8.56,6.88C8.56,5.95 7.81,5.19 6.88,5.19C5.95,5.19 5.19,5.95 5.19,6.88C5.19,7.81 5.95,8.56 6.88,8.56M8.27,18.5V10.13H5.5V18.5H8.27Z"></path></svg></a></li>
-                            </ul>
-                        </div>
-                        <div class="col-sm-6 col-md-3 col-lg-2 mb-3">
-                            <h3 class="footer__nav-header">Why Sourcegraph?</h3>
-                            <ul class="nav flex-column">
-                                <li class="nav-item"><a href="https://about.sourcegraph.com/product">Product</a></li>
-                                <li class="nav-item"><a href="https://about.sourcegraph.com/product">What is a developer platform?</a></li>
-                                <li class="nav-item"><a href="https://about.sourcegraph.com/pricing">Pricing</a></li>
-                            </ul>
-                        </div>
-                        <div class="col-sm-6 col-md-3 col-lg-2 mb-3">
-                            <h3 class="footer__nav-header">Features &amp; use cases</h3>
-                            <ul class="nav flex-column">
-                                <li class="nav-item"><a href="https://about.sourcegraph.com/product/code-search-navigation">Code search</a></li>
-                                <li class="nav-item"><a href="https://about.sourcegraph.com/product/code-review">Code review</a></li>
-                                <li class="nav-item"><a href="https://about.sourcegraph.com/product/code-change-management">Code change management</a></li>
-                            </ul>
-                        </div>
-                        <div class="col-sm-6 col-md-3 col-lg-2 mb-3">
-                            <h3 class="footer__nav-header">Resources</h3>
-                            <ul class="nav flex-column">
-                                <li class="nav-item"><a href="https://docs.sourcegraph.com">Documentation</a></li>
-                                <li class="nav-item"><a href="https://sourcegraph.com/github.com/sourcegraph/sourcegraph/-/blob/CHANGELOG.md">Changelog</a></li>
-                                <li class="nav-item"><a href="https://about.sourcegraph.com/blog">Blog</a></li>
-                            </ul>
-                        </div>
-                        <div class="col-sm-6 col-md-3 col-lg-2 mb-3">
-                            <h3 class="footer__nav-header">Company</h3>
-                            <ul class="nav flex-column">
-                                <li class="nav-item"><a href="https://about.sourcegraph.com/plan">Master plan</a></li>
-                                <li class="nav-item"><a href="https://about.sourcegraph.com/about">About</a></li>
-                                <li class="nav-item"><a href="https://about.sourcegraph.com/contact">Contact</a></li>
-                                <li class="nav-item"><a href="https://about.sourcegraph.com/jobs">Careers</a></li>
-                            </ul>
-                        </div>
+					    <button id="search-button" type="submit" aria-label="Search" class="sr-only">Search</button>
+				    </form>
+                </header>
+                <nav id="sections" class="links sidebar">
+                    <div class="nav-section tree">
+                        <h2 class="sr-only">Sections</h2>
+                        {{if (contentFileExists .ContentVersion "sidebar.md")}}
+                            {{renderMarkdownContentFile .ContentVersion "sidebar.md"}}
+                        {{else}}
+                            {{block "fallbackSidebar" .}}{{end}}
+                        {{end}}
                     </div>
-                    <div class="footer__postscript d-flex justify-content-between pt-4 pb-2 small">
-                        <ul class="nav">
-                            <li class="nav-item text-muted mr-3">© 2020 Sourcegraph</li>
-                            <li class="nav-item"><a class="nav-link" href="https://about.sourcegraph.com/terms">Terms</a></li>
-                            <li class="nav-item"><a class="nav-link" href="https://about.sourcegraph.com/security">Security</a></li>
-                            <li class="nav-item"><a class="nav-link" href="https://about.sourcegraph.com/privacy">Privacy</a></li>
+                    <div class="nav-section">
+                        <h2 class="sr-only">External</h2>
+                        <ul>
+                            <li class="external"><a href="https://about.sourcegraph.com">About Sourcegraph</a></li>
+                            <li class="external"><a href="https://sourcegraph.com">Sourcegraph.com</a></li>
                         </ul>
                     </div>
+                </nav>
+                <div id="theme">
+                    <div>
+                    <button type="button" data-theme-preference="auto">Auto</button>
+                    <button type="button" data-theme-preference="light">Light</button>
+                    <button type="button" data-theme-preference="dark">Dark</button>
+                    </div>
                 </div>
-            </footer>
-        </div>
-    </div>
+			</aside>
 
-    {{block "afterBody" .}}{{end}}
+            <div id="page" class="container">
+			    <main>
+					{{block "content" .}}{{end}}
+			    </main>
+                <footer>
+                    <nav class="links external">
+                        <ul>
+                            <li><a href="https://about.sourcegraph.com">About Sourcegraph</a></li>
+                            <li><a href="https://sourcegraph.com">Sourcegraph.com</a></li>
+                            <li><a href="https://github.com/sourcegraph/sourcegraph">Code (GitHub)</a></li>
+                            <li><a href="https://about.sourcegraph.com/terms">Terms</a></li>
+                            <li><a href="https://about.sourcegraph.com/security">Security</a></li>
+                            <li><a href="https://about.sourcegraph.com/privacy">Privacy</a></li>
+                        </ul>
+                    </nav>
+                </footer>
+            </div>
+		</body>
+	</html>
+{{end}}
 
-    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-40540747-20"></script>
-    <script>
-        window.dataLayer = window.dataLayer || [];
-
-        function gtag() {
-            dataLayer.push(arguments);
-        }
-        gtag('js', new Date());
-        gtag('config', 'UA-40540747-20');
-    </script>
-    </body>
-</html>
+{{define "fallbackSidebar"}}
+    {{/* The fallback sidebar for revisions before the sidebar.md file existed. */}}
+    <ul>
+        <li class="expand"><a href="/getting-started">Getting started</a>
+            <ul>
+                <li><a href="/getting-started/tour">Product tour</a></li>
+                <li><a href="/getting-started/personalization">Personalization</a></li>
+            </ul>
+        </li>
+        <li class="expand"><a href="/code_search">Code search</a>
+            <ul>
+                <li><a href="code_search/tutorials">Tutorials</a></li>
+                <li><a href="code_search/how-to">How-to guides</a></li>
+                <li><a href="code_search/explanations">Explanations</a></li>
+                <li><a href="code_search/reference">Reference</a></li>
+            </ul>
+        </li>
+        <li><a href="/code_intelligence">Code intelligence</a>
+            <ul>
+                <li><a href="code_intelligence/tutorials">Tutorials</a></li>
+                <li><a href="code_intelligence/how-to">How-to guides</a></li>
+                <li><a href="code_intelligence/explanations">Explanations</a></li>
+                <li><a href="code_intelligence/reference">Reference</a></li>
+            </ul>
+        </li>
+        <li><a href="/campaigns">Campaigns</a>
+            <ul>
+                <li><a href="campaigns/tutorials">Tutorials</a></li>
+                <li><a href="campaigns/how-to">How-to guides</a></li>
+                <li><a href="campaigns/explanations">Explanations</a></li>
+                <li><a href="campaigns/reference">Reference</a></li>
+            </ul>
+        </li>
+        <li><a href="/integration">Integrations</a></li>
+        <li><a href="/extensions">Extensions</a></li>
+        <li><a href="/adopt">Adopting</a></li>
+        <li><a href="/admin">Administration</a>
+            <ul>
+                <li><a href="/admin/install">Install</a></li>
+                <li><a href="/admin/updates">Upgrade</a></li>
+                <li><a href="/admin/config">Configuration</a></li>
+                <li><a href="/admin/external_service">Code hosts</a></li>
+                <li><a href="/admin/auth">User authentication</a></li>
+                <li><a href="/admin/extensions">Extension registry</a></li>
+                <li><a href="/admin/observability">Observability</a></li>
+                <li><a href="/admin/faq">FAQ</a></li>
+                <li><a href="/admin/troubleshooting">Troubleshooting</a></li>
+            </ul></li>
+        <li><a href="/dev">Development</a></li>
+            <ul>
+                <li><a href="dev/getting-started">Getting started</a></li>
+                <li><a href="dev/how-to">How-to guides</a></li>
+                <li><a href="dev/background-information">Background information</a></li>
+            </ul>
+        <li><br></li>
+        <li><a href="/#quickstart-guide">★ Quick install</a></li>
+        <li><a href="/code_search/reference/queries">★ Search query syntax</a></li>
+        <li><a href="/api/graphql">★ GraphQL API</a></li>
+    </ul>
 {{end}}

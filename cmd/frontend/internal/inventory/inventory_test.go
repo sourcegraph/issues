@@ -146,7 +146,7 @@ type nopReadCloser struct {
 }
 
 func (n *nopReadCloser) Read(p []byte) (int, error) {
-	return n.reader.Read((p))
+	return n.reader.Read(p)
 }
 
 func (n *nopReadCloser) Close() error {

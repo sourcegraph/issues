@@ -8,10 +8,11 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/sourcegraph/sourcegraph/enterprise/internal/codeintel/bundles/client"
+	"github.com/google/go-cmp/cmp"
 	bundles "github.com/sourcegraph/sourcegraph/enterprise/internal/codeintel/bundles/client"
 	bundlemocks "github.com/sourcegraph/sourcegraph/enterprise/internal/codeintel/bundles/client/mocks"
 	"github.com/sourcegraph/sourcegraph/enterprise/internal/codeintel/bundles/types"
+	"github.com/sourcegraph/sourcegraph/enterprise/internal/codeintel/gitserver"
 	"github.com/sourcegraph/sourcegraph/enterprise/internal/codeintel/store"
 	storemocks "github.com/sourcegraph/sourcegraph/enterprise/internal/codeintel/store/mocks"
 )
@@ -97,6 +98,30 @@ func setMockStoreFindClosestDumps(t *testing.T, mockStore *storemocks.MockStore,
 	})
 }
 
+func setMockStoreFindClosestDumpsFromGraphFragment(t *testing.T, mockStore *storemocks.MockStore, expectedRepositoryID int, expectedCommit, expectedFile string, expectedrootMustEnclosePath bool, expectedIndexer string, expectedGraph map[string][]string, dumps []store.Dump) {
+	mockStore.FindClosestDumpsFromGraphFragmentFunc.SetDefaultHook(func(ctx context.Context, repositoryID int, commit, file string, rootMustEnclosePath bool, indexer string, graph map[string][]string) ([]store.Dump, error) {
+		if repositoryID != expectedRepositoryID {
+			t.Errorf("unexpected repository id for FindClosestDumps. want=%d have=%d", expectedRepositoryID, repositoryID)
+		}
+		if commit != expectedCommit {
+			t.Errorf("unexpected commit for FindClosestDumps. want=%s have=%s", expectedCommit, commit)
+		}
+		if file != expectedFile {
+			t.Errorf("unexpected file for FindClosestDumps. want=%s have=%s", expectedFile, file)
+		}
+		if rootMustEnclosePath != expectedrootMustEnclosePath {
+			t.Errorf("unexpected rootMustEnclosePath for FindClosestDumps. want=%v have=%v", expectedrootMustEnclosePath, rootMustEnclosePath)
+		}
+		if indexer != expectedIndexer {
+			t.Errorf("unexpected indexer for FindClosestDumps. want=%s have=%s", expectedIndexer, indexer)
+		}
+		if diff := cmp.Diff(expectedGraph, graph); diff != "" {
+			t.Errorf("unexpected graph (-want +got):\n%s", diff)
+		}
+		return dumps, nil
+	})
+}
+
 func setMockStoreSameRepoPager(t *testing.T, mockStore *storemocks.MockStore, expectedRepositoryID int, expectedCommit, expectedScheme, expectedName, expectedVersion string, expectedLimit, totalCount int, pager store.ReferencePager) {
 	mockStore.SameRepoPagerFunc.SetDefaultHook(func(ctx context.Context, repositoryID int, commit, scheme, name, version string, limit int) (int, store.ReferencePager, error) {
 		if repositoryID != expectedRepositoryID {
@@ -142,6 +167,15 @@ func setMockStorePackageReferencePager(t *testing.T, mockStore *storemocks.MockS
 	})
 }
 
+func setMockStoreHasRepository(t *testing.T, mockStore *storemocks.MockStore, expectedRepositoryID int, exists bool) {
+	mockStore.HasRepositoryFunc.SetDefaultHook(func(ctx context.Context, repositoryID int) (bool, error) {
+		if repositoryID != expectedRepositoryID {
+			t.Errorf("unexpected repository id for HasRepository. want=%d have=%d", expectedRepositoryID, repositoryID)
+		}
+		return exists, nil
+	})
+}
+
 func setMockStoreHasCommit(t *testing.T, mockStore *storemocks.MockStore, expectedRepositoryID int, expectedCommit string, exists bool) {
 	mockStore.HasCommitFunc.SetDefaultHook(func(ctx context.Context, repositoryID int, commit string) (bool, error) {
 		if repositoryID != expectedRepositoryID {
@@ -180,6 +214,21 @@ func setMockBundleClientExists(t *testing.T, mockBundleClient *bundlemocks.MockB
 			t.Errorf("unexpected path for Exists. want=%s have=%s", expectedPath, path)
 		}
 		return exists, nil
+	})
+}
+
+func setMockBundleClientRanges(t *testing.T, mockBundleClient *bundlemocks.MockBundleClient, expectedPath string, expectedStartLine, expectedEndLine int, ranges []bundles.CodeIntelligenceRange) {
+	mockBundleClient.RangesFunc.SetDefaultHook(func(ctx context.Context, path string, startLine, endLine int) ([]bundles.CodeIntelligenceRange, error) {
+		if path != expectedPath {
+			t.Errorf("unexpected path for Ranges. want=%s have=%s", expectedPath, path)
+		}
+		if startLine != expectedStartLine {
+			t.Errorf("unexpected start line for Ranges. want=%d have=%d", expectedStartLine, startLine)
+		}
+		if endLine != expectedEndLine {
+			t.Errorf("unexpected end line for Ranges. want=%d have=%d", expectedEndLine, endLine)
+		}
+		return ranges, nil
 	})
 }
 
@@ -228,8 +277,8 @@ func setMockBundleClientHover(t *testing.T, mockBundleClient *bundlemocks.MockBu
 	})
 }
 
-func setMockBundleClientDiagnostics(t *testing.T, mockBundleClient *bundlemocks.MockBundleClient, expectedPrefix string, expectedSkip, expectedTake int, diagnostics []client.Diagnostic, totalCount int) {
-	mockBundleClient.DiagnosticsFunc.SetDefaultHook(func(ctx context.Context, prefix string, skip, take int) ([]client.Diagnostic, int, error) {
+func setMockBundleClientDiagnostics(t *testing.T, mockBundleClient *bundlemocks.MockBundleClient, expectedPrefix string, expectedSkip, expectedTake int, diagnostics []bundles.Diagnostic, totalCount int) {
+	mockBundleClient.DiagnosticsFunc.SetDefaultHook(func(ctx context.Context, prefix string, skip, take int) ([]bundles.Diagnostic, int, error) {
 		if prefix != expectedPrefix {
 			t.Errorf("unexpected prefix for Diagnostics. want=%s have=%s", expectedPrefix, prefix)
 		}
@@ -304,4 +353,14 @@ func readTestFilter(t *testing.T, dirname, filename string) []byte {
 	}
 
 	return raw
+}
+
+func setMockGitserverCommitGraph(t *testing.T, mockGitserverClient *MockGitserverClient, expectedRepositoryID int, graph map[string][]string) {
+	mockGitserverClient.CommitGraphFunc.SetDefaultHook(func(ctx context.Context, s store.Store, repositoryID int, options gitserver.CommitGraphOptions) (map[string][]string, error) {
+		if repositoryID != expectedRepositoryID {
+			t.Errorf("unexpected repository identifier for CommitGraph. want=%d have=%d", expectedRepositoryID, repositoryID)
+		}
+
+		return graph, nil
+	})
 }

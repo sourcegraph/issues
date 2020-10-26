@@ -9,7 +9,7 @@ JAEGER_DISK="${HOME}/.sourcegraph-dev/data/jaeger"
 mkdir -p "${JAEGER_DISK}"/logs
 mkdir -p .bin
 
-version=1.17.1
+version=1.18.1
 suffix="${version}-$(go env GOOS)-$(go env GOARCH)"
 target="$PWD/.bin/jaeger-all-in-one-${suffix}"
 url="https://github.com/jaegertracing/jaeger/releases/download/v${version}/jaeger-${suffix}.tar.gz"

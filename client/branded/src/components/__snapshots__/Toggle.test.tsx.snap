@@ -1,0 +1,101 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Toggle className 1`] = `
+<Toggle
+  className="c"
+>
+  <button
+    className="toggle c"
+    onClick={[Function]}
+    role="switch"
+    type="button"
+    value={0}
+  >
+    <span
+      className="toggle__bar"
+    />
+    <span
+      className="toggle__bar-shadow"
+    />
+    <span
+      className="toggle__knob"
+    />
+  </button>
+</Toggle>
+`;
+
+exports[`Toggle disabled 1`] = `
+<Toggle
+  disabled={true}
+  onToggle={[Function]}
+>
+  <button
+    className="toggle"
+    disabled={true}
+    onClick={[Function]}
+    role="switch"
+    type="button"
+    value={0}
+  >
+    <span
+      className="toggle__bar"
+    />
+    <span
+      className="toggle__bar-shadow"
+    />
+    <span
+      className="toggle__knob"
+    />
+  </button>
+</Toggle>
+`;
+
+exports[`Toggle value is false 1`] = `
+<Toggle
+  value={false}
+>
+  <button
+    aria-checked={false}
+    className="toggle"
+    onClick={[Function]}
+    role="switch"
+    type="button"
+    value={0}
+  >
+    <span
+      className="toggle__bar"
+    />
+    <span
+      className="toggle__bar-shadow"
+    />
+    <span
+      className="toggle__knob"
+    />
+  </button>
+</Toggle>
+`;
+
+exports[`Toggle value is true 1`] = `
+<Toggle
+  value={true}
+>
+  <button
+    aria-checked={true}
+    className="toggle"
+    onClick={[Function]}
+    role="switch"
+    type="button"
+    value={1}
+  >
+    <span
+      className="toggle__bar toggle__bar--on"
+    />
+    <span
+      className="toggle__bar-shadow toggle__bar-shadow--on"
+    />
+    <span
+      className="toggle__knob toggle__knob--on"
+    />
+  </button>
+</Toggle>
+`;

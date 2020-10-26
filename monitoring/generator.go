@@ -19,9 +19,11 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
+	"time"
 	"unicode"
 
 	"github.com/grafana-tools/sdk"
+	"github.com/prometheus/common/model"
 	"gopkg.in/yaml.v2"
 )
 
@@ -104,6 +106,20 @@ func (r Row) validate() error {
 	return nil
 }
 
+// ObservableOwner denotes a team that owns an Observable. The current teams are described in
+// the handbook: https://about.sourcegraph.com/company/team/org_chart#engineering
+type ObservableOwner string
+
+const (
+	ObservableOwnerSearch       ObservableOwner = "search"
+	ObservableOwnerCampaigns    ObservableOwner = "campaigns"
+	ObservableOwnerCodeIntel    ObservableOwner = "code-intel"
+	ObservableOwnerDistribution ObservableOwner = "distribution"
+	ObservableOwnerSecurity     ObservableOwner = "security"
+	ObservableOwnerWeb          ObservableOwner = "web"
+	ObservableOwnerCloud        ObservableOwner = "cloud"
+)
+
 // Observable describes a metric about a container that can be observed. For example, memory usage.
 type Observable struct {
 	// Name is a short and human-readable lower_snake_case name describing what is being observed.
@@ -138,6 +154,9 @@ type Observable struct {
 	//
 	Description string
 
+	// Owner indicates the team that owns any alerts associated with this Observable.
+	Owner ObservableOwner
+
 	// Query is the actual Prometheus query that should be observed.
 	Query string
 
@@ -150,18 +169,23 @@ type Observable struct {
 	// would not want an alert to fire if no data was present, so this would be set to true.
 	DataMayNotExist bool
 
-	// DataMayBeNaN indicates whether or not the query may return NaN regularly. Most often,
-	// this should be false as NaN often indicates a mistaken divide by zero. However, for
-	// some queries NaN values may be expected, in which case you should set this to true.
+	// DataMayNotBeNaN indicates whether or not the query may return NaN regularly.
+	// In other words, when true, alerts will fire if the query returns NaN.
 	//
-	// When false, alerts will fire if the query returns NaN.
-	DataMayBeNaN bool
+	// NaN often indicates a mistaken divide by zero - for many types of alert queries,
+	// this is a common problem on low-traffic deployments where the values of many
+	// metrics frequently end up being 0, so the default is to allow it.
+	//
+	// However, for some queries NaN values may be unexpected, in which case you should
+	// set this to true.
+	DataMayNotBeNaN bool
 
 	// Warning and Critical alert definitions. At least a Warning alert must be present.
+	// Alerts are created using the Alert() constructor.
 	//
 	// See README.md for why it is intentionally impossible to create a dashboard to monitor
 	// something without at least a warning alert being defined.
-	Warning, Critical Alert
+	Warning, Critical alertDefinition
 
 	// PossibleSolutions is Markdown describing possible solutions in the event that the alert is
 	// firing. If there is no clear potential resolution, "none" must be explicitly stated.
@@ -220,25 +244,51 @@ func (o Observable) validate() error {
 			return fmt.Errorf("PossibleSolutions: %v", err)
 		}
 	}
+	if o.Owner == "" {
+		return errors.New("Observable.Owner must be defined")
+	}
 	return nil
 }
 
-// Alert defines when an alert would be considered firing.
-type Alert struct {
+func Alert() alertDefinition {
+	return alertDefinition{}
+}
+
+// alertDefinition defines when an alert would be considered firing.
+type alertDefinition struct {
 	// GreaterOrEqual, when non-zero, indicates the alert should fire when
 	// greater or equal to this value.
-	GreaterOrEqual float64
+	greaterOrEqual *float64
 
 	// LessOrEqual, when non-zero, indicates the alert should fire when less
 	// than or equal to this value.
-	LessOrEqual float64
+	lessOrEqual *float64
+
+	// For indicates how long the given thresholds must be exceeded for this
+	// alert to be considered firing. Defaults to 0s.
+	duration time.Duration
 }
 
-func (a Alert) isEmpty() bool {
-	return a == Alert{} || (a.GreaterOrEqual == 0 && a.LessOrEqual == 0)
+func (a alertDefinition) GreaterOrEqual(f float64) alertDefinition {
+	a.greaterOrEqual = &f
+	return a
 }
 
-func (a Alert) validate() error {
+func (a alertDefinition) LessOrEqual(f float64) alertDefinition {
+	a.lessOrEqual = &f
+	return a
+}
+
+func (a alertDefinition) For(d time.Duration) alertDefinition {
+	a.duration = d
+	return a
+}
+
+func (a alertDefinition) isEmpty() bool {
+	return a == alertDefinition{} || (a.greaterOrEqual == nil && a.lessOrEqual == nil)
+}
+
+func (a alertDefinition) validate() error {
 	if a.isEmpty() {
 		return errors.New("empty")
 	}
@@ -295,6 +345,7 @@ type panelOptions struct {
 	minAuto      bool
 	legendFormat string
 	unitType     UnitType
+	interval     string
 }
 
 // Min sets the minimum value of the Y axis on the panel. The default is zero.
@@ -331,12 +382,26 @@ func (p panelOptions) Unit(t UnitType) panelOptions {
 	return p
 }
 
+func (p panelOptions) Interval(ms int) panelOptions {
+	p.interval = fmt.Sprintf("%dms", ms)
+	return p
+}
+
 func (p panelOptions) withDefaults() panelOptions {
 	if p.min == nil && !p.minAuto {
 		defaultMin := 0.0
 		p.min = &defaultMin
 	}
 	if p.legendFormat == "" {
+		// Important: We use "value" as the default legend format and not, say, "{{instance}}" or
+		// an empty string (Grafana defaults to all labels in that case) because:
+		//
+		// 1. Using "{{instance}}" is often wrong, see: https://about.sourcegraph.com/handbook/engineering/observability/monitoring_pillars#faq-why-can-t-i-create-a-graph-panel-with-more-than-5-cardinality-labels
+		// 2. More often than not, you actually do want to aggregate your whole query with `sum()`, `max()` or similar.
+		// 3. If "{{instance}}" or similar was the default, it would be easy for people to say "I guess that's intentional"
+		//    instead of seeing multiple "value" labels on their dashboard (which immediately makes them think
+		//    "how can I fix that?".)
+		//
 		p.legendFormat = "value"
 	}
 	if p.unitType == "" {
@@ -382,7 +447,7 @@ func (c *Container) dashboard() *sdk.Board {
 	description.TextPanel.Mode = "html"
 	description.TextPanel.Content = fmt.Sprintf(`
 	<div style="text-align: left;">
-	  <img src="https://storage.googleapis.com/sourcegraph-assets/sourcegraph-logo-light.png" style="height:30px; margin:0.5rem"></img>
+	  <img src="https://sourcegraphstatic.com/sourcegraph-logo-light.png" style="height:30px; margin:0.5rem"></img>
 	  <div style="margin-left: 1rem; margin-top: 0.5rem; font-size: 20px;"><span style="color: #8e8e8e">%s:</span> %s <a style="font-size: 15px" target="_blank" href="https://docs.sourcegraph.com/dev/architecture">(⧉ architecture diagram)</a></span>
 	</div>
 	`, c.Name, c.Description)
@@ -504,10 +569,10 @@ func (c *Container) dashboard() *sdk.Board {
 					Show:     true,
 				}
 
-				if o.Warning.GreaterOrEqual != 0 {
+				if o.Warning.greaterOrEqual != nil {
 					// Warning threshold
 					panel.GraphPanel.Thresholds = append(panel.GraphPanel.Thresholds, sdk.Threshold{
-						Value:     float32(o.Warning.GreaterOrEqual),
+						Value:     float32(*o.Warning.greaterOrEqual),
 						Op:        "gt",
 						ColorMode: "custom",
 						Fill:      true,
@@ -515,10 +580,10 @@ func (c *Container) dashboard() *sdk.Board {
 						FillColor: "rgba(255, 73, 53, 0.8)",
 					})
 				}
-				if o.Critical.GreaterOrEqual != 0 {
+				if o.Critical.greaterOrEqual != nil {
 					// Critical threshold
 					panel.GraphPanel.Thresholds = append(panel.GraphPanel.Thresholds, sdk.Threshold{
-						Value:     float32(o.Critical.GreaterOrEqual),
+						Value:     float32(*o.Critical.greaterOrEqual),
 						Op:        "gt",
 						ColorMode: "custom",
 						Fill:      true,
@@ -526,10 +591,10 @@ func (c *Container) dashboard() *sdk.Board {
 						FillColor: "rgba(255, 17, 36, 0.8)",
 					})
 				}
-				if o.Warning.LessOrEqual != 0 {
+				if o.Warning.lessOrEqual != nil {
 					// Warning threshold
 					panel.GraphPanel.Thresholds = append(panel.GraphPanel.Thresholds, sdk.Threshold{
-						Value:     float32(o.Warning.LessOrEqual),
+						Value:     float32(*o.Warning.lessOrEqual),
 						Op:        "lt",
 						ColorMode: "custom",
 						Fill:      true,
@@ -537,10 +602,10 @@ func (c *Container) dashboard() *sdk.Board {
 						FillColor: "rgba(255, 73, 53, 0.8)",
 					})
 				}
-				if o.Critical.LessOrEqual != 0 {
+				if o.Critical.lessOrEqual != nil {
 					// Critical threshold
 					panel.GraphPanel.Thresholds = append(panel.GraphPanel.Thresholds, sdk.Threshold{
-						Value:     float32(o.Critical.LessOrEqual),
+						Value:     float32(*o.Critical.lessOrEqual),
 						Op:        "lt",
 						ColorMode: "custom",
 						Fill:      true,
@@ -566,6 +631,7 @@ func (c *Container) dashboard() *sdk.Board {
 				panel.AddTarget(&sdk.Target{
 					Expr:         o.Query,
 					LegendFormat: opt.legendFormat,
+					Interval:     opt.interval,
 				})
 				if rowPanel != nil && group.Hidden {
 					rowPanel.RowPanel.Panels = append(rowPanel.RowPanel.Panels, *panel)
@@ -579,21 +645,31 @@ func (c *Container) dashboard() *sdk.Board {
 }
 
 // alertDescription generates an alert description for the specified coontainer's alert.
-func (c *Container) alertDescription(o Observable, alert Alert) string {
+func (c *Container) alertDescription(o Observable, alert alertDefinition) string {
 	if alert.isEmpty() {
 		panic("never here")
 	}
+	var description string
+
+	// description based on thresholds
 	units := o.PanelOptions.unitType.short()
-	if alert.GreaterOrEqual != 0 && alert.LessOrEqual != 0 {
-		return fmt.Sprintf("%s: %v%s+ or less than %v%s %s", c.Name, alert.GreaterOrEqual, units, alert.LessOrEqual, units, o.Description)
-	} else if alert.GreaterOrEqual != 0 {
+	if alert.greaterOrEqual != nil && alert.lessOrEqual != nil {
+		description = fmt.Sprintf("%s: %v%s+ or less than %v%s %s", c.Name, *alert.greaterOrEqual, units, *alert.lessOrEqual, units, o.Description)
+	} else if alert.greaterOrEqual != nil {
 		// e.g. "zoekt-indexserver: 20+ indexed search request errors every 5m by code"
-		return fmt.Sprintf("%s: %v%s+ %s", c.Name, alert.GreaterOrEqual, units, o.Description)
-	} else if alert.LessOrEqual != 0 {
+		description = fmt.Sprintf("%s: %v%s+ %s", c.Name, *alert.greaterOrEqual, units, o.Description)
+	} else if alert.lessOrEqual != nil {
 		// e.g. "zoekt-indexserver: less than 20 indexed search requests every 5m by code"
-		return fmt.Sprintf("%s: less than %v%s %s", c.Name, alert.LessOrEqual, units, o.Description)
+		description = fmt.Sprintf("%s: less than %v%s %s", c.Name, *alert.lessOrEqual, units, o.Description)
+	} else {
+		panic(fmt.Sprintf("unable to generate description for observable %+v", o))
 	}
-	panic("never here")
+
+	// add information about "for"
+	if alert.duration > 0 {
+		return fmt.Sprintf("%s for %s", description, alert.duration)
+	}
+	return description
 }
 
 // promAlertsFile generates the Prometheus rules file which defines our
@@ -608,15 +684,15 @@ func (c *Container) promAlertsFile() *promRulesFile {
 	for _, g := range c.Groups {
 		for _, r := range g.Rows {
 			for _, o := range r {
-				for level, alert := range map[string]Alert{
+				for level, a := range map[string]alertDefinition{
 					"warning":  o.Warning,
 					"critical": o.Critical,
 				} {
-					if alert.isEmpty() {
+					if a.isEmpty() {
 						continue
 					}
 
-					hasUpperAndLowerBounds := (alert.GreaterOrEqual != 0) && (alert.LessOrEqual != 0)
+					hasUpperAndLowerBounds := (a.greaterOrEqual != nil) && (a.lessOrEqual != nil)
 					makeLabels := func(bound string) map[string]string {
 						var name, description string
 						if hasUpperAndLowerBounds {
@@ -624,32 +700,40 @@ func (c *Container) promAlertsFile() *promRulesFile {
 							// make sure the prometheus alert description only describes one bound
 							name = fmt.Sprintf("%s_%s", o.Name, bound)
 							if bound == "high" {
-								description = c.alertDescription(o, Alert{
-									GreaterOrEqual: alert.GreaterOrEqual,
+								description = c.alertDescription(o, alertDefinition{
+									greaterOrEqual: a.greaterOrEqual,
 								})
 							} else if bound == "low" {
-								description = c.alertDescription(o, Alert{
-									LessOrEqual: alert.LessOrEqual,
+								description = c.alertDescription(o, alertDefinition{
+									lessOrEqual: a.lessOrEqual,
 								})
 							} else {
 								panic(fmt.Sprintf("never here, bad alert bound: %s", bound))
 							}
 						} else {
 							name = o.Name
-							description = c.alertDescription(o, alert)
+							description = c.alertDescription(o, a)
 						}
 						return map[string]string{
 							"name":         name,
 							"level":        level,
 							"service_name": c.Name,
 							"description":  description,
+							"owner":        string(o.Owner),
 						}
 					}
 
 					// The alertQuery must contribute a query that returns a value < 1 when it is not
 					// firing, or a value of >= 1 when it is firing.
 					var alertQuery string
-					if alert.GreaterOrEqual != 0 {
+
+					// Replace NaN values with zero (not firing) or one (firing) if they are present.
+					fireOnNan := "0"
+					if o.DataMayNotBeNaN {
+						fireOnNan = "1"
+					}
+
+					if a.greaterOrEqual != nil {
 						// By dividing the query value and the greaterOrEqual value, we produce a
 						// value of 1 when the query reaches the greaterOrEqual value and < 1
 						// otherwise. Examples:
@@ -658,22 +742,22 @@ func (c *Container) promAlertsFile() *promRulesFile {
 						// 	query_value=25 / greaterOrEqual=50 == 0.5
 						// 	query_value=0 / greaterOrEqual=50 == 0.0
 						//
-						alertQuery = fmt.Sprintf("(%s) / %v", o.Query, alert.GreaterOrEqual)
+						alertQuery = fmt.Sprintf("(%s) / %v", o.Query, *a.greaterOrEqual)
 
 						// Replace no-data with zero values, so the alert does not fire, if desired.
 						if o.DataMayNotExist {
 							alertQuery = fmt.Sprintf("(%s) OR on() vector(0)", alertQuery)
 						}
 
-						// Replace NaN values with zero (not firing) or one (firing) if they are present.
-						fireOnNan := "1"
-						if o.DataMayBeNaN {
-							fireOnNan = "0"
-						}
 						alertQuery = fmt.Sprintf("((%s) >= 0) OR on() vector(%v)", alertQuery, fireOnNan)
-						group.AppendRow(alertQuery, makeLabels("high"))
+
+						// Wrap the query in max() so that if there are multiple series (e.g. per-container) they
+						// get flattened into a single one (we only support per-service alerts,
+						// not per-container/replica).
+						// More context: https://github.com/sourcegraph/sourcegraph/issues/11571#issuecomment-654571953
+						group.AppendRow(fmt.Sprintf("max(%s)", alertQuery), makeLabels("high"), a.duration)
 					}
-					if alert.LessOrEqual != 0 {
+					if a.lessOrEqual != nil {
 						//
 						// 	lessOrEqual=50 / query_value=100 == 0.5
 						// 	lessOrEqual=50 / query_value=50 == 1.0
@@ -681,20 +765,20 @@ func (c *Container) promAlertsFile() *promRulesFile {
 						// 	lessOrEqual=50 / query_value=0 (0.0000001) == 500000000
 						// 	lessOrEqual=50 / query_value=-50 (0.0000001) == 500000000
 						//
-						alertQuery = fmt.Sprintf("%v / clamp_min(%s, 0.0000001)", alert.LessOrEqual, o.Query)
+						alertQuery = fmt.Sprintf("%v / clamp_min(%s, 0.0000001)", *a.lessOrEqual, o.Query)
 
 						// Replace no-data with zero values, so the alert does not fire, if desired.
 						if o.DataMayNotExist {
 							alertQuery = fmt.Sprintf("(%s) OR on() vector(0)", alertQuery)
 						}
 
-						// Replace NaN values with zero (not firing) or one (firing) if they are present.
-						fireOnNan := "1"
-						if o.DataMayBeNaN {
-							fireOnNan = "0"
-						}
 						alertQuery = fmt.Sprintf("((%s) >= 0) OR on() vector(%v)", alertQuery, fireOnNan)
-						group.AppendRow(alertQuery, makeLabels("low"))
+
+						// Wrap the query in min() so that if there are multiple series (e.g. per-container) they
+						// get flattened into a single one (we only support per-service alerts,
+						// not per-container/replica).
+						// More context: https://github.com/sourcegraph/sourcegraph/issues/11571#issuecomment-654571953
+						group.AppendRow(fmt.Sprintf("min(%s)", alertQuery), makeLabels("low"), a.duration)
 					}
 				}
 			}
@@ -744,6 +828,8 @@ This document contains possible solutions for when you find alerts are firing in
 If your alert isn't mentioned here, or if the solution doesn't help, [contact us](mailto:support@sourcegraph.com)
 for assistance.
 
+To learn more about Sourcegraph's alerting, see [our alerting documentation](https://docs.sourcegraph.com/admin/observability/alerting).
+
 <!-- DO NOT EDIT: generated via: go generate ./monitoring -->
 
 `)
@@ -751,26 +837,42 @@ for assistance.
 		for _, g := range c.Groups {
 			for _, r := range g.Rows {
 				for _, o := range r {
-					if o.PossibleSolutions == "none" {
-						continue
-					}
+					fmt.Fprintf(&b, "## %s: %s\n\n", c.Name, o.Name)
+					fmt.Fprintf(&b, `<p class="subtitle">%s: %s</p>`, o.Owner, o.Description)
 
-					fmt.Fprintf(&b, "# %s: %s\n\n", c.Name, o.Name)
-
-					fmt.Fprintf(&b, "**Descriptions:**\n")
-					for _, alert := range []Alert{
-						o.Warning,
-						o.Critical,
+					// Render descriptions of various levels of this alert
+					fmt.Fprintf(&b, "**Descriptions:**\n\n")
+					var prometheusAlertNames []string
+					for _, alert := range []struct {
+						level     string
+						threshold alertDefinition
+					}{
+						{level: "warning", threshold: o.Warning},
+						{level: "critical", threshold: o.Critical},
 					} {
-						if alert.isEmpty() {
+						if alert.threshold.isEmpty() {
 							continue
 						}
-						fmt.Fprintf(&b, "\n- _%s_\n\n", c.alertDescription(o, alert))
+						fmt.Fprintf(&b, "- _%s_\n", c.alertDescription(o, alert.threshold))
+						prometheusAlertNames = append(prometheusAlertNames,
+							fmt.Sprintf("  \"%s\"", prometheusAlertName(alert.level, c.Name, o.Name)))
 					}
+					fmt.Fprint(&b, "\n")
 
+					// Render solutions for dealing with this alert
 					fmt.Fprintf(&b, "**Possible solutions:**\n\n")
-					possibleSolutions, _ := goMarkdown(o.PossibleSolutions)
-					fmt.Fprintf(&b, "%s\n\n", possibleSolutions)
+					if o.PossibleSolutions != "none" {
+						possibleSolutions, _ := goMarkdown(o.PossibleSolutions)
+						fmt.Fprintf(&b, "%s\n", possibleSolutions)
+					}
+					// add silencing configuration as another solution
+					fmt.Fprintf(&b, "- **Silence this alert:** If you are aware of this alert and want to silence notifications for it, add the following to your site configuration and set a reminder to re-evaluate the alert:\n\n")
+					fmt.Fprintf(&b, "```json\n%s\n```\n\n", fmt.Sprintf(`"observability.silenceAlerts": [
+%s
+]`, strings.Join(prometheusAlertNames, ",\n")))
+
+					// Render break for readability
+					fmt.Fprint(&b, "<br />\n")
 				}
 			}
 		}
@@ -805,10 +907,18 @@ func goMarkdown(m string) (string, error) {
 		}
 		m = strings.Join(lines[:len(lines)-1], "\n")
 	}
+
+	// If result is not a list, make it a list, so we can add items.
+	if !strings.HasPrefix(m, "-") && !strings.HasPrefix(m, "*") {
+		m = fmt.Sprintf("- %s", m)
+	}
+
 	return m, nil
 }
 
 var isDev, _ = strconv.ParseBool(os.Getenv("DEV"))
+
+const alertSuffix = "_alert_rules.yml"
 
 func main() {
 	grafanaDir, ok := os.LookupEnv("GRAFANA_DIR")
@@ -838,18 +948,18 @@ func main() {
 		PreciseCodeIntelWorker(),
 		PreciseCodeIntelIndexer(),
 		QueryRunner(),
-		Replacer(),
 		RepoUpdater(),
 		Searcher(),
 		Symbols(),
 		SyntectServer(),
-		UpdateCheck(),
 		ZoektIndexServer(),
 		ZoektWebServer(),
+		Prometheus(),
 	}
+	var filelist []string
 	for _, container := range containers {
 		if err := container.validate(); err != nil {
-			log.Fatal(err)
+			log.Fatal(fmt.Sprintf("container %q: %+v", container.Name, err))
 		}
 		if grafanaDir != "" {
 			board := container.dashboard()
@@ -862,6 +972,8 @@ func main() {
 			if err != nil {
 				log.Fatal(err)
 			}
+			filelist = append(filelist, container.Name+".json")
+
 			if reload {
 				ctx := context.Background()
 				client := sdk.NewClient("http://127.0.0.1:3370", "admin:admin", sdk.DefaultHTTPClient)
@@ -878,7 +990,8 @@ func main() {
 			if err != nil {
 				log.Fatal(err)
 			}
-			fileName := strings.Replace(container.Name, "-", "_", -1) + "_alert_rules.yml"
+			fileName := strings.Replace(container.Name, "-", "_", -1) + alertSuffix
+			filelist = append(filelist, fileName)
 			// #nosec G306  grafana runs as UID 472
 			err = ioutil.WriteFile(filepath.Join(prometheusDir, fileName), data, 0666)
 			if err != nil {
@@ -886,6 +999,7 @@ func main() {
 			}
 		}
 	}
+	deleteRemnants(filelist, grafanaDir, prometheusDir)
 
 	if prometheusDir != "" && reload {
 		resp, err := http.Post("http://127.0.0.1:9090/-/reload", "", nil)
@@ -910,6 +1024,56 @@ func main() {
 		}
 	}
 }
+func deleteRemnants(filelist []string, grafanaDir, promDir string) {
+	err := filepath.Walk(grafanaDir, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			log.Print("Unable to access file: ", path)
+			return nil
+		}
+		if filepath.Ext(path) != ".json" || info.IsDir() {
+			return nil
+		}
+		for _, f := range filelist {
+			if filepath.Ext(f) != ".json" || filepath.Ext(path) != ".json" || info.IsDir() {
+				continue
+			}
+			if filepath.Base(path) == f {
+				return nil
+			}
+		}
+		err = os.Remove(path)
+		log.Println("Removed orphan grafana file: ", path)
+		return err
+	})
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	err = filepath.Walk(promDir, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			log.Print("Unable to access file: ", path)
+			return nil
+		}
+		if !strings.Contains(filepath.Base(path), alertSuffix) || info.IsDir() {
+			return nil
+		}
+
+		for _, f := range filelist {
+			if filepath.Ext(f) != ".yml" {
+				continue
+			}
+			if filepath.Base(path) == f {
+				return nil
+			}
+		}
+		err = os.Remove(path)
+		log.Println("Removed orphan prometheus alert file: ", path)
+		return err
+	})
+	if err != nil {
+		log.Fatal(err)
+	}
+}
 
 // promRulesFile represents a Prometheus recording rules file (which we use for defining our alerts)
 // see:
@@ -925,30 +1089,45 @@ type promGroup struct {
 	Rules []promRule
 }
 
-func (g *promGroup) AppendRow(alertQuery string, labels map[string]string) {
-	// This wrapper clamp/floor/default vector should be present on ALL alert_count rule
-	// definitions because:
-	//
-	// 1. Clamping and flooring ensures that a single alert definition can only ever
-	//    contribute a single 0 OR 1 value, and as such cannot artificially inflate
-	//    alert_count or cause it to become a non-whole number.
-	//
-	// 3. "OR on() vector(1)" ensures that the alert is always firing if the inner
-	//    alertQuery does not return values for any reason (e.g. the query is for a
-	//    metric that does not exist.)
-	//
-	expr := "clamp_max(clamp_min(floor(\n" + alertQuery + "\n), 0), 1) OR on() vector(1)"
-	g.Rules = append(g.Rules, promRule{
-		Record: "alert_count",
-		Labels: labels,
-		Expr:   expr,
-	})
+func (g *promGroup) AppendRow(alertQuery string, labels map[string]string, duration time.Duration) {
+	labels["alert_type"] = "builtin" // indicate alert is generated
+	var forDuration *model.Duration
+	if duration > 0 {
+		d := model.Duration(duration)
+		forDuration = &d
+	}
+
+	alertName := prometheusAlertName(labels["level"], labels["service_name"], labels["name"])
+	g.Rules = append(g.Rules,
+		// Native prometheus alert, based on alertQuery which returns 0 if not firing or 1 if firing.
+		promRule{
+			Alert:  alertName,
+			Labels: labels,
+			Expr:   fmt.Sprintf(`%s >= 1`, alertQuery),
+			For:    forDuration,
+		},
+		// Record for generated alert, useful for indicating in Grafana dashboards if this alert
+		// is defined at all. Prometheus's ALERTS metric does not track alerts with alertstate="inactive".
+		//
+		// Since ALERTS{alertname="value"} does not exist if the alert has never fired, we add set
+		// the series to vector(0) instead.
+		promRule{
+			Record: "alert_count",
+			Labels: labels,
+			Expr:   fmt.Sprintf(`max(ALERTS{alertname=%q,alertstate="firing"} OR on() vector(0))`, alertName),
+		})
 }
 
 type promRule struct {
-	Record string
+	// either Record or Alert
+	Record string `yaml:",omitempty"`
+	Alert  string `yaml:",omitempty"`
+
 	Labels map[string]string
 	Expr   string
+
+	// for Alert only
+	For *model.Duration `yaml:",omitempty"`
 }
 
 // setPanelSize is a helper to set a panel's size.
@@ -965,4 +1144,9 @@ func setPanelPos(p *sdk.Panel, x, y int) {
 
 func stringPtr(s string) *string {
 	return &s
+}
+
+// prometheusAlertName creates an alertname that is unique given the combination of parameters
+func prometheusAlertName(level, service, name string) string {
+	return fmt.Sprintf("%s_%s_%s", level, service, name)
 }

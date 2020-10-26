@@ -5,11 +5,11 @@ import (
 	"encoding/json"
 	"time"
 
-	"github.com/sourcegraph/sourcegraph/cmd/frontend/db"
 	"github.com/sourcegraph/sourcegraph/cmd/frontend/envvar"
 	"github.com/sourcegraph/sourcegraph/internal/conf"
+	"github.com/sourcegraph/sourcegraph/internal/db"
 	"github.com/sourcegraph/sourcegraph/internal/env"
-	"github.com/sourcegraph/sourcegraph/internal/pubsub/pubsubutil"
+	"github.com/sourcegraph/sourcegraph/internal/pubsub"
 	"github.com/sourcegraph/sourcegraph/internal/version"
 )
 
@@ -84,7 +84,7 @@ func publishSourcegraphDotComEvent(args Event) error {
 	if err != nil {
 		return err
 	}
-	return pubsubutil.Publish(pubSubDotComEventsTopicID, string(event))
+	return pubsub.Publish(pubSubDotComEventsTopicID, string(event))
 }
 
 // logLocalEvent logs users events.

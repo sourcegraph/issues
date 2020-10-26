@@ -13,11 +13,12 @@ import (
 	otlog "github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
 
-	"github.com/sourcegraph/sourcegraph/cmd/frontend/authz"
 	"github.com/sourcegraph/sourcegraph/cmd/frontend/globals"
 	"github.com/sourcegraph/sourcegraph/cmd/repo-updater/repos"
-	edb "github.com/sourcegraph/sourcegraph/enterprise/cmd/frontend/db"
+	edb "github.com/sourcegraph/sourcegraph/enterprise/internal/db"
+	"github.com/sourcegraph/sourcegraph/enterprise/internal/licensing"
 	"github.com/sourcegraph/sourcegraph/internal/api"
+	"github.com/sourcegraph/sourcegraph/internal/authz"
 	"github.com/sourcegraph/sourcegraph/internal/extsvc"
 	"github.com/sourcegraph/sourcegraph/internal/extsvc/github"
 	"github.com/sourcegraph/sourcegraph/internal/ratelimit"
@@ -289,11 +290,12 @@ func (s *PermsSyncer) syncRepoPerms(ctx context.Context, repoID api.RepoID, noPe
 	})
 
 	// Detect 404 error (i.e. not authorized to call given APIs) that often happens with GitHub.com
-	// when the owner of the token only has READ access. However, we don't want to fail entirely
-	// so the scheduler won't keep trying to fetch permissions of this same repository.
+	// when the owner of the token only has READ access. However, we don't want to fail
+	// so the scheduler won't keep trying to fetch permissions of this same repository, so we
+	// return a nil error and log a warning message.
 	if apiErr, ok := err.(*github.APIError); ok && apiErr.Code == http.StatusNotFound {
-		log15.Debug("PermsSyncer.syncRepoPerms.ignoreUnauthorizedAPIError", "repoID", repo.ID, "err", err)
-		err = nil
+		log15.Warn("PermsSyncer.syncRepoPerms.ignoreUnauthorizedAPIError", "repoID", repo.ID, "err", err, "suggestion", "GitHub access token user may only have read access to the repository, but needs write for permissions")
+		return s.permsStore.TouchRepoPermissions(ctx, int32(repoID))
 	}
 
 	if err != nil {
@@ -617,9 +619,13 @@ func (s *PermsSyncer) runSchedule(ctx context.Context) {
 			return
 		}
 
-		// Skip if not enabled or no authz provider is configured
-		if !globals.PermissionsBackgroundSync().Enabled ||
-			len(s.providersByServiceID()) == 0 {
+		// Skip if:
+		// 	- Permissions user mapping is enabled
+		// 	- No authz provider is configured
+		//	- This is not purchased with the current license
+		if globals.PermissionsUserMapping().Enabled ||
+			len(s.providersByServiceID()) == 0 ||
+			(licensing.EnforceTiers && licensing.Check(licensing.FeatureACLs) != nil) {
 			continue
 		}
 

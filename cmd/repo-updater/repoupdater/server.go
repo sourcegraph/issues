@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"net/http"
 	"strings"
-	"sync"
 	"time"
 
 	"github.com/hashicorp/go-multierror"
@@ -62,15 +61,14 @@ type Server struct {
 		// ScheduleRepos schedules new permissions syncing requests for given repositories.
 		ScheduleRepos(ctx context.Context, repoIDs ...api.RepoID)
 	}
-
-	notClonedCountMu        sync.Mutex
-	notClonedCount          uint64
-	notClonedCountUpdatedAt time.Time
 }
 
 // Handler returns the http.Handler that should be used to serve requests.
 func (s *Server) Handler() http.Handler {
 	mux := http.NewServeMux()
+	mux.HandleFunc("/healthz", func(w http.ResponseWriter, _ *http.Request) {
+		w.WriteHeader(http.StatusOK)
+	})
 	mux.HandleFunc("/repo-update-scheduler-info", s.handleRepoUpdateSchedulerInfo)
 	mux.HandleFunc("/repo-lookup", s.handleRepoLookup)
 	mux.HandleFunc("/repo-external-services", s.handleRepoExternalServices)
@@ -327,7 +325,7 @@ func (s *Server) handleExternalServiceSync(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	s.Syncer.TriggerSync()
+	s.Syncer.TriggerEnqueueSyncJobs()
 
 	err := externalServiceValidate(ctx, &req)
 	if err == github.ErrIncompleteResults {
@@ -431,11 +429,15 @@ func (s *Server) repoLookup(ctx context.Context, args protocol.RepoLookupArgs) (
 		return mockRepoLookup(args)
 	}
 
-	repos, err := s.Store.ListRepos(ctx, repos.StoreListReposArgs{
+	list, err := s.Store.ListRepos(ctx, repos.StoreListReposArgs{
 		Names: []string{string(args.Repo)},
 	})
 	if err != nil {
 		return nil, err
+	}
+	var repo *repos.Repo
+	if len(list) > 0 {
+		repo = list[0]
 	}
 
 	// If we are sourcegraph.com we don't run a global Sync since there are
@@ -445,15 +447,27 @@ func (s *Server) repoLookup(ctx context.Context, args protocol.RepoLookupArgs) (
 	codehost := extsvc.CodeHostOf(args.Repo, extsvc.PublicCodeHosts...)
 	if s.SourcegraphDotComMode && codehost != nil {
 		// TODO a queue with single flighting to speak to remote for args.Repo?
-		if len(repos) == 1 {
+		if repo != nil {
 			// We have (potentially stale) data we can return to the user right
 			// now. Do that rather than blocking.
 			go func() {
 				ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 				defer cancel()
-				_, err := s.remoteRepoSync(ctx, codehost, string(args.Repo))
+				repoResult, err := s.remoteRepoSync(ctx, codehost, string(args.Repo))
 				if err != nil {
 					log15.Error("async remoteRepoSync failed", "repo", args.Repo, "error", err)
+				}
+
+				// Since we don't support private repositories on Cloud,
+				// we can safely assume that when a repository stored in the database is not accessible anymore,
+				// no other external service should have access to it, we can then remove it.
+				if repoResult.ErrorNotFound || repoResult.ErrorUnauthorized {
+					err = s.Store.UpsertRepos(ctx, repo.With(func(r *repos.Repo) {
+						r.DeletedAt = s.Now()
+					}))
+					if err != nil {
+						log15.Error("failed to delete inaccessible repo", "repo", args.Repo, "error", err)
+					}
 				}
 			}()
 		} else {
@@ -463,13 +477,13 @@ func (s *Server) repoLookup(ctx context.Context, args protocol.RepoLookupArgs) (
 		}
 	}
 
-	if len(repos) != 1 {
+	if repo == nil {
 		return &protocol.RepoLookupResult{
 			ErrorNotFound: true,
 		}, nil
 	}
 
-	repoInfo, err := newRepoInfo(repos[0])
+	repoInfo, err := newRepoInfo(repo)
 	if err != nil {
 		return nil, err
 	}
@@ -525,7 +539,13 @@ func (s *Server) remoteRepoSync(ctx context.Context, codehost *extsvc.CodeHost, 
 		}
 	}
 
-	err = s.Syncer.SyncSubset(ctx, repo)
+	if repo.Private {
+		return &protocol.RepoLookupResult{
+			ErrorNotFound: true,
+		}, nil
+	}
+
+	err = s.Syncer.SyncRepo(ctx, s.Store, repo)
 	if err != nil {
 		return nil, err
 	}
@@ -545,7 +565,7 @@ func (s *Server) handleStatusMessages(w http.ResponseWriter, r *http.Request) {
 		Messages: []protocol.StatusMessage{},
 	}
 
-	notCloned, err := s.computeNotClonedCount(r.Context())
+	notCloned, err := s.Store.CountNotClonedRepos(r.Context())
 	if err != nil {
 		respond(w, http.StatusInternalServerError, err)
 		return
@@ -559,7 +579,7 @@ func (s *Server) handleStatusMessages(w http.ResponseWriter, r *http.Request) {
 		})
 	}
 
-	if e := s.Syncer.LastSyncError(); e != nil {
+	for _, e := range s.Syncer.SyncErrors() {
 		if multiErr, ok := errors.Cause(e).(*multierror.Error); ok {
 			for _, e := range multiErr.Errors {
 				if sourceErr, ok := e.(*repos.SourceError); ok {
@@ -598,42 +618,6 @@ func (s *Server) handleStatusMessages(w http.ResponseWriter, r *http.Request) {
 	log15.Debug("TRACE handleStatusMessages", "messages", log15.Lazy{Fn: messagesSummary})
 
 	respond(w, http.StatusOK, resp)
-}
-
-func (s *Server) computeNotClonedCount(ctx context.Context) (uint64, error) {
-	// Coarse lock so we single flight the expensive computation.
-	s.notClonedCountMu.Lock()
-	defer s.notClonedCountMu.Unlock()
-
-	if expiresAt := s.notClonedCountUpdatedAt.Add(30 * time.Second); expiresAt.After(time.Now()) {
-		return s.notClonedCount, nil
-	}
-
-	names, err := s.Store.ListAllRepoNames(ctx)
-	if err != nil {
-		return 0, err
-	}
-
-	notCloned := make(map[string]struct{}, len(names))
-	for _, n := range names {
-		lower := strings.ToLower(string(n))
-		notCloned[lower] = struct{}{}
-	}
-
-	cloned, err := s.GitserverClient.ListCloned(ctx)
-	if err != nil {
-		return 0, err
-	}
-
-	for _, c := range cloned {
-		lower := strings.ToLower(c)
-		delete(notCloned, lower)
-	}
-
-	s.notClonedCount = uint64(len(notCloned))
-	s.notClonedCountUpdatedAt = time.Now()
-
-	return s.notClonedCount, nil
 }
 
 func (s *Server) handleEnqueueChangesetSync(w http.ResponseWriter, r *http.Request) {

@@ -23,6 +23,8 @@ import (
 
 	"github.com/sourcegraph/sourcegraph/internal/debugserver"
 	"github.com/sourcegraph/sourcegraph/internal/env"
+	"github.com/sourcegraph/sourcegraph/internal/logging"
+	"github.com/sourcegraph/sourcegraph/internal/trace"
 	"github.com/sourcegraph/sourcegraph/internal/tracer"
 )
 
@@ -60,7 +62,9 @@ var hopHeaders = map[string]struct{}{
 func main() {
 	env.Lock()
 	env.HandleHelpFlag()
+	logging.Init()
 	tracer.Init()
+	trace.Init(true)
 
 	go func() {
 		c := make(chan os.Signal, 1)
@@ -75,6 +79,7 @@ func main() {
 	// connections after 60s. In order to avoid running into EOF errors, we use
 	// a IdleConnTimeout of 30s, so connections are only kept around for <30s
 	client := &http.Client{Transport: &http.Transport{
+		Proxy:           http.ProxyFromEnvironment,
 		IdleConnTimeout: 30 * time.Second,
 	}}
 

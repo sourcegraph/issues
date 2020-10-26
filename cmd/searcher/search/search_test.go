@@ -45,6 +45,7 @@ func main() {
 `,
 		"abc.txt":    "w",
 		"milton.png": string(miltonPNG),
+		"ignore.me":  `func hello() string {return "world"}`,
 	}
 
 	cases := []struct {
@@ -189,14 +190,39 @@ main.go:7:}
 		}, `
 file++.plus:1:filename contains regex metachars
 `},
+
+		{protocol.PatternInfo{Pattern: "World", IsNegated: true}, `
+abc.txt
+file++.plus
+milton.png
+`},
+
+		{protocol.PatternInfo{Pattern: "World", IsCaseSensitive: true, IsNegated: true}, `
+abc.txt
+file++.plus
+main.go
+milton.png
+`},
+
+		{protocol.PatternInfo{Pattern: "fmt", IsNegated: true}, `
+README.md
+abc.txt
+file++.plus
+milton.png
+`},
 	}
 
-	store, cleanup, err := newStore(files)
+	s, cleanup, err := newStore(files)
 	if err != nil {
 		t.Fatal(err)
 	}
+	s.FilterTar = func(_ context.Context, _ gitserver.Repo, _ api.CommitID) (store.FilterFunc, error) {
+		return func(hdr *tar.Header) bool {
+			return hdr.Name == "ignore.me"
+		}, nil
+	}
 	defer cleanup()
-	ts := httptest.NewServer(&search.Service{Store: store})
+	ts := httptest.NewServer(&search.Service{Store: s})
 	defer ts.Close()
 
 	for i, test := range cases {
@@ -336,6 +362,20 @@ func TestSearch_badrequest(t *testing.T) {
 				PathPatternsAreRegExps: true,
 			},
 		},
+
+		// structural search with negated pattern
+		{
+			Repo:   "foo",
+			URL:    "u",
+			Commit: "deadbeefdeadbeefdeadbeefdeadbeefdeadbeef",
+			PatternInfo: protocol.PatternInfo{
+				Pattern:                "fmt.Println(:[_])",
+				IsNegated:              true,
+				ExcludePattern:         "",
+				PathPatternsAreRegExps: true,
+				IsStructuralPat:        true,
+			},
+		},
 	}
 
 	store, cleanup, err := newStore(nil)
@@ -391,6 +431,9 @@ func doSearch(u string, p *protocol.Request) ([]protocol.FileMatch, error) {
 	}
 	if p.PatternMatchesPath {
 		form.Set("PatternMatchesPath", "true")
+	}
+	if p.IsNegated {
+		form.Set("IsNegated", "true")
 	}
 	resp, err := http.PostForm(u, form)
 	if err != nil {

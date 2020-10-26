@@ -1,9 +1,6 @@
 // The Sourcegraph site configuration for development servers.
 {
   "externalURL": "http://localhost:3080",
-  "experimentalFeatures": {
-    "automation": "enabled"
-  },
   "disablePublicRepoRedirects": true,
   "repoListUpdateInterval": 1,
   "update.channel": "release",

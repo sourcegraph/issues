@@ -8,6 +8,8 @@ import (
 	"io"
 	"io/ioutil"
 	"net/http"
+	"regexp"
+	"strconv"
 
 	"github.com/inconshreveable/log15"
 	"github.com/sourcegraph/codeintelutils"
@@ -38,6 +40,8 @@ func NewUploadHandler(store store.Store, bundleManagerClient bundles.BundleManag
 	return http.HandlerFunc(handler.handleEnqueue)
 }
 
+var revhashPattern = regexp.MustCompile(`^[a-z0-9]{40}$`)
+
 // POST /upload
 func (h *UploadHandler) handleEnqueue(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
@@ -46,6 +50,11 @@ func (h *UploadHandler) handleEnqueue(w http.ResponseWriter, r *http.Request) {
 	if !hasQuery(r, "uploadId") {
 		repoName := getQuery(r, "repository")
 		commit := getQuery(r, "commit")
+
+		if !revhashPattern.Match([]byte(commit)) {
+			http.Error(w, "Commit must be a 40-character revhash", http.StatusBadRequest)
+			return
+		}
 
 		repo, ok := ensureRepoAndCommitExist(ctx, w, repoName, commit)
 		if !ok {
@@ -119,6 +128,8 @@ type enqueuePayload struct {
 //   - handleEnqueueMultipartUpload
 //   - handleEnqueueMultipartFinalize
 func (h *UploadHandler) handleEnqueueErr(w http.ResponseWriter, r *http.Request, repositoryID int) (interface{}, error) {
+	ctx := r.Context()
+
 	uploadArgs := UploadArgs{
 		Commit:       getQuery(r, "commit"),
 		Root:         sanitizeRoot(getQuery(r, "root")),
@@ -142,7 +153,7 @@ func (h *UploadHandler) handleEnqueueErr(w http.ResponseWriter, r *http.Request,
 		return nil, clientError("no uploadId supplied")
 	}
 
-	upload, exists, err := h.store.GetUploadByID(r.Context(), getQueryInt(r, "uploadId"))
+	upload, exists, err := h.store.GetUploadByID(ctx, getQueryInt(r, "uploadId"))
 	if err != nil {
 		return nil, err
 	}
@@ -168,6 +179,8 @@ func (h *UploadHandler) handleEnqueueErr(w http.ResponseWriter, r *http.Request,
 // handleEnqueueSinglePayload handles a non-multipart upload. This creates an upload record
 // with state 'queued', proxies the data to the bundle manager, and returns the generated ID.
 func (h *UploadHandler) handleEnqueueSinglePayload(r *http.Request, uploadArgs UploadArgs) (_ interface{}, err error) {
+	ctx := r.Context()
+
 	// Newer versions of src-cli will do this same check before uploading the file. However,
 	// older versions of src-cli will not guarantee that the index name query parameter is
 	// sent. Requiring it now will break valid workflows. We only need ot maintain backwards
@@ -196,7 +209,7 @@ func (h *UploadHandler) handleEnqueueSinglePayload(r *http.Request, uploadArgs U
 		r.Body = ioutil.NopCloser(io.MultiReader(bytes.NewReader(buf.Bytes()), r.Body))
 	}
 
-	tx, err := h.store.Transact(r.Context())
+	tx, err := h.store.Transact(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -204,19 +217,25 @@ func (h *UploadHandler) handleEnqueueSinglePayload(r *http.Request, uploadArgs U
 		err = tx.Done(err)
 	}()
 
-	id, err := tx.InsertUpload(r.Context(), store.Upload{
+	id, err := tx.InsertUpload(ctx, store.Upload{
 		Commit:        uploadArgs.Commit,
 		Root:          uploadArgs.Root,
 		RepositoryID:  uploadArgs.RepositoryID,
 		Indexer:       uploadArgs.Indexer,
-		State:         "queued",
+		State:         "uploading",
 		NumParts:      1,
 		UploadedParts: []int{0},
 	})
 	if err != nil {
 		return nil, err
 	}
-	if err := h.bundleManagerClient.SendUpload(r.Context(), id, r.Body); err != nil {
+
+	size, err := h.bundleManagerClient.SendUpload(ctx, id, r.Body)
+	if err != nil {
+		return nil, err
+	}
+
+	if err := tx.MarkQueued(ctx, id, &size); err != nil {
 		return nil, err
 	}
 
@@ -228,14 +247,16 @@ func (h *UploadHandler) handleEnqueueSinglePayload(r *http.Request, uploadArgs U
 	)
 
 	// older versions of src-cli expect a string
-	return enqueuePayload{fmt.Sprintf("%d", id)}, nil
+	return enqueuePayload{strconv.Itoa(id)}, nil
 }
 
 // handleEnqueueMultipartSetup handles the first request in a multipart upload. This creates a
 // new upload record with state 'uploading' and returns the generated ID to be used in subsequent
 // requests for the same upload.
 func (h *UploadHandler) handleEnqueueMultipartSetup(r *http.Request, uploadArgs UploadArgs, numParts int) (interface{}, error) {
-	id, err := h.store.InsertUpload(r.Context(), store.Upload{
+	ctx := r.Context()
+
+	id, err := h.store.InsertUpload(ctx, store.Upload{
 		Commit:        uploadArgs.Commit,
 		Root:          uploadArgs.Root,
 		RepositoryID:  uploadArgs.RepositoryID,
@@ -256,13 +277,15 @@ func (h *UploadHandler) handleEnqueueMultipartSetup(r *http.Request, uploadArgs 
 	)
 
 	// older versions of src-cli expect a string
-	return enqueuePayload{fmt.Sprintf("%d", id)}, nil
+	return enqueuePayload{strconv.Itoa(id)}, nil
 }
 
 // handleEnqueueMultipartUpload handles a partial upload in a multipart upload. This proxies the
 // data to the bundle manager and marks the part index in the upload record.
 func (h *UploadHandler) handleEnqueueMultipartUpload(r *http.Request, upload store.Upload, partIndex int) (_ interface{}, err error) {
-	tx, err := h.store.Transact(r.Context())
+	ctx := r.Context()
+
+	tx, err := h.store.Transact(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -270,10 +293,10 @@ func (h *UploadHandler) handleEnqueueMultipartUpload(r *http.Request, upload sto
 		err = tx.Done(err)
 	}()
 
-	if err := tx.AddUploadPart(r.Context(), upload.ID, partIndex); err != nil {
+	if err := tx.AddUploadPart(ctx, upload.ID, partIndex); err != nil {
 		return nil, err
 	}
-	if err := h.bundleManagerClient.SendUploadPart(r.Context(), upload.ID, partIndex, r.Body); err != nil {
+	if err := h.bundleManagerClient.SendUploadPart(ctx, upload.ID, partIndex, r.Body); err != nil {
 		return nil, err
 	}
 
@@ -284,11 +307,13 @@ func (h *UploadHandler) handleEnqueueMultipartUpload(r *http.Request, upload sto
 // upload from 'uploading' to 'queued', then instructs the bundle manager to concatenate all of the part
 // files together.
 func (h *UploadHandler) handleEnqueueMultipartFinalize(r *http.Request, upload store.Upload) (_ interface{}, err error) {
+	ctx := r.Context()
+
 	if len(upload.UploadedParts) != upload.NumParts {
 		return nil, clientError("upload is missing %d parts", upload.NumParts-len(upload.UploadedParts))
 	}
 
-	tx, err := h.store.Transact(r.Context())
+	tx, err := h.store.Transact(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -296,10 +321,12 @@ func (h *UploadHandler) handleEnqueueMultipartFinalize(r *http.Request, upload s
 		err = tx.Done(err)
 	}()
 
-	if err := tx.MarkQueued(r.Context(), upload.ID); err != nil {
+	size, err := h.bundleManagerClient.StitchParts(ctx, upload.ID)
+	if err != nil {
 		return nil, err
 	}
-	if err := h.bundleManagerClient.StitchParts(r.Context(), upload.ID); err != nil {
+
+	if err := tx.MarkQueued(ctx, upload.ID, &size); err != nil {
 		return nil, err
 	}
 
