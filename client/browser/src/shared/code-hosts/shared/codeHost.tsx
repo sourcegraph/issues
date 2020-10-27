@@ -23,6 +23,7 @@ import {
     Unsubscribable,
     concat,
     BehaviorSubject,
+    merge,
 } from 'rxjs'
 import {
     catchError,
@@ -52,7 +53,6 @@ import {
     CommandListClassProps,
     CommandListPopoverButtonClassProps,
 } from '../../../../../shared/src/commandPalette/CommandList'
-import { CompletionWidgetClassProps } from '../../../../../shared/src/components/completion/CompletionWidget'
 import { asObservable } from '../../../../../shared/src/util/rxjs/asObservable'
 import { ApplyLinkPreviewOptions } from '../../../../../shared/src/components/linkPreviews/linkPreviews'
 import { Controller } from '../../../../../shared/src/extensions/controller'
@@ -103,7 +103,6 @@ import {
     nativeTooltipsEnabledFromSettings,
     registerNativeTooltipContributions,
 } from './nativeTooltips'
-import { handleTextFields, TextField } from './textFields'
 import { delayUntilIntersecting, ViewResolver } from './views'
 import { IS_LIGHT_THEME } from './consts'
 import { NotificationType, HoverAlert } from 'sourcegraph'
@@ -111,11 +110,15 @@ import { isHTTPAuthError } from '../../../../../shared/src/backend/fetch'
 import { asError } from '../../../../../shared/src/util/errors'
 import { resolveRepoNamesForDiffOrFileInfo, defaultRevisionToCommitID } from './util/fileInfo'
 import { wrapRemoteObservable } from '../../../../../shared/src/api/client/api/common'
+<<<<<<< HEAD:browser/src/shared/code-hosts/shared/codeHost.tsx
+import { ReferenceCounter } from '../../../../../shared/src/util/ReferenceCounter'
+=======
 import { HoverMerged } from '../../../../../shared/src/api/client/types/hover'
 import { isFirefox, observeSourcegraphURL } from '../../util/context'
 import { shouldOverrideSendTelemetry, observeOptionFlag } from '../../util/optionFlags'
 import { BackgroundPageApi } from '../../../browser-extension/web-extension-api/types'
 import { background } from '../../../browser-extension/web-extension-api/runtime'
+>>>>>>> main:client/browser/src/shared/code-hosts/shared/codeHost.tsx
 
 registerHighlightContributions()
 
@@ -196,11 +199,6 @@ export interface CodeHost extends ApplyLinkPreviewOptions {
     contentViewResolvers?: ViewResolver<ContentView>[]
 
     /**
-     * Resolve {@link TextField}s from the DOM.
-     */
-    textFieldResolvers?: ViewResolver<TextField>[]
-
-    /**
      * Resolves {@link NativeTooltip}s from the DOM.
      */
     nativeTooltipResolvers?: ViewResolver<NativeTooltip>[]
@@ -254,11 +252,6 @@ export interface CodeHost extends ApplyLinkPreviewOptions {
     codeViewToolbarClassProps?: CodeViewToolbarClassProps
 
     /**
-     * CSS classes for the completion widget to customize styling
-     */
-    completionWidgetClassProps?: CompletionWidgetClassProps
-
-    /**
      * Whether or not code views need to be tokenized. Defaults to false.
      */
     codeViewsRequireTokenization?: boolean
@@ -267,11 +260,11 @@ export interface CodeHost extends ApplyLinkPreviewOptions {
 /**
  * A blob (single file `FileInfo`) or a diff (with a head `FileInfo` and/or base `FileInfo`)
  */
-export type DiffOrBlobInfo<T extends FileInfo = FileInfo> = BlobInfo<T> | DiffInfo<T>
-export interface BlobInfo<T extends FileInfo = FileInfo> {
+export type DiffOrBlobInfo<T = FileInfo> = BlobInfo<T> | DiffInfo<T>
+export interface BlobInfo<T = FileInfo> {
     blob: T
 }
-export type DiffInfo<T extends FileInfo = FileInfo> =
+export type DiffInfo<T = FileInfo> =
     // `base?: undefined` avoids making `{ head: T; base: T }` assignable to this type
     { head: T; base?: undefined } | { base: T; head?: undefined } | { head: T; base: T }
 
@@ -387,7 +380,7 @@ function initCodeIntelligence({
             concat(
                 [{ isLoading: true, result: null }],
                 combineLatest([
-                    from(extensionsController.extHostAPI).pipe(
+                    from(extensionsController.extensionHostAPI).pipe(
                         switchMap(extensionHost =>
                             wrapRemoteObservable(
                                 extensionHost.getHover(
@@ -412,7 +405,7 @@ function initCodeIntelligence({
                 )
             ),
         getDocumentHighlights: ({ line, character, part, ...rest }) =>
-            from(extensionsController.extHostAPI).pipe(
+            from(extensionsController.extensionHostAPI).pipe(
                 switchMap(extensionHost =>
                     wrapRemoteObservable(
                         extensionHost.getDocumentHighlights(
@@ -817,44 +810,7 @@ export function handleCodeHost({
     )
 
     /** Map from workspace URI to number of editors referencing it */
-    const rootReferenceCounts = new Map<string, number>()
-
-    /**
-     * Adds root referenced by a code editor to the worskpace.
-     *
-     * Will only cause `workspace.roots` to emit if no root with
-     * the given `uri` existed.
-     */
-    const addRootReference = (uri: string, inputRevision: string | undefined): void => {
-        rootReferenceCounts.set(uri, (rootReferenceCounts.get(uri) || 0) + 1)
-        if (rootReferenceCounts.get(uri) === 1) {
-            extensionsController.services.workspace.roots.next([
-                ...extensionsController.services.workspace.roots.value,
-                { uri, inputRevision },
-            ])
-        }
-    }
-
-    /**
-     * Deletes a reference to a workspace root from a code editor.
-     *
-     * Will only cause `workspace.roots` to emit if the root
-     * with the given `uri` has no more references.
-     */
-    const deleteRootReference = (uri: string): void => {
-        const currentReferenceCount = rootReferenceCounts.get(uri)
-        if (!currentReferenceCount) {
-            throw new Error(`No preexisting root refs for uri ${uri}`)
-        }
-        const updatedReferenceCount = currentReferenceCount - 1
-        if (updatedReferenceCount === 0) {
-            extensionsController.services.workspace.roots.next(
-                extensionsController.services.workspace.roots.value.filter(root => root.uri !== uri)
-            )
-        } else {
-            rootReferenceCounts.set(uri, updatedReferenceCount)
-        }
-    }
+    const rootReferenceCounts = new ReferenceCounter<string>()
 
     subscriptions.add(
         codeViews.subscribe(codeViewEvent => {
@@ -863,37 +819,43 @@ export function handleCodeHost({
 
             const { element, diffOrBlobInfo, getPositionAdjuster, getToolbarMount, toolbarButtonProps } = codeViewEvent
 
-            const initializeModelAndViewerForFileInfo = (
+            const initializeModelAndViewerForFileInfo = async (
                 fileInfo: FileInfoWithContent & FileInfoWithRepoName
-            ): CodeEditorWithPartialModel => {
-                const uri = toURIWithPath(fileInfo)
+            ): Promise<CodeEditorWithPartialModel> => {
+                const extensionHostAPI = await extensionsController.extensionHostAPI
 
                 // Add model
                 const languageId = getModeFromPath(fileInfo.filePath)
-                const model = { uri, languageId, text: fileInfo.content }
+                const model = { uri: toURIWithPath(fileInfo), languageId, text: fileInfo.content }
                 // Only add the model if it doesn't exist
                 // (there may be several code views on the page pointing to the same model)
-                if (!extensionsController.services.model.hasModel(uri)) {
-                    extensionsController.services.model.addModel(model)
-                }
+                await extensionHostAPI.addTextDocumentIfNotExists(model)
 
                 // Add viewer
                 const editorData: CodeEditorData = {
                     type: 'CodeEditor' as const,
-                    resource: uri,
+                    resource: model.uri,
                     selections: codeViewEvent.getSelections ? codeViewEvent.getSelections(codeViewEvent.element) : [],
                     isActive: true,
                 }
-                const editorId = extensionsController.services.viewer.addViewer(editorData)
+                const editorId = await extensionHostAPI.addViewerIfNotExists(editorData)
 
                 // Add root ref
                 const rootURI = toRootURI(fileInfo)
-                addRootReference(rootURI, fileInfo.revision)
+                if (rootReferenceCounts.increment(rootURI)) {
+                    await extensionHostAPI.addWorkspaceRoot({ uri: rootURI })
+                }
+                // addRootReference(rootURI, fileInfo.revision)
 
                 // Subscribe for removal
                 codeViewEvent.subscriptions.add(() => {
-                    deleteRootReference(rootURI)
-                    extensionsController.services.viewer.removeViewer(editorId)
+                    // eslint-disable-next-line @typescript-eslint/no-floating-promises
+                    ;(async () => {
+                        await extensionHostAPI.removeViewer(editorId)
+                        if (rootReferenceCounts.decrement(rootURI)) {
+                            await extensionHostAPI.removeWorkspaceRoot(rootURI)
+                        }
+                    })()
                 })
 
                 return {
@@ -903,27 +865,30 @@ export function handleCodeHost({
                 }
             }
 
-            const initializeModelAndViewerForDiffOrFileInfo = (
+            const initializeModelAndViewerForDiffOrFileInfo = async (
                 diffOrFileInfo: DiffOrBlobInfo<FileInfoWithContent>
-            ): CodeEditorWithPartialModel => {
+            ): Promise<DiffOrBlobInfo<CodeEditorWithPartialModel>> => {
                 if ('blob' in diffOrFileInfo) {
-                    return initializeModelAndViewerForFileInfo(diffOrFileInfo.blob)
+                    return { blob: await initializeModelAndViewerForFileInfo(diffOrFileInfo.blob) }
                 }
                 if (diffOrFileInfo.head && diffOrFileInfo.base) {
                     // For diffs, both editors are created (for head and base)
                     // but only one of them is returned and later passed into
                     // the `scope` of the CodeViewToolbar component.
-                    const editor = initializeModelAndViewerForFileInfo(diffOrFileInfo.head)
-                    initializeModelAndViewerForFileInfo(diffOrFileInfo.base)
-                    return editor
+                    return {
+                        head: await initializeModelAndViewerForFileInfo(diffOrFileInfo.base),
+                        base: await initializeModelAndViewerForFileInfo(diffOrFileInfo.head),
+                    }
                 }
                 if (diffOrFileInfo.base) {
-                    return initializeModelAndViewerForFileInfo(diffOrFileInfo.base)
+                    return {
+                        base: await initializeModelAndViewerForFileInfo(diffOrFileInfo.base),
+                    }
                 }
-                return initializeModelAndViewerForFileInfo(diffOrFileInfo.head)
+                return { head: await initializeModelAndViewerForFileInfo(diffOrFileInfo.head) }
             }
 
-            const codeEditorWithPartialModel = initializeModelAndViewerForDiffOrFileInfo(diffOrBlobInfo)
+            const codeEditorWithPartialModelPromise = initializeModelAndViewerForDiffOrFileInfo(diffOrBlobInfo)
 
             const domFunctions = {
                 ...codeViewEvent.dom,
@@ -938,9 +903,10 @@ export function handleCodeHost({
                         : codeViewEvent.dom.getCodeElementFromTarget(target),
             }
 
-            const applyDecorationsForFileInfo = (fileInfo: FileInfoWithContent, diffPart?: DiffPart): void => {
+            // Apply decorations coming from extensions
+            if (!minimalUI) {
                 let decorationsByLine: DecorationMapByLine = new Map()
-                const update = (decorations?: TextDocumentDecoration[] | null): void => {
+                const update = (decorations?: TextDocumentDecoration[] | null, diffPart?: DiffPart): void => {
                     try {
                         decorationsByLine = applyDecorations(
                             domFunctions,
@@ -953,30 +919,50 @@ export function handleCodeHost({
                         console.error('Could not apply decorations to code view', codeViewEvent.element, error)
                     }
                 }
+
                 codeViewEvent.subscriptions.add(
-                    extensionsController.services.textDocumentDecoration
-                        .getDecorations(toTextDocumentIdentifier(fileInfo))
-                        // Make sure extensions get cleaned up un unsubscription
-                        .pipe(finalize(update))
+                    from(extensionsController.extensionHostAPI)
+                        .pipe(
+                            withLatestFrom(codeEditorWithPartialModelPromise),
+                            switchMap(([extensionHostAPI, codeEditors]) => {
+                                const observables: Observable<void>[] = []
+                                if ('blob' in codeEditors) {
+                                    observables.push(
+                                        wrapRemoteObservable(extensionHostAPI.getDecorations(codeEditors.blob)).pipe(
+                                            map(decorations => update(decorations, undefined)),
+                                            finalize(update)
+                                        )
+                                    )
+                                } else {
+                                    if (codeEditors.head) {
+                                        observables.push(
+                                            wrapRemoteObservable(
+                                                extensionHostAPI.getDecorations(codeEditors.head)
+                                            ).pipe(
+                                                map(decorations => update(decorations, 'head')),
+                                                finalize(update)
+                                            )
+                                        )
+                                    }
+                                    if (codeEditors.base) {
+                                        observables.push(
+                                            wrapRemoteObservable(
+                                                extensionHostAPI.getDecorations(codeEditors.base)
+                                            ).pipe(
+                                                map(decorations => update(decorations, 'base')),
+                                                finalize(update)
+                                            )
+                                        )
+                                    }
+                                }
+                                return merge(observables)
+                            })
+                        )
                         // The nested subscribe cannot be replaced with a switchMap()
                         // We manage the subscription correctly.
                         // eslint-disable-next-line rxjs/no-nested-subscribe
-                        .subscribe(update)
+                        .subscribe()
                 )
-            }
-
-            // Apply decorations coming from extensions
-            if (!minimalUI) {
-                if ('blob' in diffOrBlobInfo) {
-                    applyDecorationsForFileInfo(diffOrBlobInfo.blob)
-                } else {
-                    if (diffOrBlobInfo.head) {
-                        applyDecorationsForFileInfo(diffOrBlobInfo.head, 'head')
-                    }
-                    if (diffOrBlobInfo.base) {
-                        applyDecorationsForFileInfo(diffOrBlobInfo.base, 'base')
-                    }
-                }
             }
 
             // Add hover code intelligence
@@ -1024,26 +1010,43 @@ export function handleCodeHost({
             element.classList.add('sg-mounted')
 
             // Render toolbar
-            if (getToolbarMount && !minimalUI) {
-                const mount = getToolbarMount(element)
-                render(
-                    <CodeViewToolbar
-                        {...codeHost.codeViewToolbarClassProps}
-                        fileInfoOrError={diffOrBlobInfo}
-                        sourcegraphURL={sourcegraphURL}
-                        telemetryService={telemetryService}
-                        platformContext={platformContext}
-                        extensionsController={extensionsController}
-                        buttonProps={toolbarButtonProps}
-                        location={H.createLocation(window.location)}
-                        scope={codeEditorWithPartialModel}
-                        // The bound function is constant
-                        // eslint-disable-next-line react/jsx-no-bind
-                        onSignInClose={nextSignInClose}
-                    />,
-                    mount
-                )
-            }
+            codeViewEvent.subscriptions.add(
+                from(codeEditorWithPartialModelPromise)
+                    .pipe(
+                        startWith(undefined),
+                        catchError(error => {
+                            console.error('Error initializing code editor', error)
+                            return EMPTY
+                        })
+                    )
+                    // eslint-disable-next-line rxjs/no-nested-subscribe
+                    .subscribe(codeEditorWithPartialModel => {
+                        if (getToolbarMount && !minimalUI) {
+                            const mount = getToolbarMount(element)
+                            render(
+                                <CodeViewToolbar
+                                    {...codeHost.codeViewToolbarClassProps}
+                                    fileInfoOrError={diffOrBlobInfo}
+                                    sourcegraphURL={sourcegraphURL}
+                                    telemetryService={telemetryService}
+                                    platformContext={platformContext}
+                                    extensionsController={extensionsController}
+                                    buttonProps={toolbarButtonProps}
+                                    location={H.createLocation(window.location)}
+                                    scope={
+                                        codeEditorWithPartialModel && 'blob' in codeEditorWithPartialModel
+                                            ? codeEditorWithPartialModel.blob
+                                            : codeEditorWithPartialModel?.head
+                                    }
+                                    // The bound function is constant
+                                    // eslint-disable-next-line react/jsx-no-bind
+                                    onSignInClose={nextSignInClose}
+                                />,
+                                mount
+                            )
+                        }
+                    })
+            )
         })
     )
 
@@ -1051,17 +1054,6 @@ export function handleCodeHost({
     subscriptions.add(
         handleContentViews(
             from(featureFlags.isEnabled('experimentalLinkPreviews')).pipe(
-                switchMap(enabled => (enabled ? mutations : []))
-            ),
-            { extensionsController },
-            codeHost
-        )
-    )
-
-    // Show completions in text fields (feature-flagged).
-    subscriptions.add(
-        handleTextFields(
-            from(featureFlags.isEnabled('experimentalTextFieldCompletion')).pipe(
                 switchMap(enabled => (enabled ? mutations : []))
             ),
             { extensionsController },

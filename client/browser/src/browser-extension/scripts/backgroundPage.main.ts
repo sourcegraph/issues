@@ -348,8 +348,8 @@ function handleBrowserPortPair(
     const subscriptions = new Subscription()
 
     console.log('Extension host client connected')
-    const { worker, clientEndpoints } = createExtensionHostWorker(workerBundleURL)
-    subscriptions.add(() => worker.terminate())
+    const clientEndpoints = createExtensionHostWorker()
+    subscriptions.add(clientEndpoints.subscription)
 
     /** Forwards all messages between two endpoints (in one direction) */
     const forwardEndpoint = (from: Endpoint, to: Endpoint): void => {

@@ -1,6 +1,4 @@
 import { TextDocumentDecoration } from '@sourcegraph/extension-api-types'
-import { Observable } from 'rxjs'
-import { map, switchMap } from 'rxjs/operators'
 import {
     DecorationAttachmentRenderOptions,
     ThemableDecorationAttachmentStyle,
@@ -8,39 +6,6 @@ import {
     BadgeAttachmentRenderOptions,
     ThemableBadgeAttachmentStyle,
 } from 'sourcegraph'
-import { combineLatestOrDefault } from '../../../util/rxjs/combineLatestOrDefault'
-import { TextDocumentIdentifier } from '../types/textDocument'
-import { FeatureProviderRegistry } from './registry'
-import { flattenAndCompact } from './util'
-
-export type ProvideTextDocumentDecorationSignature = (
-    textDocument: TextDocumentIdentifier
-) => Observable<TextDocumentDecoration[] | null>
-
-/** Provides text document decorations from all extensions. */
-export class TextDocumentDecorationProviderRegistry extends FeatureProviderRegistry<
-    undefined,
-    ProvideTextDocumentDecorationSignature
-> {
-    public getDecorations(parameters: TextDocumentIdentifier): Observable<TextDocumentDecoration[] | null> {
-        return getDecorations(this.providers, parameters)
-    }
-}
-
-/**
- * Returns an observable that emits all decorations whenever any of the last-emitted set of providers emits
- * decorations.
- *
- * Most callers should use TextDocumentDecorationProviderRegistry, which uses the registered decoration providers.
- */
-export function getDecorations(
-    providers: Observable<ProvideTextDocumentDecorationSignature[]>,
-    parameters: TextDocumentIdentifier
-): Observable<TextDocumentDecoration[] | null> {
-    return providers
-        .pipe(switchMap(providers => combineLatestOrDefault(providers.map(provider => provider(parameters)))))
-        .pipe(map(flattenAndCompact))
-}
 
 /**
  * Resolves the actual styles to use for the attachment based on the current theme.

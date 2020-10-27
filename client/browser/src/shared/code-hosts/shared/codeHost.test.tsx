@@ -32,8 +32,13 @@ import { TextDocumentDecoration } from '@sourcegraph/extension-api-types'
 import { NotificationType } from '../../../../../shared/src/api/client/services/notifications'
 import { toPrettyBlobURL } from '../../../../../shared/src/util/url'
 import { MockIntersectionObserver } from './MockIntersectionObserver'
+<<<<<<< HEAD:browser/src/shared/code-hosts/shared/codeHost.test.tsx
+import { pretendRemote, noopFlatExtensionHostAPI } from '../../../../../shared/src/api/util'
+import { FlatExtHostAPI } from '../../../../../shared/src/api/contract'
+=======
 import { pretendRemote } from '../../../../../shared/src/api/util'
 import { FlatExtensionHostAPI } from '../../../../../shared/src/api/contract'
+>>>>>>> main:client/browser/src/shared/code-hosts/shared/codeHost.test.tsx
 
 const RENDER = sinon.spy()
 
@@ -68,7 +73,11 @@ const createMockController = (services: Services): Controller => ({
     notifications: NEVER,
     executeCommand: () => Promise.resolve(),
     unsubscribe: noop,
+<<<<<<< HEAD:browser/src/shared/code-hosts/shared/codeHost.test.tsx
+    extensionHostAPI: Promise.resolve(pretendRemote(noopFlatExtensionHostAPI)),
+=======
     extHostAPI: Promise.resolve(pretendRemote<FlatExtensionHostAPI>({})),
+>>>>>>> main:client/browser/src/shared/code-hosts/shared/codeHost.test.tsx
 })
 
 const createMockPlatformContext = (

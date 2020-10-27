@@ -1,4 +1,4 @@
-import * as sourcegraph from 'sourcegraph'
+import type * as sourcegraph from 'sourcegraph'
 
 /**
  * The type of a document highlight.

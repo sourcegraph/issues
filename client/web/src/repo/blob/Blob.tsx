@@ -4,8 +4,18 @@ import { TextDocumentDecoration } from '@sourcegraph/extension-api-types'
 import * as H from 'history'
 import { isEqual, pick } from 'lodash'
 import * as React from 'react'
-import { combineLatest, fromEvent, merge, Observable, Subject, Subscription } from 'rxjs'
-import { catchError, distinctUntilChanged, filter, map, share, switchMap, withLatestFrom } from 'rxjs/operators'
+import { combineLatest, fromEvent, merge, Observable, Subject, Subscription, from, concat, of } from 'rxjs'
+import {
+    catchError,
+    distinctUntilChanged,
+    filter,
+    map,
+    share,
+    switchMap,
+    withLatestFrom,
+    concatMap,
+    mergeMap,
+} from 'rxjs/operators'
 import { ActionItemAction } from '../../../../shared/src/actions/ActionItem'
 import { decorationStyleForTheme } from '../../../../shared/src/api/client/services/decoration'
 import { HoverMerged } from '../../../../shared/src/api/client/types/hover'
@@ -30,13 +40,18 @@ import {
     RevisionSpec,
     toPositionOrRangeHash,
     toURIWithPath,
+    makeRepoURI,
 } from '../../../../shared/src/util/url'
 import { getHover, getDocumentHighlights } from '../../backend/features'
 import { WebHoverOverlay } from '../../components/shared'
 import { ThemeProps } from '../../../../shared/src/theme'
 import { LineDecorationAttachment } from './LineDecorationAttachment'
+<<<<<<< HEAD:web/src/repo/blob/Blob.tsx
+import { wrapRemoteObservable, finallyReleaseProxy } from '../../../../shared/src/api/client/api/common'
+=======
 import { TelemetryProps } from '../../../../shared/src/telemetry/telemetryService'
 import { HoverThresholdProps } from '../RepoContainer'
+>>>>>>> main:client/web/src/repo/blob/Blob.tsx
 
 /**
  * toPortalID builds an ID that will be used for the {@link LineDecorationAttachment} portal containers.
@@ -289,54 +304,47 @@ export class Blob extends React.Component<BlobProps, BlobState> {
             })
         )
 
-        /** Emits when the URL's target blob (repository, revision, path, and content) changes. */
-        const modelChanges: Observable<
-            AbsoluteRepoFile & ModeSpec & Pick<BlobProps, 'content' | 'isLightTheme'>
-        > = this.componentUpdates.pipe(
-            map(props =>
-                pick(props, 'repoName', 'revision', 'commitID', 'filePath', 'mode', 'content', 'isLightTheme')
-            ),
-            distinctUntilChanged((a, b) => isEqual(a, b)),
-            share()
-        )
-
-        // Update the Sourcegraph extensions model to reflect the current file.
-        this.subscriptions.add(
-            combineLatest([modelChanges, locationPositions]).subscribe(([model, position]) => {
-                const uri = toURIWithPath(model)
-                if (!this.props.extensionsController.services.model.hasModel(uri)) {
-                    this.props.extensionsController.services.model.addModel({
-                        uri,
-                        languageId: model.mode,
-                        text: model.content,
-                    })
-                }
-                this.props.extensionsController.services.viewer.removeAllViewers()
-                this.props.extensionsController.services.viewer.addViewer({
+        // Register a viewer in the extension API
+        const editorId = from(props.extensionsController.extensionHostAPI).pipe(
+            mergeMap(async extensionHostAPI => {
+                const uri = toURIWithPath(props)
+                await extensionHostAPI.addTextDocumentIfNotExists({
+                    uri,
+                    languageId: props.mode,
+                    text: props.content,
+                })
+                const editor = await extensionHostAPI.addViewerIfNotExists({
                     type: 'CodeEditor' as const,
                     resource: uri,
-                    selections: lprToSelectionsZeroIndexed(position),
+                    selections: lprToSelectionsZeroIndexed(parseHash(props.location.hash)),
                     isActive: true,
                 })
+                this.subscriptions.add(() => extensionHostAPI.removeViewer(editor))
+                return editor
             })
         )
 
-        /** Decorations */
-        let lastModel: (AbsoluteRepoFile & ModeSpec) | undefined
-        const decorations: Observable<TextDocumentDecoration[] | null> = modelChanges.pipe(
-            switchMap(model => {
-                const modelChanged = !isEqual(model, lastModel)
-                lastModel = model // record so we can compute modelChanged
-
-                // Only clear decorations if the model changed. If only the extensions changed, keep
-                // the old decorations until the new ones are available, to avoid UI jitter.
-                return merge(
-                    modelChanged ? [null] : [],
-                    this.props.extensionsController.services.textDocumentDecoration.getDecorations({
-                        uri: `git://${model.repoName}?${model.commitID}#${model.filePath}`,
+        // Update selections as they change
+        this.subscriptions.add(
+            combineLatest([editorId, locationPositions])
+                .pipe(
+                    withLatestFrom(this.props.extensionsController.extensionHostAPI),
+                    concatMap(async ([[editor, position], extensionHostAPI]) => {
+                        await extensionHostAPI.setEditorSelections(editor, lprToSelectionsZeroIndexed(position))
                     })
                 )
-            }),
+                .subscribe()
+        )
+
+        /** Decorations */
+        const decorations: Observable<TextDocumentDecoration[] | null> = editorId.pipe(
+            withLatestFrom(this.props.extensionsController.extensionHostAPI),
+            switchMap(([editorId, extensionHostAPI]) =>
+                concat(
+                    [null],
+                    wrapRemoteObservable(extensionHostAPI.getDecorations(editorId)).pipe(finallyReleaseProxy())
+                )
+            ),
             share()
         )
         this.subscriptions.add(
@@ -350,12 +358,12 @@ export class Blob extends React.Component<BlobProps, BlobState> {
         this.subscriptions.add(
             combineLatest([
                 decorations.pipe(
-                    map(decorations => decorations || []),
+                    map(decorations => decorations ?? []),
                     catchError(error => {
                         console.error(error)
 
                         // Treat decorations error as empty decorations.
-                        return [[] as TextDocumentDecoration[]]
+                        return of<TextDocumentDecoration[]>([])
                     })
                 ),
                 this.codeViewElements,

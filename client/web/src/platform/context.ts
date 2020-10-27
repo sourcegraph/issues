@@ -1,6 +1,6 @@
 import { concat, Observable, ReplaySubject } from 'rxjs'
 import { map, publishReplay, refCount } from 'rxjs/operators'
-import { createExtensionHost } from '../../../shared/src/api/extension/worker'
+import { createExtensionHostWorker } from '../../../shared/src/api/extension/worker'
 import { gql } from '../../../shared/src/graphql/graphql'
 import * as GQL from '../../../shared/src/graphql/schema'
 import { PlatformContext } from '../../../shared/src/platform/context'
@@ -60,7 +60,7 @@ export function createPlatformContext(): PlatformContext {
         },
         requestGraphQL: ({ request, variables }) => requestGraphQL(request, variables),
         forceUpdateTooltip: () => Tooltip.forceUpdate(),
-        createExtensionHost: () => Promise.resolve(createExtensionHost()),
+        createExtensionHost: () => Promise.resolve(createExtensionHostWorker()),
         urlToFile: toPrettyWebBlobURL,
         getScriptURLForExtension: bundleURL => bundleURL,
         sourcegraphURL: window.context.externalURL,

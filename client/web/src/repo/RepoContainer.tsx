@@ -3,8 +3,13 @@ import MapSearchIcon from 'mdi-react/MapSearchIcon'
 import React, { useMemo, useState, useEffect, useCallback } from 'react'
 import { escapeRegExp, uniqueId } from 'lodash'
 import { Route, RouteComponentProps, Switch } from 'react-router'
+<<<<<<< HEAD:web/src/repo/RepoContainer.tsx
+import { Subject, Subscription, concat, combineLatest } from 'rxjs'
+import { catchError, distinctUntilChanged, map, switchMap, tap, withLatestFrom, concatMap } from 'rxjs/operators'
+=======
 import { Observable, NEVER, ObservableInput, of } from 'rxjs'
 import { catchError, map, startWith } from 'rxjs/operators'
+>>>>>>> main:client/web/src/repo/RepoContainer.tsx
 import { redirectToExternalHost } from '.'
 import {
     isRepoNotFoundErrorLike,
@@ -202,6 +207,45 @@ export const RepoContainer: React.FunctionComponent<RepoContainerProps> = props 
                 ),
             [repoName, revision]
         )
+<<<<<<< HEAD:web/src/repo/RepoContainer.tsx
+
+        // Update the extension host to reflect the current workspace root.
+        let workspaceRootUri: string | null = null
+        this.subscriptions.add(
+            this.revResolves
+                .pipe(
+                    map(resolvedRevisionOrError =>
+                        resolvedRevisionOrError && !isErrorLike(resolvedRevisionOrError)
+                            ? makeRepoURI({
+                                  repoName: this.state.repoName,
+                                  revision: resolvedRevisionOrError.commitID,
+                              })
+                            : null
+                    ),
+                    withLatestFrom(this.props.extensionsController.extensionHostAPI),
+                    concatMap(async ([uri, extensionHostAPI]) => {
+                        if (workspaceRootUri) {
+                            await extensionHostAPI.removeWorkspaceRoot(workspaceRootUri)
+                        }
+                        if (uri) {
+                            await extensionHostAPI.addWorkspaceRoot({ uri })
+                        }
+                        workspaceRootUri = uri
+                    })
+                )
+                .subscribe()
+        )
+        // Clear the Sourcegraph extensions model's roots when navigating away.
+        this.subscriptions.add(() => {
+            // eslint-disable-next-line @typescript-eslint/no-floating-promises
+            ;(async () => {
+                const extensionHostAPI = await this.props.extensionsController.extensionHostAPI
+                if (workspaceRootUri) {
+                    await extensionHostAPI.removeWorkspaceRoot(workspaceRootUri)
+                }
+            })()
+        })
+=======
     )
 
     // The external links to show in the repository header, if any.
@@ -221,6 +265,7 @@ export const RepoContainer: React.FunctionComponent<RepoContainerProps> = props 
             []
         )
     )
+>>>>>>> main:client/web/src/repo/RepoContainer.tsx
 
     const childBreadcrumbSetters = repositoryBreadcrumbSetters.useBreadcrumb(
         useMemo(() => {

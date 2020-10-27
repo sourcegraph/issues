@@ -26,18 +26,12 @@ export interface FeatureFlags {
      * Support link previews from extensions in content views (such as GitHub issues).
      */
     experimentalLinkPreviews: boolean
-
-    /**
-     * Support completion in text fields (such as on GitHub issues).
-     */
-    experimentalTextFieldCompletion: boolean
 }
 
 export const featureFlagDefaults: FeatureFlags = {
     allowErrorReporting: false,
     sendTelemetry: true,
     experimentalLinkPreviews: false,
-    experimentalTextFieldCompletion: false,
 }
 
 interface SourcegraphURL {

@@ -44,11 +44,13 @@ describe('LanguageFeatures (integration)', () => {
         }),
         labeledProviderResults: labeledDefinitionResults,
         providerWithImplementation: run => ({ provideDefinition: run } as sourcegraph.DefinitionProvider),
-        getResult: (services, uri) =>
-            services.textDocumentDefinition.getLocations({
-                textDocument: { uri },
-                position: { line: 1, character: 2 },
-            }),
+        getResult: (services, uri, extensionHost) =>
+            wrapRemoteObservable(
+                extensionHost.getDefinitions({
+                    textDocument: { uri },
+                    position: { line: 1, character: 2 },
+                })
+            ),
         emptyResultValue: [],
     })
     testLocationProvider<sourcegraph.ReferenceProvider>({
@@ -70,12 +72,14 @@ describe('LanguageFeatures (integration)', () => {
                     _context: sourcegraph.ReferenceContext
                 ) => run(textDocument, position),
             } as sourcegraph.ReferenceProvider),
-        getResult: (services, uri) =>
-            services.textDocumentReferences.getLocations({
-                textDocument: { uri },
-                position: { line: 1, character: 2 },
-                context: { includeDeclaration: true },
-            }),
+        getResult: (services, uri, extensionHost) =>
+            wrapRemoteObservable(
+                extensionHost.getReferences({
+                    textDocument: { uri },
+                    position: { line: 1, character: 2 },
+                    context: { includeDeclaration: true },
+                })
+            ),
         emptyResultValue: [],
     })
     testLocationProvider<sourcegraph.LocationProvider>({
@@ -92,11 +96,13 @@ describe('LanguageFeatures (integration)', () => {
                 provideLocations: (textDocument: sourcegraph.TextDocument, position: sourcegraph.Position) =>
                     run(textDocument, position),
             } as sourcegraph.LocationProvider),
-        getResult: (services, uri) =>
-            services.textDocumentLocations.getLocations('x', {
-                textDocument: { uri },
-                position: { line: 1, character: 2 },
-            }),
+        getResult: (services, uri, extensionHost) =>
+            wrapRemoteObservable(
+                extensionHost.getLocations('x', {
+                    textDocument: { uri },
+                    position: { line: 1, character: 2 },
+                })
+            ),
         emptyResultValue: [],
     })
 })

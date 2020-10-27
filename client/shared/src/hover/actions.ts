@@ -1,7 +1,7 @@
 import { HoveredToken, LOADER_DELAY, MaybeLoadingResult, emitLoading } from '@sourcegraph/codeintellify'
 import * as H from 'history'
 import { isEqual, uniqWith } from 'lodash'
-import { combineLatest, merge, Observable, of, Subscription, Unsubscribable, concat } from 'rxjs'
+import { combineLatest, merge, Observable, of, Subscription, Unsubscribable, concat, from } from 'rxjs'
 import {
     catchError,
     delay,
@@ -14,21 +14,29 @@ import {
     takeUntil,
     scan,
     mapTo,
+    withLatestFrom,
 } from 'rxjs/operators'
 import { ActionItemAction } from '../actions/ActionItem'
 import { Context } from '../api/client/context/context'
 import { parse, parseTemplate } from '../api/client/context/expr/evaluator'
 import { Services } from '../api/client/services'
+<<<<<<< HEAD:shared/src/hover/actions.ts
+import { ContributableMenu, TextDocumentPositionParams } from '../api/protocol'
+=======
 import { WorkspaceRootWithMetadata } from '../api/client/services/workspaceService'
 import { ContributableMenu, TextDocumentPositionParameters } from '../api/protocol'
+>>>>>>> main:client/shared/src/hover/actions.ts
 import { isPrivateRepoPublicSourcegraphComErrorLike } from '../backend/errors'
 import { resolveRawRepoName } from '../backend/repo'
 import { getContributedActionItems } from '../contributions/contributions'
-import { ExtensionsControllerProps } from '../extensions/controller'
+import { ExtensionsControllerProps, Controller } from '../extensions/controller'
 import { PlatformContext, PlatformContextProps, URLToFileContext } from '../platform/context'
 import { asError, ErrorLike, isErrorLike } from '../util/errors'
 import { makeRepoURI, parseRepoURI, withWorkspaceRootInputRevision, isExternalLink } from '../util/url'
 import { HoverContext } from './HoverOverlay'
+import { wrapRemoteObservable } from '../api/client/api/common'
+import { FlatExtHostAPI } from '../api/contract'
+import { Remote } from 'comlink'
 
 const LOADING = 'loading' as const
 
@@ -77,20 +85,10 @@ export function getHoverActionsContext(
     {
         extensionsController,
         platformContext: { urlToFile, requestGraphQL },
-    }:
-        | (ExtensionsControllerProps & PlatformContextProps<'urlToFile' | 'requestGraphQL'>)
-        | {
-              extensionsController: {
-                  services: {
-                      workspace: {
-                          roots: { value: readonly WorkspaceRootWithMetadata[] }
-                      }
-                      textDocumentDefinition: Pick<Services['textDocumentDefinition'], 'getLocations'>
-                      textDocumentReferences: Pick<Services['textDocumentReferences'], 'providersForDocument'>
-                  }
-              }
-              platformContext: Pick<PlatformContext, 'urlToFile' | 'requestGraphQL'>
-          },
+    }: {
+        extensionsController: Pick<Controller, 'extensionHostAPI'>
+        platformContext: Pick<PlatformContext, 'urlToFile' | 'requestGraphQL'>
+    },
     hoverContext: HoveredToken & HoverContext
 ): Observable<Context<TextDocumentPositionParameters>> {
     const parameters: TextDocumentPositionParameters & URLToFileContext = {
@@ -100,41 +98,42 @@ export function getHoverActionsContext(
     }
     const definitionURLOrError = getDefinitionURL(
         { urlToFile, requestGraphQL },
-        extensionsController.services,
+        extensionsController.extensionHostAPI,
         parameters
     ).pipe(
         catchError((error): [MaybeLoadingResult<ErrorLike>] => [{ isLoading: false, result: asError(error) }]),
         share()
     )
 
-    return combineLatest([
-        // definitionURLOrError:
-        definitionURLOrError.pipe(emitLoading<UIDefinitionURL | ErrorLike, null>(LOADER_DELAY, null)),
+    return from(extensionsController.extensionHostAPI).pipe(
+        switchMap(extensionHostAPI =>
+            combineLatest([
+                // definitionURLOrError:
+                definitionURLOrError.pipe(emitLoading<UIDefinitionURL | ErrorLike, null>(LOADER_DELAY, null)),
 
-        // hasReferenceProvider:
-        // Only show "Find references" if a reference provider is registered. Unlike definitions, references are
-        // not preloaded and here just involve statically constructing a URL, so no need to indicate loading.
-        extensionsController.services.textDocumentReferences
-            .providersForDocument(parameters.textDocument)
-            .pipe(map(providers => providers.length !== 0)),
+                // hasReferenceProvider:
+                // Only show "Find references" if a reference provider is registered. Unlike definitions, references are
+                // not preloaded and here just involve statically constructing a URL, so no need to indicate loading.
+                wrapRemoteObservable(extensionHostAPI.hasReferenceProvider(parameters.textDocument)),
 
-        // showFindReferences:
-        // If there is no definition, delay showing "Find references" because it is likely that the token is
-        // punctuation or something else that has no meaningful references. This reduces UI jitter when it can be
-        // quickly determined that there is no definition. TODO(sqs): Allow reference providers to register
-        // "trigger characters" or have a "hasReferences" method to opt-out of being called for certain tokens.
-        merge(
-            [false],
-            of(true).pipe(
-                delay(LOADER_DELAY),
-                takeUntil(definitionURLOrError.pipe(filter(({ result }) => result !== null)))
-            ),
-            definitionURLOrError.pipe(
-                filter(({ result }) => result !== null),
-                mapTo(true)
-            )
+                // showFindReferences:
+                // If there is no definition, delay showing "Find references" because it is likely that the token is
+                // punctuation or something else that has no meaningful references. This reduces UI jitter when it can be
+                // quickly determined that there is no definition. TODO(sqs): Allow reference providers to register
+                // "trigger characters" or have a "hasReferences" method to opt-out of being called for certain tokens.
+                merge(
+                    [false],
+                    of(true).pipe(
+                        delay(LOADER_DELAY),
+                        takeUntil(definitionURLOrError.pipe(filter(({ result }) => result !== null)))
+                    ),
+                    definitionURLOrError.pipe(
+                        filter(({ result }) => result !== null),
+                        mapTo(true)
+                    )
+                ),
+            ])
         ),
-    ]).pipe(
         map(
             ([definitionURLOrError, hasReferenceProvider, showFindReferences]): HoverActionsContext => ({
                 'goToDefinition.showLoading': definitionURLOrError === LOADING,
@@ -185,6 +184,11 @@ export interface UIDefinitionURL {
  */
 export function getDefinitionURL(
     { urlToFile, requestGraphQL }: Pick<PlatformContext, 'urlToFile' | 'requestGraphQL'>,
+<<<<<<< HEAD:shared/src/hover/actions.ts
+
+    extensionHostAPI: Promise<Remote<FlatExtHostAPI>>,
+    parameters: TextDocumentPositionParams & URLToFileContext
+=======
     {
         workspace,
         textDocumentDefinition,
@@ -195,10 +199,18 @@ export function getDefinitionURL(
         textDocumentDefinition: Pick<Services['textDocumentDefinition'], 'getLocations'>
     },
     parameters: TextDocumentPositionParameters & URLToFileContext
+>>>>>>> main:client/shared/src/hover/actions.ts
 ): Observable<MaybeLoadingResult<UIDefinitionURL | null>> {
-    return textDocumentDefinition.getLocations(parameters).pipe(
+    return from(extensionHostAPI).pipe(
+        switchMap(extensionHostAPI =>
+            wrapRemoteObservable(extensionHostAPI.getDefinitions(parameters)).pipe(
+                withLatestFrom(extensionHostAPI.getWorkspaceRoots())
+            )
+        ),
         switchMap(
-            ({ isLoading, result: definitions }): Observable<Partial<MaybeLoadingResult<UIDefinitionURL | null>>> => {
+            ([{ isLoading, result: definitions }, workspaceRoots]): Observable<
+                Partial<MaybeLoadingResult<UIDefinitionURL | null>>
+            > => {
                 if (definitions.length === 0) {
                     return of<MaybeLoadingResult<UIDefinitionURL | null>>({ isLoading, result: null })
                 }
@@ -209,7 +221,7 @@ export function getDefinitionURL(
                 if (definitions.length > 1) {
                     // Open the panel to show all definitions.
                     const uri = withWorkspaceRootInputRevision(
-                        workspace.roots.value || [],
+                        workspaceRoots,
                         parseRepoURI(parameters.textDocument.uri)
                     )
                     return of<MaybeLoadingResult<UIDefinitionURL | null>>({
@@ -237,7 +249,7 @@ export function getDefinitionURL(
                 // Preserve the input revision (e.g., a Git branch name instead of a Git commit SHA) if the result is
                 // inside one of the current roots. This avoids navigating the user from (e.g.) a URL with a nice Git
                 // branch name to a URL with a full Git commit SHA.
-                const uri = withWorkspaceRootInputRevision(workspace.roots.value || [], parseRepoURI(def.uri))
+                const uri = withWorkspaceRootInputRevision(workspaceRoots, parseRepoURI(def.uri))
 
                 if (def.range) {
                     uri.position = {
@@ -293,13 +305,8 @@ export function registerHoverContributions({
 }: (
     | (ExtensionsControllerProps & PlatformContextProps)
     | {
-          extensionsController: {
-              services: Pick<Services, 'commands' | 'contribution'> & {
-                  workspace: {
-                      roots: { value: readonly WorkspaceRootWithMetadata[] }
-                  }
-                  textDocumentDefinition: Pick<Services['textDocumentDefinition'], 'getLocations'>
-              }
+          extensionsController: Pick<Controller, 'extensionHostAPI'> & {
+              services: Pick<Services, 'commands' | 'contribution'>
           }
           platformContext: Pick<PlatformContext, 'urlToFile' | 'requestGraphQL'>
       }
@@ -377,7 +384,7 @@ export function registerHoverContributions({
                 const parameters: TextDocumentPositionParameters & URLToFileContext = JSON.parse(parametersString)
                 const { result } = await getDefinitionURL(
                     { urlToFile, requestGraphQL },
-                    extensionsController.services,
+                    extensionsController.extensionHostAPI,
                     parameters
                 )
                     .pipe(first(({ isLoading, result }) => !isLoading || result !== null))

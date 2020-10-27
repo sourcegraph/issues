@@ -3,7 +3,6 @@ import { sortBy } from 'lodash'
 import { BehaviorSubject, Observable, of } from 'rxjs'
 import * as sourcegraph from 'sourcegraph'
 import { asError } from '../../../util/errors'
-import { ClientCodeEditorAPI } from '../../client/api/codeEditor'
 import { ClientWindowsAPI } from '../../client/api/windows'
 import { ViewerUpdate } from '../../client/services/viewerService'
 import { ExtensionCodeEditor } from './codeEditor'
@@ -11,7 +10,6 @@ import { ExtensionDocuments } from './documents'
 
 interface WindowsProxyData {
     windows: ClientWindowsAPI
-    codeEditor: ClientCodeEditorAPI
 }
 
 /**
@@ -102,8 +100,7 @@ export class ExtensionWindow implements sourcegraph.Window {
                         case 'CodeEditor':
                             viewer = new ExtensionCodeEditor(
                                 { viewerId, ...viewerData },
-                                this.proxy.codeEditor,
-                                this.documents
+                                this.documents.get(viewerData.resource)
                             )
                             break
                         case 'DirectoryViewer':
@@ -165,10 +162,7 @@ export class ExtensionWindows implements ExtensionWindowsAPI, ProxyMarked {
     public readonly activeWindowChanges: Observable<sourcegraph.Window>
 
     /** @internal */
-    constructor(
-        private proxy: Remote<{ windows: ClientWindowsAPI; codeEditor: ClientCodeEditorAPI }>,
-        private documents: ExtensionDocuments
-    ) {
+    constructor(private proxy: Remote<{ windows: ClientWindowsAPI }>, private documents: ExtensionDocuments) {
         this.activeWindow = new ExtensionWindow(this.proxy, this.documents, [])
         this.activeWindowChanges = of(this.activeWindow)
     }

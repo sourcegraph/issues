@@ -1,12 +1,11 @@
-import { Remote } from 'comlink'
+import { ProxyMarked, proxyMarker } from 'comlink'
 import { Range, Selection } from '@sourcegraph/extension-api-classes'
 import * as clientType from '@sourcegraph/extension-api-types'
-import { BehaviorSubject } from 'rxjs'
+import { BehaviorSubject, Observable } from 'rxjs'
 import * as sourcegraph from 'sourcegraph'
-import { ClientCodeEditorAPI } from '../../client/api/codeEditor'
-import { CodeEditorData, ViewerId } from '../../client/services/viewerService'
 import { createDecorationType } from './decorations'
-import { ExtensionDocuments } from './documents'
+import { ExtensionDocument } from './textDocument'
+import { CodeEditorData, ViewerId } from '../../viewerTypes'
 
 const DEFAULT_DECORATION_TYPE = createDecorationType()
 
@@ -24,26 +23,24 @@ const isDecorationEmpty = ({ range, isWholeLine, ...contents }: clientType.TextD
     isEmptyObjectDeep(contents)
 
 /** @internal */
-export class ExtensionCodeEditor implements sourcegraph.CodeEditor {
-    /** The URI of this editor's document. */
-    private resource: string
+export class ExtensionCodeEditor implements sourcegraph.CodeEditor, ProxyMarked {
+    public readonly [proxyMarker] = true
 
-    constructor(
-        data: CodeEditorData & ViewerId,
-        private proxy: Remote<ClientCodeEditorAPI>,
-        private documents: ExtensionDocuments
-    ) {
+    /** The internal ID of this code editor. */
+    public readonly viewerId: string
+
+    /** The URI of this editor's document. */
+    public readonly resource: string
+
+    constructor(data: CodeEditorData & ViewerId, public document: ExtensionDocument) {
         this.resource = data.resource
+        this.viewerId = data.viewerId
         this.update(data)
     }
 
     public readonly selectionsChanges = new BehaviorSubject<sourcegraph.Selection[]>([])
 
     public readonly type = 'CodeEditor'
-
-    public get document(): sourcegraph.TextDocument {
-        return this.documents.get(this.resource)
-    }
 
     public get selection(): sourcegraph.Selection | null {
         return this.selectionsChanges.value.length > 0 ? this.selectionsChanges.value[0] : null
@@ -53,6 +50,13 @@ export class ExtensionCodeEditor implements sourcegraph.CodeEditor {
         return this.selectionsChanges.value
     }
 
+    private _decorationsByType = new Map<sourcegraph.TextDocumentDecorationType, clientType.TextDocumentDecoration[]>()
+
+    private _mergedDecorations = new BehaviorSubject<clientType.TextDocumentDecoration[]>([])
+    public get mergedDecorations(): Observable<clientType.TextDocumentDecoration[]> {
+        return this._mergedDecorations
+    }
+
     public setDecorations(
         decorationType: sourcegraph.TextDocumentDecorationType | null,
         decorations: sourcegraph.TextDocumentDecoration[]
@@ -60,11 +64,10 @@ export class ExtensionCodeEditor implements sourcegraph.CodeEditor {
         // Backcompat: extensions developed against an older version of the API
         // may not supply a decorationType
         decorationType = decorationType || DEFAULT_DECORATION_TYPE
-        // eslint-disable-next-line @typescript-eslint/no-floating-promises
-        this.proxy.$setDecorations(
-            this.resource,
-            decorationType.key,
-            decorations.map(fromTextDocumentDecoration).filter(decoration => !isDecorationEmpty(decoration))
+        // Replace previous decorations for this decorationType
+        this._decorationsByType.set(decorationType, decorations.map(fromTextDocumentDecoration))
+        this._mergedDecorations.next(
+            [...this._decorationsByType.values()].flat().filter(decoration => !isDecorationEmpty(decoration))
         )
     }
 

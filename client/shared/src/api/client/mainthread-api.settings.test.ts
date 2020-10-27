@@ -1,7 +1,7 @@
 import { initMainThreadAPI, MainThreadAPIDependencies } from './mainthread-api'
 import { PlatformContext } from '../../platform/context'
 import { of, Subject } from 'rxjs'
-import { pretendRemote } from '../util'
+import { pretendRemote, noopFlatExtensionHostAPI } from '../util'
 import { SettingsEdit } from './services/settings'
 import { SettingsCascade } from '../../settings/settings'
 import { FlatExtensionHostAPI } from '../contract'
@@ -40,7 +40,11 @@ describe('configuration', () => {
             updateSettings,
         }
 
-        const { api } = initMainThreadAPI(pretendRemote({}), platformContext, defaultDependencies())
+        const { api } = initMainThreadAPI(
+            pretendRemote(noopFlatExtensionHostAPI),
+            platformContext,
+            defaultDependencies()
+        )
 
         const edit: SettingsEdit = { path: ['a'], value: 'newVal' }
         await api.applySettingsEdit(edit)
@@ -71,7 +75,12 @@ describe('configuration', () => {
 
         const passedToExtensionHost: SettingsCascade<object>[] = []
         initMainThreadAPI(
+<<<<<<< HEAD:shared/src/api/client/mainthread-api.settings.test.ts
+            pretendRemote<FlatExtHostAPI>({
+                ...noopFlatExtensionHostAPI,
+=======
             pretendRemote<FlatExtensionHostAPI>({
+>>>>>>> main:client/shared/src/api/client/mainthread-api.settings.test.ts
                 syncSettingsData: data => {
                     passedToExtensionHost.push(data)
                 },
@@ -92,7 +101,12 @@ describe('configuration', () => {
 
         const passedToExtensionHost: SettingsCascade<object>[] = []
         const { subscription } = initMainThreadAPI(
+<<<<<<< HEAD:shared/src/api/client/mainthread-api.settings.test.ts
+            pretendRemote<FlatExtHostAPI>({
+                ...noopFlatExtensionHostAPI,
+=======
             pretendRemote<FlatExtensionHostAPI>({
+>>>>>>> main:client/shared/src/api/client/mainthread-api.settings.test.ts
                 syncSettingsData: data => {
                     passedToExtensionHost.push(data)
                 },

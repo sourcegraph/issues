@@ -1,10 +1,10 @@
 import { Remote, proxyMarker, releaseProxy, ProxyMethods, ProxyMarked, proxy, UnproxyOrClone } from 'comlink'
 import { noop } from 'lodash'
-import { from, Observable, observable as symbolObservable, Subscription, Unsubscribable } from 'rxjs'
+import { from, Observable, observable as symbolObservable, Subscription, Unsubscribable, of } from 'rxjs'
 import { mergeMap, finalize } from 'rxjs/operators'
 import { Subscribable } from 'sourcegraph'
 import { ProxySubscribable } from '../../extension/api/common'
-import { syncSubscription } from '../../util'
+import { syncSubscription, isPromiseLike } from '../../util'
 import { asError } from '../../../util/errors'
 import { FeatureProviderRegistry } from '../services/registry'
 
@@ -49,14 +49,14 @@ export interface RemoteObservable<T> extends Observable<T>, ProxySubscribed {}
  * @param addToSubscription If provided, directly adds the `ProxySubscription` to this Subscription.
  */
 export const wrapRemoteObservable = <T>(
-    proxyPromise: Promise<Remote<ProxySubscribable<T>>>,
+    proxyPromise: Promise<Remote<ProxySubscribable<T>>> | Remote<ProxySubscribable<T>>,
     addToSubscription?: Subscription
 ): RemoteObservable<T> => {
     const proxySubscription = new Subscription()
     if (addToSubscription) {
         addToSubscription.add(proxySubscription)
     }
-    const observable = from(proxyPromise).pipe(
+    const observable = (isPromiseLike(proxyPromise) ? from(proxyPromise) : of(proxyPromise)).pipe(
         mergeMap(
             (proxySubscribable): Subscribable<T> => {
                 proxySubscription.add(new ProxySubscription(proxySubscribable))

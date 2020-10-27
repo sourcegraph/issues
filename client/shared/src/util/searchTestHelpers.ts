@@ -11,8 +11,12 @@ import {
     ISymbol,
     SearchResult,
 } from '../graphql/schema'
+<<<<<<< HEAD:shared/src/util/searchTestHelpers.ts
+import { pretendRemote, noopFlatExtensionHostAPI } from '../api/util'
+=======
 import { pretendRemote } from '../api/util'
 import { FlatExtensionHostAPI } from '../api/contract'
+>>>>>>> main:client/shared/src/util/searchTestHelpers.ts
 
 export const RESULT = {
     __typename: 'FileMatch' as const,
@@ -250,8 +254,12 @@ const services = {
     },
 }
 
-export const extensionsController: Pick<Controller, 'executeCommand' | 'services' | 'extHostAPI'> = {
+export const extensionsController: Pick<Controller, 'executeCommand' | 'services' | 'extensionHostAPI'> = {
     executeCommand: () => Promise.resolve(),
     services: services as any,
+<<<<<<< HEAD:shared/src/util/searchTestHelpers.ts
+    extensionHostAPI: Promise.resolve(pretendRemote(noopFlatExtensionHostAPI)),
+=======
     extHostAPI: Promise.resolve(pretendRemote<FlatExtensionHostAPI>({})),
+>>>>>>> main:client/shared/src/util/searchTestHelpers.ts
 }

@@ -48,10 +48,17 @@ initSentry('options')
 
 const IS_EXTENSION = true
 
+<<<<<<< HEAD:browser/src/browser-extension/scripts/optionsPage.main.tsx
+type State = Pick<FeatureFlags, 'allowErrorReporting' | 'experimentalLinkPreviews'> & {
+    sourcegraphURL: string | null
+    isActivated: boolean
+}
+=======
 /**
  * A list of protocols where we should *not* show the permissions notification.
  */
 const PERMISSIONS_PROTOCOL_BLOCKLIST = new Set(['chrome:', 'about:'])
+>>>>>>> main:client/browser/src/browser-extension/scripts/optionsPage.main.tsx
 
 setLinkComponent(AnchorLink)
 
@@ -124,17 +131,57 @@ const observeOptionFlagsWithValues = (): Observable<OptionFlagWithValue[]> => {
     )
 }
 
+<<<<<<< HEAD:browser/src/browser-extension/scripts/optionsPage.main.tsx
+class Options extends React.Component<{}, State> {
+    public state: State = {
+        sourcegraphURL: null,
+        isActivated: true,
+        allowErrorReporting: false,
+        experimentalLinkPreviews: false,
+    }
+=======
 const observingIsActivated = observeStorageKey('sync', 'disableExtension').pipe(map(isDisabled => !isDisabled))
 const observingSourcegraphUrl = observeSourcegraphURL(true)
 const observingOptionFlagsWithValues = observeOptionFlagsWithValues()
+>>>>>>> main:client/browser/src/browser-extension/scripts/optionsPage.main.tsx
 
 function handleToggleActivated(isActivated: boolean): void {
     storage.sync.set({ disableExtension: !isActivated }).catch(console.error)
 }
 
+<<<<<<< HEAD:browser/src/browser-extension/scripts/optionsPage.main.tsx
+    public componentDidMount(): void {
+        this.subscriptions.add(
+            observeStorageKey('sync', 'featureFlags').subscribe(featureFlags => {
+                const { allowErrorReporting, experimentalLinkPreviews } = {
+                    ...featureFlagDefaults,
+                    ...featureFlags,
+                }
+                this.setState({
+                    allowErrorReporting,
+                    experimentalLinkPreviews,
+                })
+            })
+        )
+
+        this.subscriptions.add(
+            observeSourcegraphURL(IS_EXTENSION).subscribe(sourcegraphURL => {
+                this.setState({ sourcegraphURL })
+            })
+        )
+
+        this.subscriptions.add(
+            observeStorageKey('sync', 'disableExtension').subscribe(disableExtension => {
+                this.setState({
+                    isActivated: !disableExtension,
+                })
+            })
+        )
+=======
 function handleChangeOptionFlag(key: string, value: boolean): void {
     if (isOptionFlagKey(key)) {
         featureFlags.set(key, value).catch(noop)
+>>>>>>> main:client/browser/src/browser-extension/scripts/optionsPage.main.tsx
     }
 }
 
@@ -151,6 +198,30 @@ function buildRequestPermissionsHandler({ protocol, host }: TabStatus) {
     }
 }
 
+<<<<<<< HEAD:browser/src/browser-extension/scripts/optionsPage.main.tsx
+        const props: OptionsContainerProps = {
+            sourcegraphURL: this.state.sourcegraphURL,
+            isActivated: this.state.isActivated,
+
+            ensureValidSite,
+            fetchCurrentTabStatus,
+            hasPermissions: url =>
+                browser.permissions.contains({
+                    origins: [`${url}/*`],
+                }),
+            requestPermissions: url =>
+                browser.permissions.request({
+                    origins: [`${url}/*`],
+                }),
+
+            setSourcegraphURL: (sourcegraphURL: string) => storage.sync.set({ sourcegraphURL }),
+            toggleExtensionDisabled: (isActivated: boolean) => storage.sync.set({ disableExtension: !isActivated }),
+            toggleFeatureFlag,
+            featureFlags: [
+                { key: 'allowErrorReporting', value: this.state.allowErrorReporting },
+                { key: 'experimentalLinkPreviews', value: this.state.experimentalLinkPreviews },
+            ],
+=======
 const Options: React.FunctionComponent = () => {
     const sourcegraphUrl = useObservable(observingSourcegraphUrl) || ''
     const isActivated = useObservable(observingIsActivated)
@@ -179,6 +250,7 @@ const Options: React.FunctionComponent = () => {
             permissionAlert = knownCodeHost
         } else {
             permissionAlert = { name: currentTabStatus.status.host }
+>>>>>>> main:client/browser/src/browser-extension/scripts/optionsPage.main.tsx
         }
     }
 

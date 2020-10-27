@@ -1,10 +1,8 @@
 import * as H from 'history'
 import { isEqual } from 'lodash'
 import * as React from 'react'
-import { from, Subject, Subscription } from 'rxjs'
+import { from, Subject, Subscription, Observable, of } from 'rxjs'
 import { distinctUntilChanged, map, startWith, switchMap, tap } from 'rxjs/operators'
-import { getActiveCodeEditorPosition } from '../../../../../shared/src/api/client/services/viewerService'
-import { TextDocumentLocationProviderRegistry } from '../../../../../shared/src/api/client/services/location'
 import { Entry } from '../../../../../shared/src/api/client/services/registry'
 import {
     ProvidePanelViewSignature,
@@ -12,7 +10,6 @@ import {
 } from '../../../../../shared/src/api/client/services/panelViews'
 import { ContributableViewContainer, TextDocumentPositionParameters } from '../../../../../shared/src/api/protocol'
 import { ActivationProps } from '../../../../../shared/src/components/activation/Activation'
-import { ExtensionsControllerProps } from '../../../../../shared/src/extensions/controller'
 import * as GQL from '../../../../../shared/src/graphql/schema'
 import { PlatformContextProps } from '../../../../../shared/src/platform/context'
 import { SettingsCascadeProps } from '../../../../../shared/src/settings/settings'
@@ -20,7 +17,14 @@ import { AbsoluteRepoFile, ModeSpec, parseHash, UIPositionSpec } from '../../../
 import { RepoHeaderContributionsLifecycleProps } from '../../RepoHeader'
 import { RepoRevisionSidebarCommits } from '../../RepoRevisionSidebarCommits'
 import { ThemeProps } from '../../../../../shared/src/theme'
+<<<<<<< HEAD:web/src/repo/blob/panel/BlobPanel.tsx
+import { wrapRemoteObservable, finallyReleaseProxy } from '../../../../../shared/src/api/client/api/common'
+import { Controller } from '../../../../../shared/src/extensions/controller'
+import { MaybeLoadingResult } from '@sourcegraph/codeintellify'
+import * as clientType from '@sourcegraph/extension-api-types'
+=======
 import { AuthenticatedUser } from '../../../auth'
+>>>>>>> main:client/web/src/repo/blob/panel/BlobPanel.tsx
 
 interface Props
     extends AbsoluteRepoFile,
@@ -29,7 +33,6 @@ interface Props
         RepoHeaderContributionsLifecycleProps,
         SettingsCascadeProps,
         PlatformContextProps,
-        ExtensionsControllerProps,
         ThemeProps,
         ActivationProps {
     location: H.Location
@@ -37,7 +40,12 @@ interface Props
     repoID: GQL.ID
     repoName: string
     commitID: string
+<<<<<<< HEAD:web/src/repo/blob/panel/BlobPanel.tsx
+    authenticatedUser: GQL.IUser | null
+    extensionsController: Controller
+=======
     authenticatedUser: AuthenticatedUser | null
+>>>>>>> main:client/web/src/repo/blob/panel/BlobPanel.tsx
 }
 
 export type BlobPanelTabID = 'info' | 'def' | 'references' | 'impl' | 'typedef' | 'history'
@@ -90,21 +98,32 @@ export class BlobPanel extends React.PureComponent<Props> {
             id: string,
             title: string,
             priority: number,
+<<<<<<< HEAD:web/src/repo/blob/panel/BlobPanel.tsx
+            provideLocations: (params: P) => Observable<MaybeLoadingResult<clientType.Location[]>>,
+            extraParameters?: Pick<P, Exclude<keyof P, keyof TextDocumentPositionParams>>
+=======
             registry: TextDocumentLocationProviderRegistry<P>,
             extraParameters?: Pick<P, Exclude<keyof P, keyof TextDocumentPositionParameters>>
+>>>>>>> main:client/web/src/repo/blob/panel/BlobPanel.tsx
         ): Entry<PanelViewProviderRegistrationOptions, ProvidePanelViewSignature> => ({
             registrationOptions: { id, container: ContributableViewContainer.Panel },
-            provider: from(this.props.extensionsController.services.viewer.activeViewerUpdates).pipe(
-                map(activeEditor =>
-                    activeEditor && activeEditor.type === 'CodeEditor'
-                        ? {
-                              ...activeEditor,
-                              model: this.props.extensionsController.services.model.getPartialModel(
-                                  activeEditor.resource
-                              ),
-                          }
-                        : undefined
+            provider: from(this.props.extensionsController.extensionHostAPI).pipe(
+                // Get TextDocumentPositionParams from selection of active viewer
+                switchMap(extensionHostAPI =>
+                    wrapRemoteObservable(extensionHostAPI.getActiveCodeEditorPosition(), this.subscriptions).pipe(
+                        finallyReleaseProxy()
+                    )
                 ),
+<<<<<<< HEAD:web/src/repo/blob/panel/BlobPanel.tsx
+                map(textDocumentPositionParameters => {
+                    if (!textDocumentPositionParameters) {
+                        return null
+                    }
+                    return {
+                        title,
+                        content: '',
+                        priority,
+=======
                 switchMap(activeEditor =>
                     registry.hasProvidersForActiveTextDocument(activeEditor).pipe(
                         map(hasProviders => {
@@ -121,40 +140,44 @@ export class BlobPanel extends React.PureComponent<Props> {
                                 title,
                                 content: '',
                                 priority,
+>>>>>>> main:client/web/src/repo/blob/panel/BlobPanel.tsx
 
-                                // This disable directive is necessary because TypeScript is not yet smart
-                                // enough to know that (typeof params & typeof extraParams) is P.
-                                //
-                                // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
-                                locationProvider: registry
-                                    .getLocations({ ...parameters, ...extraParameters } as P)
-                                    .pipe(
-                                        tap(({ result: locations }) => {
-                                            if (this.props.activation && id === 'references' && locations.length > 0) {
-                                                this.props.activation.update({ FoundReferences: true })
-                                            }
-                                        })
-                                    ),
-                            }
-                        })
-                    )
-                )
+                        // This disable directive is necessary because TypeScript is not yet smart
+                        // enough to know that (typeof params & typeof extraParams) is P.
+                        //
+                        // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
+                        locationProvider: provideLocations({
+                            ...textDocumentPositionParameters,
+                            ...extraParameters,
+                        } as P).pipe(
+                            tap(({ result: locations }) => {
+                                if (this.props.activation && id === 'references' && locations.length > 0) {
+                                    this.props.activation.update({ FoundReferences: true })
+                                }
+                            })
+                        ),
+                    }
+                })
             ),
         })
 
         this.subscriptions.add(
             this.props.extensionsController.services.panelViews.registerProviders([
-                entryForViewProviderRegistration(
-                    'def',
-                    'Definition',
-                    190,
-                    this.props.extensionsController.services.textDocumentDefinition
+                entryForViewProviderRegistration('def', 'Definition', 190, parameters =>
+                    from(this.props.extensionsController.extensionHostAPI).pipe(
+                        switchMap(extensionHostAPI => wrapRemoteObservable(extensionHostAPI.getDefinitions(parameters)))
+                    )
                 ),
                 entryForViewProviderRegistration(
                     'references',
                     'References',
                     180,
-                    this.props.extensionsController.services.textDocumentReferences,
+                    parameters =>
+                        from(this.props.extensionsController.extensionHostAPI).pipe(
+                            switchMap(extensionHostAPI =>
+                                wrapRemoteObservable(extensionHostAPI.getReferences(parameters))
+                            )
+                        ),
                     {
                         context: { includeDeclaration: false },
                     }

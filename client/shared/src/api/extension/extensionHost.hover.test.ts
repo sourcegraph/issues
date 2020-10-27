@@ -1,12 +1,15 @@
 import { MarkupKind } from '@sourcegraph/extension-api-classes'
-import { Hover, Range } from 'sourcegraph'
+import { Hover } from 'sourcegraph'
 import { HoverMerged } from '../client/types/hover'
-import { initNewExtensionAPI, mergeHoverResults } from './flatExtensionApi'
-import { pretendRemote } from '../util'
+import { initNewExtensionAPI } from './flatExtensionApi'
+import { pretendRemote, noopMainThreadAPI } from '../util'
 import { MainThreadAPI } from '../contract'
 import { SettingsCascade } from '../../settings/settings'
 import { Observer } from 'rxjs'
 import { ProxyMarked, proxyMarker, Remote } from 'comlink'
+<<<<<<< HEAD:shared/src/api/extension/extensionHost.hover.test.ts
+import { MaybeLoadingResult } from '@sourcegraph/codeintellify'
+=======
 import { ExtensionDocuments } from './api/documents'
 import { MaybeLoadingResult, LOADING } from '@sourcegraph/codeintellify'
 
@@ -54,10 +57,11 @@ describe('mergeHoverResults', () => {
         expect(mergeHoverResults([hover1, hover2])).toEqual(merged)
     })
 })
+>>>>>>> main:client/shared/src/api/extension/extensionHost.hover.test.ts
 
 describe('getHover from ExtensionHost API, it aims to have more e2e feel', () => {
     // integration(ish) tests for scenarios not covered by providers tests
-    const noopMain = pretendRemote<MainThreadAPI>({})
+    const noopMain = pretendRemote<MainThreadAPI>(noopMainThreadAPI)
     const emptySettings: SettingsCascade<object> = {
         subjects: [],
         final: {},
@@ -79,17 +83,13 @@ describe('getHover from ExtensionHost API, it aims to have more e2e feel', () =>
 
     it('restarts hover call if a provider was added or removed', () => {
         const typescriptFileUri = 'file:///f.ts'
-        const documents = new ExtensionDocuments(() => Promise.resolve())
-        documents.$acceptDocumentData([
-            {
-                type: 'added',
-                languageId: 'ts',
-                text: 'body',
-                uri: typescriptFileUri,
-            },
-        ])
 
-        const { exposedToMain, languages } = initNewExtensionAPI(noopMain, emptySettings, documents)
+        const { exposedToMain, languages } = initNewExtensionAPI(noopMain, emptySettings)
+        exposedToMain.addTextDocumentIfNotExists({
+            languageId: 'ts',
+            text: 'body',
+            uri: typescriptFileUri,
+        })
 
         let counter = 0
         languages.registerHoverProvider([{ pattern: '*.ts' }], {

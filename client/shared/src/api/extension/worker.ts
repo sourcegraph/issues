@@ -9,7 +9,7 @@ import { Subscription } from 'rxjs'
  * If a `workerBundleURL` is provided, it is used to create a new Worker(), instead of using the ExtensionHostWorker
  * returned by worker-loader. This is useful to load the worker bundle from a different path.
  */
-export function createExtensionHostWorker(workerBundleURL?: string): { worker: Worker; clientEndpoints: EndpointPair } {
+export function createExtensionHostWorker(workerBundleURL?: string): ClosableEndpointPair {
     const clientAPIChannel = new MessageChannel()
     const extensionHostAPIChannel = new MessageChannel()
     const worker = workerBundleURL ? new Worker(workerBundleURL) : new ExtensionHostWorker()
@@ -22,10 +22,11 @@ export function createExtensionHostWorker(workerBundleURL?: string): { worker: W
         proxy: extensionHostAPIChannel.port1,
         expose: clientAPIChannel.port1,
     }
-    return { worker, clientEndpoints }
-}
-
-export function createExtensionHost(workerBundleURL?: string): ClosableEndpointPair {
-    const { clientEndpoints, worker } = createExtensionHostWorker(workerBundleURL)
-    return { endpoints: clientEndpoints, subscription: new Subscription(() => worker.terminate()) }
+    const subscription = new Subscription(() => {
+        extensionHostAPIChannel.port1.close()
+        extensionHostAPIChannel.port2.close()
+        clientAPIChannel.port1.close()
+        clientAPIChannel.port2.close()
+    })
+    return { ...clientEndpoints, subscription }
 }

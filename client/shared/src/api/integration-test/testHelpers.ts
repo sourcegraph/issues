@@ -13,6 +13,7 @@ import { WorkspaceRootWithMetadata } from '../client/services/workspaceService'
 import { InitData, startExtensionHost } from '../extension/extensionHost'
 import { FlatExtensionHostAPI } from '../contract'
 import { Remote } from 'comlink'
+import { ViewerId } from '../viewerTypes'
 
 export function assertToJSON(a: any, expected: any): void {
     const raw = JSON.stringify(a)
@@ -70,7 +71,12 @@ export async function integrationTestContext(
 ): Promise<{
     extensionAPI: typeof sourcegraph
     services: Services
+<<<<<<< HEAD:shared/src/api/integration-test/testHelpers.ts
+    extensionHost: Remote<FlatExtHostAPI>
+    viewerIds: ViewerId[]
+=======
     extensionHost: Remote<FlatExtensionHostAPI>
+>>>>>>> main:client/shared/src/api/integration-test/testHelpers.ts
 }> {
     const mocks = partialMocks ? { ...NOOP_MOCKS, ...partialMocks } : NOOP_MOCKS
 
@@ -93,9 +99,9 @@ export async function integrationTestContext(
         clientApplication: 'sourcegraph',
     }
 
-    const { api } = await createExtensionHostClientConnection(
+    const { api: extensionHostAPI } = await createExtensionHostClientConnection(
         Promise.resolve({
-            endpoints: clientEndpoints,
+            ...clientEndpoints,
             subscription: new Subscription(),
         }),
         services,
@@ -106,13 +112,14 @@ export async function integrationTestContext(
     const extensionAPI = await extensionHost.extensionAPI
     if (initModel.models) {
         for (const model of initModel.models) {
-            services.model.addModel(model)
+            await extensionHostAPI.addTextDocumentIfNotExists(model)
         }
     }
-    for (const editor of initModel.viewers) {
-        services.viewer.addViewer(editor)
+    const viewerIds = await Promise.all(initModel.viewers.map(viewer => extensionHostAPI.addViewerIfNotExists(viewer)))
+
+    for (const root of initModel.roots) {
+        await extensionHostAPI.addWorkspaceRoot(root)
     }
-    services.workspace.roots.next(initModel.roots)
 
     // Wait for initModel to be initialized
     if (initModel.viewers.length > 0) {
@@ -135,7 +142,8 @@ export async function integrationTestContext(
     return {
         extensionAPI,
         services,
-        extensionHost: api,
+        extensionHost: extensionHostAPI,
+        viewerIds,
     }
 }
 

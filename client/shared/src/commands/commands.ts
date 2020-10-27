@@ -1,10 +1,14 @@
-import { Position } from '@sourcegraph/extension-api-types'
-import { concat, from, of, Subscription, Unsubscribable } from 'rxjs'
-import { first } from 'rxjs/operators'
+import { Position, Location } from '@sourcegraph/extension-api-types'
+import { from, Subscription, Unsubscribable } from 'rxjs'
+import { first, defaultIfEmpty, switchMap, map } from 'rxjs/operators'
 import { Services } from '../api/client/services'
 import { KeyPath, SettingsEdit, updateSettings } from '../api/client/services/settings'
 import { ActionContributionClientCommandUpdateConfiguration, Evaluated } from '../api/protocol'
 import { PlatformContext } from '../platform/context'
+import { ExtensionHostAPI } from '../api/extension/api/api'
+import { Remote } from 'comlink'
+import { wrapRemoteObservable } from '../api/client/api/common'
+import { Badged } from 'sourcegraph'
 
 /**
  * Registers the builtin client commands that are required for Sourcegraph extensions. See
@@ -12,15 +16,16 @@ import { PlatformContext } from '../platform/context'
  * documentation.
  */
 export function registerBuiltinClientCommands(
-    { commands: commandRegistry, textDocumentLocations }: Services,
-    context: Pick<PlatformContext, 'requestGraphQL' | 'telemetryService' | 'settings' | 'updateSettings'>
+    { commands: commandRegistry }: Services,
+    context: Pick<PlatformContext, 'requestGraphQL' | 'telemetryService' | 'settings' | 'updateSettings'>,
+    extensionHostAPI: Promise<Remote<ExtensionHostAPI>>
 ): Unsubscribable {
     const subscription = new Subscription()
 
     subscription.add(
         commandRegistry.registerCommand({
             command: 'open',
-            run: (url: string) => {
+            run: (url: string): Promise<void> => {
                 // The `open` client command is usually implemented by ActionItem rendering the action with the
                 // HTML <a> element, not by handling it here. Using an HTML <a> element means it is a standard
                 // link, and native system behaviors such as open-in-new-tab work.
@@ -36,7 +41,7 @@ export function registerBuiltinClientCommands(
     subscription.add(
         commandRegistry.registerCommand({
             command: 'openPanel',
-            run: (viewID: string) => {
+            run: (viewID: string): Promise<void> => {
                 // As above for `open`, the `openPanel` client command is usually implemented by an HTML <a>
                 // element.
                 window.open(urlForOpenPanel(viewID, window.location.hash))
@@ -51,14 +56,17 @@ export function registerBuiltinClientCommands(
     subscription.add(
         commandRegistry.registerCommand({
             command: 'executeLocationProvider',
-            run: (id: string, uri: string, position: Position) =>
-                concat(
-                    textDocumentLocations.getLocations(id, { textDocument: { uri }, position }),
-                    // Concat with [] to avoid undefined promise value when the getLocation observable completes
-                    // without emitting. See https://github.com/ReactiveX/rxjs/issues/1736.
-                    of([])
-                )
-                    .pipe(first())
+            run: (id: string, uri: string, position: Position): Promise<Badged<Location>[]> =>
+                from(extensionHostAPI)
+                    .pipe(
+                        switchMap(extensionHostAPI =>
+                            wrapRemoteObservable(extensionHostAPI.getLocations(id, { textDocument: { uri }, position }))
+                        ),
+                        first(({ isLoading }) => !isLoading),
+                        map(({ result }) => result),
+                        // Avoid undefined promise value when the getLocation observable completes without emitting.
+                        defaultIfEmpty<Badged<Location>[]>([])
+                    )
                     .toPromise(),
         })
     )
@@ -104,7 +112,7 @@ export function registerBuiltinClientCommands(
     subscription.add(
         commandRegistry.registerCommand({
             command: 'logTelemetryEvent',
-            run: (eventName: string, eventProperties?: any): Promise<any> => {
+            run: (eventName: string, eventProperties?: any): Promise<void> => {
                 if (context.telemetryService) {
                     context.telemetryService.log(eventName, eventProperties)
                 }

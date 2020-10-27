@@ -19,7 +19,7 @@ export function getHover(
 ): Observable<MaybeLoadingResult<HoverMerged | null>> {
     return concat(
         [{ isLoading: true, result: null }],
-        from(extensionsController.extHostAPI).pipe(
+        from(extensionsController.extensionHostAPI).pipe(
             switchMap(extensionHost =>
                 wrapRemoteObservable(
                     extensionHost.getHover({
@@ -47,21 +47,18 @@ export function getDocumentHighlights(
     context: RepoSpec & ResolvedRevisionSpec & FileSpec & UIPositionSpec,
     { extensionsController }: ExtensionsControllerProps
 ): Observable<DocumentHighlight[]> {
-    return concat(
-        [[]],
-        from(extensionsController.extHostAPI).pipe(
-            switchMap(extensionHost =>
-                wrapRemoteObservable(
-                    extensionHost.getDocumentHighlights({
-                        textDocument: {
-                            uri: toURIWithPath(context),
-                        },
-                        position: {
-                            character: context.position.character - 1,
-                            line: context.position.line - 1,
-                        },
-                    })
-                )
+    return from(extensionsController.extensionHostAPI).pipe(
+        switchMap(extensionHost =>
+            wrapRemoteObservable(
+                extensionHost.getDocumentHighlights({
+                    textDocument: {
+                        uri: toURIWithPath(context),
+                    },
+                    position: {
+                        character: context.position.character - 1,
+                        line: context.position.line - 1,
+                    },
+                })
             )
         )
     )

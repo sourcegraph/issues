@@ -26,6 +26,12 @@ function createInPageExtensionHost({
             proxy: extensionHostAPIChannel.port1,
             expose: clientAPIChannel.port1,
         }
+        const subscription = new Subscription(() => {
+            clientAPIChannel.port1.close()
+            clientAPIChannel.port2.close()
+            extensionHostAPIChannel.port1.close()
+            extensionHostAPIChannel.port2.close()
+        })
         // Subscribe to the load event on the frame
         frame.addEventListener(
             'load',
@@ -41,10 +47,7 @@ function createInPageExtensionHost({
                     new URL(assetsURL).origin,
                     Object.values(clientEndpoints)
                 )
-                resolve({
-                    endpoints: workerEndpoints,
-                    subscription: new Subscription(() => frame.remove()),
-                })
+                resolve({ ...workerEndpoints, subscription })
             },
             {
                 once: true,
@@ -66,7 +69,7 @@ function createInPageExtensionHost({
  * worker per pair of ports, and forward messages between the port objects and
  * the extension host worker's endpoints.
  */
-export function createExtensionHost(
+export async function createExtensionHost(
     urls: Pick<SourcegraphIntegrationURLs, 'assetsURL'>
 ): Promise<ClosableEndpointPair> {
     if (isInPage) {
@@ -85,11 +88,9 @@ export function createExtensionHost(
         return link.messagePort
     }
 
-    return Promise.resolve({
-        endpoints: {
-            proxy: setup('proxy'),
-            expose: setup('expose'),
-        },
+    return {
+        proxy: setup('proxy'),
+        expose: setup('expose'),
         subscription,
-    })
+    }
 }

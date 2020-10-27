@@ -5,13 +5,13 @@ import { distinctUntilChanged, map, switchMap } from 'rxjs/operators'
 import { PanelView, View } from 'sourcegraph'
 import { ContributableViewContainer } from '../../protocol'
 import { ViewerService, getActiveCodeEditorPosition } from '../services/viewerService'
-import { TextDocumentLocationProviderIDRegistry } from '../services/location'
 import { PanelViewWithComponent, PanelViewProviderRegistry } from '../services/panelViews'
 import { Location } from '@sourcegraph/extension-api-types'
 import { MaybeLoadingResult } from '@sourcegraph/codeintellify'
 import { ProxySubscribable } from '../../extension/api/common'
 import { wrapRemoteObservable, ProxySubscription } from './common'
 import { ViewService, ViewContexts } from '../services/viewService'
+import { FlatExtHostAPI } from '../../contract'
 
 /** @internal */
 export interface PanelViewData extends Pick<PanelView, 'title' | 'content' | 'priority' | 'component'> {}
@@ -65,7 +65,7 @@ export class ClientViews implements ClientViewsAPI {
 
     constructor(
         private panelViewRegistry: PanelViewProviderRegistry,
-        private textDocumentLocations: TextDocumentLocationProviderIDRegistry,
+        private extensionHostAPI: comlink.Remote<FlatExtHostAPI>,
         private viewerService: ViewerService,
         private viewService: ViewService
     ) {}
@@ -96,9 +96,8 @@ export class ClientViews implements ClientViewsAPI {
                                     if (!parameters) {
                                         return [{ isLoading: false, result: [] }]
                                     }
-                                    return this.textDocumentLocations.getLocations(
-                                        component.locationProvider,
-                                        parameters
+                                    return wrapRemoteObservable(
+                                        this.extensionHostAPI.getLocations(component.locationProvider, parameters)
                                     )
                                 }
                             )

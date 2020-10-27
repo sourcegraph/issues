@@ -1,6 +1,6 @@
 import * as comlink from 'comlink'
 import { Location, MarkupKind, Position, Range, Selection } from '@sourcegraph/extension-api-classes'
-import { Subscription, Unsubscribable } from 'rxjs'
+import { Subscription, Unsubscribable, of } from 'rxjs'
 import * as sourcegraph from 'sourcegraph'
 import { EndpointPair } from '../../platform/context'
 import { ClientAPI } from '../client/api/api'
@@ -9,16 +9,14 @@ import { ExtensionHostAPI, ExtensionHostAPIFactory } from './api/api'
 import { ExtensionContent } from './api/content'
 import { ExtensionContext } from './api/context'
 import { createDecorationType } from './api/decorations'
-import { ExtensionDocuments } from './api/documents'
 import { DocumentHighlightKind } from './api/documentHighlights'
-import { Extensions } from './api/extensions'
-import { ExtensionLanguageFeatures } from './api/languageFeatures'
 import { ExtensionViewsApi } from './api/views'
 import { ExtensionWindows } from './api/windows'
 
 import { registerComlinkTransferHandlers } from '../util'
 import { initNewExtensionAPI } from './flatExtensionApi'
 import { SettingsCascade } from '../../settings/settings'
+import { ExtensionDocuments } from './api/documents'
 
 /**
  * Required information when initializing an extension host.
@@ -132,23 +130,14 @@ function createExtensionAPI(
     const context = new ExtensionContext(proxy.context)
     const documents = new ExtensionDocuments(sync)
 
-    const extensions = new Extensions()
-    subscription.add(extensions)
-
     const windows = new ExtensionWindows(proxy, documents)
     const views = new ExtensionViewsApi(proxy.views)
-    const languageFeatures = new ExtensionLanguageFeatures(proxy.languageFeatures, documents)
     const content = new ExtensionContent(proxy.content)
 
-    const {
-        configuration,
-        exposedToMain,
-        workspace,
-        state,
-        commands,
-        search,
-        languages: { registerHoverProvider, registerDocumentHighlightProvider },
-    } = initNewExtensionAPI(proxy, initData.initialSettings, documents)
+    const { configuration, exposedToMain, workspace, commands, search, languages } = initNewExtensionAPI(
+        proxy,
+        initData.initialSettings
+    )
 
     // Expose the extension host API to the client (main thread)
     const extensionHostAPI: ExtensionHostAPI = {
@@ -156,8 +145,6 @@ function createExtensionAPI(
 
         ping: () => 'pong',
 
-        documents,
-        extensions,
         windows,
         ...exposedToMain,
     }
@@ -166,14 +153,7 @@ function createExtensionAPI(
     // "redefines" everything instead of exposing internal Ext* classes directly so as to:
     // - Avoid exposing private methods to extensions
     // - Avoid exposing proxy.* to extensions, which gives access to the main thread
-    const extensionAPI: typeof sourcegraph & {
-        // Backcompat definitions that were removed from sourcegraph.d.ts but are still defined (as
-        // noops with a log message), to avoid completely breaking extensions that use them.
-        languages: {
-            registerTypeDefinitionProvider: any
-            registerImplementationProvider: any
-        }
-    } = {
+    const extensionAPI: typeof sourcegraph = {
         URI: URL,
         Position,
         Range,
@@ -195,66 +175,11 @@ function createExtensionAPI(
             registerViewProvider: (id, provider) => views.registerViewProvider(id, provider),
         },
 
-        workspace: {
-            get textDocuments(): sourcegraph.TextDocument[] {
-                return documents.getAll()
-            },
-            onDidOpenTextDocument: documents.openedTextDocuments,
-            openedTextDocuments: documents.openedTextDocuments,
-            ...workspace,
-            // we use state here directly because of getters
-            // getter are not preserved as functions via {...obj} syntax
-            // thus expose state until we migrate documents to the new model according RFC 155
-            get roots() {
-                return state.roots
-            },
-            get versionContext() {
-                return state.versionContext
-            },
-        },
+        workspace,
 
         configuration,
 
-        languages: {
-            registerHoverProvider,
-            registerDocumentHighlightProvider,
-
-            registerDefinitionProvider: (
-                selector: sourcegraph.DocumentSelector,
-                provider: sourcegraph.DefinitionProvider
-            ) => languageFeatures.registerDefinitionProvider(selector, provider),
-
-            // These were removed, but keep them here so that calls from old extensions do not throw
-            // an exception and completely break.
-            registerTypeDefinitionProvider: () => {
-                console.warn(
-                    'sourcegraph.languages.registerTypeDefinitionProvider was removed. Use sourcegraph.languages.registerLocationProvider instead.'
-                )
-                return { unsubscribe: () => undefined }
-            },
-            registerImplementationProvider: () => {
-                console.warn(
-                    'sourcegraph.languages.registerImplementationProvider was removed. Use sourcegraph.languages.registerLocationProvider instead.'
-                )
-                return { unsubscribe: () => undefined }
-            },
-
-            registerReferenceProvider: (
-                selector: sourcegraph.DocumentSelector,
-                provider: sourcegraph.ReferenceProvider
-            ) => languageFeatures.registerReferenceProvider(selector, provider),
-
-            registerLocationProvider: (
-                id: string,
-                selector: sourcegraph.DocumentSelector,
-                provider: sourcegraph.LocationProvider
-            ) => languageFeatures.registerLocationProvider(id, selector, provider),
-
-            registerCompletionItemProvider: (
-                selector: sourcegraph.DocumentSelector,
-                provider: sourcegraph.CompletionItemProvider
-            ) => languageFeatures.registerCompletionItemProvider(selector, provider),
-        },
+        languages,
 
         search,
         commands,
@@ -270,5 +195,8 @@ function createExtensionAPI(
             clientApplication: initData.clientApplication,
         },
     }
+
+    subscription.add(handleExtensionActivation(proxy, of(new Set())))
+
     return { extensionHostAPI, extensionAPI, subscription }
 }

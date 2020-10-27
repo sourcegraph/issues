@@ -1,5 +1,5 @@
 import { Endpoint } from 'comlink'
-import { NextObserver, Observable, Subscribable, Subscription } from 'rxjs'
+import { NextObserver, Observable, Subscribable, Unsubscribable } from 'rxjs'
 import { SettingsEdit } from '../api/client/services/settings'
 import { GraphQLResult } from '../graphql/graphql'
 import * as GQL from '../graphql/schema'
@@ -9,8 +9,7 @@ import { FileSpec, UIPositionSpec, RawRepoSpec, RepoSpec, RevisionSpec, ViewStat
 import { DiffPart } from '@sourcegraph/codeintellify'
 import { isObject } from 'lodash'
 import { hasProperty } from '../util/types'
-import { IExtensionsService } from '../api/client/services/extensionsService'
-import { ModelService } from '../api/client/services/modelService'
+import { ConfiguredExtension } from '../extensions/extension'
 
 export interface EndpointPair {
     /** The endpoint to proxy the API of the other thread from */
@@ -20,11 +19,8 @@ export interface EndpointPair {
     expose: Endpoint
 }
 
-export interface ClosableEndpointPair {
-    endpoints: EndpointPair
-
-    /** Destroys worker or iframe depending on the environment. */
-    subscription: Subscription
+export interface ClosableEndpointPair extends EndpointPair {
+    subscription: Unsubscribable
 }
 
 const isEndpoint = (value: unknown): value is Endpoint =>
@@ -138,7 +134,7 @@ export interface PlatformContext {
      * @returns A script URL suitable for passing to importScripts, typically either the original
      * https:// URL for the extension's bundle or a blob: URI for it.
      */
-    getScriptURLForExtension: (bundleURL: string) => string | Promise<string>
+    getScriptURLForExtension?: (bundleURL: string) => string | Promise<string>
 
     /**
      * Constructs the URL (possibly relative or absolute) to the file with the specified options.
@@ -195,9 +191,9 @@ export interface PlatformContext {
     telemetryService?: TelemetryService
 
     /**
-     * Creates an extensions service that provides the list of extensions to be activated.
+     * The list of extensions to be activated.
      */
-    createExtensionsService?(modelService: Pick<ModelService, 'activeLanguages'>): IExtensionsService
+    enabledExtensions?: ConfiguredExtension[]
 }
 
 /**

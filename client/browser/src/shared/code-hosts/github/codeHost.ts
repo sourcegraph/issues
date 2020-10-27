@@ -21,7 +21,6 @@ import { markdownBodyViewResolver } from './contentViews'
 import { diffDomFunctions, searchCodeSnippetDOMFunctions, singleFileDOMFunctions } from './domFunctions'
 import { getCommandPaletteMount } from './extensions'
 import { resolveDiffFileInfo, resolveFileInfo, resolveSnippetFileInfo } from './fileInfo'
-import { commentTextFieldResolver } from './textFields'
 import { setElementTooltip } from './tooltip'
 import { getFileContainers, parseURL } from './util'
 import { NotificationType } from '../../../../../shared/src/api/client/services/notifications'
@@ -286,7 +285,6 @@ export const githubCodeHost: CodeHost = {
     name: checkIsGitHubEnterprise() ? 'GitHub Enterprise' : 'GitHub',
     codeViewResolvers: [genericCodeViewResolver, fileLineContainerResolver, searchResultCodeViewResolver],
     contentViewResolvers: [markdownBodyViewResolver],
-    textFieldResolvers: [commentTextFieldResolver],
     nativeTooltipResolvers: [nativeTooltipResolver],
     getContext: () => {
         const repoHeaderHasPrivateMarker =
@@ -342,13 +340,6 @@ export const githubCodeHost: CodeHost = {
         actionItemClass: 'btn btn-sm tooltipped tooltipped-s BtnGroup-item action-item--github',
         actionItemPressedClass: 'selected',
         actionItemIconClass: 'icon--github v-align-text-bottom',
-    },
-    completionWidgetClassProps: {
-        widgetClassName: 'suggester-container',
-        widgetContainerClassName: 'suggester',
-        listClassName: 'suggestions',
-        selectedListItemClassName: 'navigation-focus',
-        listItemClassName: 'text-normal',
     },
     hoverOverlayClassProps: {
         className: 'Box',

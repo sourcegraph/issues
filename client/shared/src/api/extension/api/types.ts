@@ -22,6 +22,13 @@ export function toPosition(position: clientType.Position): Position {
     return new Position(position.line, position.character)
 }
 
+export function fromDocumentHighlight(highlight: sourcegraph.DocumentHighlight): clientType.DocumentHighlight {
+    return {
+        range: highlight.range && fromRange(highlight.range),
+        kind: highlight.kind,
+    }
+}
+
 /**
  * Converts from an instance of a badged {@link Location} to the plain object {@link clientType.Location}.
  *
@@ -32,7 +39,7 @@ export function fromLocation(
 ): sourcegraph.Badged<clientType.Location> {
     return {
         uri: location.uri.href,
-        range: fromRange(location.range),
+        range: location.range && fromRange(location.range),
         badge: location.badge,
     }
 }
@@ -45,7 +52,7 @@ export function fromLocation(
 export function fromHover(hover: sourcegraph.Badged<sourcegraph.Hover>): sourcegraph.Badged<clientType.Hover> {
     return {
         contents: hover.contents,
-        range: fromRange(hover.range),
+        range: hover.range && fromRange(hover.range),
         badge: hover.badge,
         alerts: hover.alerts,
     }
@@ -56,9 +63,6 @@ export function fromHover(hover: sourcegraph.Badged<sourcegraph.Hover>): sourceg
  *
  * @internal
  */
-function fromRange(range: Range | sourcegraph.Range | undefined): clientType.Range | undefined {
-    if (!range) {
-        return undefined
-    }
+function fromRange(range: Range | sourcegraph.Range): clientType.Range {
     return range instanceof Range ? range.toJSON() : range
 }

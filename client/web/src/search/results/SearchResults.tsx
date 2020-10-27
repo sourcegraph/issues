@@ -41,7 +41,7 @@ import { AuthenticatedUser } from '../../auth'
 import { SearchPatternType } from '../../../../shared/src/graphql-operations'
 
 export interface SearchResultsProps
-    extends ExtensionsControllerProps<'executeCommand' | 'extHostAPI' | 'services'>,
+    extends ExtensionsControllerProps<'executeCommand' | 'extensionHostAPI' | 'services'>,
         PlatformContextProps<'forceUpdateTooltip' | 'settings'>,
         SettingsCascadeProps,
         TelemetryProps,
@@ -175,7 +175,7 @@ export class SearchResults extends React.Component<SearchResultsProps, SearchRes
                                     LATEST_VERSION,
                                     patternType,
                                     resolveVersionContext(versionContext, this.props.availableVersionContexts),
-                                    this.props.extensionsController.extHostAPI
+                                    this.props.extensionsController.extensionHostAPI
                                 )
                                 .pipe(
                                     // Log telemetry

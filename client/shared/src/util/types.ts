@@ -45,7 +45,7 @@ export const isNot = <TInput, TExclude extends TInput>(isType: (value: TInput) =
 ): value is Exclude<TInput, TExclude> => !isType(value)
 
 /**
- * Returns a function that returns `true` if the given `key` of the object passes the given type guard.
+ * Returns a function that returns `true` if the given `key` exists in the given object, narrowing down the type of the _object_.
  *
  * @param key The key of the property to check.
  */

@@ -1,7 +1,10 @@
-import { ProxyMarked, transferHandlers, releaseProxy, TransferHandler, Remote } from 'comlink'
-import { Subscription } from 'rxjs'
+import { ProxyMarked, transferHandlers, releaseProxy, TransferHandler, Remote, proxy } from 'comlink'
+import { Subscription, of, EMPTY } from 'rxjs'
 import { Subscribable, Unsubscribable } from 'sourcegraph'
-import { hasProperty } from '../util/types'
+import { hasProperty, keyExistsIn } from '../util/types'
+import { FlatExtHostAPI, MainThreadAPI } from './contract'
+import { noop, identity } from 'lodash'
+import { proxySubscribable } from './extension/api/common'
 
 /**
  * Tests whether a value is a WHATWG URL object.
@@ -69,22 +72,50 @@ export const isSubscribable = (value: unknown): value is Subscribable<unknown> =
  * NOTE: it does not handle ProxyMethods and callbacks yet
  * NOTE2: for testing purposes only!!
  */
-export const pretendRemote = <T>(object: Partial<T>): Remote<T> =>
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-return
-    (new Proxy(object, {
-        get: (a, property) => {
-            if (property === 'then') {
-                // Promise.resolve(pretendRemote(..)) checks if this is a Promise
-                // we will let it know that no, this is not a Promise
+export const pretendRemote = <T extends object>(object: T): Remote<T> =>
+    new Proxy(object, {
+        get: (target, key) => {
+            if (!keyExistsIn(key, target)) {
                 return undefined
             }
-            if (property in a) {
-                if (typeof (a as any)[property] !== 'function') {
-                    return Promise.resolve((a as any)[property])
-                }
-
-                return (...args: any[]) => Promise.resolve((a as any)[property](...args))
+            const value = target[key]
+            if (typeof value === 'function') {
+                return (...args: unknown[]) => Promise.resolve(value(...args))
             }
-            throw new Error(`unspecified property in the stub: "${property.toString()}"`)
+            return Promise.resolve(value)
         },
-    }) as unknown) as Remote<T>
+    }) as Remote<T>
+
+// TODO this object is better than just casting, but it is still not good.
+// Calling these function will never work as expected and the test needs to override the things actually used,
+// meaning it needs to have knowledge of the internals of what is being tested.
+export const noopFlatExtensionHostAPI: FlatExtHostAPI = {
+    getWorkspaceRoots: () => [],
+    addWorkspaceRoot: noop,
+    removeWorkspaceRoot: noop,
+    syncVersionContext: noop,
+    transformSearchQuery: (query: string) => proxySubscribable(of(query)),
+    syncSettingsData: noop,
+    addTextDocumentIfNotExists: noop,
+    addViewerIfNotExists: () => {
+        throw new Error('Not implemented')
+    },
+    removeViewer: noop,
+    setEditorSelections: noop,
+    getActiveCodeEditorPosition: () => proxySubscribable(EMPTY),
+    getDecorations: () => proxySubscribable(of([])),
+    // Languages
+    getHover: () => proxySubscribable(of({ isLoading: false, result: null })),
+    getDefinitions: () => proxySubscribable(of({ isLoading: false, result: [] })),
+    getReferences: () => proxySubscribable(of({ isLoading: false, result: [] })),
+    getLocations: () => proxySubscribable(of({ isLoading: false, result: [] })),
+    hasReferenceProvider: () => proxySubscribable(of(false)),
+}
+
+export const noopMainThreadAPI: MainThreadAPI = {
+    getActiveExtensions: () => proxySubscribable(EMPTY),
+    getScriptURLForExtension: identity,
+    applySettingsEdit: () => Promise.resolve(),
+    executeCommand: () => Promise.resolve(),
+    registerCommand: () => proxy(new Subscription()),
+}
