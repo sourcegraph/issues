@@ -3,7 +3,7 @@ import MapSearchIcon from 'mdi-react/MapSearchIcon'
 import React, { useMemo, useState, useEffect, useCallback } from 'react'
 import { escapeRegExp, uniqueId } from 'lodash'
 import { Route, RouteComponentProps, Switch } from 'react-router'
-import { Observable, NEVER, ObservableInput, of } from 'rxjs'
+import { Observable, of } from 'rxjs'
 import { catchError, map, startWith } from 'rxjs/operators'
 import { redirectToExternalHost } from '.'
 import {
@@ -17,7 +17,7 @@ import * as GQL from '../../../shared/src/graphql/schema'
 import { PlatformContextProps } from '../../../shared/src/platform/context'
 import { SettingsCascadeProps } from '../../../shared/src/settings/settings'
 import { ErrorLike, isErrorLike, asError } from '../../../shared/src/util/errors'
-import { makeRepoURI } from '../../../shared/src/util/url'
+import { makeRepoURI, ParsedRepoURI } from '../../../shared/src/util/url'
 import { ErrorBoundary } from '../components/ErrorBoundary'
 import { HeroPage } from '../components/HeroPage'
 import {
@@ -30,7 +30,7 @@ import {
     quoteIfNeeded,
 } from '../search'
 import { RouteDescriptor } from '../util/contributions'
-import { parseBrowserRepoURL } from '../util/url'
+import { parseBrowserRepoURL, ParsedRepoRevision } from '../util/url'
 import { GoToCodeHostAction } from './actions/GoToCodeHostAction'
 import { fetchFileExternalLinks, fetchRepository, resolveRevision } from './backend'
 import { RepoHeader, RepoHeaderActionButton, RepoHeaderContributionsLifecycleProps } from './RepoHeader'
@@ -100,7 +100,7 @@ const RepoPageNotFound: React.FunctionComponent = () => (
     <HeroPage icon={MapSearchIcon} title="404: Not Found" subtitle="The repository page was not found." />
 )
 
-interface RepoContainerProps
+interface RepoPageProps
     extends RouteComponentProps<{ repoRevAndRest: string }>,
         SettingsCascadeProps<Settings>,
         PlatformContextProps,
@@ -127,6 +127,8 @@ interface RepoContainerProps
     globbing: boolean
 }
 
+interface RepoContainerProps extends RepoPageProps, ParsedRepoURI, Pick<ParsedRepoRevision, 'rawRevision'> {}
+
 export const HOVER_COUNT_KEY = 'hover-count'
 const HAS_DISMISSED_ALERT_KEY = 'has-dismissed-extension-alert'
 
@@ -143,47 +145,68 @@ export interface ExtensionAlertProps {
     onExtensionAlertDismissed: () => void
 }
 
+interface RepoPageState {
+    error?: unknown
+}
+
+/**
+ * Wrapper around `RepoContainer` parsing the URL and handling errors that bubbled up from `RepoContainer`.
+ */
+export class RepoPage extends React.Component<RepoPageProps, RepoPageState> {
+    constructor(props: RepoPageProps) {
+        super(props)
+        this.state = {}
+    }
+    public static getDerivedStateFromError(error: unknown): RepoPageState | null {
+        return { error }
+    }
+    public render(): JSX.Element | null {
+        const parsedUrl = parseBrowserRepoURL(location.pathname + location.search + location.hash)
+
+        if (this.state.error) {
+            const redirect = isRepoSeeOtherErrorLike(this.state.error)
+            if (redirect) {
+                redirectToExternalHost(redirect)
+                return null
+            }
+            if (isRepoNotFoundErrorLike(this.state.error)) {
+                return (
+                    <RepositoryNotFoundPage
+                        {...parsedUrl}
+                        viewerCanAdminister={!!this.props.authenticatedUser && this.props.authenticatedUser.siteAdmin}
+                    />
+                )
+            }
+            return (
+                <HeroPage
+                    icon={AlertCircleIcon}
+                    title="Error"
+                    subtitle={<ErrorMessage error={this.state.error} history={this.props.history} />}
+                />
+            )
+        }
+        return <RepoContainer {...this.props} {...parsedUrl} />
+    }
+}
+
 /**
  * Renders a horizontal bar and content for a repository page.
  */
-export const RepoContainer: React.FunctionComponent<RepoContainerProps> = props => {
-    const { repoName, revision, rawRevision, filePath, commitRange, position, range } = parseBrowserRepoURL(
-        location.pathname + location.search + location.hash
-    )
+const RepoContainer: React.FunctionComponent<RepoContainerProps> = props => {
+    const { repoName, revision, rawRevision, filePath, commitRange, position, range } = props
 
     // Fetch repository upon mounting the component.
-    const initialRepoOrError = useObservable(
-        useMemo(
-            () =>
-                fetchRepository({ repoName }).pipe(
-                    catchError(
-                        (error): ObservableInput<ErrorLike> => {
-                            const redirect = isRepoSeeOtherErrorLike(error)
-                            if (redirect) {
-                                redirectToExternalHost(redirect)
-                                return NEVER
-                            }
-                            return of(asError(error))
-                        }
-                    )
-                ),
-            [repoName]
-        )
-    )
+    const initialRepo = useObservable(useMemo(() => fetchRepository({ repoName }), [repoName]))
 
     // Allow partial updates of the repository from components further down the tree.
-    const [nextRepoOrErrorUpdate, repoOrError] = useEventObservable(
+    const [nextRepoUpdate, repo] = useEventObservable(
         useCallback(
             (repoOrErrorUpdates: Observable<Partial<GQL.IRepository>>) =>
                 repoOrErrorUpdates.pipe(
-                    map((update): GQL.IRepository | ErrorLike | undefined =>
-                        isErrorLike(initialRepoOrError) || initialRepoOrError === undefined
-                            ? initialRepoOrError
-                            : { ...initialRepoOrError, ...update }
-                    ),
-                    startWith(initialRepoOrError)
+                    map((update): GQL.IRepository | undefined => initialRepo && { ...initialRepo, ...update }),
+                    startWith(initialRepo)
                 ),
-            [initialRepoOrError]
+            [initialRepo]
         )
     )
 
@@ -224,11 +247,11 @@ export const RepoContainer: React.FunctionComponent<RepoContainerProps> = props 
 
     const childBreadcrumbSetters = repositoryBreadcrumbSetters.useBreadcrumb(
         useMemo(() => {
-            if (isErrorLike(repoOrError) || !repoOrError) {
+            if (!repo) {
                 return
             }
 
-            const [repoDirectory, repoBase] = splitPath(displayRepoName(repoOrError.name))
+            const [repoDirectory, repoBase] = splitPath(displayRepoName(repo.name))
 
             return {
                 key: 'repository',
@@ -238,7 +261,7 @@ export const RepoContainer: React.FunctionComponent<RepoContainerProps> = props 
                             to={
                                 resolvedRevisionOrError && !isErrorLike(resolvedRevisionOrError)
                                     ? resolvedRevisionOrError.rootTreeURL
-                                    : repoOrError.url
+                                    : repo.url
                             }
                             className="repo-header__repo"
                         >
@@ -261,7 +284,7 @@ export const RepoContainer: React.FunctionComponent<RepoContainerProps> = props 
                             popperClassName="border-0"
                         >
                             <RepositoriesPopover
-                                currentRepo={repoOrError.id}
+                                currentRepo={repo.id}
                                 history={props.history}
                                 location={props.location}
                             />
@@ -269,7 +292,7 @@ export const RepoContainer: React.FunctionComponent<RepoContainerProps> = props 
                     </>
                 ),
             }
-        }, [repoOrError, resolvedRevisionOrError, props.history, props.location])
+        }, [repo, resolvedRevisionOrError, props.history, props.location])
     )
 
     // Update the workspace roots service to reflect the current repo / resolved revision
@@ -380,25 +403,9 @@ export const RepoContainer: React.FunctionComponent<RepoContainerProps> = props 
         setHasDismissedExtensionAlert(true)
     }, [onExtensionAlertDismissed, setHasDismissedExtensionAlert])
 
-    if (!repoOrError) {
+    if (!repo) {
         // Render nothing while loading
         return null
-    }
-
-    const viewerCanAdminister = !!props.authenticatedUser && props.authenticatedUser.siteAdmin
-
-    if (isErrorLike(repoOrError)) {
-        // Display error page
-        if (isRepoNotFoundErrorLike(repoOrError)) {
-            return <RepositoryNotFoundPage repo={repoName} viewerCanAdminister={viewerCanAdminister} />
-        }
-        return (
-            <HeroPage
-                icon={AlertCircleIcon}
-                title="Error"
-                subtitle={<ErrorMessage error={repoOrError} history={props.history} />}
-            />
-        )
     }
 
     const repoMatchURL = '/' + repoName.split('/').map(encodeURIComponent).join('/')
@@ -408,10 +415,10 @@ export const RepoContainer: React.FunctionComponent<RepoContainerProps> = props 
         ...repoHeaderContributionsLifecycleProps,
         ...childBreadcrumbSetters,
         onHoverShown,
-        repo: repoOrError,
+        repo,
         routePrefix: repoMatchURL,
         onDidUpdateExternalLinks: setExternalLinks,
-        onDidUpdateRepository: nextRepoOrErrorUpdate,
+        onDidUpdateRepository: nextRepoUpdate,
     }
 
     return (
@@ -420,7 +427,7 @@ export const RepoContainer: React.FunctionComponent<RepoContainerProps> = props 
                 <InstallBrowserExtensionAlert
                     isChrome={IS_CHROME}
                     onAlertDismissed={onAlertDismissed}
-                    externalURLs={repoOrError.externalURLs}
+                    externalURLs={repo.externalURLs}
                     codeHostIntegrationMessaging={codeHostIntegrationMessaging}
                 />
             )}
@@ -428,7 +435,7 @@ export const RepoContainer: React.FunctionComponent<RepoContainerProps> = props 
                 {...props}
                 actionButtons={props.repoHeaderActionButtons}
                 revision={revision}
-                repo={repoOrError}
+                repo={repo}
                 resolvedRev={resolvedRevisionOrError}
                 onLifecyclePropsChange={setRepoHeaderContributionsLifecycleProps}
                 isAlertDisplayed={showExtensionAlert}
@@ -440,9 +447,9 @@ export const RepoContainer: React.FunctionComponent<RepoContainerProps> = props 
                 element={
                     <GoToCodeHostAction
                         key="go-to-code-host"
-                        repo={repoOrError}
+                        repo={repo}
                         // We need a revision to generate code host URLs, if revision isn't available, we use the default branch or HEAD.
-                        revision={rawRevision || repoOrError.defaultBranch?.displayName || 'HEAD'}
+                        revision={rawRevision || repo.defaultBranch?.displayName || 'HEAD'}
                         filePath={filePath}
                         commitRange={commitRange}
                         position={position}

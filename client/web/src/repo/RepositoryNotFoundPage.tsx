@@ -9,7 +9,7 @@ import { eventLogger } from '../tracking/eventLogger'
 
 interface Props {
     /** The name of the repository. */
-    repo: string
+    repoName: string
 
     /** Whether the viewer is a site admin. */
     viewerCanAdminister: boolean
@@ -47,16 +47,16 @@ export class RepositoryNotFoundPage extends React.PureComponent<Props, State> {
             this.componentUpdates
                 .pipe(
                     distinctUntilChanged(
-                        (a, b) => a.repo === b.repo && a.viewerCanAdminister === b.viewerCanAdminister
+                        (a, b) => a.repoName === b.repoName && a.viewerCanAdminister === b.viewerCanAdminister
                     ),
-                    switchMap(({ repo, viewerCanAdminister }) => {
+                    switchMap(({ repoName, viewerCanAdminister }) => {
                         type PartialStateUpdate = Pick<State, 'showAdd' | 'canAddOrError'>
                         if (!viewerCanAdminister) {
                             return of({ showAdd: false, canAddOrError: undefined })
                         }
                         return merge<PartialStateUpdate>(
                             of({ showAdd: true, canAddOrError: undefined }),
-                            checkMirrorRepositoryConnection({ name: repo }).pipe(
+                            checkMirrorRepositoryConnection({ name: repoName }).pipe(
                                 map(result => result.error === null),
                                 catchError(error => [asError(error)]),
                                 map((canAddOrError): PartialStateUpdate => ({ showAdd: true, canAddOrError }))

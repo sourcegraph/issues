@@ -2,12 +2,13 @@ import { Observable } from 'rxjs'
 import { map } from 'rxjs/operators'
 import {
     CloneInProgressError,
+    FileNotFoundError,
     RepoNotFoundError,
     RepoSeeOtherError,
     RevisionNotFoundError,
 } from '../../../shared/src/backend/errors'
 import { FetchFileParameters } from '../../../shared/src/components/CodeExcerpt'
-import { gql } from '../../../shared/src/graphql/graphql'
+import { dataOrThrowErrors, gql, GraphQLError } from '../../../shared/src/graphql/graphql'
 import * as GQL from '../../../shared/src/graphql/schema'
 import { createAggregateError } from '../../../shared/src/util/errors'
 import { memoizeObservable } from '../../../shared/src/util/memoizeObservable'
@@ -188,11 +189,18 @@ const fetchHighlightedFile = memoizeObservable(
             `,
             context
         ).pipe(
-            map(({ data, errors }) => {
-                if (!data?.repository?.commit?.file?.highlight) {
-                    throw createAggregateError(errors)
+            map(dataOrThrowErrors),
+            map(data => {
+                if (!data.repository) {
+                    throw new RepoNotFoundError(context.repoName)
+                }
+                if (!data.repository.commit) {
+                    throw new RevisionNotFoundError(context.commitID)
                 }
                 const file = data.repository.commit.file
+                if (!file) {
+                    throw new FileNotFoundError(context.filePath)
+                }
                 return { isDirectory: file.isDirectory, richHTML: file.richHTML, highlightedFile: file.highlight }
             })
         ),
@@ -242,9 +250,16 @@ export const fetchFileExternalLinks = memoizeObservable(
             `,
             context
         ).pipe(
-            map(({ data, errors }) => {
-                if (!data?.repository?.commit?.file?.externalURLs) {
-                    throw createAggregateError(errors)
+            map(dataOrThrowErrors),
+            map(data => {
+                if (!data.repository) {
+                    throw new RepoNotFoundError(context.repoName)
+                }
+                if (!data.repository.commit) {
+                    throw new RevisionNotFoundError(context.revision)
+                }
+                if (!data.repository.commit.file) {
+                    throw new FileNotFoundError(context.filePath)
                 }
                 return data.repository.commit.file.externalURLs
             })
@@ -292,9 +307,18 @@ export const fetchTreeEntries = memoizeObservable(
             `,
             args
         ).pipe(
-            map(({ data, errors }) => {
-                if (errors || !data?.repository?.commit?.tree) {
-                    throw createAggregateError(errors)
+            map(dataOrThrowErrors),
+            map(data => {
+                if (!data.repository) {
+                    throw new RepoNotFoundError(args.repoName)
+                }
+                if (!data.repository.commit) {
+                    throw new RevisionNotFoundError(args.revision)
+                }
+                if (!data.repository.commit.tree) {
+                    const error: Error & GraphQLError = new Error('Tree not found')
+                    error.path = ['repository', 'commit', 'tree']
+                    throw error
                 }
                 return data.repository.commit.tree
             })

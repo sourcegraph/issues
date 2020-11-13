@@ -1,8 +1,8 @@
 import { Observable } from 'rxjs'
 import { map } from 'rxjs/operators'
-import { gql } from '../../../../shared/src/graphql/graphql'
+import { RepoNotFoundError } from '../../../../shared/src/backend/errors'
+import { dataOrThrowErrors, gql } from '../../../../shared/src/graphql/graphql'
 import * as GQL from '../../../../shared/src/graphql/schema'
-import { createAggregateError } from '../../../../shared/src/util/errors'
 import { queryGraphQL } from '../../backend/graphql'
 
 /**
@@ -50,9 +50,10 @@ export function fetchRepository(name: string): Observable<GQL.IRepository> {
         `,
         { name }
     ).pipe(
-        map(({ data, errors }) => {
-            if (!data || !data.repository || !data.repository.externalServices) {
-                throw createAggregateError(errors)
+        map(dataOrThrowErrors),
+        map(data => {
+            if (!data.repository) {
+                throw new RepoNotFoundError(name)
             }
             return data.repository
         })

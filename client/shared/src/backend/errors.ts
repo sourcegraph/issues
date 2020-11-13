@@ -37,6 +37,19 @@ export class RevisionNotFoundError extends Error {
 export const isRevisionNotFoundErrorLike = (value: unknown): boolean =>
     isErrorLike(value) && (value.name === REVISION_NOT_FOUND_ERROR_NAME || /revision.*not found/i.test(value.message))
 
+const FILE_NOT_FOUND_ERROR_NAME = 'RevisionNotFoundError' as const
+export class FileNotFoundError extends Error {
+    public readonly name = FILE_NOT_FOUND_ERROR_NAME
+    constructor(filePath: string) {
+        super(`File ${filePath} not found`)
+    }
+}
+// Will work even for errors that came from GraphQL, background pages, comlink webworkers, etc.
+// TODO remove error message assertion after https://github.com/sourcegraph/sourcegraph/issues/9697 and https://github.com/sourcegraph/sourcegraph/issues/9693 are fixed
+export const isFileNotFoundErrorLike = (value: unknown): boolean =>
+    isErrorLike(value) &&
+    (value.name === FILE_NOT_FOUND_ERROR_NAME || /file.*(not found|does not exist)/i.test(value.message))
+
 const REPO_SEE_OTHER_ERROR_NAME = 'RepoSeeOtherError' as const
 export class RepoSeeOtherError extends Error {
     public readonly name = REPO_SEE_OTHER_ERROR_NAME

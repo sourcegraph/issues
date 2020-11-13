@@ -230,6 +230,6 @@ export const routes: readonly LayoutRouteProps<any>[] = [
     },
     {
         path: '/:repoRevAndRest+',
-        render: lazyComponent(() => import('./repo/RepoContainer'), 'RepoContainer'),
+        render: lazyComponent(() => import('./repo/RepoContainer'), 'RepoPage'),
     },
 ]

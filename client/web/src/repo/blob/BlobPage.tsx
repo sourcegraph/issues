@@ -40,6 +40,7 @@ import { FilePathBreadcrumbs } from '../FilePathBreadcrumbs'
 import { AuthenticatedUser } from '../../auth'
 import { TelemetryProps } from '../../../../shared/src/telemetry/telemetryService'
 import { HoverThresholdProps } from '../RepoContainer'
+import { RepoNotFoundError } from '../../../../shared/src/backend/errors'
 
 function fetchBlobCacheKey(parsed: ParsedRepoURI & { isLightTheme: boolean; disableTimeout: boolean }): string {
     return makeRepoURI(parsed) + String(parsed.isLightTheme) + String(parsed.disableTimeout)
@@ -80,6 +81,9 @@ const fetchBlob = memoizeObservable(
         ).pipe(
             map(dataOrThrowErrors),
             map(data => {
+                if (!data.repository) {
+                    throw new RepoNotFoundError(args.repoName)
+                }
                 if (!data.repository?.commit?.file?.highlight) {
                     throw new Error('Not found')
                 }
