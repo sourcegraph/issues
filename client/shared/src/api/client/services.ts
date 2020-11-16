@@ -13,7 +13,6 @@ import { createModelService } from './services/modelService'
 import { NotificationsService } from './services/notifications'
 import { PanelViewProviderRegistry } from './services/panelViews'
 import { createViewService } from './services/viewService'
-import { createWorkspaceService } from './services/workspaceService'
 
 /**
  * Services is a container for all services used by the client application.
@@ -40,7 +39,6 @@ export class Services {
 
     public readonly commands = new CommandRegistry()
     public readonly context = createContextService(this.platformContext)
-    public readonly workspace = createWorkspaceService()
     public readonly model = createModelService()
     public readonly viewer = createViewerService(this.model)
     public readonly notifications = new NotificationsService()

@@ -3,23 +3,20 @@ import { updateSettings } from './services/settings'
 import { Subscription, from } from 'rxjs'
 import { PlatformContext } from '../../platform/context'
 import { isSettingsValid } from '../../settings/settings'
-import { switchMap, concatMap } from 'rxjs/operators'
+import { switchMap } from 'rxjs/operators'
 import { FlatExtensionHostAPI, MainThreadAPI } from '../contract'
 import { ProxySubscription } from './api/common'
 import { Services } from './services'
 
 // for now it will partially mimic Services object but hopefully will be incrementally reworked in the process
-export type MainThreadAPIDependencies = Pick<Services, 'commands' | 'workspace'>
+export type MainThreadAPIDependencies = Pick<Services, 'commands'>
 
 export const initMainThreadAPI = (
     extensionHost: Remote<FlatExtensionHostAPI>,
     platformContext: Pick<PlatformContext, 'updateSettings' | 'settings'>,
     dependencies: MainThreadAPIDependencies
 ): { api: MainThreadAPI; subscription: Subscription } => {
-    const {
-        workspace: { roots, versionContext },
-        commands,
-    } = dependencies
+    const { commands } = dependencies
 
     const subscription = new Subscription()
     // Settings
@@ -33,18 +30,6 @@ export const initMainThreadAPI = (
                     return []
                 })
             )
-            .subscribe()
-    )
-
-    // Workspace
-    subscription.add(
-        from(roots)
-            .pipe(concatMap(roots => extensionHost.syncRoots(roots)))
-            .subscribe()
-    )
-    subscription.add(
-        from(versionContext)
-            .pipe(concatMap(context => extensionHost.syncVersionContext(context)))
             .subscribe()
     )
 

@@ -37,7 +37,7 @@ describe('tryCatchPromise', () => {
     })
 })
 
-describe('isPromise', () => {
+describe('isPromiseLike', () => {
     test('returns true for promises', () =>
         expect(
             isPromiseLike(

@@ -116,6 +116,7 @@ import { isFirefox, observeSourcegraphURL } from '../../util/context'
 import { shouldOverrideSendTelemetry, observeOptionFlag } from '../../util/optionFlags'
 import { BackgroundPageApi } from '../../../browser-extension/web-extension-api/types'
 import { background } from '../../../browser-extension/web-extension-api/runtime'
+import { ReferenceCounter } from '../../../../../shared/src/util/ReferenceCounter'
 
 registerHighlightContributions()
 
@@ -824,43 +825,28 @@ export function handleCodeHost({
         observeOn(asyncScheduler)
     )
 
-    /** Map from workspace URI to number of editors referencing it */
-    const rootReferenceCounts = new Map<string, number>()
+    /** Keep a count of existing references to workspace roots. */
+    const rootReferenceCounter = new ReferenceCounter()
 
     /**
-     * Adds root referenced by a code editor to the worskpace.
-     *
-     * Will only cause `workspace.roots` to emit if no root with
-     * the given `uri` existed.
+     * Adds root referenced by a code editor to the workspace.
      */
     const addRootReference = (uri: string, inputRevision: string | undefined): void => {
-        rootReferenceCounts.set(uri, (rootReferenceCounts.get(uri) || 0) + 1)
-        if (rootReferenceCounts.get(uri) === 1) {
-            extensionsController.services.workspace.roots.next([
-                ...extensionsController.services.workspace.roots.value,
-                { uri, inputRevision },
-            ])
+        if (rootReferenceCounter.increment(uri)) {
+            extensionsController.extHostAPI
+                .then(extensionHostAPI => extensionHostAPI.addWorkspaceRoot({ uri, inputRevision }))
+                .catch(console.error)
         }
     }
 
     /**
      * Deletes a reference to a workspace root from a code editor.
-     *
-     * Will only cause `workspace.roots` to emit if the root
-     * with the given `uri` has no more references.
      */
     const deleteRootReference = (uri: string): void => {
-        const currentReferenceCount = rootReferenceCounts.get(uri)
-        if (!currentReferenceCount) {
-            throw new Error(`No preexisting root refs for uri ${uri}`)
-        }
-        const updatedReferenceCount = currentReferenceCount - 1
-        if (updatedReferenceCount === 0) {
-            extensionsController.services.workspace.roots.next(
-                extensionsController.services.workspace.roots.value.filter(root => root.uri !== uri)
-            )
-        } else {
-            rootReferenceCounts.set(uri, updatedReferenceCount)
+        if (rootReferenceCounter.decrement(uri)) {
+            extensionsController.extHostAPI
+                .then(extensionHostApi => extensionHostApi.removeWorkspaceRoot(uri))
+                .catch(console.error)
         }
     }
 

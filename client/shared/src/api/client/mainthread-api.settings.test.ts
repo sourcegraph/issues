@@ -5,11 +5,9 @@ import { pretendRemote } from '../util'
 import { SettingsEdit } from './services/settings'
 import { SettingsCascade } from '../../settings/settings'
 import { FlatExtensionHostAPI } from '../contract'
-import { createWorkspaceService } from './services/workspaceService'
 import { CommandRegistry } from './services/command'
 
 const defaultDependencies = (): MainThreadAPIDependencies => ({
-    workspace: createWorkspaceService(),
     commands: new CommandRegistry(),
 })
 

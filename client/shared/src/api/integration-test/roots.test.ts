@@ -9,13 +9,11 @@ describe('Workspace roots (integration)', () => {
         })
 
         test('adds new text documents', async () => {
-            const {
-                services: { workspace },
-                extensionAPI,
-            } = await integrationTestContext()
+            const { extensionHost, extensionAPI } = await integrationTestContext()
 
-            workspace.roots.next([{ uri: 'file:///a' }, { uri: 'file:///b' }])
-            await extensionAPI.internal.sync()
+            await extensionHost.removeWorkspaceRoot('file:///')
+            await extensionHost.addWorkspaceRoot({ uri: 'file:///a' })
+            await extensionHost.addWorkspaceRoot({ uri: 'file:///b' })
 
             expect(extensionAPI.workspace.roots).toEqual([
                 { uri: new URL('file:///a') },
@@ -26,17 +24,13 @@ describe('Workspace roots (integration)', () => {
 
     describe('workspace.rootChanges', () => {
         test('fires when a root is added or removed', async () => {
-            const {
-                services: { workspace },
-                extensionAPI,
-            } = await integrationTestContext()
+            const { extensionHost, extensionAPI } = await integrationTestContext()
 
             const values = collectSubscribableValues(extensionAPI.workspace.rootChanges)
             expect(values).toEqual([] as void[])
 
-            workspace.roots.next([{ uri: 'file:///a' }])
-            await extensionAPI.internal.sync()
-
+            await extensionHost.addWorkspaceRoot({ uri: 'file:///a' })
+            // rootChanges lets us know when roots changed, but it doesn't emit the new value, it just emits undefined.
             expect(values).toEqual([undefined])
         })
     })

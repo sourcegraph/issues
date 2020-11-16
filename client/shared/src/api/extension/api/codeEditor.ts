@@ -1,6 +1,6 @@
 import { Remote } from 'comlink'
 import { Range, Selection } from '@sourcegraph/extension-api-classes'
-import * as clientType from '@sourcegraph/extension-api-types'
+import * as extensionApiTypes from '@sourcegraph/extension-api-types'
 import { BehaviorSubject } from 'rxjs'
 import * as sourcegraph from 'sourcegraph'
 import { ClientCodeEditorAPI } from '../../client/api/codeEditor'
@@ -20,7 +20,7 @@ const isEmptyObjectDeep = (value: any): boolean =>
         ? Object.values(value).every(isEmptyObjectDeep)
         : !value
 
-const isDecorationEmpty = ({ range, isWholeLine, ...contents }: clientType.TextDocumentDecoration): boolean =>
+const isDecorationEmpty = ({ range, isWholeLine, ...contents }: extensionApiTypes.TextDocumentDecoration): boolean =>
     isEmptyObjectDeep(contents)
 
 /** @internal */
@@ -77,7 +77,9 @@ export class ExtensionCodeEditor implements sourcegraph.CodeEditor {
     }
 }
 
-function fromTextDocumentDecoration(decoration: sourcegraph.TextDocumentDecoration): clientType.TextDocumentDecoration {
+function fromTextDocumentDecoration(
+    decoration: sourcegraph.TextDocumentDecoration
+): extensionApiTypes.TextDocumentDecoration {
     return {
         ...decoration,
         range: (decoration.range as Range).toJSON(),

@@ -1,5 +1,5 @@
 import { HoveredToken, LOADER_DELAY, MaybeLoadingResult } from '@sourcegraph/codeintellify'
-import { Location } from '@sourcegraph/extension-api-types'
+import * as extensionApiTypes from '@sourcegraph/extension-api-types'
 import { createMemoryHistory, MemoryHistory, createPath } from 'history'
 import { BehaviorSubject, from, Observable, of, throwError, Subscription } from 'rxjs'
 import { first, map } from 'rxjs/operators'
@@ -10,7 +10,6 @@ import { CommandRegistry } from '../api/client/services/command'
 import { ContributionRegistry } from '../api/client/services/contribution'
 import { createTestViewerService } from '../api/client/services/viewerService.test'
 import { ProvideTextDocumentLocationSignature } from '../api/client/services/location'
-import { WorkspaceRootWithMetadata, WorkspaceService } from '../api/client/services/workspaceService'
 import { ContributableMenu, ReferenceParameters, TextDocumentPositionParameters } from '../api/protocol'
 import { PrivateRepoPublicSourcegraphComError } from '../backend/errors'
 import { getContributedActionItems } from '../contributions/contributions'
@@ -40,7 +39,7 @@ const FIXTURE_PARAMS: TextDocumentPositionParameters & URLToFileContext = {
     part: undefined,
 }
 
-const FIXTURE_LOCATION: Location = {
+const FIXTURE_LOCATION: extensionApiTypes.Location = {
     uri: 'git://r2?c2#f2',
     range: {
         start: { line: 2, character: 2 },
@@ -58,11 +57,13 @@ const FIXTURE_HOVER_CONTEXT: HoveredToken & HoverContext = {
 }
 
 function testWorkspaceService(
-    roots: readonly WorkspaceRootWithMetadata[] = [{ uri: 'git://r3?c3', inputRevision: 'v3' }],
+    roots: readonly extensionApiTypes.WorkspaceRoot[] = [{ uri: 'git://r3?c3', inputRevision: 'v3' }],
     versionContext: string | undefined = undefined
-): WorkspaceService {
+) {
     return { roots: new BehaviorSubject(roots), versionContext: new BehaviorSubject(versionContext) }
 }
+
+const FIXTURE_WORKSPACE_ROOTS: extensionApiTypes.WorkspaceRoot[] = [{ uri: 'git://r3?c3', inputRevision: 'v3' }]
 
 // Use toPrettyBlobURL as the urlToFile passed to these functions because it results in the most readable/familiar
 // expected test output.
@@ -96,20 +97,24 @@ describe('getHoverActionsContext', () => {
                     getHoverActionsContext(
                         {
                             getDefinition: () =>
-                                cold<MaybeLoadingResult<Location[]>>(`l ${LOADER_DELAY + 100}ms r`, {
+                                cold<MaybeLoadingResult<extensionApiTypes.Location[]>>(`l ${LOADER_DELAY + 100}ms r`, {
                                     l: { isLoading: true, result: [] },
                                     r: { isLoading: false, result: [FIXTURE_LOCATION] },
                                 }),
+                            getWorkspaceRoots: () =>
+                                cold<extensionApiTypes.WorkspaceRoot[]>('a|', {
+                                    a: FIXTURE_WORKSPACE_ROOTS,
+                                }),
                             extensionsController: {
                                 services: {
-                                    workspace: testWorkspaceService(),
-
                                     textDocumentReferences: {
                                         providersForDocument: () =>
-                                            cold<ProvideTextDocumentLocationSignature<ReferenceParameters, Location>[]>(
-                                                'a',
-                                                { a: [() => of(null)] }
-                                            ),
+                                            cold<
+                                                ProvideTextDocumentLocationSignature<
+                                                    ReferenceParameters,
+                                                    extensionApiTypes.Location
+                                                >[]
+                                            >('a', { a: [() => of(null)] }),
                                     },
                                 },
                             },
@@ -171,20 +176,28 @@ describe('getHoverActionsContext', () => {
                     getHoverActionsContext(
                         {
                             getDefinition: () =>
-                                cold<MaybeLoadingResult<Location[]>>(`l e 50ms l ${LOADER_DELAY}ms r`, {
-                                    l: { isLoading: true, result: [] },
-                                    e: { isLoading: false, result: [] },
-                                    r: { isLoading: false, result: [FIXTURE_LOCATION] },
+                                cold<MaybeLoadingResult<extensionApiTypes.Location[]>>(
+                                    `l e 50ms l ${LOADER_DELAY}ms r`,
+                                    {
+                                        l: { isLoading: true, result: [] },
+                                        e: { isLoading: false, result: [] },
+                                        r: { isLoading: false, result: [FIXTURE_LOCATION] },
+                                    }
+                                ),
+                            getWorkspaceRoots: () =>
+                                cold<extensionApiTypes.WorkspaceRoot[]>('a|', {
+                                    a: FIXTURE_WORKSPACE_ROOTS,
                                 }),
                             extensionsController: {
                                 services: {
-                                    workspace: testWorkspaceService(),
                                     textDocumentReferences: {
                                         providersForDocument: () =>
-                                            cold<ProvideTextDocumentLocationSignature<ReferenceParameters, Location>[]>(
-                                                'a',
-                                                { a: [() => of(null)] }
-                                            ),
+                                            cold<
+                                                ProvideTextDocumentLocationSignature<
+                                                    ReferenceParameters,
+                                                    extensionApiTypes.Location
+                                                >[]
+                                            >('a', { a: [() => of(null)] }),
                                     },
                                 },
                             },
@@ -253,18 +266,23 @@ describe('getHoverActionsContext', () => {
                     getHoverActionsContext(
                         {
                             getDefinition: () =>
-                                cold<MaybeLoadingResult<Location[]>>('-b', {
+                                cold<MaybeLoadingResult<extensionApiTypes.Location[]>>('-b', {
                                     b: { isLoading: false, result: [FIXTURE_LOCATION] },
+                                }),
+                            getWorkspaceRoots: () =>
+                                cold<extensionApiTypes.WorkspaceRoot[]>('a|', {
+                                    a: FIXTURE_WORKSPACE_ROOTS,
                                 }),
                             extensionsController: {
                                 services: {
-                                    workspace: testWorkspaceService(),
                                     textDocumentReferences: {
                                         providersForDocument: () =>
-                                            cold<ProvideTextDocumentLocationSignature<ReferenceParameters, Location>[]>(
-                                                'e 10ms p',
-                                                { e: [], p: [() => of(null)] }
-                                            ),
+                                            cold<
+                                                ProvideTextDocumentLocationSignature<
+                                                    ReferenceParameters,
+                                                    extensionApiTypes.Location
+                                                >[]
+                                            >('e 10ms p', { e: [], p: [() => of(null)] }),
                                     },
                                 },
                             },
@@ -315,18 +333,23 @@ describe('getHoverActionsContext', () => {
                     getHoverActionsContext(
                         {
                             getDefinition: () =>
-                                cold<MaybeLoadingResult<Location[]>>('-b', {
+                                cold<MaybeLoadingResult<extensionApiTypes.Location[]>>('-b', {
                                     b: { isLoading: false, result: [FIXTURE_LOCATION] },
+                                }),
+                            getWorkspaceRoots: () =>
+                                cold<extensionApiTypes.WorkspaceRoot[]>('a|', {
+                                    a: FIXTURE_WORKSPACE_ROOTS,
                                 }),
                             extensionsController: {
                                 services: {
-                                    workspace: testWorkspaceService(),
                                     textDocumentReferences: {
                                         providersForDocument: () =>
-                                            cold<ProvideTextDocumentLocationSignature<ReferenceParameters, Location>[]>(
-                                                'a',
-                                                { a: [() => of(null)] }
-                                            ),
+                                            cold<
+                                                ProvideTextDocumentLocationSignature<
+                                                    ReferenceParameters,
+                                                    extensionApiTypes.Location
+                                                >[]
+                                            >('a', { a: [() => of(null)] }),
                                     },
                                 },
                             },
@@ -376,15 +399,13 @@ describe('getDefinitionURL', () => {
 
     it('emits null if the locations result is empty', () =>
         expect(
-            of({ isLoading: false, result: [] })
-                .pipe(
-                    getDefinitionURL(
-                        { urlToFile, requestGraphQL },
-                        { workspace: testWorkspaceService() },
-                        FIXTURE_PARAMS
-                    ),
-                    first(({ isLoading }) => !isLoading)
-                )
+            getDefinitionURL(
+                { urlToFile, requestGraphQL },
+                FIXTURE_WORKSPACE_ROOTS,
+                of({ isLoading: false, result: [] }),
+                FIXTURE_PARAMS
+            )
+                .pipe(first(({ isLoading }) => !isLoading))
                 .toPromise()
         ).resolves.toStrictEqual({ isLoading: false, result: null }))
 
@@ -412,20 +433,18 @@ describe('getDefinitionURL', () => {
                         Partial<ViewStateSpec>
                 ) => ''
             )
-            await of<MaybeLoadingResult<Location[]>>({
-                isLoading: false,
-                result: [{ uri: 'git://r3?c3#f' }],
-            })
-                .pipe(
-                    getDefinitionURL(
-                        { urlToFile, requestGraphQL },
-                        { workspace: testWorkspaceService() },
-                        FIXTURE_PARAMS
-                    ),
-                    first(({ isLoading }) => !isLoading)
-                )
+            await getDefinitionURL(
+                { urlToFile, requestGraphQL },
+                FIXTURE_WORKSPACE_ROOTS,
+                of<MaybeLoadingResult<extensionApiTypes.Location[]>>({
+                    isLoading: false,
+                    result: [{ uri: 'git://r3?c3#f' }],
+                }),
+                FIXTURE_PARAMS
+            )
+                .pipe(first(({ isLoading }) => !isLoading))
                 .toPromise()
-            sinon.assert.calledOnce(urlToFile)
+
             expect(urlToFile.getCalls()[0].args[0]).toMatchObject({
                 filePath: 'f',
                 position: undefined,
@@ -439,20 +458,17 @@ describe('getDefinitionURL', () => {
             const requestGraphQL = (): Observable<never> =>
                 throwError(new PrivateRepoPublicSourcegraphComError('ResolveRawRepoName'))
             const urlToFile = sinon.spy()
-            await of<MaybeLoadingResult<Location[]>>({
-                isLoading: false,
-                result: [{ uri: 'git://r3?c3#f' }],
-            })
-                .pipe(
-                    getDefinitionURL(
-                        { urlToFile, requestGraphQL },
-                        {
-                            workspace: testWorkspaceService(),
-                        },
-                        FIXTURE_PARAMS
-                    ),
-                    first(({ isLoading }) => !isLoading)
-                )
+            await getDefinitionURL(
+                { urlToFile, requestGraphQL },
+                FIXTURE_WORKSPACE_ROOTS,
+                of<MaybeLoadingResult<extensionApiTypes.Location[]>>({
+                    isLoading: false,
+                    result: [{ uri: 'git://r3?c3#f' }],
+                }),
+                FIXTURE_PARAMS
+            )
+                .pipe(first(({ isLoading }) => !isLoading))
+
                 .toPromise()
             sinon.assert.calledOnce(urlToFile)
             sinon.assert.calledWith(urlToFile, {
@@ -469,18 +485,16 @@ describe('getDefinitionURL', () => {
         describe('when the result is inside the current root', () => {
             it('emits the definition URL the user input revision (not commit SHA) of the root', () =>
                 expect(
-                    of<MaybeLoadingResult<Location[]>>({
-                        isLoading: false,
-                        result: [{ uri: 'git://r3?c3#f' }],
-                    })
-                        .pipe(
-                            getDefinitionURL(
-                                { urlToFile, requestGraphQL },
-                                { workspace: testWorkspaceService() },
-                                FIXTURE_PARAMS
-                            ),
-                            first(({ isLoading }) => !isLoading)
-                        )
+                    getDefinitionURL(
+                        { urlToFile, requestGraphQL },
+                        FIXTURE_WORKSPACE_ROOTS,
+                        of<MaybeLoadingResult<extensionApiTypes.Location[]>>({
+                            isLoading: false,
+                            result: [{ uri: 'git://r3?c3#f' }],
+                        }),
+                        FIXTURE_PARAMS
+                    )
+                        .pipe(first(({ isLoading }) => !isLoading))
                         .toPromise()
                 ).resolves.toEqual({ isLoading: false, result: { url: '/r3@v3/-/blob/f', multiple: false } }))
         })
@@ -488,37 +502,31 @@ describe('getDefinitionURL', () => {
         describe('when the result is not inside the current root (different repo and/or commit)', () => {
             it('emits the definition URL with range', () =>
                 expect(
-                    of<MaybeLoadingResult<Location[]>>({
-                        isLoading: false,
-                        result: [FIXTURE_LOCATION],
-                    })
-                        .pipe(
-                            getDefinitionURL(
-                                { urlToFile, requestGraphQL },
-                                {
-                                    workspace: testWorkspaceService(),
-                                },
-                                FIXTURE_PARAMS
-                            ),
-                            first(({ isLoading }) => !isLoading)
-                        )
+                    getDefinitionURL(
+                        { urlToFile, requestGraphQL },
+                        FIXTURE_WORKSPACE_ROOTS,
+                        of<MaybeLoadingResult<extensionApiTypes.Location[]>>({
+                            isLoading: false,
+                            result: [FIXTURE_LOCATION],
+                        }),
+                        FIXTURE_PARAMS
+                    )
+                        .pipe(first(({ isLoading }) => !isLoading))
                         .toPromise()
                 ).resolves.toEqual({ isLoading: false, result: { url: '/r2@c2/-/blob/f2#L3:3', multiple: false } }))
 
             it('emits the definition URL without range', () =>
                 expect(
-                    of<MaybeLoadingResult<Location[]>>({
-                        isLoading: false,
-                        result: [{ ...FIXTURE_LOCATION, range: undefined }],
-                    })
-                        .pipe(
-                            getDefinitionURL(
-                                { urlToFile, requestGraphQL },
-                                { workspace: testWorkspaceService() },
-                                FIXTURE_PARAMS
-                            ),
-                            first(({ isLoading }) => !isLoading)
-                        )
+                    getDefinitionURL(
+                        { urlToFile, requestGraphQL },
+                        FIXTURE_WORKSPACE_ROOTS,
+                        of<MaybeLoadingResult<extensionApiTypes.Location[]>>({
+                            isLoading: false,
+                            result: [{ ...FIXTURE_LOCATION, range: undefined }],
+                        }),
+                        FIXTURE_PARAMS
+                    )
+                        .pipe(first(({ isLoading }) => !isLoading))
                         .toPromise()
                 ).resolves.toEqual({ isLoading: false, result: { url: '/r2@c2/-/blob/f2', multiple: false } }))
         })
@@ -526,18 +534,16 @@ describe('getDefinitionURL', () => {
 
     it('emits the definition panel URL if there is more than 1 location result', () =>
         expect(
-            of<MaybeLoadingResult<Location[]>>({
-                isLoading: false,
-                result: [FIXTURE_LOCATION, { ...FIXTURE_LOCATION, uri: 'other' }],
-            })
-                .pipe(
-                    getDefinitionURL(
-                        { urlToFile, requestGraphQL },
-                        { workspace: testWorkspaceService([{ uri: 'git://r?c', inputRevision: 'v' }]) },
-                        FIXTURE_PARAMS
-                    ),
-                    first()
-                )
+            getDefinitionURL(
+                { urlToFile, requestGraphQL },
+                [{ uri: 'git://r?c', inputRevision: 'v' }],
+                of<MaybeLoadingResult<extensionApiTypes.Location[]>>({
+                    isLoading: false,
+                    result: [FIXTURE_LOCATION, { ...FIXTURE_LOCATION, uri: 'other' }],
+                }),
+                FIXTURE_PARAMS
+            )
+                .pipe(first())
                 .toPromise()
         ).resolves.toEqual({ isLoading: false, result: { url: '/r@v/-/blob/f#L2:2&tab=def', multiple: true } }))
 })
@@ -547,7 +553,7 @@ describe('registerHoverContributions()', () => {
     let history!: MemoryHistory
     let contribution!: ContributionRegistry
     let commands!: CommandRegistry
-    let extensionHostAPI!: Pick<FlatExtensionHostAPI, 'getDefinition'>
+    let extensionHostAPI!: Pick<FlatExtensionHostAPI, 'getDefinition' | 'getWorkspaceRoots'>
     let locationAssign!: sinon.SinonSpy<[string], void>
     beforeEach(() => {
         resetAllMemoizationCaches()
@@ -562,6 +568,7 @@ describe('registerHoverContributions()', () => {
         commands = new CommandRegistry()
         extensionHostAPI = {
             getDefinition: () => proxySubscribable(of({ isLoading: false, result: [] })),
+            getWorkspaceRoots: () => FIXTURE_WORKSPACE_ROOTS,
         }
         history = createMemoryHistory()
         locationAssign = sinon.spy((_url: string) => undefined)
@@ -571,7 +578,6 @@ describe('registerHoverContributions()', () => {
                     services: {
                         contribution,
                         commands,
-                        workspace: testWorkspaceService(),
                     },
                     extHostAPI: Promise.resolve(pretendRemote<FlatExtensionHostAPI>(extensionHostAPI)),
                 },

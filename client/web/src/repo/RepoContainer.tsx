@@ -272,24 +272,31 @@ export const RepoContainer: React.FunctionComponent<RepoContainerProps> = props 
         }, [repoOrError, resolvedRevisionOrError, props.history, props.location])
     )
 
-    // Update the workspace roots service to reflect the current repo / resolved revision
+    // Update the workspace roots via the extension host API to reflect the current repo / resolved revision
     useEffect(() => {
-        props.extensionsController.services.workspace.roots.next(
+        const workspaceRootURI =
             resolvedRevisionOrError && !isErrorLike(resolvedRevisionOrError)
-                ? [
-                      {
-                          uri: makeRepoURI({
-                              repoName,
-                              revision: resolvedRevisionOrError.commitID,
-                          }),
-                          inputRevision: revision || '',
-                      },
-                  ]
-                : []
-        )
-        // Clear the Sourcegraph extensions model's roots when navigating away.
-        return () => props.extensionsController.services.workspace.roots.next([])
-    }, [props.extensionsController.services.workspace.roots, repoName, resolvedRevisionOrError, revision])
+                ? makeRepoURI({ repoName, revision: resolvedRevisionOrError.commitID })
+                : undefined
+        if (workspaceRootURI) {
+            props.extensionsController.extHostAPI
+                .then(extensionHostAPI =>
+                    extensionHostAPI.addWorkspaceRoot({
+                        uri: workspaceRootURI,
+                    })
+                )
+                .catch(console.error)
+        }
+
+        // Clear the Sourcegraph extensions workspace's roots when navigating away.
+        return () => {
+            if (workspaceRootURI) {
+                props.extensionsController.extHostAPI
+                    .then(extensionHostAPI => extensionHostAPI.removeWorkspaceRoot(workspaceRootURI))
+                    .catch(console.error)
+            }
+        }
+    }, [props.extensionsController.extHostAPI, repoName, resolvedRevisionOrError, revision])
 
     // Update the navbar query to reflect the current repo / revision
     const { splitSearchModes, interactiveSearchMode, globbing, onFiltersInQueryChange, onNavbarQueryChange } = props

@@ -1,5 +1,5 @@
 import { Position, Range } from '@sourcegraph/extension-api-classes'
-import * as clientType from '@sourcegraph/extension-api-types'
+import * as extensionApiTypes from '@sourcegraph/extension-api-types'
 import * as sourcegraph from 'sourcegraph'
 
 /**
@@ -14,22 +14,22 @@ export function fromDocumentSelector(selector: sourcegraph.DocumentSelector): so
 }
 
 /**
- * Converts from a plain object {@link clientType.Position} to an instance of {@link Position}.
+ * Converts from a plain object {@link extensionApiTypes.Position} to an instance of {@link Position}.
  *
  * @internal
  */
-export function toPosition(position: clientType.Position): Position {
+export function toPosition(position: extensionApiTypes.Position): Position {
     return new Position(position.line, position.character)
 }
 
 /**
- * Converts from an instance of a badged {@link Location} to the plain object {@link clientType.Location}.
+ * Converts from an instance of a badged {@link Location} to the plain object {@link extensionApiTypes.Location}.
  *
  * @internal
  */
 export function fromLocation(
     location: sourcegraph.Badged<sourcegraph.Location>
-): sourcegraph.Badged<clientType.Location> {
+): sourcegraph.Badged<extensionApiTypes.Location> {
     return {
         uri: location.uri.href,
         range: fromRange(location.range),
@@ -38,11 +38,11 @@ export function fromLocation(
 }
 
 /**
- * Converts from an instance of a badged {@link Hover} to the plain object {@link clientType.Hover}.
+ * Converts from an instance of a badged {@link Hover} to the plain object {@link extensionApiTypes.Hover}.
  *
  * @internal
  */
-export function fromHover(hover: sourcegraph.Badged<sourcegraph.Hover>): sourcegraph.Badged<clientType.Hover> {
+export function fromHover(hover: sourcegraph.Badged<sourcegraph.Hover>): sourcegraph.Badged<extensionApiTypes.Hover> {
     return {
         contents: hover.contents,
         range: fromRange(hover.range),
@@ -52,11 +52,11 @@ export function fromHover(hover: sourcegraph.Badged<sourcegraph.Hover>): sourceg
 }
 
 /**
- * Converts from an instance of {@link Range} to the plain object {@link clientType.Range}.
+ * Converts from an instance of {@link Range} to the plain object {@link extensionApiTypes.Range}.
  *
  * @internal
  */
-function fromRange(range: Range | sourcegraph.Range | undefined): clientType.Range | undefined {
+function fromRange(range: Range | sourcegraph.Range | undefined): extensionApiTypes.Range | undefined {
     if (!range) {
         return undefined
     }

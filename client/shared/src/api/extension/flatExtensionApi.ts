@@ -14,10 +14,11 @@ import { fromLocation, toPosition } from './api/types'
 import { TextDocumentPositionParameters } from '../protocol'
 import { LOADING, MaybeLoadingResult } from '@sourcegraph/codeintellify'
 import { combineLatestOrDefault } from '../../util/rxjs/combineLatestOrDefault'
-import { Hover, Location } from '@sourcegraph/extension-api-types'
+import * as extensionApiTypes from '@sourcegraph/extension-api-types'
 import { castArray, isEqual } from 'lodash'
 import { fromHoverMerged, HoverMerged } from '../client/types/hover'
 import { isNot, isExactly, isDefined } from '../../util/types'
+import { WorkspaceRoot } from './api/workspace'
 
 /**
  * Holds the entire state exposed to the extension host
@@ -27,7 +28,7 @@ export interface ExtensionHostState {
     settings: Readonly<SettingsCascade<object>>
 
     // Workspace
-    roots: readonly sourcegraph.WorkspaceRoot[]
+    roots: WorkspaceRoot[]
     versionContext: string | undefined
 
     // Search
@@ -65,6 +66,7 @@ export type PartialWorkspaceNamespace = Omit<
     typeof sourcegraph['workspace'],
     'textDocuments' | 'onDidOpenTextDocument' | 'openedTextDocuments' | 'roots' | 'versionContext'
 >
+
 /**
  * Holds internally ExtState and manages communication with the Client
  * Returns the initialized public extension API pieces ready for consumption and the internal extension host API ready to be exposed to the main thread
@@ -89,10 +91,12 @@ export const initNewExtensionAPI = (
         definitionProviders: new BehaviorSubject<RegisteredProvider<sourcegraph.DefinitionProvider>[]>([]),
     }
 
+    // Most extensions never call `configuration.get()` synchronously in
+    // `activate()` to get the initial settings data, and instead only subscribe
+    // to configuration changes. In order for these extensions to be able to
+    // access settings, make sure `configuration` emits on subscription by
+    // making it a BehaviorSubject.
     const configChanges = new BehaviorSubject<void>(undefined)
-    // Most extensions never call `configuration.get()` synchronously in `activate()` to get
-    // the initial settings data, and instead only subscribe to configuration changes.
-    // In order for these extensions to be able to access settings, make sure `configuration` emits on subscription.
 
     const rootChanges = new Subject<void>()
 
@@ -106,14 +110,22 @@ export const initNewExtensionAPI = (
         },
 
         // Workspace
-        syncRoots: (roots): void => {
-            state.roots = Object.freeze(roots.map(plain => ({ ...plain, uri: new URL(plain.uri) })))
+        addWorkspaceRoot: (root: extensionApiTypes.WorkspaceRoot) => {
+            if (!state.roots.some(existingRoot => existingRoot.uri.toString() !== root.uri)) {
+                state.roots = [...state.roots, new WorkspaceRoot(new URL(root.uri), root.inputRevision)]
+            }
             rootChanges.next()
         },
-        syncVersionContext: context => {
-            state.versionContext = context
-            versionContextChanges.next(context)
+        getWorkspaceRoots: () => state.roots.map(root => ({ ...root, uri: root.uri.toString() })),
+        removeWorkspaceRoot: (uri: string) => {
+            state.roots = state.roots.filter(root => root.uri.toString() !== uri)
+            rootChanges.next()
         },
+        setVersionContext: context => {
+            state.versionContext = context
+            versionContextChanges.next()
+        },
+        getVersionContext: () => state.versionContext, // TODO remove if this isn't needed
 
         // Search
         transformSearchQuery: query =>
@@ -340,7 +352,9 @@ export function callProviders<TProvider, TProviderResult, TMergedResult>(
  * @param results latests results from hover providers
  * @returns a {@link HoverMerged} results if there are any actual Hover results or null in case of no results or loading
  */
-export function mergeHoverResults(results: (typeof LOADING | Hover | null | undefined)[]): HoverMerged | null {
+export function mergeHoverResults(
+    results: (typeof LOADING | extensionApiTypes.Hover | null | undefined)[]
+): HoverMerged | null {
     return fromHoverMerged(results.filter(isNot(isExactly(LOADING))))
 }
 
@@ -349,7 +363,9 @@ export function mergeHoverResults(results: (typeof LOADING | Hover | null | unde
  *
  * @param results Results from all definition providers.
  */
-export function mergeDefinition(results: (typeof LOADING | sourcegraph.Definition | null | undefined)[]): Location[] {
+export function mergeDefinition(
+    results: (typeof LOADING | sourcegraph.Definition | null | undefined)[]
+): extensionApiTypes.Location[] {
     return results
         .filter(isNot(isExactly(LOADING)))
         .flatMap(castArray)

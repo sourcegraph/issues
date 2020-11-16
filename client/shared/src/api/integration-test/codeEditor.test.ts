@@ -1,5 +1,5 @@
 import { Range, Selection } from '@sourcegraph/extension-api-classes'
-import * as clientType from '@sourcegraph/extension-api-types'
+import * as extensionApiTypes from '@sourcegraph/extension-api-types'
 import { from } from 'rxjs'
 import { distinctUntilChanged, first, switchMap, take, toArray, filter } from 'rxjs/operators'
 import * as sourcegraph from 'sourcegraph'
@@ -53,7 +53,7 @@ describe('CodeEditor (integration)', () => {
                     range: { start: { line: 1, character: 2 }, end: { line: 3, character: 4 } },
                     backgroundColor: 'red',
                 },
-            ] as clientType.TextDocumentDecoration[])
+            ] as extensionApiTypes.TextDocumentDecoration[])
 
             // Clear the decorations and ensure they are removed.
             editor.setDecorations(decorationType, [])
@@ -100,7 +100,7 @@ describe('CodeEditor (integration)', () => {
                         hoverMessage: 'bar',
                     },
                 },
-            ] as clientType.TextDocumentDecoration[])
+            ] as extensionApiTypes.TextDocumentDecoration[])
 
             // Change decorations only for dt1, and check that merged decorations are coherent
             editor.setDecorations(dt1, [
@@ -127,7 +127,7 @@ describe('CodeEditor (integration)', () => {
                         hoverMessage: 'bar',
                     },
                 },
-            ] as clientType.TextDocumentDecoration[])
+            ] as extensionApiTypes.TextDocumentDecoration[])
 
             // remove decorations for dt2, and verify that decorations for dt1 are still present
             editor.setDecorations(dt2, [])
@@ -141,7 +141,7 @@ describe('CodeEditor (integration)', () => {
                         hoverMessage: 'baz',
                     },
                 },
-            ] as clientType.TextDocumentDecoration[])
+            ] as extensionApiTypes.TextDocumentDecoration[])
         })
 
         it('is backwards compatible with extensions that do not provide a decoration type', async () => {
@@ -183,7 +183,7 @@ describe('CodeEditor (integration)', () => {
                         hoverMessage: 'foo',
                     },
                 },
-            ] as clientType.TextDocumentDecoration[])
+            ] as extensionApiTypes.TextDocumentDecoration[])
         })
     })
 })

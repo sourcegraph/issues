@@ -1,6 +1,6 @@
 import { SettingsCascade } from '../settings/settings'
 import { SettingsEdit } from './client/services/settings'
-import * as clientType from '@sourcegraph/extension-api-types'
+import * as extensionApiTypes from '@sourcegraph/extension-api-types'
 import { Remote, ProxyMarked } from 'comlink'
 import { Unsubscribable, DocumentHighlight } from 'sourcegraph'
 import { ProxySubscribable } from './extension/api/common'
@@ -20,8 +20,11 @@ export interface FlatExtensionHostAPI {
     syncSettingsData: (data: Readonly<SettingsCascade<object>>) => void
 
     // Workspace
-    syncRoots: (roots: readonly clientType.WorkspaceRoot[]) => void
-    syncVersionContext: (versionContext: string | undefined) => void
+    addWorkspaceRoot: (root: extensionApiTypes.WorkspaceRoot) => void
+    getWorkspaceRoots: () => extensionApiTypes.WorkspaceRoot[]
+    removeWorkspaceRoot: (uri: string) => void
+    setVersionContext: (versionContext: string | undefined) => void
+    getVersionContext: () => string | undefined
 
     // Search
     transformSearchQuery: (query: string) => ProxySubscribable<string>
@@ -31,7 +34,7 @@ export interface FlatExtensionHostAPI {
     getDocumentHighlights: (parameters: TextDocumentPositionParameters) => ProxySubscribable<DocumentHighlight[]>
     getDefinition: (
         parameters: TextDocumentPositionParameters
-    ) => ProxySubscribable<MaybeLoadingResult<clientType.Location[]>>
+    ) => ProxySubscribable<MaybeLoadingResult<extensionApiTypes.Location[]>>
 }
 
 /**

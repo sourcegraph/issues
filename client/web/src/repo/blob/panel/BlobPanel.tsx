@@ -4,7 +4,7 @@ import * as React from 'react'
 import { from, Observable, Subject, Subscription } from 'rxjs'
 import { distinctUntilChanged, map, startWith, switchMap, tap } from 'rxjs/operators'
 import { getActiveCodeEditorPosition } from '../../../../../shared/src/api/client/services/viewerService'
-import * as clientType from '@sourcegraph/extension-api-types'
+import * as extensionApiTypes from '@sourcegraph/extension-api-types'
 import { Entry } from '../../../../../shared/src/api/client/services/registry'
 import {
     ProvidePanelViewSignature,
@@ -96,7 +96,7 @@ export class BlobPanel extends React.PureComponent<Props> {
             id: string,
             title: string,
             priority: number,
-            provideLocations: (parameters: P) => Observable<MaybeLoadingResult<clientType.Location[]>>,
+            provideLocations: (parameters: P) => Observable<MaybeLoadingResult<extensionApiTypes.Location[]>>,
             extraParameters?: Pick<P, Exclude<keyof P, keyof TextDocumentPositionParameters>>
         ): Entry<PanelViewProviderRegistrationOptions, ProvidePanelViewSignature> => ({
             registrationOptions: { id, container: ContributableViewContainer.Panel },

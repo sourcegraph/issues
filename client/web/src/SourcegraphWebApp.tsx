@@ -340,7 +340,9 @@ class ColdSourcegraphWebApp extends React.Component<SourcegraphWebAppProps, Sour
         )
 
         // Send initial versionContext to extensions
-        this.extensionsController.services.workspace.versionContext.next(this.state.versionContext)
+        this.extensionsController.extHostAPI
+            .then(extensionHostApi => extensionHostApi.setVersionContext(this.state.versionContext))
+            .catch(console.error)
     }
 
     public componentWillUnmount(): void {
@@ -512,7 +514,9 @@ class ColdSourcegraphWebApp extends React.Component<SourcegraphWebAppProps, Sour
             this.setState({ versionContext: resolvedVersionContext, previousVersionContext: resolvedVersionContext })
         }
 
-        this.extensionsController.services.workspace.versionContext.next(resolvedVersionContext)
+        this.extensionsController.extHostAPI
+            .then(extensionHostAPI => extensionHostAPI.setVersionContext(resolvedVersionContext))
+            .catch(console.error)
     }
 }
 

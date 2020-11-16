@@ -1,6 +1,6 @@
 /* eslint-disable no-sync */
 import * as comlink from 'comlink'
-import * as clientType from '@sourcegraph/extension-api-types'
+import * as extensionApiTypes from '@sourcegraph/extension-api-types'
 import { Unsubscribable } from 'rxjs'
 import { CompletionItemProvider, DocumentSelector, Location, LocationProvider, ReferenceProvider } from 'sourcegraph'
 import { ClientLanguageFeaturesAPI } from '../../client/api/languageFeatures'
@@ -70,6 +70,6 @@ export class ExtensionLanguageFeatures {
     }
 }
 
-function toLocations(result: Location[] | Location | null | undefined): clientType.Location[] {
+function toLocations(result: Location[] | Location | null | undefined): extensionApiTypes.Location[] {
     return result ? (Array.isArray(result) ? result : [result]).map(location => fromLocation(location)) : []
 }
