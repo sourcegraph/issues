@@ -15,6 +15,7 @@ import { ChangesetCountsOverTimeFields, Scalars } from '../../../graphql-operati
 import { LoadingSpinner } from '@sourcegraph/react-loading-spinner'
 import { useObservable } from '../../../../../shared/src/util/useObservable'
 import { queryChangesetCountsOverTime as _queryChangesetCountsOverTime } from './backend'
+import { DateRangePicker } from 'react-dates'
 
 interface Props {
     campaignID: Scalars['ID']
@@ -118,55 +119,58 @@ export const CampaignBurndownChart: React.FunctionComponent<Props> = ({
         )
     }
     return (
-        <ResponsiveContainer width={width} height={300} className="test-campaigns-chart">
-            <ComposedChart
-                data={changesetCountsOverTime.map(snapshot => ({ ...snapshot, date: Date.parse(snapshot.date) }))}
-            >
-                <Legend verticalAlign="bottom" iconType="square" />
-                <XAxis
-                    dataKey="date"
-                    domain={[
-                        changesetCountsOverTime[0].date,
-                        changesetCountsOverTime[changesetCountsOverTime.length - 1].date,
-                    ]}
-                    name="Time"
-                    tickFormatter={dateTickFormatter}
-                    type="number"
-                    stroke="var(--text-muted)"
-                    scale="time"
-                />
-                <YAxis
-                    tickFormatter={toLocaleString}
-                    stroke="var(--text-muted)"
-                    type="number"
-                    allowDecimals={false}
-                    domain={[0, 'dataMax']}
-                />
-                <Tooltip
-                    labelFormatter={tooltipLabelFormatter as LabelFormatter}
-                    isAnimationActive={false}
-                    wrapperStyle={{ border: '1px solid var(--border-color)' }}
-                    contentStyle={tooltipStyle}
-                    labelStyle={{ fontWeight: 'bold' }}
-                    itemStyle={tooltipStyle}
-                    itemSorter={tooltipItemSorter}
-                />
+        <>
+            <DateRangePicker />
+            <ResponsiveContainer width={width} height={300} className="test-campaigns-chart">
+                <ComposedChart
+                    data={changesetCountsOverTime.map(snapshot => ({ ...snapshot, date: Date.parse(snapshot.date) }))}
+                >
+                    <Legend verticalAlign="bottom" iconType="square" />
+                    <XAxis
+                        dataKey="date"
+                        domain={[
+                            changesetCountsOverTime[0].date,
+                            changesetCountsOverTime[changesetCountsOverTime.length - 1].date,
+                        ]}
+                        name="Time"
+                        tickFormatter={dateTickFormatter}
+                        type="number"
+                        stroke="var(--text-muted)"
+                        scale="time"
+                    />
+                    <YAxis
+                        tickFormatter={toLocaleString}
+                        stroke="var(--text-muted)"
+                        type="number"
+                        allowDecimals={false}
+                        domain={[0, 'dataMax']}
+                    />
+                    <Tooltip
+                        labelFormatter={tooltipLabelFormatter as LabelFormatter}
+                        isAnimationActive={false}
+                        wrapperStyle={{ border: '1px solid var(--border-color)' }}
+                        contentStyle={tooltipStyle}
+                        labelStyle={{ fontWeight: 'bold' }}
+                        itemStyle={tooltipStyle}
+                        itemSorter={tooltipItemSorter}
+                    />
 
-                {Object.entries(states)
-                    .sort(([, a], [, b]) => b.sortOrder - a.sortOrder)
-                    .map(([dataKey, state]) => (
-                        <Area
-                            key={state.sortOrder}
-                            dataKey={dataKey}
-                            name={state.label}
-                            fill={state.fill}
-                            // The stroke is used to color the legend, which we
-                            // want to match the fill color for each area.
-                            stroke={state.fill}
-                            {...commonAreaProps}
-                        />
-                    ))}
-            </ComposedChart>
-        </ResponsiveContainer>
+                    {Object.entries(states)
+                        .sort(([, a], [, b]) => b.sortOrder - a.sortOrder)
+                        .map(([dataKey, state]) => (
+                            <Area
+                                key={state.sortOrder}
+                                dataKey={dataKey}
+                                name={state.label}
+                                fill={state.fill}
+                                // The stroke is used to color the legend, which we
+                                // want to match the fill color for each area.
+                                stroke={state.fill}
+                                {...commonAreaProps}
+                            />
+                        ))}
+                </ComposedChart>
+            </ResponsiveContainer>
+        </>
     )
 }

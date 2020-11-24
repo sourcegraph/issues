@@ -382,14 +382,16 @@ const changesetCountsOverTimeFragment = gql`
 
 export const queryChangesetCountsOverTime = ({
     campaign,
+    from,
+    to,
 }: ChangesetCountsOverTimeVariables): Observable<ChangesetCountsOverTimeFields[]> =>
     requestGraphQL<ChangesetCountsOverTimeResult, ChangesetCountsOverTimeVariables>(
         gql`
-            query ChangesetCountsOverTime($campaign: ID!) {
+            query ChangesetCountsOverTime($campaign: ID!, $from: DateTime, $to: DateTime) {
                 node(id: $campaign) {
                     __typename
                     ... on Campaign {
-                        changesetCountsOverTime {
+                        changesetCountsOverTime(from: $from, to: $to) {
                             ...ChangesetCountsOverTimeFields
                         }
                     }
@@ -398,7 +400,7 @@ export const queryChangesetCountsOverTime = ({
 
             ${changesetCountsOverTimeFragment}
         `,
-        { campaign }
+        { campaign, from, to }
     ).pipe(
         map(dataOrThrowErrors),
         map(({ node }) => {
