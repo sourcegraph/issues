@@ -11,33 +11,6 @@ import (
 	"github.com/sourcegraph/sourcegraph/internal/extsvc/gitlab"
 )
 
-// changesetHistory is a collection of external changeset states
-// (open/closed/merged state and review state) over time.
-type changesetHistory []changesetStatesAtTime
-
-// StatesAtTime returns the changeset's states valid at the given time. If the
-// changeset didn't exist yet, the second parameter is false.
-func (h changesetHistory) StatesAtTime(t time.Time) (changesetStatesAtTime, bool) {
-	if len(h) == 0 {
-		return changesetStatesAtTime{}, false
-	}
-
-	var (
-		states changesetStatesAtTime
-		found  bool
-	)
-
-	for _, s := range h {
-		if s.t.After(t) {
-			break
-		}
-		states = s
-		found = true
-	}
-
-	return states, found
-}
-
 // RequiredEventTypesForHistory keeps track of all event kinds required for calculating the history of a changeset.
 //
 // We specifically ignore ChangesetEventKindGitHubReviewDismissed
@@ -68,22 +41,16 @@ var RequiredEventTypesForHistory = []campaigns.ChangesetEventKind{
 	campaigns.ChangesetEventKindGitLabUnapproved,
 }
 
-type changesetStatesAtTime struct {
-	t             time.Time
-	externalState campaigns.ChangesetExternalState
-	reviewState   campaigns.ChangesetReviewState
-}
-
 // computeHistory calculates the changesetHistory for the given Changeset and
 // its ChangesetEvents.
 // The ChangesetEvents MUST be sorted by their Timestamp.
-func computeHistory(ch *campaigns.Changeset, ce ChangesetEvents) (changesetHistory, error) {
+func computeHistory(ch *campaigns.Changeset, ce ChangesetEvents) (campaigns.ChangesetHistory, error) {
 	if !sort.IsSorted(ce) {
 		return nil, errors.New("changeset events not sorted")
 	}
 
 	var (
-		states = []changesetStatesAtTime{}
+		states = make([]*campaigns.ChangesetStatesAtTime, 0)
 
 		currentExtState    = initialExternalState(ch, ce)
 		currentReviewState = campaigns.ChangesetReviewStatePending
@@ -92,10 +59,10 @@ func computeHistory(ch *campaigns.Changeset, ce ChangesetEvents) (changesetHisto
 	)
 
 	pushStates := func(t time.Time) {
-		states = append(states, changesetStatesAtTime{
-			t:             t,
-			externalState: currentExtState,
-			reviewState:   currentReviewState,
+		states = append(states, &campaigns.ChangesetStatesAtTime{
+			T:             t,
+			ExternalState: currentExtState,
+			ReviewState:   currentReviewState,
 		})
 	}
 

@@ -208,6 +208,44 @@ type Changeset struct {
 	// Closing is set to true (along with the ReocncilerState) when the
 	// reconciler should close the changeset.
 	Closing bool
+
+	History ChangesetHistory
+}
+
+// ChangesetHistory is a collection of external changeset states
+// (open/closed/merged state and review state) over time.
+type ChangesetHistory []*ChangesetStatesAtTime
+
+// StatesAtTime returns the changeset's states valid at the given time. If the
+// changeset didn't exist yet, the second parameter is false.
+func (h ChangesetHistory) StatesAtTime(t time.Time, afterIdx int) (ChangesetStatesAtTime, int, bool) {
+	if len(h) == 0 {
+		return ChangesetStatesAtTime{}, 0, false
+	}
+
+	var (
+		states ChangesetStatesAtTime
+		found  bool
+	)
+
+	var lastIndex int
+
+	for i, s := range h[afterIdx:] {
+		if s.T.After(t) {
+			break
+		}
+		lastIndex = i
+		states = *s
+		found = true
+	}
+
+	return states, lastIndex, found
+}
+
+type ChangesetStatesAtTime struct {
+	T             time.Time              `json:"T"`
+	ExternalState ChangesetExternalState `json:"ExternalState"`
+	ReviewState   ChangesetReviewState   `json:"ReviewState"`
 }
 
 // RecordID is needed to implement the workerutil.Record interface.

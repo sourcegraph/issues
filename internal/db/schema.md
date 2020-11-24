@@ -195,6 +195,7 @@ Referenced by:
  closing               | boolean                  | not null default false
  num_failures          | integer                  | not null default 0
  log_contents          | text                     | 
+ history               | jsonb                    | 
 Indexes:
     "changesets_pkey" PRIMARY KEY, btree (id)
     "changesets_repo_external_id_unique" UNIQUE CONSTRAINT, btree (repo_id, external_id)

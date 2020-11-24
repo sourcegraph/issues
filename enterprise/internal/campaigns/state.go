@@ -37,6 +37,7 @@ func SetDerivedState(ctx context.Context, c *campaigns.Changeset, es []*campaign
 		log15.Warn("Computing changeset history", "err", err)
 		return
 	}
+	c.History = history
 
 	if state, err := computeExternalState(c, history); err != nil {
 		log15.Warn("Computing external changeset state", "err", err)
@@ -112,20 +113,20 @@ func computeCheckState(c *campaigns.Changeset, events ChangesetEvents) campaigns
 
 // computeExternalState computes the external state for the changeset and its
 // associated events.
-func computeExternalState(c *campaigns.Changeset, history []changesetStatesAtTime) (campaigns.ChangesetExternalState, error) {
+func computeExternalState(c *campaigns.Changeset, history []*campaigns.ChangesetStatesAtTime) (campaigns.ChangesetExternalState, error) {
 	if len(history) == 0 {
 		return computeSingleChangesetExternalState(c)
 	}
 	newestDataPoint := history[len(history)-1]
-	if c.UpdatedAt.After(newestDataPoint.t) {
+	if c.UpdatedAt.After(newestDataPoint.T) {
 		return computeSingleChangesetExternalState(c)
 	}
-	return newestDataPoint.externalState, nil
+	return newestDataPoint.ExternalState, nil
 }
 
 // computeReviewState computes the review state for the changeset and its
 // associated events. The events should be presorted.
-func computeReviewState(c *campaigns.Changeset, history []changesetStatesAtTime) (campaigns.ChangesetReviewState, error) {
+func computeReviewState(c *campaigns.Changeset, history []*campaigns.ChangesetStatesAtTime) (campaigns.ChangesetReviewState, error) {
 	if len(history) == 0 {
 		return computeSingleChangesetReviewState(c)
 	}
@@ -135,15 +136,15 @@ func computeReviewState(c *campaigns.Changeset, history []changesetStatesAtTime)
 	// GitHub only stores the ReviewState in events, we can't look at the
 	// Changeset.
 	if c.ExternalServiceType == extsvc.TypeGitHub {
-		return newestDataPoint.reviewState, nil
+		return newestDataPoint.ReviewState, nil
 	}
 
 	// For other codehosts we check whether the Changeset is newer or the
 	// events and use the newest entity to get the reviewstate.
-	if c.UpdatedAt.After(newestDataPoint.t) {
+	if c.UpdatedAt.After(newestDataPoint.T) {
 		return computeSingleChangesetReviewState(c)
 	}
-	return newestDataPoint.reviewState, nil
+	return newestDataPoint.ReviewState, nil
 }
 
 func computeBitbucketBuildStatus(lastSynced time.Time, pr *bitbucketserver.PullRequest, events []*campaigns.ChangesetEvent) campaigns.ChangesetCheckState {

@@ -54,6 +54,7 @@ var ChangesetColumns = []*sqlf.Query{
 	sqlf.Sprintf("changesets.num_failures"),
 	sqlf.Sprintf("changesets.unsynced"),
 	sqlf.Sprintf("changesets.closing"),
+	sqlf.Sprintf("changesets.history"),
 }
 
 // changesetInsertColumns is the list of changeset columns that are modified in
@@ -90,6 +91,7 @@ var changesetInsertColumns = []*sqlf.Query{
 	sqlf.Sprintf("num_failures"),
 	sqlf.Sprintf("unsynced"),
 	sqlf.Sprintf("closing"),
+	sqlf.Sprintf("history"),
 }
 
 func (s *Store) changesetWriteQuery(q string, includeID bool, c *campaigns.Changeset) (*sqlf.Query, error) {
@@ -104,6 +106,11 @@ func (s *Store) changesetWriteQuery(q string, includeID bool, c *campaigns.Chang
 	}
 
 	syncState, err := json.Marshal(c.SyncState)
+	if err != nil {
+		return nil, err
+	}
+
+	history, err := json.Marshal(c.History)
 	if err != nil {
 		return nil, err
 	}
@@ -141,6 +148,7 @@ func (s *Store) changesetWriteQuery(q string, includeID bool, c *campaigns.Chang
 		c.NumFailures,
 		c.Unsynced,
 		c.Closing,
+		history,
 	}
 
 	if includeID {
@@ -173,7 +181,7 @@ func (s *Store) CreateChangeset(ctx context.Context, c *campaigns.Changeset) err
 var createChangesetQueryFmtstr = `
 -- source: enterprise/internal/campaigns/store.go:CreateChangeset
 INSERT INTO changesets (%s)
-VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
 RETURNING %s
 `
 
@@ -397,11 +405,12 @@ type ListChangesetsOpts struct {
 	OnlyWithoutDiffStats bool
 	OnlySynced           bool
 	ExternalServiceID    string
+	WithoutHistory       bool
 }
 
 // ListChangesets lists Changesets with the given filters.
 func (s *Store) ListChangesets(ctx context.Context, opts ListChangesetsOpts) (cs campaigns.Changesets, next int64, err error) {
-	q := listChangesetsQuery(&opts)
+	q := listChangesetsQuery(&opts, ChangesetColumns)
 
 	cs = make([]*campaigns.Changeset, 0, opts.DBLimit())
 	err = s.query(ctx, q, func(sc scanner) (err error) {
@@ -429,7 +438,7 @@ WHERE %s
 ORDER BY id ASC
 `
 
-func listChangesetsQuery(opts *ListChangesetsOpts) *sqlf.Query {
+func listChangesetsQuery(opts *ListChangesetsOpts, cols []*sqlf.Query) *sqlf.Query {
 	preds := []*sqlf.Query{
 		sqlf.Sprintf("changesets.id >= %s", opts.Cursor),
 		sqlf.Sprintf("repo.deleted_at IS NULL"),
@@ -488,11 +497,51 @@ func listChangesetsQuery(opts *ListChangesetsOpts) *sqlf.Query {
 		preds = append(preds, sqlf.Sprintf("repo.external_service_id = %s", opts.ExternalServiceID))
 	}
 
+	if opts.WithoutHistory {
+		preds = append(preds, sqlf.Sprintf("changesets.history IS NULL"))
+	}
+
 	return sqlf.Sprintf(
 		listChangesetsQueryFmtstr+opts.LimitOpts.ToDB(),
-		sqlf.Join(ChangesetColumns, ", "),
+		sqlf.Join(cols, ", "),
 		sqlf.Join(preds, "\n AND "),
 	)
+}
+
+type changesetHistoryRow struct {
+	ID      int64
+	History campaigns.ChangesetHistory
+}
+
+// ListChangesetHistories lists changeset histories with the given filters.
+func (s *Store) ListChangesetHistories(ctx context.Context, opts ListChangesetsOpts) (chs []*campaigns.ChangesetHistory, next int64, err error) {
+	q := listChangesetsQuery(&opts, []*sqlf.Query{sqlf.Sprintf("changesets.id"), sqlf.Sprintf("changesets.history")})
+
+	chs = make([]*campaigns.ChangesetHistory, 0, opts.DBLimit())
+	err = s.query(ctx, q, func(sc scanner) (err error) {
+		var c changesetHistoryRow
+		var history dbutil.NullJSONRawMessage
+
+		if err = sc.Scan(&c.ID, &history); err != nil {
+			return err
+		}
+		if history.Raw != nil {
+			if err = json.Unmarshal(history.Raw, &c.History); err != nil {
+				return errors.Wrapf(err, "ListChangesetHistories: failed to unmarshal history: %s", history)
+			}
+		}
+		next = c.ID
+		chs = append(chs, &c.History)
+		return nil
+	})
+
+	if opts.Limit != 0 && len(chs) == opts.DBLimit() {
+		chs = chs[:len(chs)-1]
+	} else {
+		next = 0
+	}
+
+	return chs, next, err
 }
 
 // ListChangesetsAttachedOrOwnedByCampaign lists Changesets that are either
@@ -543,7 +592,7 @@ func (s *Store) UpdateChangeset(ctx context.Context, cs *campaigns.Changeset) er
 var updateChangesetQueryFmtstr = `
 -- source: enterprise/internal/campaigns/store_changesets.go:UpdateChangeset
 UPDATE changesets
-SET (%s) = (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+SET (%s) = (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
 WHERE id = %s
 RETURNING
   %s
@@ -685,6 +734,8 @@ func scanChangesets(rows *sql.Rows, queryErr error) ([]*campaigns.Changeset, err
 func scanChangeset(t *campaigns.Changeset, s scanner) error {
 	var metadata, syncState json.RawMessage
 
+	var history dbutil.NullJSONRawMessage
+
 	var (
 		externalState       string
 		externalReviewState string
@@ -725,6 +776,7 @@ func scanChangeset(t *campaigns.Changeset, s scanner) error {
 		&t.NumFailures,
 		&t.Unsynced,
 		&t.Closing,
+		&history,
 	)
 	if err != nil {
 		return errors.Wrap(err, "scanning changeset")
@@ -754,6 +806,11 @@ func scanChangeset(t *campaigns.Changeset, s scanner) error {
 	}
 	if err = json.Unmarshal(syncState, &t.SyncState); err != nil {
 		return errors.Wrapf(err, "scanChangeset: failed to unmarshal sync state: %s", syncState)
+	}
+	if history.Raw != nil {
+		if err = json.Unmarshal(history.Raw, &t.History); err != nil {
+			return errors.Wrapf(err, "scanChangeset: failed to unmarshal history: %s", history)
+		}
 	}
 
 	return nil

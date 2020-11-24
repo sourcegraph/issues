@@ -1,6 +1,7 @@
 package campaigns
 
 import (
+	"sort"
 	"testing"
 	"time"
 
@@ -1400,7 +1401,35 @@ func TestCalcCounts(t *testing.T) {
 				tc.end = now
 			}
 
-			have, err := CalcCounts(tc.start, tc.end, tc.changesets, tc.events...)
+			// Sort all events once by their timestamps
+			events := ChangesetEvents(tc.events)
+			sort.Sort(events)
+
+			// Grouping Events by their Changeset ID
+			byChangesetID := make(map[int64]ChangesetEvents)
+			for _, e := range events {
+				id := e.Changeset()
+				byChangesetID[id] = append(byChangesetID[id], e)
+			}
+
+			// Map Events to their Changeset
+			byChangeset := make(map[*campaigns.Changeset]ChangesetEvents)
+			for _, c := range tc.changesets {
+				byChangeset[c] = byChangesetID[c.ID]
+			}
+
+			histories := []*campaigns.ChangesetHistory{}
+
+			for changeset, csEvents := range byChangeset {
+				// Compute history of changeset
+				history, err := computeHistory(changeset, csEvents)
+				if err != nil {
+					t.Fatal(err)
+				}
+				histories = append(histories, &history)
+			}
+
+			have, err := CalcCounts(tc.start, tc.end, histories)
 			if err != nil {
 				t.Fatal(err)
 			}

@@ -180,7 +180,7 @@ func (r *campaignResolver) ChangesetCountsOverTime(
 		// Only load fully-synced changesets, so that the data we use for computing the changeset counts is complete.
 		OnlySynced: true,
 	}
-	cs, _, err := r.store.ListChangesets(ctx, opts)
+	cs, _, err := r.store.ListChangesetHistories(ctx, opts)
 	if err != nil {
 		return resolvers, err
 	}
@@ -201,13 +201,7 @@ func (r *campaignResolver) ChangesetCountsOverTime(
 		end = args.To.Time.UTC()
 	}
 
-	eventsOpts := ee.ListChangesetEventsOpts{ChangesetIDs: cs.IDs(), Kinds: ee.RequiredEventTypesForHistory}
-	es, _, err := r.store.ListChangesetEvents(ctx, eventsOpts)
-	if err != nil {
-		return resolvers, err
-	}
-
-	counts, err := ee.CalcCounts(start, end, cs, es...)
+	counts, err := ee.CalcCounts(start, end, cs)
 	if err != nil {
 		return resolvers, err
 	}

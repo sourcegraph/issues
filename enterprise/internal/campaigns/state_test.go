@@ -408,43 +408,43 @@ func TestComputeReviewState(t *testing.T) {
 	tests := []struct {
 		name      string
 		changeset *campaigns.Changeset
-		history   []changesetStatesAtTime
+		history   []*campaigns.ChangesetStatesAtTime
 		want      cmpgn.ChangesetReviewState
 	}{
 		{
 			name:      "github - no events",
 			changeset: githubChangeset(daysAgo(10), "OPEN"),
-			history:   []changesetStatesAtTime{},
+			history:   []*campaigns.ChangesetStatesAtTime{},
 			want:      cmpgn.ChangesetReviewStatePending,
 		},
 		{
 			name:      "github - changeset older than events",
 			changeset: githubChangeset(daysAgo(10), "OPEN"),
-			history: []changesetStatesAtTime{
-				{t: daysAgo(0), reviewState: campaigns.ChangesetReviewStateApproved},
+			history: []*campaigns.ChangesetStatesAtTime{
+				{T: daysAgo(0), ReviewState: campaigns.ChangesetReviewStateApproved},
 			},
 			want: cmpgn.ChangesetReviewStateApproved,
 		},
 		{
 			name:      "github - changeset newer than events",
 			changeset: githubChangeset(daysAgo(0), "OPEN"),
-			history: []changesetStatesAtTime{
-				{t: daysAgo(10), reviewState: campaigns.ChangesetReviewStateApproved},
+			history: []*campaigns.ChangesetStatesAtTime{
+				{T: daysAgo(10), ReviewState: campaigns.ChangesetReviewStateApproved},
 			},
 			want: cmpgn.ChangesetReviewStateApproved,
 		},
 		{
 			name:      "bitbucketserver - no events",
 			changeset: bitbucketChangeset(daysAgo(10), "OPEN", "NEEDS_WORK"),
-			history:   []changesetStatesAtTime{},
+			history:   []*campaigns.ChangesetStatesAtTime{},
 			want:      cmpgn.ChangesetReviewStateChangesRequested,
 		},
 
 		{
 			name:      "bitbucketserver - changeset older than events",
 			changeset: bitbucketChangeset(daysAgo(10), "OPEN", "NEEDS_WORK"),
-			history: []changesetStatesAtTime{
-				{t: daysAgo(0), reviewState: campaigns.ChangesetReviewStateApproved},
+			history: []*campaigns.ChangesetStatesAtTime{
+				{T: daysAgo(0), ReviewState: campaigns.ChangesetReviewStateApproved},
 			},
 			want: cmpgn.ChangesetReviewStateApproved,
 		},
@@ -452,15 +452,15 @@ func TestComputeReviewState(t *testing.T) {
 		{
 			name:      "bitbucketserver - changeset newer than events",
 			changeset: bitbucketChangeset(daysAgo(0), "OPEN", "NEEDS_WORK"),
-			history: []changesetStatesAtTime{
-				{t: daysAgo(10), reviewState: campaigns.ChangesetReviewStateApproved},
+			history: []*campaigns.ChangesetStatesAtTime{
+				{T: daysAgo(10), ReviewState: campaigns.ChangesetReviewStateApproved},
 			},
 			want: cmpgn.ChangesetReviewStateChangesRequested,
 		},
 		{
 			name:      "gitlab - no events, no approvals",
 			changeset: gitLabChangeset(daysAgo(0), gitlab.MergeRequestStateOpened, []*gitlab.Note{}),
-			history:   []changesetStatesAtTime{},
+			history:   []*campaigns.ChangesetStatesAtTime{},
 			want:      cmpgn.ChangesetReviewStatePending,
 		},
 		{
@@ -471,7 +471,7 @@ func TestComputeReviewState(t *testing.T) {
 					Body:   "approved this merge request",
 				},
 			}),
-			history: []changesetStatesAtTime{},
+			history: []*campaigns.ChangesetStatesAtTime{},
 			want:    cmpgn.ChangesetReviewStateApproved,
 		},
 		{
@@ -482,7 +482,7 @@ func TestComputeReviewState(t *testing.T) {
 					Body:   "unapproved this merge request",
 				},
 			}),
-			history: []changesetStatesAtTime{},
+			history: []*campaigns.ChangesetStatesAtTime{},
 			want:    cmpgn.ChangesetReviewStateChangesRequested,
 		},
 		{
@@ -499,7 +499,7 @@ func TestComputeReviewState(t *testing.T) {
 					Body:   "approved this merge request",
 				},
 			}),
-			history: []changesetStatesAtTime{},
+			history: []*campaigns.ChangesetStatesAtTime{},
 			want:    cmpgn.ChangesetReviewStateChangesRequested,
 		},
 		{
@@ -510,8 +510,8 @@ func TestComputeReviewState(t *testing.T) {
 					Body:   "unapproved this merge request",
 				},
 			}),
-			history: []changesetStatesAtTime{
-				{t: daysAgo(0), reviewState: campaigns.ChangesetReviewStateApproved},
+			history: []*campaigns.ChangesetStatesAtTime{
+				{T: daysAgo(0), ReviewState: campaigns.ChangesetReviewStateApproved},
 			},
 			want: cmpgn.ChangesetReviewStateApproved,
 		},
@@ -523,8 +523,8 @@ func TestComputeReviewState(t *testing.T) {
 					Body:   "unapproved this merge request",
 				},
 			}),
-			history: []changesetStatesAtTime{
-				{t: daysAgo(10), reviewState: campaigns.ChangesetReviewStateApproved},
+			history: []*campaigns.ChangesetStatesAtTime{
+				{T: daysAgo(10), ReviewState: campaigns.ChangesetReviewStateApproved},
 			},
 			want: cmpgn.ChangesetReviewStateChangesRequested,
 		},
@@ -553,156 +553,156 @@ func TestComputeExternalState(t *testing.T) {
 	tests := []struct {
 		name      string
 		changeset *campaigns.Changeset
-		history   []changesetStatesAtTime
+		history   []*campaigns.ChangesetStatesAtTime
 		want      cmpgn.ChangesetExternalState
 	}{
 		{
 			name:      "github - no events",
 			changeset: githubChangeset(daysAgo(10), "OPEN"),
-			history:   []changesetStatesAtTime{},
+			history:   []*campaigns.ChangesetStatesAtTime{},
 			want:      cmpgn.ChangesetExternalStateOpen,
 		},
 		{
 			name:      "github - changeset older than events",
 			changeset: githubChangeset(daysAgo(10), "OPEN"),
-			history: []changesetStatesAtTime{
-				{t: daysAgo(0), externalState: campaigns.ChangesetExternalStateClosed},
+			history: []*campaigns.ChangesetStatesAtTime{
+				{T: daysAgo(0), ExternalState: campaigns.ChangesetExternalStateClosed},
 			},
 			want: cmpgn.ChangesetExternalStateClosed,
 		},
 		{
 			name:      "github - changeset newer than events",
 			changeset: githubChangeset(daysAgo(0), "OPEN"),
-			history: []changesetStatesAtTime{
-				{t: daysAgo(10), externalState: campaigns.ChangesetExternalStateClosed},
+			history: []*campaigns.ChangesetStatesAtTime{
+				{T: daysAgo(10), ExternalState: campaigns.ChangesetExternalStateClosed},
 			},
 			want: cmpgn.ChangesetExternalStateOpen,
 		},
 		{
 			name:      "github - changeset newer and deleted",
 			changeset: setDeletedAt(githubChangeset(daysAgo(0), "OPEN"), daysAgo(0)),
-			history: []changesetStatesAtTime{
-				{t: daysAgo(10), externalState: campaigns.ChangesetExternalStateClosed},
+			history: []*campaigns.ChangesetStatesAtTime{
+				{T: daysAgo(10), ExternalState: campaigns.ChangesetExternalStateClosed},
 			},
 			want: cmpgn.ChangesetExternalStateDeleted,
 		},
 		{
 			name:      "github draft - no events",
 			changeset: setDraft(githubChangeset(daysAgo(10), "OPEN")),
-			history:   []changesetStatesAtTime{},
+			history:   []*campaigns.ChangesetStatesAtTime{},
 			want:      cmpgn.ChangesetExternalStateDraft,
 		},
 		{
 			name:      "github draft - changeset older than events",
 			changeset: githubChangeset(daysAgo(10), "OPEN"),
-			history: []changesetStatesAtTime{
-				{t: daysAgo(0), externalState: campaigns.ChangesetExternalStateDraft},
+			history: []*campaigns.ChangesetStatesAtTime{
+				{T: daysAgo(0), ExternalState: campaigns.ChangesetExternalStateDraft},
 			},
 			want: cmpgn.ChangesetExternalStateDraft,
 		},
 		{
 			name:      "github draft - changeset newer than events",
 			changeset: setDraft(githubChangeset(daysAgo(0), "OPEN")),
-			history: []changesetStatesAtTime{
-				{t: daysAgo(10), externalState: campaigns.ChangesetExternalStateClosed},
+			history: []*campaigns.ChangesetStatesAtTime{
+				{T: daysAgo(10), ExternalState: campaigns.ChangesetExternalStateClosed},
 			},
 			want: cmpgn.ChangesetExternalStateDraft,
 		},
 		{
 			name:      "github draft closed",
 			changeset: setDraft(githubChangeset(daysAgo(1), "CLOSED")),
-			history:   []changesetStatesAtTime{{t: daysAgo(2), externalState: campaigns.ChangesetExternalStateClosed}},
+			history:   []*campaigns.ChangesetStatesAtTime{{T: daysAgo(2), ExternalState: campaigns.ChangesetExternalStateClosed}},
 			want:      cmpgn.ChangesetExternalStateClosed,
 		},
 		{
 			name:      "bitbucketserver - no events",
 			changeset: bitbucketChangeset(daysAgo(10), "OPEN", "NEEDS_WORK"),
-			history:   []changesetStatesAtTime{},
+			history:   []*campaigns.ChangesetStatesAtTime{},
 			want:      cmpgn.ChangesetExternalStateOpen,
 		},
 		{
 			name:      "bitbucketserver - changeset older than events",
 			changeset: bitbucketChangeset(daysAgo(10), "OPEN", "NEEDS_WORK"),
-			history: []changesetStatesAtTime{
-				{t: daysAgo(0), externalState: campaigns.ChangesetExternalStateClosed},
+			history: []*campaigns.ChangesetStatesAtTime{
+				{T: daysAgo(0), ExternalState: campaigns.ChangesetExternalStateClosed},
 			},
 			want: cmpgn.ChangesetExternalStateClosed,
 		},
 		{
 			name:      "bitbucketserver - changeset newer than events",
 			changeset: bitbucketChangeset(daysAgo(0), "OPEN", "NEEDS_WORK"),
-			history: []changesetStatesAtTime{
-				{t: daysAgo(10), externalState: campaigns.ChangesetExternalStateClosed},
+			history: []*campaigns.ChangesetStatesAtTime{
+				{T: daysAgo(10), ExternalState: campaigns.ChangesetExternalStateClosed},
 			},
 			want: cmpgn.ChangesetExternalStateOpen,
 		},
 		{
 			name:      "bitbucketserver - changeset newer and deleted",
 			changeset: setDeletedAt(bitbucketChangeset(daysAgo(0), "OPEN", "NEEDS_WORK"), daysAgo(0)),
-			history: []changesetStatesAtTime{
-				{t: daysAgo(10), externalState: campaigns.ChangesetExternalStateClosed},
+			history: []*campaigns.ChangesetStatesAtTime{
+				{T: daysAgo(10), ExternalState: campaigns.ChangesetExternalStateClosed},
 			},
 			want: cmpgn.ChangesetExternalStateDeleted,
 		},
 		{
 			name:      "gitlab - no events, opened",
 			changeset: gitLabChangeset(daysAgo(0), gitlab.MergeRequestStateOpened, nil),
-			history:   []changesetStatesAtTime{},
+			history:   []*campaigns.ChangesetStatesAtTime{},
 			want:      cmpgn.ChangesetExternalStateOpen,
 		},
 		{
 			name:      "gitlab - no events, closed",
 			changeset: gitLabChangeset(daysAgo(0), gitlab.MergeRequestStateClosed, nil),
-			history:   []changesetStatesAtTime{},
+			history:   []*campaigns.ChangesetStatesAtTime{},
 			want:      cmpgn.ChangesetExternalStateClosed,
 		},
 		{
 			name:      "gitlab - no events, locked",
 			changeset: gitLabChangeset(daysAgo(0), gitlab.MergeRequestStateLocked, nil),
-			history:   []changesetStatesAtTime{},
+			history:   []*campaigns.ChangesetStatesAtTime{},
 			want:      cmpgn.ChangesetExternalStateClosed,
 		},
 		{
 			name:      "gitlab - no events, merged",
 			changeset: gitLabChangeset(daysAgo(0), gitlab.MergeRequestStateMerged, nil),
-			history:   []changesetStatesAtTime{},
+			history:   []*campaigns.ChangesetStatesAtTime{},
 			want:      cmpgn.ChangesetExternalStateMerged,
 		},
 		{
 			name:      "gitlab - changeset older than events",
 			changeset: gitLabChangeset(daysAgo(10), gitlab.MergeRequestStateMerged, nil),
-			history: []changesetStatesAtTime{
-				{t: daysAgo(0), externalState: campaigns.ChangesetExternalStateClosed},
+			history: []*campaigns.ChangesetStatesAtTime{
+				{T: daysAgo(0), ExternalState: campaigns.ChangesetExternalStateClosed},
 			},
 			want: cmpgn.ChangesetExternalStateClosed,
 		},
 		{
 			name:      "gitlab - changeset newer than events",
 			changeset: gitLabChangeset(daysAgo(0), gitlab.MergeRequestStateMerged, nil),
-			history: []changesetStatesAtTime{
-				{t: daysAgo(10), externalState: campaigns.ChangesetExternalStateClosed},
+			history: []*campaigns.ChangesetStatesAtTime{
+				{T: daysAgo(10), ExternalState: campaigns.ChangesetExternalStateClosed},
 			},
 			want: cmpgn.ChangesetExternalStateMerged,
 		},
 		{
 			name:      "gitlab draft - no events",
 			changeset: setDraft(gitLabChangeset(daysAgo(10), gitlab.MergeRequestStateOpened, nil)),
-			history:   []changesetStatesAtTime{},
+			history:   []*campaigns.ChangesetStatesAtTime{},
 			want:      cmpgn.ChangesetExternalStateDraft,
 		},
 		{
 			name:      "gitlab draft - changeset older than events",
 			changeset: gitLabChangeset(daysAgo(10), gitlab.MergeRequestStateOpened, nil),
-			history: []changesetStatesAtTime{
-				{t: daysAgo(0), externalState: campaigns.ChangesetExternalStateDraft},
+			history: []*campaigns.ChangesetStatesAtTime{
+				{T: daysAgo(0), ExternalState: campaigns.ChangesetExternalStateDraft},
 			},
 			want: cmpgn.ChangesetExternalStateDraft,
 		},
 		{
 			name:      "gitlab draft - changeset newer than events",
 			changeset: setDraft(gitLabChangeset(daysAgo(0), gitlab.MergeRequestStateOpened, nil)),
-			history: []changesetStatesAtTime{
-				{t: daysAgo(10), externalState: campaigns.ChangesetExternalStateClosed},
+			history: []*campaigns.ChangesetStatesAtTime{
+				{T: daysAgo(10), ExternalState: campaigns.ChangesetExternalStateClosed},
 			},
 			want: cmpgn.ChangesetExternalStateDraft,
 		},

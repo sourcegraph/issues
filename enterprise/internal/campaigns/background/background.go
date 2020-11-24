@@ -20,6 +20,7 @@ func StartBackgroundJobs(ctx context.Context, db *sql.DB, campaignsStore *campai
 		newWorker(ctx, campaignsStore, gitserver.DefaultClient, sourcer, metrics),
 		newWorkerResetter(campaignsStore, metrics),
 		newSpecExpireWorker(ctx, campaignsStore),
+		newHistoryMigrator(ctx, campaignsStore),
 	}
 
 	go goroutine.MonitorBackgroundRoutines(ctx, routines...)

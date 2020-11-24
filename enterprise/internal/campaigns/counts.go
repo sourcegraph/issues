@@ -2,7 +2,6 @@ package campaigns
 
 import (
 	"fmt"
-	"sort"
 	"time"
 
 	"github.com/sourcegraph/sourcegraph/internal/campaigns"
@@ -41,53 +40,33 @@ func (cc *ChangesetCounts) String() string {
 // The number of ChangesetCounts returned is the number of 1 day intervals
 // between start and end, with each ChangesetCounts representing a point in
 // time at the boundary of each 24h interval.
-func CalcCounts(start, end time.Time, cs []*campaigns.Changeset, es ...*campaigns.ChangesetEvent) ([]*ChangesetCounts, error) {
+func CalcCounts(start, end time.Time, chs []*campaigns.ChangesetHistory) ([]*ChangesetCounts, error) {
 	ts := generateTimestamps(start, end)
 	counts := make([]*ChangesetCounts, len(ts))
 	for i, t := range ts {
 		counts[i] = &ChangesetCounts{Time: t}
 	}
 
-	// Sort all events once by their timestamps
-	events := ChangesetEvents(es)
-	sort.Sort(events)
-
-	// Grouping Events by their Changeset ID
-	byChangesetID := make(map[int64]ChangesetEvents)
-	for _, e := range events {
-		id := e.Changeset()
-		byChangesetID[id] = append(byChangesetID[id], e)
-	}
-
-	// Map Events to their Changeset
-	byChangeset := make(map[*campaigns.Changeset]ChangesetEvents)
-	for _, c := range cs {
-		byChangeset[c] = byChangesetID[c.ID]
-	}
-
-	for changeset, csEvents := range byChangeset {
-		// Compute history of changeset
-		history, err := computeHistory(changeset, csEvents)
-		if err != nil {
-			return counts, err
-		}
-
+	for _, history := range chs {
 		// Go through every point in time we want to record and check the
 		// states of the changeset at that point in time
+		afterIdx := 0
 		for _, c := range counts {
-			states, ok := history.StatesAtTime(c.Time)
+			var states campaigns.ChangesetStatesAtTime
+			var ok bool
+			states, afterIdx, ok = history.StatesAtTime(c.Time, afterIdx)
 			if !ok {
 				// Changeset didn't exist yet
 				continue
 			}
 
 			c.Total++
-			switch states.externalState {
+			switch states.ExternalState {
 			case campaigns.ChangesetExternalStateDraft:
 				c.Draft++
 			case campaigns.ChangesetExternalStateOpen:
 				c.Open++
-				switch states.reviewState {
+				switch states.ReviewState {
 				case campaigns.ChangesetReviewStatePending:
 					c.OpenPending++
 				case campaigns.ChangesetReviewStateApproved:
