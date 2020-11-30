@@ -388,10 +388,27 @@ const messageHandlers: {
             eventSource.close()
         }),
     error: (type, eventSource, observer) =>
-        fromEvent(eventSource, type).subscribe(error => {
-            observer.error(error)
-            eventSource.close()
-        }),
+        fromEvent(eventSource, type)
+            .pipe(
+                map(
+                    (event: Event): Error => {
+                        if (event instanceof MessageEvent && typeof event.data === 'string') {
+                            // Error sent by the server as a named event
+                            return new Error(event.data)
+                        }
+                        if (event instanceof ErrorEvent) {
+                            // Client-side error (eg. failed to connect)
+                            const { lineno, filename, message, colno, error } = event
+                            return Object.assign(new Error(message), { lineno, filename, message, colno, error })
+                        }
+                        return Object.assign(new Error('Unknown error in streaming search'), { event })
+                    }
+                )
+            )
+            .subscribe(error => {
+                observer.error(error)
+                eventSource.close()
+            }),
     filematches: observeMessages,
     symbolmatches: observeMessages,
     repomatches: observeMessages,
