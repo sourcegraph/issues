@@ -7,6 +7,7 @@
 package buildkite
 
 import (
+	"fmt"
 	"io"
 
 	"github.com/ghodss/yaml"
@@ -85,6 +86,10 @@ func (p *Pipeline) AddTrigger(label string, opts ...StepOpt) {
 		opt(step)
 	}
 	p.Steps = append(p.Steps, step)
+}
+
+func (p *Pipeline) AddWait() {
+	p.Steps = append(p.Steps, "wait")
 }
 
 func (p *Pipeline) WriteTo(w io.Writer) (int64, error) {
@@ -169,6 +174,19 @@ func Agent(key, value string) StepOpt {
 	}
 }
 
-func (p *Pipeline) AddWait() {
-	p.Steps = append(p.Steps, "wait")
+type AnnotationOptions struct {
+	Style  string
+	Append bool
+}
+
+func Annotate(context, message string, opts AnnotationOptions) StepOpt {
+	if opts.Style == "" {
+		opts.Style = "info"
+	}
+	annotateCmd := fmt.Sprintf(`buildkite-agent annotate '%s' --context %s --style %s`,
+		message, context, opts.Style)
+	if opts.Append {
+		annotateCmd = fmt.Sprintf("%s --append", annotateCmd)
+	}
+	return Cmd(annotateCmd)
 }

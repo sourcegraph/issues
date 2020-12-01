@@ -311,14 +311,32 @@ func copyEnv(keys ...string) map[string]string {
 // - Publishing of `insiders` implies deployment
 // - See `images.go` for more details on what images get built and where they get published
 func addDockerImages(c Config, final bool) func(*bk.Pipeline) {
-	addDockerImage := func(c Config, app string, insiders bool) func(*bk.Pipeline) {
-		if !final {
-			return addCandidateDockerImage(c, app)
-		}
-		return addFinalDockerImage(c, app, insiders)
-	}
-
 	return func(pipeline *bk.Pipeline) {
+		var candidatesAnnotationCreated, finalAnnotationCreated bool
+		addDockerImage := func(c Config, app string, insiders bool) func(*bk.Pipeline) {
+			if !final {
+				// Set up annotation for posting candidate images in
+				if !candidatesAnnotationCreated {
+					candidatesAnnotationCreated = true
+					pipeline.AddStep(":docker::memo: Creating annotation for candidate images",
+						bk.Annotate("candidate-images", "### Candidate images\n\n| App | Published |\n|-|-|\n", bk.AnnotationOptions{
+							Style: "info",
+						}))
+				}
+				return addCandidateDockerImage(c, app)
+			}
+
+			// Set up annotation for posting final images in
+			if !finalAnnotationCreated {
+				finalAnnotationCreated = true
+				pipeline.AddStep(":docker::memo: Creating annotation for final images",
+					bk.Annotate("final-images", "### Final images\n\n| App | Published |\n|-|-|\n", bk.AnnotationOptions{
+						Style: "info",
+					}))
+			}
+			return addFinalDockerImage(c, app, insiders)
+		}
+
 		switch {
 		// build all images for tagged releases
 		case c.taggedRelease:
@@ -388,11 +406,18 @@ func addCandidateDockerImage(c Config, app string) func(*bk.Pipeline) {
 
 		devImage := fmt.Sprintf("%s/%s", SourcegraphDockerDevRegistry, image)
 		devTag := candidateImageTag(c)
+		devPublishImage := fmt.Sprintf("%s:%s", devImage, devTag)
 		cmds = append(cmds,
 			// Retag the local image for dev registry
-			bk.Cmd(fmt.Sprintf("docker tag %s %s:%s", localImage, devImage, devTag)),
+			bk.Cmd(fmt.Sprintf("docker tag %s %s", localImage, devPublishImage)),
 			// Publish tagged image
-			bk.Cmd(fmt.Sprintf("docker push %s:%s", devImage, devTag)),
+			bk.Cmd(fmt.Sprintf("docker push %s", devPublishImage)),
+			// Report published image
+			bk.Annotate("candidate-images",
+				fmt.Sprintf("| %s | `%s` |\n", app, devPublishImage),
+				bk.AnnotationOptions{
+					Append: true,
+				}),
 		)
 
 		pipeline.AddStep(fmt.Sprintf(":docker: :construction: %s", app), cmds...)
@@ -422,9 +447,20 @@ func addFinalDockerImage(c Config, app string, insiders bool) func(*bk.Pipeline)
 			}
 		}
 
+		// image to republish
 		candidateImage := fmt.Sprintf("%s:%s", devImage, candidateImageTag(c))
-		cmd := fmt.Sprintf("./dev/ci/docker-publish.sh %s %s", candidateImage, strings.Join(images, " "))
 
-		pipeline.AddStep(fmt.Sprintf(":docker: :white_check_mark: %s", app), bk.Cmd(cmd))
+		// publish steps
+		cmds := []bk.StepOpt{
+			// Republish candidate as final images
+			bk.Cmd(fmt.Sprintf("./dev/ci/docker-publish.sh %s %s", candidateImage, strings.Join(images, " "))),
+			// Report published images
+			bk.Annotate("final-images",
+				fmt.Sprintf("| %s | `%s` |\n", app, strings.Join(images, "`, `")),
+				bk.AnnotationOptions{
+					Append: true,
+				}),
+		}
+		pipeline.AddStep(fmt.Sprintf(":docker: :white_check_mark: %s", app), cmds...)
 	}
 }
