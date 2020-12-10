@@ -109,10 +109,14 @@ func CalcCounts(start, end time.Time, cs []*campaigns.Changeset, es ...*campaign
 }
 
 func generateTimestamps(start, end time.Time) []time.Time {
-	// Walk backwards from `end` to >= `start` in 1 day intervals
+	dur := end.Sub(start)
+	// Always have 150 steps per date range.
+	step := dur / 150
+
+	// Walk backwards from `end` to >= `start` in step wide intervals
 	// Backwards so we always end exactly on `end`
 	ts := []time.Time{}
-	for t := end; !t.Before(start); t = t.AddDate(0, 0, -1) {
+	for t := end; !t.Before(start); t = t.Add(-1 * step) {
 		ts = append(ts, t)
 	}
 

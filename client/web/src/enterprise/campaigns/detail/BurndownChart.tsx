@@ -1,5 +1,5 @@
 import * as H from 'history'
-import React, { useMemo } from 'react'
+import React, { useCallback, useMemo, useState } from 'react'
 import {
     Area,
     ComposedChart,
@@ -10,11 +10,14 @@ import {
     XAxis,
     YAxis,
     TooltipPayload,
+    ReferenceArea,
+    RechartsFunction,
 } from 'recharts'
 import { ChangesetCountsOverTimeFields, Scalars } from '../../../graphql-operations'
 import { LoadingSpinner } from '@sourcegraph/react-loading-spinner'
 import { useObservable } from '../../../../../shared/src/util/useObservable'
 import { queryChangesetCountsOverTime as _queryChangesetCountsOverTime } from './backend'
+import { subDays } from 'date-fns'
 
 interface Props {
     campaignID: Scalars['ID']
@@ -78,12 +81,83 @@ export const CampaignBurndownChart: React.FunctionComponent<Props> = ({
     queryChangesetCountsOverTime = _queryChangesetCountsOverTime,
     width = '100%',
 }) => {
+    const [left, setLeft] = useState<number>()
+    const [right, setRight] = useState<number>()
     const changesetCountsOverTime: ChangesetCountsOverTimeFields[] | undefined = useObservable(
-        useMemo(() => queryChangesetCountsOverTime({ campaign: campaignID }), [
-            campaignID,
-            queryChangesetCountsOverTime,
-        ])
+        useMemo(
+            () =>
+                queryChangesetCountsOverTime({
+                    campaign: campaignID,
+                    from: left ? new Date(left).toISOString() : null,
+                    to: right ? new Date(right).toISOString() : null,
+                }),
+            [campaignID, queryChangesetCountsOverTime, left, right]
+        )
     )
+
+    const [referenceAreaLeft, setReferenceAreaLeft] = useState<number>()
+    const [referenceAreaRight, setReferenceAreaRight] = useState<number>()
+
+    const onMouseDown = useCallback<RechartsFunction>(e => {
+        if (!e) {
+            return
+        }
+        setReferenceAreaLeft(e.activeLabel)
+    }, [])
+    const onMouseMove = useCallback<RechartsFunction>(
+        e => {
+            if (!e) {
+                return
+            }
+            if (referenceAreaLeft !== undefined) {
+                setReferenceAreaRight(e.activeLabel)
+            }
+        },
+        [referenceAreaLeft]
+    )
+    const onMouseUp = useCallback<RechartsFunction>(
+        e => {
+            if (
+                referenceAreaLeft === referenceAreaRight ||
+                referenceAreaLeft === undefined ||
+                referenceAreaRight === undefined
+            ) {
+                setReferenceAreaLeft(undefined)
+                setReferenceAreaRight(undefined)
+                return
+            }
+
+            setReferenceAreaLeft(undefined)
+            setReferenceAreaRight(undefined)
+
+            let left = referenceAreaLeft
+            let right = referenceAreaRight
+            // xAxis domain
+            if (left > right) {
+                ;[left, right] = [right, left]
+            }
+            setLeft(left)
+            setRight(right)
+
+            // yAxis domain
+            // const [bottom, top] = getAxisYDomain(referenceAreaLeft, referenceAreaRight, 'cost', 1)
+            // const [bottom2, top2] = getAxisYDomain(referenceAreaLeft, referenceAreaRight, 'impression', 50)
+
+            // this.setState(() => ({
+            //     left: refAreaLeft,
+            //     right: refAreaRight,
+            //     bottom,
+            //     top,
+            //     bottom2,
+            //     top2,
+            // }))
+        },
+        [referenceAreaLeft, referenceAreaRight]
+    )
+    const resetZoom = useCallback<React.MouseEventHandler>(() => {
+        setLeft(undefined)
+        setRight(undefined)
+    }, [])
 
     // Is loading.
     if (changesetCountsOverTime === undefined) {
@@ -118,55 +192,69 @@ export const CampaignBurndownChart: React.FunctionComponent<Props> = ({
         )
     }
     return (
-        <ResponsiveContainer width={width} height={300} className="test-campaigns-chart">
-            <ComposedChart
-                data={changesetCountsOverTime.map(snapshot => ({ ...snapshot, date: Date.parse(snapshot.date) }))}
-            >
-                <Legend verticalAlign="bottom" iconType="square" />
-                <XAxis
-                    dataKey="date"
-                    domain={[
-                        changesetCountsOverTime[0].date,
-                        changesetCountsOverTime[changesetCountsOverTime.length - 1].date,
-                    ]}
-                    name="Time"
-                    tickFormatter={dateTickFormatter}
-                    type="number"
-                    stroke="var(--text-muted)"
-                    scale="time"
-                />
-                <YAxis
-                    tickFormatter={toLocaleString}
-                    stroke="var(--text-muted)"
-                    type="number"
-                    allowDecimals={false}
-                    domain={[0, 'dataMax']}
-                />
-                <Tooltip
-                    labelFormatter={tooltipLabelFormatter as LabelFormatter}
-                    isAnimationActive={false}
-                    wrapperStyle={{ border: '1px solid var(--border-color)' }}
-                    contentStyle={tooltipStyle}
-                    labelStyle={{ fontWeight: 'bold' }}
-                    itemStyle={tooltipStyle}
-                    itemSorter={tooltipItemSorter}
-                />
+        <>
+            {left && right && (
+                <button type="button" onClick={resetZoom}>
+                    Reset zoom
+                </button>
+            )}
+            <ResponsiveContainer width={width} height={300} className="test-campaigns-chart">
+                <ComposedChart
+                    data={changesetCountsOverTime.map(snapshot => ({ ...snapshot, date: Date.parse(snapshot.date) }))}
+                    onMouseDown={onMouseDown}
+                    onMouseMove={onMouseMove}
+                    onMouseUp={onMouseUp}
+                >
+                    <Legend verticalAlign="bottom" iconType="square" />
+                    <XAxis
+                        dataKey="date"
+                        domain={[
+                            changesetCountsOverTime[0].date,
+                            changesetCountsOverTime[changesetCountsOverTime.length - 1].date,
+                        ]}
+                        name="Time"
+                        tickFormatter={dateTickFormatter}
+                        type="number"
+                        stroke="var(--text-muted)"
+                        scale="time"
+                    />
+                    <YAxis
+                        tickFormatter={toLocaleString}
+                        stroke="var(--text-muted)"
+                        type="number"
+                        allowDecimals={false}
+                        domain={[0, 'dataMax']}
+                    />
+                    <Tooltip
+                        labelFormatter={tooltipLabelFormatter as LabelFormatter}
+                        isAnimationActive={false}
+                        wrapperStyle={{ border: '1px solid var(--border-color)' }}
+                        contentStyle={tooltipStyle}
+                        labelStyle={{ fontWeight: 'bold' }}
+                        itemStyle={tooltipStyle}
+                        itemSorter={tooltipItemSorter}
+                    />
 
-                {Object.entries(states)
-                    .sort(([, a], [, b]) => b.sortOrder - a.sortOrder)
-                    .map(([dataKey, state]) => (
-                        <Area
-                            key={state.sortOrder}
-                            dataKey={dataKey}
-                            name={state.label}
-                            fill={state.fill}
-                            // The stroke is used to color the legend, which we
-                            // want to match the fill color for each area.
-                            stroke={state.fill}
-                            {...commonAreaProps}
-                        />
-                    ))}
-            </ComposedChart>
-        </ResponsiveContainer>
+                    {Object.entries(states)
+                        .sort(([, a], [, b]) => b.sortOrder - a.sortOrder)
+                        .map(([dataKey, state]) => (
+                            <Area
+                                key={state.sortOrder}
+                                dataKey={dataKey}
+                                name={state.label}
+                                fill={state.fill}
+                                // The stroke is used to color the legend, which we
+                                // want to match the fill color for each area.
+                                stroke={state.fill}
+                                {...commonAreaProps}
+                            />
+                        ))}
+
+                    {referenceAreaLeft && referenceAreaRight && (
+                        <ReferenceArea x1={referenceAreaLeft} x2={referenceAreaRight} strokeOpacity={0.3} />
+                    )}
+                </ComposedChart>
+            </ResponsiveContainer>
+        </>
     )
 }

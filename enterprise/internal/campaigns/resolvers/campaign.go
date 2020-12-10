@@ -207,6 +207,17 @@ func (r *campaignResolver) ChangesetCountsOverTime(
 		return resolvers, err
 	}
 
+	// sort.Sort(cs)
+	if args.From == nil {
+		for _, c := range cs {
+			t := c.ExternalCreatedAt()
+			if !t.IsZero() {
+				start = t
+				break
+			}
+		}
+	}
+
 	counts, err := ee.CalcCounts(start, end, cs, es...)
 	if err != nil {
 		return resolvers, err
