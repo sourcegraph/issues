@@ -74,7 +74,7 @@ function build() {
     darwin*)
       # pkg-config spits out multiple arguments and must not be quoted.
       # shellcheck disable=SC2046
-      gcc -fno-common -dynamiclib pcre.c -o "$libsqlite_path" $(pkg-config --cflags sqlite3 libpcre) $(pkg-config --libs libpcre) -fPIC
+      gcc -fno-common -dynamiclib pcre.c -o "$libsqlite_path" $(pkg-config --cflags sqlite3 libpcre) $(pkg-config --libs libpcre) -fPIC || echo "if this failed with 'ld: symbol(s) not found for architecture x86_64' \n try running export PKG_CONFIG_PATH='/usr/local/opt/sqlite/lib/pkgconfig'"
       exit 0
       ;;
 
