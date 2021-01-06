@@ -164,7 +164,7 @@
     "@types/socket.io": "2.1.10",
     "@types/socket.io-client": "1.4.33",
     "@types/textarea-caret": "3.0.0",
-    "@types/uuid": "8.0.1",
+    "@types/uuid": "8.3.0",
     "@types/webpack": "4.41.25",
     "@types/webpack-dev-server": "3.11.1",
     "abort-controller": "^3.0.0",
@@ -323,7 +323,7 @@
     "tslib": "^2.0.3",
     "use-deep-compare-effect": "^1.4.0",
     "utility-types": "^3.10.0",
-    "uuid": "^8.3.0",
+    "uuid": "^8.3.2",
     "webext-domain-permission-toggle": "^1.0.1",
     "webext-patterns": "^0.9.0",
     "webextension-polyfill": "^0.6.0"
