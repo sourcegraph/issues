@@ -1,5 +1,5 @@
 golang 1.14.3
-yarn 1.22.4
+yarn 1.22.10
 fd 7.4.0
 shfmt 3.2.0
 shellcheck 0.7.1
