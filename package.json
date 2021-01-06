@@ -240,7 +240,7 @@
     "string-width": "^4.2.0",
     "style-loader": "^2.0.0",
     "stylelint": "^13.8.0",
-    "term-size": "^2.2.0",
+    "term-size": "^2.2.1",
     "terser-webpack-plugin": "^4.2.3",
     "thread-loader": "^3.0.1",
     "to-string-loader": "^1.1.6",
