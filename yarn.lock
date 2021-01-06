@@ -22156,10 +22156,10 @@ ts-log@^2.2.3:
   resolved "https://registry.npmjs.org/ts-log/-/ts-log-2.2.3.tgz#4da5640fe25a9fb52642cd32391c886721318efb"
   integrity sha512-XvB+OdKSJ708Dmf9ore4Uf/q62AYDTzFcAdxc8KNML1mmAWywRFVt/dn1KYJH8Agt5UJNujfM3znU5PxgAzA2w==
 
-ts-morph@^8.1.0:
-  version "8.1.0"
-  resolved "https://registry.npmjs.org/ts-morph/-/ts-morph-8.1.0.tgz#f8534e66bda86bfd444718ea5efb533510f185f1"
-  integrity sha512-Wc3SAqdh5E1/AEr6Tuwx3EANy4RmAwzHaaG/gbsQf5OVxu5audGSYof2TcZDmCodkzH9Ke/E3d//7rCOeZ7fSw==
+ts-morph@^8.2.0:
+  version "8.2.0"
+  resolved "https://registry.npmjs.org/ts-morph/-/ts-morph-8.2.0.tgz#41d83cd501cbd897eb029ac489d6d5b927555c57"
+  integrity sha512-NHHWu+7I2/AOZiTni5w3f+xCfIxrkzPCcQbTGa81Yk3pr23a4h9xLLEE6tIGuYIubWjkjr9QVC3ITqgmA5touQ==
   dependencies:
     "@dsherret/to-absolute-glob" "^2.0.2"
     "@ts-morph/common" "~0.6.0"
