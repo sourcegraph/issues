@@ -11,7 +11,7 @@ import (
 func maybeMinio() []string {
 	if os.Getenv("DISABLE_MINIO") != "" {
 		log15.Info("WARNING: Running with minio disabled")
-		return []string{""}
+		return []string{}
 	}
 
 	// Set default for MinIO auth and point at local MinIO endpoint
