@@ -58,6 +58,7 @@ var (
 // set a name in this package's DBNameSuffix var that is unique among all other
 // test packages that call SetupGlobalTestDB, so that each package's
 // tests run in separate DBs and do not conflict.
+// Deprecated: Use GetDB instead.
 func SetupGlobalTestDB(t testing.TB) {
 	useFastPasswordMocks()
 

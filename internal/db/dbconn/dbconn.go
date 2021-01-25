@@ -46,6 +46,7 @@ var (
 // Note: github.com/jackc/pgx parses the environment as well. This function will
 // also use the value of PGDATASOURCE if supplied and dataSource is the empty
 // string.
+// Deprecated: Use New instead.
 func SetupGlobalConnection(dataSource string) (err error) {
 	Global, err = New(dataSource, "_app")
 	return err
