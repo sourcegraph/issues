@@ -110,7 +110,7 @@
     "@storybook/react": "^6.1.11",
     "@storybook/theming": "^6.1.11",
     "@testing-library/react": "^10.4.8",
-    "@testing-library/react-hooks": "^3.4.1",
+    "@testing-library/react-hooks": "^3.7.0",
     "@types/babel__core": "7.1.12",
     "@types/chai": "4.2.14",
     "@types/chai-as-promised": "7.1.3",
