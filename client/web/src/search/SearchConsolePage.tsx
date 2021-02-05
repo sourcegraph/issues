@@ -7,8 +7,8 @@ import { MonacoEditor } from '../components/MonacoEditor'
 import * as GQL from '../../../shared/src/graphql/schema'
 import { SearchResultsList, SearchResultsListProps } from './results/SearchResultsList'
 import { ErrorLike } from '../../../shared/src/util/errors'
-import { addSourcegraphSearchCodeIntelligence } from './input/MonacoQueryInput'
-import { BehaviorSubject, concat, NEVER, of } from 'rxjs'
+import { useSourcegraphSearchCodeIntelligence } from './input/MonacoQueryInput'
+import { concat, NEVER, of } from 'rxjs'
 import { useObservable } from '../../../shared/src/util/useObservable'
 import { search, shouldDisplayPerformanceWarning } from './backend'
 import { ExtensionsControllerProps } from '../../../shared/src/extensions/controller'
@@ -58,15 +58,13 @@ const options: Monaco.editor.IEditorOptions = {
 }
 
 export const SearchConsolePage: React.FunctionComponent<SearchConsolePageProps> = props => {
-    const searchQuery = useMemo(() => new BehaviorSubject<string>(parseSearchURLQuery(props.location.search) ?? ''), [
-        props.location.search,
-    ])
+    const [searchQuery, setSearchQuery] = useState<string>(parseSearchURLQuery(props.location.search) ?? '')
     const patternType = useMemo(
         () => parseSearchURLPatternType(props.location.search) || SearchPatternType.structural,
         [props.location.search]
     )
     const triggerSearch = useCallback(() => {
-        props.history.push('/search/console?q=' + encodeURIComponent(searchQuery.value))
+        props.history.push('/search/console?q=' + encodeURIComponent(searchQuery))
     }, [props.history, searchQuery])
     // Fetch search results when the `q` URL query parameter changes
     const resultsOrError = useObservable<'loading' | GQL.ISearchResults | ErrorLike>(
@@ -87,20 +85,13 @@ export const SearchConsolePage: React.FunctionComponent<SearchConsolePageProps> 
         }, [patternType, props.extensionsController, props.location.search])
     )
     const [allExpanded, setAllExpanded] = useState(false)
-    const [monacoInstance, setMonacoInstance] = useState<typeof Monaco>()
     const { globbing } = props
-    useEffect(() => {
-        if (!monacoInstance) {
-            return
-        }
-        const subscription = addSourcegraphSearchCodeIntelligence(monacoInstance, searchQuery, {
-            patternType,
-            globbing,
-            enableSmartQuery: true,
-            interpretComments: true,
-        })
-        return () => subscription.unsubscribe()
-    }, [monacoInstance, searchQuery, patternType, globbing])
+    const { setMonacoInstance } = useSourcegraphSearchCodeIntelligence(searchQuery, {
+        patternType,
+        globbing,
+        enableSmartQuery: true,
+        interpretComments: true,
+    })
     const [editorInstance, setEditorInstance] = useState<Monaco.editor.IStandaloneCodeEditor>()
     useEffect(() => {
         if (!editorInstance) {
@@ -108,7 +99,7 @@ export const SearchConsolePage: React.FunctionComponent<SearchConsolePageProps> 
         }
         const disposable = editorInstance.onDidChangeModelContent(() => {
             const query = editorInstance.getValue()
-            searchQuery.next(query)
+            setSearchQuery(query)
         })
         return () => disposable.dispose()
     }, [editorInstance, searchQuery, props.history])
@@ -153,7 +144,7 @@ export const SearchConsolePage: React.FunctionComponent<SearchConsolePageProps> 
                         height={600}
                         editorWillMount={setMonacoInstance}
                         onEditorCreated={setEditorInstance}
-                        value={searchQuery.value}
+                        value={searchQuery}
                     />
                 </div>
                 <div className="flex-1 p-1 search-console-page__results">

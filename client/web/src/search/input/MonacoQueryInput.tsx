@@ -1,11 +1,10 @@
-import React, { useEffect, useLayoutEffect, useMemo, useState } from 'react'
+import React, { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import * as H from 'history'
 import * as Monaco from 'monaco-editor'
 import { isPlainObject } from 'lodash'
 import { MonacoEditor } from '../../components/MonacoEditor'
 import { QueryState } from '../helpers'
 import { getProviders } from '../../../../shared/src/search/query/providers'
-import { Subscription, Observable, Unsubscribable, ReplaySubject } from 'rxjs'
 import { fetchSuggestions } from '../backend'
 import { Omit } from 'utility-types'
 import { ThemeProps } from '../../../../shared/src/theme'
@@ -16,6 +15,8 @@ import { KeyboardShortcut } from '../../../../shared/src/keyboardShortcuts'
 import { KEYBOARD_SHORTCUT_FOCUS_SEARCHBAR } from '../../keyboardShortcuts/keyboardShortcuts'
 import { observeResize } from '../../util/dom'
 import { SearchPatternType } from '../../graphql-operations'
+import { scanSearchQuery } from '../../../../shared/src/search/query/scanner'
+import { getDiagnostics } from '../../../../shared/src/search/query/diagnostics'
 
 export interface MonacoQueryInputProps
     extends Omit<TogglesProps, 'navbarSearchQuery'>,
@@ -48,47 +49,74 @@ export interface MonacoQueryInputProps
 const SOURCEGRAPH_SEARCH = 'sourcegraphSearch' as const
 
 /**
- * Maps a Monaco IDisposable to an rxjs Unsubscribable.
- */
-const toUnsubscribable = (disposable: Monaco.IDisposable): Unsubscribable => ({
-    unsubscribe: () => disposable.dispose(),
-})
-
-/**
  * Adds code intelligence for the Sourcegraph search syntax to Monaco.
  *
  * @returns Subscription
  */
-export function addSourcegraphSearchCodeIntelligence(
-    monaco: typeof Monaco,
-    searchQueries: Observable<string>,
-    options: {
+export function useSourcegraphSearchCodeIntelligence(
+    rawQuery: string,
+    {
+        patternType,
+        globbing,
+        interpretComments,
+        enableSmartQuery,
+    }: {
         patternType: SearchPatternType
         globbing: boolean
         interpretComments?: boolean
         enableSmartQuery: boolean
     }
-): Subscription {
-    const subscriptions = new Subscription()
+): { setMonacoInstance: (monaco: typeof Monaco) => void } {
+    const [monacoInstance, setMonacoInstance] = useState<typeof Monaco>()
 
-    // Register language ID
-    monaco.languages.register({ id: SOURCEGRAPH_SEARCH })
+    // The query is passed as a ref to providers, to avoid re-registering providers on all query changes.
+    const queryReference = useRef<{ rawQuery: string; scanned: ReturnType<typeof scanSearchQuery> }>()
 
-    // Register providers
-    const providers = getProviders(searchQueries, fetchSuggestions, options)
-    subscriptions.add(toUnsubscribable(monaco.languages.setTokensProvider(SOURCEGRAPH_SEARCH, providers.tokens)))
-    subscriptions.add(toUnsubscribable(monaco.languages.registerHoverProvider(SOURCEGRAPH_SEARCH, providers.hover)))
-    subscriptions.add(
-        toUnsubscribable(monaco.languages.registerCompletionItemProvider(SOURCEGRAPH_SEARCH, providers.completion))
-    )
+    // Scan the query, update the query ref & diagnostics when the query changes.
+    // This is done with useLayoutEffect so that the update is synchronous,
+    // otherwise providers run off an outdated query.
+    useLayoutEffect(() => {
+        const scanned = scanSearchQuery(rawQuery)
+        queryReference.current = {
+            rawQuery,
+            scanned,
+        }
+        if (!monacoInstance) {
+            return
+        }
+        // Set diagnostics
+        const diagnostics = scanned.type === 'success' ? getDiagnostics(scanned.term, patternType) : []
+        monacoInstance.editor.setModelMarkers(monacoInstance.editor.getModels()[0], 'diagnostics', diagnostics)
+    }, [rawQuery, queryReference, monacoInstance, patternType])
 
-    subscriptions.add(
-        providers.diagnostics.subscribe(markers => {
-            monaco.editor.setModelMarkers(monaco.editor.getModels()[0], 'diagnostics', markers)
+    useEffect(() => {
+        if (!monacoInstance) {
+            return
+        }
+        console.log({ patternType })
+        // Register language ID
+        monacoInstance.languages.register({ id: SOURCEGRAPH_SEARCH })
+
+        // Register providers
+        const providers = getProviders(queryReference, fetchSuggestions, {
+            patternType,
+            globbing,
+            interpretComments,
+            enableSmartQuery,
         })
-    )
+        const disposables: Monaco.IDisposable[] = [
+            monacoInstance.languages.setTokensProvider(SOURCEGRAPH_SEARCH, providers.tokens),
+            monacoInstance.languages.registerHoverProvider(SOURCEGRAPH_SEARCH, providers.hover),
+            monacoInstance.languages.registerCompletionItemProvider(SOURCEGRAPH_SEARCH, providers.completion),
+        ]
+        return () => {
+            for (const disposable of disposables) {
+                disposable.dispose()
+            }
+        }
+    }, [monacoInstance, queryReference, patternType, globbing, interpretComments, enableSmartQuery])
 
-    return subscriptions
+    return { setMonacoInstance }
 }
 
 /**
@@ -177,31 +205,8 @@ export const MonacoQueryInput: React.FunctionComponent<MonacoQueryInputProps> = 
         return () => subscription.unsubscribe()
     }, [editor, container])
 
-    // Register themes and code intelligence providers. The providers are passed
-    // a ReplaySubject of search queries to avoid registering new providers on
-    // every query change. The ReplaySubject is updated with useLayoutEffect
-    // so that the update is synchronous, otherwise providers run off
-    // an outdated query.
-    //
-    // TODO: use a ref instead and get rid of RxJS usage here altogether?
-    const [monacoInstance, setMonacoInstance] = useState<typeof Monaco>()
-    const searchQueries = useMemo(() => new ReplaySubject<string>(1), [])
-    useLayoutEffect(() => {
-        searchQueries.next(queryState.query)
-    }, [queryState.query, searchQueries])
-    const { patternType, globbing, enableSmartQuery, interpretComments } = props
-    useEffect(() => {
-        if (!monacoInstance) {
-            return
-        }
-        const subscription = addSourcegraphSearchCodeIntelligence(monacoInstance, searchQueries, {
-            patternType,
-            globbing,
-            enableSmartQuery,
-            interpretComments,
-        })
-        return () => subscription.unsubscribe()
-    }, [monacoInstance, searchQueries, patternType, globbing, enableSmartQuery, interpretComments])
+    // Register themes and code intelligence providers.
+    const { setMonacoInstance } = useSourcegraphSearchCodeIntelligence(queryState.query, props)
 
     // Register suggestions handle
     useEffect(() => {
