@@ -1,7 +1,7 @@
 import expect from 'expect'
 import { commonWebGraphQlResults } from './graphQlResults'
 import { RepoGroupsResult, SearchResult, SearchSuggestionsResult, WebGraphQlOperations } from '../graphql-operations'
-import { Driver, createDriverForTest } from '../../../shared/src/testing/driver'
+import { Driver, createDriverForTest, percySnapshot } from '../../../shared/src/testing/driver'
 import { afterEachSaveScreenshotIfFailed } from '../../../shared/src/testing/screenshotReporter'
 import { WebIntegrationTestContext, createWebIntegrationTestContext } from './context'
 import { test } from 'mocha'
@@ -354,6 +354,112 @@ describe('Search', () => {
                 )
             )
             expect(results).toEqual(['github.com/sourcegraph/sourcegraph'])
+        })
+    })
+
+    describe('Search statistics', () => {
+        // This is a substring that appears in the sourcegraph/go-diff repository, which is present
+        // in the external service added for the e2e test. It is OK if it starts to appear in other
+        // repositories (such as sourcegraph/sourcegraph now that it's mentioned here); the test
+        // just checks that it is found in at least 1 Go file.
+        const uniqueString = 'Incomplete-'
+        const uniqueStringPostfix = 'Lines'
+
+        test('button on search results page', async () => {
+            testContext.overrideGraphQL({
+                ...commonSearchGraphQLResults,
+            })
+            await driver.page.goto(`${driver.sourcegraphBaseUrl}/search?q=${uniqueString}`)
+            await driver.page.waitForSelector(`a[href="/stats?q=${uniqueString}"]`)
+        })
+
+        test('page', async () => {
+            testContext.overrideGraphQL({
+                ...commonSearchGraphQLResults,
+            })
+            await driver.page.goto(`${driver.sourcegraphBaseUrl}/stats?q=${uniqueString}`)
+
+            // Ensure the global navbar hides the search input (to avoid confusion with the one on
+            // the stats page).
+            await driver.page.waitForSelector('.global-navbar a.nav-link[href="/search"]')
+            expect(
+                await driver.page.evaluate(() => document.querySelectorAll('#monaco-query-input').length)
+            ).toStrictEqual(0)
+
+            const queryInputValue = () =>
+                driver.page.evaluate(() => {
+                    const input = document.querySelector<HTMLInputElement>('.test-stats-query')
+                    return input ? input.value : null
+                })
+
+            // Check for a Go result (the sample repositories have Go files).
+            await driver.page.waitForSelector(`a[href*="${uniqueString}+lang:go"]`)
+            expect(await queryInputValue()).toStrictEqual(uniqueString)
+            await percySnapshot(driver.page, 'Search stats')
+
+            // Update the query and rerun the computation.
+            await driver.page.type('.test-stats-query', uniqueStringPostfix) // the uniqueString is followed by 'Incomplete-Lines' in go-diff
+            const wantQuery = `${uniqueString}${uniqueStringPostfix}`
+            expect(await queryInputValue()).toStrictEqual(wantQuery)
+            await driver.page.click('.test-stats-query-update')
+            await driver.page.waitForSelector(`a[href*="${wantQuery}+lang:go"]`)
+            expect(driver.page.url().endsWith(`/stats?q=${wantQuery}`)).toBeTruthy()
+        })
+    })
+
+    describe('Search result type tabs', () => {
+        test('Search results type tabs appear', async () => {
+            testContext.overrideGraphQL({
+                ...commonSearchGraphQLResults,
+            })
+            await driver.page.goto(
+                driver.sourcegraphBaseUrl + '/search?q=repo:%5Egithub.com/gorilla/mux%24&patternType=regexp'
+            )
+            await driver.page.waitForSelector('.test-search-result-type-tabs', { visible: true })
+            await driver.page.waitForSelector('.test-search-result-tab--active', { visible: true })
+            const tabs = await driver.page.evaluate(() =>
+                [...document.querySelectorAll('.test-search-result-tab')].map(tab => tab.textContent)
+            )
+
+            expect(tabs.length).toEqual(6)
+            expect(tabs).toStrictEqual(['Code', 'Diffs', 'Commits', 'Symbols', 'Repositories', 'Filenames'])
+
+            const activeTab = await driver.page.evaluate(
+                () => document.querySelectorAll('.test-search-result-tab--active').length
+            )
+            expect(activeTab).toEqual(1)
+
+            const label = await driver.page.evaluate(
+                () => document.querySelector('.test-search-result-tab--active')!.textContent || ''
+            )
+            expect(label).toEqual('Code')
+        })
+    })
+
+    describe('Search component', () => {
+        test('redirects to a URL with &patternType=regexp if no patternType in URL', async () => {
+            testContext.overrideGraphQL({
+                ...commonSearchGraphQLResults,
+            })
+            await driver.page.goto(driver.sourcegraphBaseUrl + '/search?q=test')
+            await driver.assertWindowLocation('/search?q=test&patternType=regexp')
+        })
+
+        test('regexp toggle appears and updates patternType query parameter when clicked', async () => {
+            testContext.overrideGraphQL({
+                ...commonSearchGraphQLResults,
+            })
+            await driver.page.goto(driver.sourcegraphBaseUrl + '/search?q=test&patternType=literal')
+            // Wait for monaco query input to load to avoid race condition with the intermediate input
+            await driver.page.waitForSelector('#monaco-query-input')
+            await driver.page.waitForSelector('.test-regexp-toggle')
+            await driver.page.click('.test-regexp-toggle')
+            await driver.page.goto(driver.sourcegraphBaseUrl + '/search?q=test&patternType=regexp')
+            // Wait for monaco query input to load to avoid race condition with the intermediate input
+            await driver.page.waitForSelector('#monaco-query-input')
+            await driver.page.waitForSelector('.test-regexp-toggle')
+            await driver.page.click('.test-regexp-toggle')
+            await driver.page.goto(driver.sourcegraphBaseUrl + '/search?q=test&patternType=literal')
         })
     })
 })
