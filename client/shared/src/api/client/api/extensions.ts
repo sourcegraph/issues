@@ -1,8 +1,11 @@
 import { Remote } from 'comlink'
+import debug from 'debug'
 import { from, Subscription } from 'rxjs'
 import { bufferCount, startWith } from 'rxjs/operators'
 import { ExtensionExtensionsAPI } from '../../extension/api/extensions'
 import { ExecutableExtension, IExtensionsService } from '../services/extensionsService'
+
+const log = debug('extensions:mainthread')
 
 /** @internal */
 export class ClientExtensions {
@@ -54,7 +57,7 @@ export class ClientExtensions {
 
                     // Activate extensions that haven't yet been activated.
                     for (const extension of toActivate) {
-                        console.log('Activating Sourcegraph extension:', extension.id)
+                        log('Activating Sourcegraph extension:', extension.id)
                         this.proxy.$activateExtension(extension.id, extension.scriptURL).catch(error => {
                             console.error(`Error activating extension ${JSON.stringify(extension.id)}:`, error)
                         })
