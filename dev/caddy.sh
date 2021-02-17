@@ -11,7 +11,7 @@ fi
 
 mkdir -p .bin
 
-version="2.0.0"
+version="2.1.1"
 case "$(go env GOOS)" in
   linux)
     os="linux"
