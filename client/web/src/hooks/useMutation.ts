@@ -4,11 +4,28 @@ import { isErrorGraphQLResult } from '../../../shared/src/graphql/graphql'
 import { createAggregateError } from '../../../shared/src/util/errors'
 import { requestGraphQL } from '../backend/graphql'
 
-export interface MutationResult<TData> {
-    loading: boolean
-    data?: TData
-    error?: Error
+interface UnsubmittedMutationResult {
+    loading: false
 }
+
+interface InFlightMutationResult {
+    loading: true
+}
+
+interface ResolvedMutationResult<TData = undefined> {
+    loading: false
+    data: TData
+}
+
+interface ErredMutationResult {
+    loading: false
+    error: Error
+}
+
+export type MutationResult<TData> =
+    | UnsubmittedMutationResult
+    | InFlightMutationResult
+    | (ResolvedMutationResult<TData> | ErredMutationResult)
 
 /**
  * Trigger a GraphQL mutation and render based on the returned response
@@ -27,30 +44,29 @@ export function useMutation<TData = unknown, TVariables = unknown>(
     const subscriptions = useMemo(() => new Subscription(), [])
 
     const [result, setResult] = useState<MutationResult<TData>>({ loading: false })
-    const handleResponse = useCallback(
-        (partialResult: Partial<MutationResult<TData>>): void =>
-            setResult(previous => ({
-                ...previous,
-                ...partialResult,
-            })),
-        []
-    )
 
     const submit = useCallback(
         (variables: TVariables) => {
-            handleResponse({ loading: true })
+            setResult({ loading: true })
 
             subscriptions.add(
                 requestGraphQL<TData, TVariables>(mutation, variables).subscribe(response => {
-                    const error = isErrorGraphQLResult(response) ? createAggregateError(response.errors) : undefined
-                    handleResponse({ data: response.data, error, loading: false })
+                    if (isErrorGraphQLResult(response)) {
+                        setResult({
+                            loading: false,
+                            error: createAggregateError(response.errors),
+                        })
+                        return
+                    }
+
+                    setResult({ loading: false, data: response.data })
                 })
             )
         },
-        [subscriptions, mutation, handleResponse]
+        [subscriptions, mutation]
     )
 
-    if (result.error && options?.throwGraphQLErrors) {
+    if ('error' in result && options?.throwGraphQLErrors) {
         throw result.error
     }
 

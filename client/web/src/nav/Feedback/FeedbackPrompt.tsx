@@ -63,10 +63,9 @@ const FeedbackPromptContent: React.FunctionComponent<ContentProps> = ({ closePro
         (event: React.ChangeEvent<HTMLTextAreaElement>) => setText(event.target.value),
         [setText]
     )
-    const [submitFeedback, { loading, data, error }] = useMutation<
-        SubmitHappinessFeedbackResult,
-        SubmitHappinessFeedbackVariables
-    >(SUBMIT_HAPPINESS_FEEDBACK_QUERY)
+    const [submitFeedback, response] = useMutation<SubmitHappinessFeedbackResult, SubmitHappinessFeedbackVariables>(
+        SUBMIT_HAPPINESS_FEEDBACK_QUERY
+    )
 
     const handleSubmit = useCallback(
         (event: React.FormEvent<HTMLFormElement>): void => {
@@ -81,16 +80,16 @@ const FeedbackPromptContent: React.FunctionComponent<ContentProps> = ({ closePro
     )
 
     useEffect(() => {
-        if (data?.submitHappinessFeedback) {
+        if ('data' in response && response.data.submitHappinessFeedback) {
             // Reset local storage when successfully submitted
             localStorage.removeItem(LOCAL_STORAGE_KEY_TEXT)
             localStorage.removeItem(LOCAL_STORAGE_KEY_RATING)
         }
-    }, [data?.submitHappinessFeedback])
+    }, [response])
 
     return (
         <>
-            {data?.submitHappinessFeedback ? (
+            {'data' in response ? (
                 <div className="feedback-prompt__success">
                     <TickIcon className="feedback-prompt__success--tick" />
                     <h3>We‘ve received your feedback!</h3>
@@ -132,11 +131,11 @@ const FeedbackPromptContent: React.FunctionComponent<ContentProps> = ({ closePro
                         icons={HAPPINESS_FEEDBACK_OPTIONS}
                         selected={rating}
                         onChange={handleRateChange}
-                        disabled={loading}
+                        disabled={response.loading}
                     />
-                    {error && (
+                    {'error' in response && (
                         <ErrorAlert
-                            error={error}
+                            error={response.error}
                             history={history}
                             icon={false}
                             className="mt-3"
@@ -147,9 +146,9 @@ const FeedbackPromptContent: React.FunctionComponent<ContentProps> = ({ closePro
                         role="menuitem"
                         type="submit"
                         className="btn btn-block btn-secondary feedback-prompt__button"
-                        loading={loading}
+                        loading={response.loading}
                         label="Send"
-                        disabled={!rating || loading}
+                        disabled={!rating || response.loading}
                     />
                 </Form>
             )}
