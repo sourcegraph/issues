@@ -5,22 +5,16 @@ import { defaultExternalServices } from '../../../components/externalServices/ex
 import { BatchChangesCodeHostFields, Scalars } from '../../../graphql-operations'
 import { AddCredentialModal } from './AddCredentialModal'
 import { RemoveCredentialModal } from './RemoveCredentialModal'
-import { Subject } from 'rxjs'
 import { ViewCredentialModal } from './ViewCredentialModal'
 
 export interface CodeHostConnectionNodeProps {
     node: BatchChangesCodeHostFields
     userID: Scalars['ID']
-    updateList: Subject<void>
 }
 
 type OpenModal = 'add' | 'view' | 'delete'
 
-export const CodeHostConnectionNode: React.FunctionComponent<CodeHostConnectionNodeProps> = ({
-    node,
-    userID,
-    updateList,
-}) => {
+export const CodeHostConnectionNode: React.FunctionComponent<CodeHostConnectionNodeProps> = ({ node, userID }) => {
     const Icon = defaultExternalServices[node.externalServiceKind].icon
 
     const [openModal, setOpenModal] = useState<OpenModal | undefined>()
@@ -40,8 +34,7 @@ export const CodeHostConnectionNode: React.FunctionComponent<CodeHostConnectionN
     }, [])
     const afterAction = useCallback(() => {
         setOpenModal(undefined)
-        updateList.next()
-    }, [updateList])
+    }, [])
 
     const isEnabled = node.credential !== null
 

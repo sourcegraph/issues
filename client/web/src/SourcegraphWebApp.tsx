@@ -1,5 +1,6 @@
 import 'focus-visible'
-
+import { MutationFunction, QueryClient, QueryClientProvider } from 'react-query'
+import { ReactQueryDevtools } from 'react-query/devtools'
 import { ShortcutProvider } from '@slimsag/react-shortcuts'
 import ServerIcon from 'mdi-react/ServerIcon'
 import * as React from 'react'
@@ -80,6 +81,7 @@ import { aggregateStreamingSearch } from './search/stream'
 import { ISearchContext } from '../../shared/src/graphql/schema'
 import { logCodeInsightsChanges } from './insights/analytics'
 import { listUserRepositories } from './site-admin/backend'
+import fetcher from './client'
 
 export interface SourcegraphWebAppProps extends KeyboardShortcutsProps {
     extensionAreaRoutes: readonly ExtensionAreaRoute[]
@@ -238,6 +240,17 @@ const LayoutWithActivation = window.context.sourcegraphDotComMode ? Layout : wit
  * This is the non-hot-reload component. It is wrapped in `hot(...)` below to make it
  * hot-reloadable in development.
  */
+const queryClient = new QueryClient({
+    defaultOptions: {
+        queries: {
+            queryFn: fetcher,
+        },
+        mutations: {
+            mutationFn: fetcher as MutationFunction<unknown, unknown>,
+        },
+    },
+})
+
 class ColdSourcegraphWebApp extends React.Component<SourcegraphWebAppProps, SourcegraphWebAppState> {
     private readonly subscriptions = new Subscription()
     private readonly userRepositoriesUpdates = new Subject<void>()
@@ -438,82 +451,85 @@ class ColdSourcegraphWebApp extends React.Component<SourcegraphWebAppProps, Sour
         const { children, ...props } = this.props
 
         return (
-            <ErrorBoundary location={null}>
-                <ShortcutProvider>
-                    <BrowserRouter key={0}>
-                        {/* eslint-disable react/jsx-no-bind */}
-                        <Route
-                            path="/"
-                            render={routeComponentProps => (
-                                <LayoutWithActivation
-                                    {...props}
-                                    {...routeComponentProps}
-                                    authenticatedUser={authenticatedUser}
-                                    viewerSubject={this.state.viewerSubject}
-                                    settingsCascade={this.state.settingsCascade}
-                                    showBatchChanges={this.props.showBatchChanges}
-                                    // Theme
-                                    isLightTheme={this.isLightTheme()}
-                                    themePreference={this.state.themePreference}
-                                    onThemePreferenceChange={this.onThemePreferenceChange}
-                                    // Search query
-                                    navbarSearchQueryState={this.state.navbarSearchQueryState}
-                                    onNavbarQueryChange={this.onNavbarQueryChange}
-                                    fetchHighlightedFileLineRanges={fetchHighlightedFileLineRanges}
-                                    searchRequest={search}
-                                    parsedSearchQuery={this.state.parsedSearchQuery}
-                                    setParsedSearchQuery={this.setParsedSearchQuery}
-                                    patternType={this.state.searchPatternType}
-                                    setPatternType={this.setPatternType}
-                                    caseSensitive={this.state.searchCaseSensitivity}
-                                    setCaseSensitivity={this.setCaseSensitivity}
-                                    versionContext={this.state.versionContext}
-                                    setVersionContext={this.setVersionContext}
-                                    availableVersionContexts={this.state.availableVersionContexts}
-                                    previousVersionContext={this.state.previousVersionContext}
-                                    copyQueryButton={this.state.copyQueryButton}
-                                    // Extensions
-                                    platformContext={this.platformContext}
-                                    extensionsController={this.extensionsController}
-                                    telemetryService={eventLogger}
-                                    isSourcegraphDotCom={window.context.sourcegraphDotComMode}
-                                    showRepogroupHomepage={this.state.showRepogroupHomepage}
-                                    showOnboardingTour={this.state.showOnboardingTour}
-                                    showSearchContext={this.canShowSearchContext()}
-                                    selectedSearchContextSpec={this.getSelectedSearchContextSpec()}
-                                    setSelectedSearchContextSpec={this.setSelectedSearchContextSpec}
-                                    availableSearchContexts={this.state.availableSearchContexts}
-                                    defaultSearchContextSpec={this.state.defaultSearchContextSpec}
-                                    showEnterpriseHomePanels={this.state.showEnterpriseHomePanels}
-                                    globbing={this.state.globbing}
-                                    showMultilineSearchConsole={this.state.showMultilineSearchConsole}
-                                    showQueryBuilder={this.state.showQueryBuilder}
-                                    enableSmartQuery={this.state.enableSmartQuery}
-                                    enableCodeMonitoring={this.state.enableCodeMonitoring}
-                                    fetchSavedSearches={fetchSavedSearches}
-                                    fetchRecentSearches={fetchRecentSearches}
-                                    fetchRecentFileViews={fetchRecentFileViews}
-                                    createCodeMonitor={createCodeMonitor}
-                                    fetchUserCodeMonitors={fetchUserCodeMonitors}
-                                    fetchCodeMonitor={fetchCodeMonitor}
-                                    updateCodeMonitor={updateCodeMonitor}
-                                    deleteCodeMonitor={deleteCodeMonitor}
-                                    toggleCodeMonitorEnabled={toggleCodeMonitorEnabled}
-                                    streamSearch={aggregateStreamingSearch}
-                                    onUserRepositoriesUpdate={this.onUserRepositoriesUpdate}
-                                />
-                            )}
+            <QueryClientProvider client={queryClient}>
+                <ReactQueryDevtools initialIsOpen={true} />
+                <ErrorBoundary location={null}>
+                    <ShortcutProvider>
+                        <BrowserRouter key={0}>
+                            {/* eslint-disable react/jsx-no-bind */}
+                            <Route
+                                path="/"
+                                render={routeComponentProps => (
+                                    <LayoutWithActivation
+                                        {...props}
+                                        {...routeComponentProps}
+                                        authenticatedUser={authenticatedUser}
+                                        viewerSubject={this.state.viewerSubject}
+                                        settingsCascade={this.state.settingsCascade}
+                                        showBatchChanges={this.props.showBatchChanges}
+                                        // Theme
+                                        isLightTheme={this.isLightTheme()}
+                                        themePreference={this.state.themePreference}
+                                        onThemePreferenceChange={this.onThemePreferenceChange}
+                                        // Search query
+                                        navbarSearchQueryState={this.state.navbarSearchQueryState}
+                                        onNavbarQueryChange={this.onNavbarQueryChange}
+                                        fetchHighlightedFileLineRanges={fetchHighlightedFileLineRanges}
+                                        searchRequest={search}
+                                        parsedSearchQuery={this.state.parsedSearchQuery}
+                                        setParsedSearchQuery={this.setParsedSearchQuery}
+                                        patternType={this.state.searchPatternType}
+                                        setPatternType={this.setPatternType}
+                                        caseSensitive={this.state.searchCaseSensitivity}
+                                        setCaseSensitivity={this.setCaseSensitivity}
+                                        versionContext={this.state.versionContext}
+                                        setVersionContext={this.setVersionContext}
+                                        availableVersionContexts={this.state.availableVersionContexts}
+                                        previousVersionContext={this.state.previousVersionContext}
+                                        copyQueryButton={this.state.copyQueryButton}
+                                        // Extensions
+                                        platformContext={this.platformContext}
+                                        extensionsController={this.extensionsController}
+                                        telemetryService={eventLogger}
+                                        isSourcegraphDotCom={window.context.sourcegraphDotComMode}
+                                        showRepogroupHomepage={this.state.showRepogroupHomepage}
+                                        showOnboardingTour={this.state.showOnboardingTour}
+                                        showSearchContext={this.canShowSearchContext()}
+                                        selectedSearchContextSpec={this.getSelectedSearchContextSpec()}
+                                        setSelectedSearchContextSpec={this.setSelectedSearchContextSpec}
+                                        availableSearchContexts={this.state.availableSearchContexts}
+                                        defaultSearchContextSpec={this.state.defaultSearchContextSpec}
+                                        showEnterpriseHomePanels={this.state.showEnterpriseHomePanels}
+                                        globbing={this.state.globbing}
+                                        showMultilineSearchConsole={this.state.showMultilineSearchConsole}
+                                        showQueryBuilder={this.state.showQueryBuilder}
+                                        enableSmartQuery={this.state.enableSmartQuery}
+                                        enableCodeMonitoring={this.state.enableCodeMonitoring}
+                                        fetchSavedSearches={fetchSavedSearches}
+                                        fetchRecentSearches={fetchRecentSearches}
+                                        fetchRecentFileViews={fetchRecentFileViews}
+                                        createCodeMonitor={createCodeMonitor}
+                                        fetchUserCodeMonitors={fetchUserCodeMonitors}
+                                        fetchCodeMonitor={fetchCodeMonitor}
+                                        updateCodeMonitor={updateCodeMonitor}
+                                        deleteCodeMonitor={deleteCodeMonitor}
+                                        toggleCodeMonitorEnabled={toggleCodeMonitorEnabled}
+                                        streamSearch={aggregateStreamingSearch}
+                                        onUserRepositoriesUpdate={this.onUserRepositoriesUpdate}
+                                    />
+                                )}
+                            />
+                            {/* eslint-enable react/jsx-no-bind */}
+                        </BrowserRouter>
+                        <Tooltip key={1} />
+                        <Notifications
+                            key={2}
+                            extensionsController={this.extensionsController}
+                            notificationClassNames={notificationClassNames}
                         />
-                        {/* eslint-enable react/jsx-no-bind */}
-                    </BrowserRouter>
-                    <Tooltip key={1} />
-                    <Notifications
-                        key={2}
-                        extensionsController={this.extensionsController}
-                        notificationClassNames={notificationClassNames}
-                    />
-                </ShortcutProvider>
-            </ErrorBoundary>
+                    </ShortcutProvider>
+                </ErrorBoundary>
+            </QueryClientProvider>
         )
     }
 

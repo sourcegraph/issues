@@ -1,30 +1,19 @@
-import React, { FunctionComponent, useMemo, useState } from 'react'
 import classNames from 'classnames'
-
-import { AddUserEmailResult, AddUserEmailVariables } from '../../../graphql-operations'
-import { gql, dataOrThrowErrors } from '../../../../../shared/src/graphql/graphql'
-import { requestGraphQL } from '../../../backend/graphql'
-import { asError, isErrorLike, ErrorLike } from '../../../../../shared/src/util/errors'
-import { useInputValidation, deriveInputClassName } from '../../../../../shared/src/util/useInputValidation'
-
-import { eventLogger } from '../../../tracking/eventLogger'
+import React, { FunctionComponent, useMemo } from 'react'
+import { LoaderInput } from '../../../../../branded/src/components/LoaderInput'
+import { deriveInputClassName, useInputValidation } from '../../../../../shared/src/util/useInputValidation'
 import { ErrorAlert } from '../../../components/alerts'
 import { LoaderButton } from '../../../components/LoaderButton'
-import { LoaderInput } from '../../../../../branded/src/components/LoaderInput'
+import { useAddUserEmail } from './useUserEmail'
 
 interface Props {
     user: string
-    onDidAdd: () => void
-
     className?: string
 }
 
-type Status = undefined | 'loading' | ErrorLike
-
-export const AddUserEmailForm: FunctionComponent<Props> = ({ user, className, onDidAdd }) => {
-    const [statusOrError, setStatusOrError] = useState<Status>()
-
-    const [emailState, nextEmailFieldChange, emailInputReference, overrideEmailState] = useInputValidation(
+export const AddUserEmailForm: FunctionComponent<Props> = ({ user, className }) => {
+    const { mutate, isLoading, error } = useAddUserEmail()
+    const [emailState, nextEmailFieldChange, emailInputReference] = useInputValidation(
         useMemo(
             () => ({
                 synchronousValidators: [],
@@ -34,37 +23,9 @@ export const AddUserEmailForm: FunctionComponent<Props> = ({ user, className, on
         )
     )
 
-    const onSubmit: React.FormEventHandler<HTMLFormElement> = async event => {
+    const onSubmit: React.FormEventHandler<HTMLFormElement> = event => {
         event.preventDefault()
-
-        if (emailState.kind === 'VALID') {
-            setStatusOrError('loading')
-
-            try {
-                dataOrThrowErrors(
-                    await requestGraphQL<AddUserEmailResult, AddUserEmailVariables>(
-                        gql`
-                            mutation AddUserEmail($user: ID!, $email: String!) {
-                                addUserEmail(user: $user, email: $email) {
-                                    alwaysNil
-                                }
-                            }
-                        `,
-                        { user, email: emailState.value }
-                    ).toPromise()
-                )
-
-                eventLogger.log('NewUserEmailAddressAdded')
-                overrideEmailState({ value: '' })
-                setStatusOrError(undefined)
-
-                if (onDidAdd) {
-                    onDidAdd()
-                }
-            } catch (error) {
-                setStatusOrError(asError(error))
-            }
-        }
+        mutate({ user, email: emailState.value })
     }
 
     return (
@@ -79,10 +40,7 @@ export const AddUserEmailForm: FunctionComponent<Props> = ({ user, className, on
             </label>
             {/* eslint-disable-next-line react/forbid-elements */}
             <form className="form-inline" onSubmit={onSubmit} noValidate={true}>
-                <LoaderInput
-                    className={classNames(deriveInputClassName(emailState), 'mr-sm-2')}
-                    loading={emailState.kind === 'LOADING'}
-                >
+                <LoaderInput className={classNames(deriveInputClassName(emailState), 'mr-sm-2')} loading={isLoading}>
                     <input
                         id="AddUserEmailForm-email"
                         type="email"
@@ -104,10 +62,10 @@ export const AddUserEmailForm: FunctionComponent<Props> = ({ user, className, on
                     />
                 </LoaderInput>
                 <LoaderButton
-                    loading={statusOrError === 'loading'}
+                    loading={isLoading}
                     label="Add"
                     type="submit"
-                    disabled={statusOrError === 'loading' || emailState.kind !== 'VALID'}
+                    disabled={isLoading || emailState.kind !== 'VALID'}
                     className="btn btn-primary"
                 />
                 {emailState.kind === 'INVALID' && (
@@ -116,7 +74,7 @@ export const AddUserEmailForm: FunctionComponent<Props> = ({ user, className, on
                     </small>
                 )}
             </form>
-            {isErrorLike(statusOrError) && <ErrorAlert className="mt-2" error={statusOrError} />}
+            {error && <ErrorAlert className="mt-2" error={error} />}
         </div>
     )
 }

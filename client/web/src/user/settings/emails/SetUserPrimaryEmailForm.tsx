@@ -14,9 +14,7 @@ type UserEmail = NonNullable<UserEmailsResult['node']>['emails'][number]
 
 interface Props {
     user: string
-    emails: UserEmail[]
-    onDidSet: () => void
-
+    emails: UserEmail[] | unknown
     className?: string
 }
 
@@ -26,7 +24,7 @@ type Status = undefined | 'loading' | ErrorLike
 // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
 const findPrimaryEmail = (emails: UserEmail[]): string => emails.find(email => email.isPrimary)!.email
 
-export const SetUserPrimaryEmailForm: FunctionComponent<Props> = ({ user, emails, onDidSet, className }) => {
+export const SetUserPrimaryEmailForm: FunctionComponent<Props> = ({ user, emails, className }) => {
     const [primaryEmail, setPrimaryEmail] = useState<string>(findPrimaryEmail(emails))
     const [statusOrError, setStatusOrError] = useState<Status>()
 
@@ -57,15 +55,11 @@ export const SetUserPrimaryEmailForm: FunctionComponent<Props> = ({ user, emails
 
                 eventLogger.log('UserEmailAddressSetAsPrimary')
                 setStatusOrError(undefined)
-
-                if (onDidSet) {
-                    onDidSet()
-                }
             } catch (error) {
                 setStatusOrError(asError(error))
             }
         },
-        [user, primaryEmail, onDidSet]
+        [user, primaryEmail]
     )
 
     return (
