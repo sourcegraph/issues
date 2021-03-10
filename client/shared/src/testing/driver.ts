@@ -19,12 +19,12 @@ import { readEnvironmentBoolean, retry } from './utils'
 import { formatPuppeteerConsoleMessage } from './console'
 import * as path from 'path'
 import { escapeRegExp } from 'lodash'
-import { readFile, appendFile, mkdir } from 'mz/fs'
+import { readFile } from 'mz/fs'
 import { Settings } from '../settings/settings'
 import { from, fromEvent, merge, Subscription } from 'rxjs'
 import { filter, map, concatAll, mergeMap, mergeAll, takeUntil } from 'rxjs/operators'
 import getFreePort from 'get-port'
-import puppeteerFirefox from 'puppeteer-firefox'
+// import puppeteerFirefox from 'puppeteer-firefox'
 import webExt from 'web-ext'
 import { isDefined } from '../util/types'
 import { getConfig } from './config'
@@ -702,21 +702,23 @@ export function modifyJSONC(
 }
 
 // Copied from node_modules/puppeteer-firefox/misc/install-preferences.js
-async function getFirefoxCfgPath(): Promise<string> {
-    const firefoxFolder = path.dirname(puppeteerFirefox.executablePath())
-    let configPath: string
-    if (process.platform === 'darwin') {
-        configPath = path.join(firefoxFolder, '..', 'Resources')
-    } else if (process.platform === 'linux') {
-        await mkdir(path.join(firefoxFolder, 'browser', 'defaults', 'preferences'), { recursive: true })
-        configPath = firefoxFolder
-    } else if (process.platform === 'win32') {
-        configPath = firefoxFolder
-    } else {
-        throw new Error('Unsupported platform: ' + process.platform)
-    }
-    return path.join(configPath, 'puppeteer.cfg')
-}
+// async function getFirefoxCfgPath(): Promise<string> {
+//     // const firefoxFolder = path.dirname(puppeteerFirefox.executablePath())
+//     const firefoxFolder = path.dirname(puppeteer.executablePath().replace('latest', '84.0a1'))
+
+//     let configPath: string
+//     if (process.platform === 'darwin') {
+//         configPath = path.join(firefoxFolder, '..', 'Resources')
+//     } else if (process.platform === 'linux') {
+//         await mkdir(path.join(firefoxFolder, 'browser', 'defaults', 'preferences'), { recursive: true })
+//         configPath = firefoxFolder
+//     } else if (process.platform === 'win32') {
+//         configPath = firefoxFolder
+//     } else {
+//         throw new Error('Unsupported platform: ' + process.platform)
+//     }
+//     return path.join(configPath, 'puppeteer.cfg')
+// }
 
 interface DriverOptions extends LaunchOptions {
     browser?: 'chrome' | 'firefox'
@@ -747,6 +749,7 @@ export async function createDriverForTest(options?: DriverOptions): Promise<Driv
         ...options,
         args,
         defaultViewport: null,
+        product: options.browser,
         timeout: 30000,
     }
     let browser: puppeteer.Browser
@@ -755,31 +758,41 @@ export async function createDriverForTest(options?: DriverOptions): Promise<Driv
         // because Puppeteer uses new Function() to evaluate code
         // which is not allowed by the github.com CSP.
         // The pref option does not work to disable CSP for some reason.
-        const cfgPath = await getFirefoxCfgPath()
-        const disableCspPreference = '\npref("security.csp.enable", false);\n'
-        if (!(await readFile(cfgPath, 'utf-8')).includes(disableCspPreference)) {
-            await appendFile(cfgPath, disableCspPreference)
-        }
+        // const cfgPath = await getFirefoxCfgPath()
+        // const disableCspPreference = '\npref("security.csp.enable", false);\n'
+        // if (!(await readFile(cfgPath, 'utf-8')).includes(disableCspPreference)) {
+        //     await appendFile(cfgPath, disableCspPreference)
+        // }
         if (loadExtension) {
             const cdpPort = await getFreePort()
             const firefoxExtensionPath = path.resolve(__dirname, '..', '..', '..', 'browser', 'build', 'firefox')
             // webExt.util.logger.consoleStream.makeVerbose()
-            args.push(`-juggler=${cdpPort}`)
+            // args.push(`-juggler=${cdpPort}`)
+            args.push(`-cdpPort=${cdpPort}`)
+            // args.push(`--remote-debugging-port=${cdpPort}`)
             if (launchOptions.headless) {
                 args.push('-headless')
             }
+
             await webExt.cmd.run(
                 {
                     sourceDir: firefoxExtensionPath,
-                    firefox: puppeteerFirefox.executablePath(),
-                    args,
+                    // firefox: puppeteerFirefox.executablePath(),
+                    firefox: puppeteer.executablePath().replace('latest', '84.0a1'),
+                    args: [...args, '--remote-debugging-port', cdpPort.toString()],
                 },
                 { shouldExitProgram: false }
             )
-            const browserWSEndpoint = `ws://127.0.0.1:${cdpPort}`
-            browser = await puppeteerFirefox.connect({ browserWSEndpoint })
+            // const browserWSEndpoint = `ws://127.0.0.1:${cdpPort}`
+            // browser = await puppeteerFirefox.connect({ browserWSEndpoint })
+
+            // TODO: explain https://github.com/mozilla/web-ext/issues/1927#issuecomment-706979142
+            await new Promise(resolve => setTimeout(resolve, 2000))
+
+            browser = await puppeteer.connect({ browserURL: `http://localhost:${cdpPort}` })
         } else {
-            browser = await puppeteerFirefox.launch(launchOptions)
+            // browser = await puppeteerFirefox.launch(launchOptions)
+            browser = await puppeteer.launch(launchOptions)
         }
     } else {
         // Chrome
