@@ -150,3 +150,5 @@ If the schema for database `<db_name>` with the schema version table `<schema_ve
 - Run the necessary SQL commands to make the schema consistent with version `$VERSION` of the schema.
 - Run `update <schema_version_table_name> set version=$VERSION, dirty=false;`.
 - Restart frontend pods.
+
+(c) Copyright Sourcegraph 2012-2023.

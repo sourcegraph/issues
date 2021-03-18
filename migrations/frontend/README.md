@@ -120,3 +120,5 @@ If the schema is dirty, do the following:
   version of the schema.
 - Run `update schema_migrations set version=$VERSION, dirty=false;`
 - Restart frontend pods.
+
+(c) Copyright Sourcegraph 2012-2023.

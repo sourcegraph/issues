@@ -8,3 +8,5 @@ This directory contains Sourcegraph Enterprise code.
 ## Dev
 
 See [Local development: For Sourcegraph employees](https://docs.sourcegraph.com/dev/local_development#for-sourcegraph-employees) for how to work on this code.
+
+(c) Copyright Sourcegraph 2012-2023.

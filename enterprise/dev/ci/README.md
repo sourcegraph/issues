@@ -13,3 +13,5 @@ go run ./enterprise/dev/ci/gen-pipeline.go | buildkite-agent pipeline upload
 ## Testing
 
 To test this you can run `env BUILDKITE_BRANCH=TESTBRANCH go run ./enterprise/dev/ci/gen-pipeline.go` and inspect the YAML output. To change the behaviour set the relevant `BUILDKITE_` environment variables.
+
+(c) Copyright Sourcegraph 2012-2023.

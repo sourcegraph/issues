@@ -5,3 +5,5 @@ The executor-queue service maintains the executor work queues. Executor instance
 ## Work queues
 
 - The `codeintel` queue contains unprocessed lsif_index records
+
+(c) Copyright Sourcegraph 2012-2023.

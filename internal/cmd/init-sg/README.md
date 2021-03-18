@@ -77,3 +77,5 @@ The format for the external service json file is as follows, multiple github ext
   }
 ]
 ```
+
+(c) Copyright Sourcegraph 2012-2023.

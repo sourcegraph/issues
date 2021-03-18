@@ -42,3 +42,5 @@ This bot can be [configured in Slack](https://api.slack.com/apps/A013EETK25V) wi
 
 - GCP: Declare resource types to query in [`gcp.go`](./gcp.go)'s `gcpResources` variable.
 - AWS: Declare queries for resources as functions in [`aws.go`](./aws.go)'s `awsResources` variable.
+
+(c) Copyright Sourcegraph 2012-2023.

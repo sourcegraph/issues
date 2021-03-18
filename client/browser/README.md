@@ -211,3 +211,5 @@ The output will be in `browser/build`:
 - Chrome extension:
   - Packed: `browser/build/bundles/chrome-bundle.zip`
   - Unpacked: `browser/build/chrome`
+
+(c) Copyright Sourcegraph 2012-2023.

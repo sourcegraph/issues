@@ -27,3 +27,5 @@ The Sourcegraph monitoring generator consists of three components:
   This is where the API for service monitoring definitions is defined, as well as the generator code that provides [its features](https://docs.sourcegraph.com/dev/background-information/observability/monitoring-generator#features).
 
 All features and capabilities for developed for the generator should align with the [Sourcegraph monitoring pillars](https://about.sourcegraph.com/handbook/engineering/observability/monitoring_pillars).
+
+(c) Copyright Sourcegraph 2012-2023.

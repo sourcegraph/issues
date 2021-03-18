@@ -62,3 +62,5 @@ Upload the generated indexes by running the following command:
 ```
 ./scripts/upload.sh
 ```
+
+(c) Copyright Sourcegraph 2012-2023.

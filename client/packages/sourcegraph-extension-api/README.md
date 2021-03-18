@@ -7,3 +7,5 @@
 This package contains only the types for the [Sourcegraph extension API](https://unpkg.com/sourcegraph/dist/docs/index.html) ([`sourcegraph.d.ts`](https://github.com/sourcegraph/sourcegraph/blob/main/packages/sourcegraph-extension-api/src/sourcegraph.d.ts)).
 
 See [Sourcegraph extensions documentation](https://docs.sourcegraph.com/extensions) for more information.
+
+(c) Copyright Sourcegraph 2012-2023.

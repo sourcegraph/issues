@@ -5,3 +5,5 @@ In particular, components cannot make use of Bootstrap classes, but must accept 
 For more details, see [Styling UI in the handbook](https://about.sourcegraph.com/handbook/engineering/web/styling).
 
 Code that is only used in branded contexts (web app, options menu of the browser extension, ...) should go into [`../branded`](../branded) instead.
+
+(c) Copyright Sourcegraph 2012-2023.
