@@ -24,6 +24,7 @@
     "watch-generate": "gulp watchGenerate",
     "test": "jest --testPathIgnorePatterns end-to-end regression integration storybook",
     "test-integration": "TS_NODE_PROJECT=client/web/src/integration/tsconfig.json NODE_NO_WARNINGS=1 mocha --parallel=$CI --retries=1 ./client/web/src/integration/**/*.test.ts",
+    "test-browser-integration": "TS_NODE_PROJECT=client/browser/src/puppeteer-tests/tsconfig.json NODE_NO_WARNINGS=1 mocha --parallel=$CI --retries=1 ./client/browser/src/puppeteer-tests/integration/**/*.test.ts",
     "cover-integration": "nyc --hook-require=false yarn test-integration",
     "test-e2e": "TS_NODE_PROJECT=client/web/src/end-to-end/tsconfig.json mocha ./client/web/src/end-to-end/end-to-end.test.ts",
     "cover-e2e": "nyc --hook-require=false --silent=true yarn test-e2e",

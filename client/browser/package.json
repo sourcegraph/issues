@@ -19,7 +19,7 @@
     "eslint": "eslint --cache '**/*.[jt]s?(x)'",
     "stylelint": "stylelint 'src/**/*.scss'",
     "clean": "rm -rf build/ dist/ *.zip *.xpi .checksum",
-    "test": "jest --testPathIgnorePatterns end-to-end",
+    "test": "jest --testPathIgnorePatterns end-to-end integration",
     "test-e2e": "mocha './src/end-to-end/**/*.test.ts'",
     "bundlesize": "GITHUB_TOKEN= bundlesize",
     "create-source-zip": "node scripts/create-source-zip"

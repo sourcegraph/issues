@@ -968,6 +968,10 @@ describe('Blob viewer', () => {
             const HOVER_COUNT_KEY = 'hover-count'
 
             it(`shows a popover about the browser extension when the user has seen ${HOVER_THRESHOLD} hovers and clicks "View on [code host]" button`, async () => {
+                testContext.server.get('https://github.com/*').intercept((request, response) => {
+                    response.sendStatus(200)
+                })
+
                 await driver.page.goto(`${driver.sourcegraphBaseUrl}/github.com/sourcegraph/test/-/blob/test.ts`)
                 await driver.page.evaluate(() => localStorage.removeItem('hover-count'))
                 await driver.page.reload()

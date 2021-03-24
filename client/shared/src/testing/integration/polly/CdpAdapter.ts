@@ -4,6 +4,7 @@ import Protocol from 'devtools-protocol'
 import PollyAdapter from '@pollyjs/adapter'
 import { isErrorLike } from '../../../util/errors'
 import { Observable, Subject } from 'rxjs'
+import { noop } from 'lodash'
 
 function toBase64(input: string): string {
     return Buffer.from(input).toString('base64')
@@ -14,7 +15,7 @@ function fromBase64(input: string): string {
 }
 
 export interface CdpAdapterOptions {
-    page: Puppeteer.Page
+    browser: Puppeteer.Browser
 }
 
 interface PollyResponse {
@@ -29,7 +30,11 @@ interface PollyResponse {
  * to requests.
  */
 interface PollyRequestArguments {
-    requestArguments: { requestId: string }
+    requestArguments: {
+        requestId: string
+
+        cdpSession: Puppeteer.CDPSession
+    }
 }
 
 interface PollyPromise extends Promise<PollyResponse> {
@@ -63,10 +68,10 @@ export class CdpAdapter extends PollyAdapter {
     public readonly errors: Observable<unknown> = this._errors.asObservable()
 
     /**
-     * The puppeteer Page this adapter is attached to, obtained from
+     * The puppeteer Browser this adapter is attached to, obtained from
      * options passed to the Polly constructor.
      */
-    private page: Puppeteer.Page
+    private browser: Puppeteer.Browser
 
     /**
      * A map of all intercepted requests to their respond function, which will be called by the
@@ -75,9 +80,10 @@ export class CdpAdapter extends PollyAdapter {
     private pendingRequests = new Map<string, PollyPromise>()
 
     /**
-     * The CDP session used to control request interception in the browser.
+     * A map of CDPSessions keyed by their associated Targets.
+     * Each CDP session is used to control request interception for a Target.
      */
-    private cdpSession?: Puppeteer.CDPSession
+    private cdpSessions = new Map<Puppeteer.Target, Puppeteer.CDPSession>()
 
     /**
      * A map of all intercepted requests to their passthrough callbacks function, which will be called by the
@@ -98,15 +104,44 @@ export class CdpAdapter extends PollyAdapter {
         // eslint-disable-next-line @typescript-eslint/ban-ts-comment
         // @ts-ignore
         super(polly)
-        this.page = this.options.page
+        this.browser = this.options.browser
     }
 
     /**
-     * Called when connecting to a Puppeteer page. Sets up CDP request
-     * interception using the CDP "Fetch domain".
+     * Called when the adapter is connected to. Sets up CDP request
+     * interception for all browser pages using the CDP "Fetch domain".
      */
     public async onConnect(): Promise<void> {
-        this.cdpSession = await this.page.target().createCDPSession()
+        // Create CDP sessions for all existing targets
+        const targets = await this.browser.targets()
+
+        await Promise.all(
+            targets.map(async target => {
+                await this.setupCDPSessionForTarget(target)
+            })
+        )
+
+        // Listen for future pages, create CDP session on creation
+        this.browser.on('targetcreated', target => {
+            this.setupCDPSessionForTarget(target).catch(noop)
+        })
+
+        // Delete associated CDP session when target is destroyed
+        this.browser.on('targetdestroyed', target => {
+            const cdpSession = this.cdpSessions.get(target)
+            this.cdpSessions.delete(target)
+            // is this necessary?
+            cdpSession?.detach().catch(noop)
+        })
+    }
+
+    /**
+     * Creates a CDP session for the given target and listens
+     * for paused requests
+     */
+    private async setupCDPSessionForTarget(target: Puppeteer.Target): Promise<void> {
+        const cdpSession = await target.createCDPSession()
+        this.cdpSessions.set(target, cdpSession)
 
         // TODO: This is where we narrow down the interception with patterns.
         // Request and respond stages are independent, so we can set a different
@@ -114,23 +149,25 @@ export class CdpAdapter extends PollyAdapter {
         const fetchEnableRequest: Protocol.Fetch.EnableRequest = {
             patterns: [{ requestStage: 'Request' }, { requestStage: 'Response' }],
         }
-        await this.cdpSession.send('Fetch.enable', fetchEnableRequest)
+        await cdpSession.send('Fetch.enable', fetchEnableRequest)
 
-        this.cdpSession.on('Fetch.requestPaused', (event: Protocol.Fetch.RequestPausedEvent): void => {
+        cdpSession.on('Fetch.requestPaused', (event: Protocol.Fetch.RequestPausedEvent): void => {
             const isInResponseStage = eventIsInResponseStage(event)
             if (isInResponseStage) {
-                this.handlePausedRequestInResponseStage(event)
+                this.handlePausedRequestInResponseStage(event, cdpSession)
             } else {
-                this.handlePausedRequestInRequestStage(event)
+                this.handlePausedRequestInRequestStage(event, cdpSession)
             }
         })
     }
 
     /**
-     * Called when disconnecting from a Puppeteer.page.
+     * Called when the adapter is disconnected from
      */
     public async onDisconnect(): Promise<void> {
-        await this.trySendCdpRequest('Fetch.disable')
+        await Promise.allSettled(
+            [...this.cdpSessions].map(async ([, cdpSession]) => this.trySendCdpRequest('Fetch.disable', cdpSession))
+        )
     }
 
     /**
@@ -140,12 +177,12 @@ export class CdpAdapter extends PollyAdapter {
      */
     public passthroughRequest(pollyRequest: PollyRequest & PollyRequestArguments): Promise<PollyResponse> {
         const {
-            requestArguments: { requestId },
+            requestArguments: { requestId, cdpSession },
         } = pollyRequest
 
         return new Promise<PollyResponse>((resolve, reject) => {
             this.passthroughPromises.set(requestId, { resolve, reject })
-            this.continuePausedRequest({ requestId }).catch(console.error)
+            this.continuePausedRequest({ requestId }, cdpSession).catch(console.error)
         })
     }
 
@@ -160,13 +197,13 @@ export class CdpAdapter extends PollyAdapter {
     ): Promise<void> {
         const { response: pollyResponse, requestArguments } = pollyRequest
         const { headers, body = '' } = pollyResponse
-        const { requestId } = requestArguments
+        const { requestId, cdpSession } = requestArguments
         if (error) {
             // This function receives a value in the `error` argument if we're
             // intercepting a request with the Polly server route which throws
             // an error.
             this._errors.next(error)
-            await this.abortPausedRequest({ requestId, errorReason: 'Failed' })
+            await this.abortPausedRequest({ requestId, errorReason: 'Failed' }, cdpSession)
         } else {
             // Fulfill by converting the Polly response to a CDP response
             const cdpRequestToFulfill = {
@@ -175,7 +212,7 @@ export class CdpAdapter extends PollyAdapter {
                 responseHeaders: headerObjectToHeaderEntries(headers),
                 body: toBase64(body),
             }
-            await this.fulfillPausedRequest(cdpRequestToFulfill)
+            await this.fulfillPausedRequest(cdpRequestToFulfill, cdpSession)
         }
     }
 
@@ -192,21 +229,31 @@ export class CdpAdapter extends PollyAdapter {
         this.pendingRequests.set(requestId, promise)
     }
 
-    private async fulfillPausedRequest(request: Protocol.Fetch.FulfillRequestRequest): Promise<void> {
-        await this.trySendCdpRequest('Fetch.fulfillRequest', request)
+    private async fulfillPausedRequest(
+        request: Protocol.Fetch.FulfillRequestRequest,
+        cdpSession: Puppeteer.CDPSession
+    ): Promise<void> {
+        await this.trySendCdpRequest('Fetch.fulfillRequest', cdpSession, request)
     }
 
-    private async continuePausedRequest(request: Protocol.Fetch.ContinueRequestRequest): Promise<void> {
-        await this.trySendCdpRequest('Fetch.continueRequest', request)
+    private async continuePausedRequest(
+        request: Protocol.Fetch.ContinueRequestRequest,
+        cdpSession: Puppeteer.CDPSession
+    ): Promise<void> {
+        await this.trySendCdpRequest('Fetch.continueRequest', cdpSession, request)
     }
 
     /**
      * Perform a CDP request call that doesn't return a result, while ignoring
      * errors due to the page being closed already.
      */
-    private async trySendCdpRequest(cdpRequestName: string, request?: object): Promise<void> {
+    private async trySendCdpRequest(
+        cdpRequestName: string,
+        cdpSession: Puppeteer.CDPSession,
+        request?: object
+    ): Promise<void> {
         try {
-            await this.cdpSession?.send(cdpRequestName, request)
+            await cdpSession?.send(cdpRequestName, request)
         } catch (error) {
             // TODO: also ignore "target closed" error
             if (
@@ -222,18 +269,25 @@ export class CdpAdapter extends PollyAdapter {
         }
     }
 
-    private async abortPausedRequest(request: Protocol.Fetch.FailRequestRequest): Promise<void> {
-        await this.cdpSession?.send('Fetch.failRequest', request)
+    private async abortPausedRequest(
+        request: Protocol.Fetch.FailRequestRequest,
+        cdpSession: Puppeteer.CDPSession
+    ): Promise<void> {
+        await cdpSession?.send('Fetch.failRequest', request)
     }
 
-    private async getResponseBody(event: Protocol.Fetch.RequestPausedEvent): Promise<string> {
+    private async getResponseBody(
+        event: Protocol.Fetch.RequestPausedEvent,
+        cdpSession: Puppeteer.CDPSession
+    ): Promise<string> {
         if (getLocationHeader(event)) {
             return '' // CDP doesn't let us obtain the body of redirect requests, so we don't attempt it.
         }
-        if (!this.cdpSession) {
+        if (!cdpSession) {
             throw new Error('Fetch.getResponseBody called before CDP session created')
         }
-        const body = (await this.cdpSession.send('Fetch.getResponseBody', {
+
+        const body = (await cdpSession.send('Fetch.getResponseBody', {
             requestId: event.requestId,
         })) as Protocol.Fetch.GetResponseBodyResponse
 
@@ -243,7 +297,10 @@ export class CdpAdapter extends PollyAdapter {
     /**
      * Handle a "request paused" event, for requests called at the request stage.
      */
-    private handlePausedRequestInRequestStage(event: Protocol.Fetch.RequestPausedEvent): void {
+    private handlePausedRequestInRequestStage(
+        event: Protocol.Fetch.RequestPausedEvent,
+        cdpSession: Puppeteer.CDPSession
+    ): void {
         // Rationale for ts-ignore:
         // The type declaration provided for Polly's Adapter is missing a
         // declaration for the handleRequest method.
@@ -256,14 +313,17 @@ export class CdpAdapter extends PollyAdapter {
             // postData appears to be the field that contains the actual entire
             // body of the request
             body: event.request.postData ?? '',
-            requestArguments: { requestId: event.requestId },
+            requestArguments: { requestId: event.requestId, cdpSession },
         })
     }
 
     /**
      * Handle a "request paused" event, for requests paused at the response stage.
      */
-    private handlePausedRequestInResponseStage(event: Protocol.Fetch.RequestPausedEvent): void {
+    private handlePausedRequestInResponseStage(
+        event: Protocol.Fetch.RequestPausedEvent,
+        cdpSession: Puppeteer.CDPSession
+    ): void {
         const { requestId } = event
 
         // First case: response was not received and encountered an error (for
@@ -283,7 +343,7 @@ export class CdpAdapter extends PollyAdapter {
 
         // Second case: response was received and therefore the response is
         // expected to have a status code, and may or may not have a body.
-        this.getResponseBody(event)
+        this.getResponseBody(event, cdpSession)
             .then(body => {
                 const statusCode = event.responseStatusCode
                 if (!statusCode) {

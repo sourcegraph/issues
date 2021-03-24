@@ -1,11 +1,11 @@
 import expect from 'expect'
-import { afterEachSaveScreenshotIfFailed } from '../../../shared/src/testing/screenshotReporter'
-import { createDriverForTest, Driver } from '../../../shared/src/testing/driver'
-import { PhabricatorMapping } from '../browser-extension/web-extension-api/types'
+import { afterEachSaveScreenshotIfFailed } from '../../../../shared/src/testing/screenshotReporter'
+import { createDriverForTest, Driver } from '../../../../shared/src/testing/driver'
+import { PhabricatorMapping } from '../../browser-extension/web-extension-api/types'
 import { isEqual } from 'lodash'
-import { getConfig } from '../../../shared/src/testing/config'
-import { retry } from '../../../shared/src/testing/utils'
-import { ExternalServiceKind } from '../../../shared/src/graphql-operations'
+import { getConfig } from '../../../../shared/src/testing/config'
+import { retry } from '../../../../shared/src/testing/utils'
+import { ExternalServiceKind } from '../../../../shared/src/graphql-operations'
 
 // By default, these tests run against a local Phabricator instance and a local Sourcegraph instance.
 // To run them against phabricator.sgdev.org and umami.sgdev.org, set the below env vars in addition to SOURCEGRAPH_BASE_URL.

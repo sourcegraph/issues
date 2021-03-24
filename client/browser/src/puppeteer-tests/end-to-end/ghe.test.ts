@@ -1,8 +1,8 @@
-import { afterEachSaveScreenshotIfFailed } from '../../../shared/src/testing/screenshotReporter'
-import { createDriverForTest, Driver } from '../../../shared/src/testing/driver'
-import { testSingleFilePage } from './shared'
-import { getConfig } from '../../../shared/src/testing/config'
-import { ExternalServiceKind } from '../../../shared/src/graphql-operations'
+import { afterEachSaveScreenshotIfFailed } from '../../../../shared/src/testing/screenshotReporter'
+import { createDriverForTest, Driver } from '../../../../shared/src/testing/driver'
+import { testSingleFilePage } from '../shared'
+import { getConfig } from '../../../../shared/src/testing/config'
+import { ExternalServiceKind } from '../../../../shared/src/graphql-operations'
 
 const GHE_BASE_URL = process.env.GHE_BASE_URL || 'https://ghe.sgdev.org'
 const GHE_USERNAME = process.env.GHE_USERNAME
@@ -78,7 +78,6 @@ describe('Sourcegraph browser extension on GitHub Enterprise', () => {
         getDriver: () => driver,
         url: `${GHE_BASE_URL}/sourcegraph/jsonrpc2/blob/4fb7cd90793ee6ab445f466b900e6bffb9b63d78/call_opt.go`,
         repoName: `${REPO_PREFIX}/sourcegraph/jsonrpc2`,
-        sourcegraphBaseUrl,
         // Not using '.js-file-line' because it breaks the reliance on :nth-child() in testSingleFilePage()
         lineSelector: '.js-file-line-container tr',
         goToDefinitionURL: new URL(

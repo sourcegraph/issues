@@ -1,8 +1,8 @@
-import { afterEachSaveScreenshotIfFailed } from '../../../shared/src/testing/screenshotReporter'
-import { createDriverForTest, Driver } from '../../../shared/src/testing/driver'
-import { testSingleFilePage } from './shared'
-import { getConfig } from '../../../shared/src/testing/config'
-import { ExternalServiceKind } from '../../../shared/src/graphql-operations'
+import { afterEachSaveScreenshotIfFailed } from '../../../../shared/src/testing/screenshotReporter'
+import { createDriverForTest, Driver } from '../../../../shared/src/testing/driver'
+import { testSingleFilePage } from '../shared'
+import { getConfig } from '../../../../shared/src/testing/config'
+import { ExternalServiceKind } from '../../../../shared/src/graphql-operations'
 
 // By default, these tests run against gitlab.com and a local Sourcegraph instance.
 // You can run them against other instances by setting the below env vars in addition to SOURCEGRAPH_BASE_URL.
@@ -56,7 +56,6 @@ describe('Sourcegraph browser extension on Gitlab Server', () => {
         // Other than GitHub, the URL must not include the column in the hash.
         goToDefinitionURL: new URL('#L5', url.href).href,
         repoName: `${REPO_PATH_PREFIX}/sourcegraph/jsonrpc2`,
-        sourcegraphBaseUrl,
         lineSelector: '.line',
     })
 })

@@ -1,14 +1,14 @@
 import { startCase } from 'lodash'
 import assert from 'assert'
-import { afterEachSaveScreenshotIfFailed } from '../../../shared/src/testing/screenshotReporter'
-import { Driver, createDriverForTest } from '../../../shared/src/testing/driver'
-import { closeInstallPageTab, testSingleFilePage } from './shared'
-import { retry } from '../../../shared/src/testing/utils'
-import { getConfig } from '../../../shared/src/testing/config'
+import { afterEachSaveScreenshotIfFailed } from '../../../../shared/src/testing/screenshotReporter'
+import { Driver, createDriverForTest } from '../../../../shared/src/testing/driver'
+import { closeInstallPageTab, testSingleFilePage } from '../shared'
+import { retry } from '../../../../shared/src/testing/utils'
+import { getConfig } from '../../../../shared/src/testing/config'
 import { fromEvent } from 'rxjs'
 import { first, filter, timeout, mergeMap } from 'rxjs/operators'
 import { Target, Page } from 'puppeteer'
-import { isDefined } from '../../../shared/src/util/types'
+import { isDefined } from '../../../../shared/src/util/types'
 
 describe('Sourcegraph browser extension on github.com', function () {
     this.slow(8000)
@@ -37,7 +37,6 @@ describe('Sourcegraph browser extension on github.com', function () {
         getDriver: () => driver,
         url: 'https://github.com/sourcegraph/jsonrpc2/blob/4fb7cd90793ee6ab445f466b900e6bffb9b63d78/call_opt.go',
         repoName: 'github.com/sourcegraph/jsonrpc2',
-        sourcegraphBaseUrl,
         // Not using '.js-file-line' because it breaks the reliance on :nth-child() in testSingleFilePage()
         lineSelector: '.js-file-line-container tr',
         goToDefinitionURL:

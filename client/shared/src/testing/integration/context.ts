@@ -104,7 +104,7 @@ export const createSharedIntegrationTestContext = async <
     }
     const subscriptions = new Subscription()
     const cdpAdapterOptions: CdpAdapterOptions = {
-        page: driver.page,
+        browser: driver.browser,
     }
     const polly = new Polly(snakeCase(currentTest.title), {
         adapters: [CdpAdapter.id],
@@ -121,8 +121,8 @@ export const createSharedIntegrationTestContext = async <
         recordIfMissing: record,
         matchRequestsBy: {
             method: true,
-            body: true,
-            order: true,
+            body: false,
+            order: false,
             // Origin header will change when running against a test instance
             headers: false,
         },
@@ -142,6 +142,8 @@ export const createSharedIntegrationTestContext = async <
 
     // Let browser handle data: URIs
     server.get('data:*rest').passthrough()
+
+    server.any('chrome-extension://bmfbcejdknlknpncfpeloejonjoledha/*rest').passthrough()
 
     // Special URL: The browser redirects to chrome-extension://invalid
     // when requesting an extension resource that does not exist.

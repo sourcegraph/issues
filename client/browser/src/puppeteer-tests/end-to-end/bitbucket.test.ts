@@ -1,10 +1,10 @@
 import expect from 'expect'
-import { afterEachSaveScreenshotIfFailed } from '../../../shared/src/testing/screenshotReporter'
-import { createDriverForTest, Driver } from '../../../shared/src/testing/driver'
-import { retry } from '../../../shared/src/testing/utils'
-import { testSingleFilePage } from './shared'
-import { getConfig } from '../../../shared/src/testing/config'
-import { ExternalServiceKind } from '../../../shared/src/graphql-operations'
+import { afterEachSaveScreenshotIfFailed } from '../../../../shared/src/testing/screenshotReporter'
+import { createDriverForTest, Driver } from '../../../../shared/src/testing/driver'
+import { retry } from '../../../../shared/src/testing/utils'
+import { testSingleFilePage } from '../shared'
+import { getConfig } from '../../../../shared/src/testing/config'
+import { ExternalServiceKind } from '../../../../shared/src/graphql-operations'
 
 // By default, these tests run against a local Bitbucket instance and a local Sourcegraph instance.
 // You can run them against other instances by setting the below env vars in addition to SOURCEGRAPH_BASE_URL.
@@ -182,7 +182,6 @@ describe('Sourcegraph browser extension on Bitbucket Server', () => {
         getDriver: () => driver,
         url: `${BITBUCKET_BASE_URL}/projects/SOURCEGRAPH/repos/jsonrpc2/browse/call_opt.go?until=4fb7cd90793ee6ab445f466b900e6bffb9b63d78&untilPath=call_opt.go`,
         repoName: `${REPO_PATH_PREFIX}/SOURCEGRAPH/jsonrpc2`,
-        sourcegraphBaseUrl,
         lineSelector: '.line',
     })
 })
