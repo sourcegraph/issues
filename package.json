@@ -269,7 +269,7 @@
     "@reach/dialog": "^0.11.2",
     "@reach/listbox": "^0.10.1",
     "@reach/menu-button": "0.10.2",
-    "@sentry/browser": "^5.19.0",
+    "@sentry/browser": "^5.30.0",
     "@slimsag/react-shortcuts": "^1.2.1",
     "@sourcegraph/codeintellify": "^7.2.0",
     "@sourcegraph/extension-api-classes": "^1.1.0",
