@@ -93,7 +93,7 @@
     "@pollyjs/adapter": "^5.0.0",
     "@pollyjs/core": "^5.1.0",
     "@pollyjs/persister-fs": "^5.0.0",
-    "@slack/web-api": "^5.10.0",
+    "@slack/web-api": "^5.15.0",
     "@sourcegraph/babel-plugin-transform-react-hot-loader-wrapper": "^1.0.0",
     "@sourcegraph/eslint-config": "^0.20.19",
     "@sourcegraph/eslint-plugin-sourcegraph": "link:client/packages/@sourcegraph/eslint-plugin-sourcegraph",
