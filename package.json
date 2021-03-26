@@ -305,7 +305,7 @@
     "monaco-editor": "^0.18.1",
     "nice-ticks": "^1.0.1",
     "open-color": "^1.8.0",
-    "pretty-bytes": "^5.3.0",
+    "pretty-bytes": "^5.6.0",
     "react": "^16.14.0",
     "react-circular-progressbar": "^2.0.3",
     "react-dom": "npm:@hot-loader/react-dom@^16.14.0",
