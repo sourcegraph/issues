@@ -102,7 +102,7 @@
     "@sourcegraph/tsconfig": "^4.0.1",
     "@storybook/addon-a11y": "^6.1.21",
     "@storybook/addon-actions": "^6.1.11",
-    "@storybook/addon-console": "^1.2.1",
+    "@storybook/addon-console": "^1.2.3",
     "@storybook/addon-knobs": "^6.1.11",
     "@storybook/addon-links": "^6.1.11",
     "@storybook/addon-storyshots": "^6.1.11",
