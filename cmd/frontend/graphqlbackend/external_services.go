@@ -22,9 +22,13 @@ import (
 	"github.com/sourcegraph/sourcegraph/internal/conf"
 	"github.com/sourcegraph/sourcegraph/internal/database"
 	"github.com/sourcegraph/sourcegraph/internal/database/dbutil"
+	"github.com/sourcegraph/sourcegraph/internal/encryption"
 	"github.com/sourcegraph/sourcegraph/internal/env"
+	"github.com/sourcegraph/sourcegraph/internal/extsvc"
+	"github.com/sourcegraph/sourcegraph/internal/extsvc/auth"
 	"github.com/sourcegraph/sourcegraph/internal/repoupdater"
 	"github.com/sourcegraph/sourcegraph/internal/types"
+	"github.com/sourcegraph/sourcegraph/schema"
 )
 
 var extsvcConfigAllowEdits, _ = strconv.ParseBool(env.Get("EXTSVC_CONFIG_ALLOW_EDITS", "false", "When EXTSVC_CONFIG_FILE is in use, allow edits in the application to be made which will be overwritten on next process restart"))
@@ -85,6 +89,59 @@ func (r *schemaResolver) AddExternalService(ctx context.Context, args *addExtern
 
 	if err := database.GlobalExternalServices.Create(ctx, conf.Get, externalService); err != nil {
 		return nil, err
+	}
+
+	if namespaceUserID > 0 {
+		parsedConfig, err := externalService.Configuration()
+		if err != nil {
+			return nil, err
+		}
+		switch c := parsedConfig.(type) {
+		case *schema.GitHubConnection:
+			if c.Token != "" {
+				keypair, err := encryption.GenerateRSAKey()
+				if err != nil {
+					return nil, err
+				}
+				a := &auth.OAuthBearerTokenWithSSH{
+					OAuthBearerToken: auth.OAuthBearerToken{Token: c.Token},
+					PrivateKey:       keypair.PrivateKey,
+					Passphrase:       keypair.Passphrase,
+					PublicKey:        keypair.PublicKey,
+				}
+				_, err = database.UserCredentials(r.db).Create(ctx, database.UserCredentialScope{
+					Domain:              database.UserCredentialDomainBatches,
+					UserID:              namespaceUserID,
+					ExternalServiceType: extsvc.TypeGitHub,
+					ExternalServiceID:   externalService.URN(),
+				}, a)
+				if err != nil {
+					return nil, err
+				}
+			}
+		case *schema.GitLabConnection:
+			if c.Token != "" {
+				keypair, err := encryption.GenerateRSAKey()
+				if err != nil {
+					return nil, err
+				}
+				a := &auth.OAuthBearerTokenWithSSH{
+					OAuthBearerToken: auth.OAuthBearerToken{Token: c.Token},
+					PrivateKey:       keypair.PrivateKey,
+					Passphrase:       keypair.Passphrase,
+					PublicKey:        keypair.PublicKey,
+				}
+				_, err = database.UserCredentials(r.db).Create(ctx, database.UserCredentialScope{
+					Domain:              database.UserCredentialDomainBatches,
+					UserID:              namespaceUserID,
+					ExternalServiceType: extsvc.TypeGitLab,
+					ExternalServiceID:   externalService.URN(),
+				}, a)
+				if err != nil {
+					return nil, err
+				}
+			}
+		}
 	}
 
 	res := &externalServiceResolver{db: r.db, externalService: externalService}
