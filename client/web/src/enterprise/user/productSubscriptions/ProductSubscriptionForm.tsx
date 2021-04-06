@@ -3,9 +3,9 @@ import React, { useState, useMemo, useEffect, useCallback } from 'react'
 import { Link } from 'react-router-dom'
 import { ReactStripeElements } from 'react-stripe-elements'
 import { from, of, throwError, Observable } from 'rxjs'
-import { catchError, startWith, switchMap } from 'rxjs/operators'
+import { catchError, map, startWith, switchMap, tap } from 'rxjs/operators'
 import * as GQL from '../../../../../shared/src/graphql/schema'
-import { asError, ErrorLike, isErrorLike } from '../../../../../shared/src/util/errors'
+import { asError, createAggregateError, ErrorLike, isErrorLike } from '../../../../../shared/src/util/errors'
 import { Form } from '../../../../../branded/src/components/Form'
 import { StripeWrapper } from '../../dotcom/billing/StripeWrapper'
 import { ProductPlanFormControl } from '../../dotcom/productPlans/ProductPlanFormControl'
@@ -19,9 +19,11 @@ import { PaymentTokenFormControl } from './PaymentTokenFormControl'
 import { productSubscriptionInputForLocationHash } from './UserSubscriptionsNewProductSubscriptionPage'
 import { ThemeProps } from '../../../../../shared/src/theme'
 import { ErrorAlert } from '../../../components/alerts'
-import { useEventObservable } from '../../../../../shared/src/util/useObservable'
+import { useEventObservable, useObservable } from '../../../../../shared/src/util/useObservable'
 import * as H from 'history'
 import { Scalars } from '../../../../../shared/src/graphql-operations'
+import { queryGraphQL } from '../../../backend/graphql'
+import { gql } from '../../../../../shared/src/graphql/graphql'
 
 export enum PaymentValidity {
     Valid = 'Valid',
@@ -84,6 +86,38 @@ interface Props extends ThemeProps {
 }
 
 const DEFAULT_USER_COUNT = MIN_USER_COUNT
+
+function queryProductPlans(): Observable<GQL.IProductPlan[]> {
+    return queryGraphQL(
+        gql`
+            query ProductPlans {
+                dotcom {
+                    productPlans {
+                        productPlanID
+                        billingPlanID
+                        name
+                        pricePerUserPerYear
+                        minQuantity
+                        maxQuantity
+                        tiersMode
+                        planTiers {
+                            unitAmount
+                            upTo
+                            flatAmount
+                        }
+                    }
+                }
+            }
+        `
+    ).pipe(
+        map(({ data, errors }) => {
+            if (!data || !data.dotcom || !data.dotcom.productPlans || (errors && errors.length > 0)) {
+                throw createAggregateError(errors)
+            }
+            return data.dotcom.productPlans
+        })
+    )
+}
 
 /**
  * Displays a form for a product subscription.
@@ -197,13 +231,48 @@ const _ProductSubscriptionForm: React.FunctionComponent<Props & ReactStripeEleme
         [billingPlanID, userCount]
     )
 
+    /**
+     * The list of all possible product plans, loading, or an error.
+     */
+    const plans =
+        useObservable(
+            useMemo(
+                () =>
+                    queryProductPlans().pipe(
+                        tap(plans => {
+                            // If no plan is selected, select the 1st plan when the plans have loaded.
+                            if (plans.length > 0) {
+                                setBillingPlanID(plans[0].billingPlanID)
+                            }
+                        }),
+                        catchError(error => [asError(error)]),
+                        startWith(LOADING)
+                    ),
+                [setBillingPlanID]
+            )
+        ) || LOADING
+
+    if (plans === LOADING) {
+        return <LoadingSpinner className="icon-inline" />
+    }
+
+    if (isErrorLike(plans)) {
+        return <ErrorAlert error={plans.message} history={history} />
+    }
+
+    const selectedPlan = plans.find(plan => plan.billingPlanID === billingPlanID)
+
     return (
         <div className="product-subscription-form">
             <LicenseGenerationKeyWarning />
             <Form onSubmit={onSubmit}>
                 <div className="row">
                     <div className="col-md-6">
-                        <ProductSubscriptionUserCountFormControl value={userCount} onChange={setUserCount} />
+                        <ProductSubscriptionUserCountFormControl
+                            value={userCount}
+                            onChange={setUserCount}
+                            selectedPlan={selectedPlan}
+                        />
                         <h4 className="mt-2 mb-0">Plan</h4>
                         <ProductPlanFormControl value={billingPlanID} onChange={setBillingPlanID} />
                     </div>

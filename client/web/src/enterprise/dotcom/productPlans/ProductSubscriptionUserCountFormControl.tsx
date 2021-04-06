@@ -1,4 +1,5 @@
 import React, { useCallback } from 'react'
+import { IProductPlan } from '../../../../../shared/src/graphql/schema'
 
 interface Props {
     /** The user count input by the user. */
@@ -9,6 +10,7 @@ interface Props {
 
     disabled?: boolean
     className?: string
+    selectedPlan?: IProductPlan
 }
 
 /**
@@ -29,14 +31,19 @@ export const ProductSubscriptionUserCountFormControl: React.FunctionComponent<Pr
     onChange,
     disabled,
     className = '',
+    selectedPlan,
 }) => {
-    const onUserCountChange = useCallback<React.ChangeEventHandler<HTMLInputElement>>(
+    const onUserCountChange = useCallback<React.ChangeEventHandler<HTMLSelectElement | HTMLInputElement>>(
         event => {
             // Check for NaN (which is the value if the user deletes the input's value).
-            onChange(Number.isNaN(event.currentTarget.valueAsNumber) ? null : event.currentTarget.valueAsNumber)
+            onChange(Number.isNaN(event.currentTarget.value) ? null : Number(event.currentTarget.value))
         },
         [onChange]
     )
+
+    if (!selectedPlan) {
+        return null
+    }
 
     return (
         <div className={`product-subscription-user-count-control form-group align-items-center ${className}`}>
@@ -44,18 +51,30 @@ export const ProductSubscriptionUserCountFormControl: React.FunctionComponent<Pr
                 Users
             </label>
             <div className="d-flex align-items-center">
-                <input
-                    id="product-subscription-user-count-control__userCount"
-                    type="number"
-                    className="form-control w-auto"
-                    min={MIN_USER_COUNT}
-                    step={USER_COUNT_STEP}
-                    max={50000}
-                    required={true}
-                    disabled={disabled}
-                    value={value || ''}
-                    onChange={onUserCountChange}
-                />
+                {selectedPlan.tiersMode === 'graduated' ? (
+                    <select className="form-control w-auto" disabled={disabled} onChange={onUserCountChange}>
+                        {selectedPlan.planTiers
+                            .map(({ upTo }) => upTo)
+                            // Currently filters out upTo 0. Only supporting fixed tiers
+                            .filter(Boolean)
+                            .map(userCount => (
+                                <option value={userCount}>{userCount}</option>
+                            ))}
+                    </select>
+                ) : (
+                    <input
+                        id="product-subscription-user-count-control__userCount"
+                        type="number"
+                        className="form-control w-auto"
+                        min={MIN_USER_COUNT}
+                        step={USER_COUNT_STEP}
+                        max={50000}
+                        required={true}
+                        disabled={disabled}
+                        value={value || ''}
+                        onChange={onUserCountChange}
+                    />
+                )}
             </div>
         </div>
     )

@@ -8,7 +8,8 @@ export const ProductPlanTiered: React.FunctionComponent<{
     <>
         {planTiers.map((tier, index) => (
             <div key={index}>
-                {formatAmountForTier(tier, minQuantity)} {formatLabelForTier(tier, tiersMode, planTiers[index - 1])}
+                {formatAmountForTier(tier, minQuantity)}{' '}
+                {formatLabelForTier(tier, tiersMode, planTiers[index - 1], planTiers[index + 1])}
             </div>
         ))}
     </>
@@ -41,7 +42,12 @@ function formatAmountForTier(tier: GQL.IPlanTier, minQuantity: number | null): s
     return `${amount}/user/month`
 }
 
-function formatLabelForTier(tier: GQL.IPlanTier, tiersMode: string, previousTier?: GQL.IPlanTier): string {
+function formatLabelForTier(
+    tier: GQL.IPlanTier,
+    tiersMode: string,
+    previousTier?: GQL.IPlanTier,
+    nextTier?: GQL.IPlanTier
+): string {
     if (tiersMode === 'volume') {
         if (!previousTier) {
             return `for 1–${tier.upTo} users`
@@ -53,7 +59,7 @@ function formatLabelForTier(tier: GQL.IPlanTier, tiersMode: string, previousTier
     }
 
     if (!previousTier) {
-        return `for the first ${tier.upTo} users`
+        return `for ${nextTier ? 'the first ' : ''}${tier.upTo} users`
     }
     if (tier.upTo === 0) {
         return 'for each additional user (paid yearly)'
