@@ -284,7 +284,7 @@
     "@sourcegraph/extension-api-types": "link:client/extension-api-types",
     "@sourcegraph/react-loading-spinner": "0.0.7",
     "@sqs/jsonc-parser": "^1.0.3",
-    "bootstrap": "^4.5.2",
+    "bootstrap": "^4.6.0",
     "classnames": "^2.2.6",
     "comlink": "^4.3.0",
     "copy-to-clipboard": "^3.3.1",
