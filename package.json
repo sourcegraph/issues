@@ -173,7 +173,7 @@
     "@types/simmerjs": "0.5.1",
     "@types/sinon": "9.0.4",
     "@types/socket.io": "2.1.10",
-    "@types/socket.io-client": "1.4.33",
+    "@types/socket.io-client": "1.4.36",
     "@types/testing-library__jest-dom": "^5.9.5",
     "@types/textarea-caret": "3.0.0",
     "@types/uuid": "8.0.1",
