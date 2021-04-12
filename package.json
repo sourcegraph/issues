@@ -323,7 +323,7 @@
     "js-cookie": "^2.2.1",
     "lodash": "^4.17.20",
     "marked": "^1.2.7",
-    "mdi-react": "^7.3.0",
+    "mdi-react": "^7.5.0",
     "minimatch": "^3.0.4",
     "monaco-editor": "^0.18.1",
     "nice-ticks": "^1.0.1",
