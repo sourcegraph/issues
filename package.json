@@ -164,7 +164,7 @@
     "@types/react-router": "5.1.10",
     "@types/react-router-dom": "5.1.7",
     "@types/react-stripe-elements": "6.0.4",
-    "@types/react-test-renderer": "16.9.2",
+    "@types/react-test-renderer": "17.0.1",
     "@types/reactstrap": "8.4.2",
     "@types/recharts": "1.8.18",
     "@types/resize-observer-browser": "0.1.4",
