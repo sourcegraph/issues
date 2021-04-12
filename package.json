@@ -174,7 +174,7 @@
     "@types/signale": "1.4.1",
     "@types/simmerjs": "0.5.1",
     "@types/sinon": "9.0.4",
-    "@types/socket.io": "2.1.10",
+    "@types/socket.io": "2.1.13",
     "@types/socket.io-client": "1.4.33",
     "@types/terser-webpack-plugin": "^4.2.0",
     "@types/testing-library__jest-dom": "^5.9.5",
