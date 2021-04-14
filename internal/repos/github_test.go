@@ -12,6 +12,7 @@ import (
 	"sort"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/inconshreveable/log15"
@@ -90,8 +91,29 @@ func TestGithubSource_CreateChangeset(t *testing.T) {
 			// We need to clear the cache before we run the tests
 			rcache.SetupForTest(t)
 
-			cf, save := newClientFactory(t, tc.name)
-			defer save(t)
+			// The success case requires a new branch each time it's updated.
+			var preUpdate func(*http.Request) error
+			if tc.name == "success" {
+				preUpdate = func(*http.Request) error {
+					branchName := fmt.Sprintf("test-pr-%d", time.Now().Unix())
+					// TODO: push a new branch.
+
+					return nil
+				}
+			}
+
+			cf := testutil.NewVCR(
+				filepath.Join("testdata", "sources"),
+				filepath.Join("testdata", "golden"),
+				updateRegex,
+			).NewClientFactory(t, testutil.ClientFactoryOpts{
+				Name: tc.name,
+				Middlewares: []httpcli.Middleware{
+					httpcli.GitHubProxyRedirectMiddleware,
+					gitserverRedirectMiddleware,
+				},
+				PreUpdate: preUpdate,
+			})
 
 			lg := log15.New()
 			lg.SetHandler(log15.DiscardHandler())
@@ -104,7 +126,7 @@ func TestGithubSource_CreateChangeset(t *testing.T) {
 				}),
 			}
 
-			githubSrc, err := NewGithubSource(svc, cf)
+			githubSrc, err := NewGithubSource(svc, cf.Factory)
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -132,7 +154,7 @@ func TestGithubSource_CreateChangeset(t *testing.T) {
 				t.Fatal("Metadata does not contain PR")
 			}
 
-			testutil.AssertGolden(t, "testdata/golden/"+tc.name, update(tc.name), pr)
+			cf.AssertGolden(t, pr)
 		})
 	}
 }
@@ -375,8 +397,17 @@ func TestGithubSource_LoadChangeset(t *testing.T) {
 			// We need to clear the cache before we run the tests
 			rcache.SetupForTest(t)
 
-			cf, save := newClientFactory(t, tc.name)
-			defer save(t)
+			cf := testutil.NewVCR(
+				filepath.Join("testdata", "sources"),
+				filepath.Join("testdata", "golden"),
+				updateRegex,
+			).NewClientFactory(t, testutil.ClientFactoryOpts{
+				Name: tc.name,
+				Middlewares: []httpcli.Middleware{
+					httpcli.GitHubProxyRedirectMiddleware,
+					gitserverRedirectMiddleware,
+				},
+			})
 
 			lg := log15.New()
 			lg.SetHandler(log15.DiscardHandler())
@@ -389,7 +420,7 @@ func TestGithubSource_LoadChangeset(t *testing.T) {
 				}),
 			}
 
-			githubSrc, err := NewGithubSource(svc, cf)
+			githubSrc, err := NewGithubSource(svc, cf.Factory)
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -409,7 +440,7 @@ func TestGithubSource_LoadChangeset(t *testing.T) {
 			}
 
 			meta := tc.cs.Changeset.Metadata.(*github.PullRequest)
-			testutil.AssertGolden(t, "testdata/golden/"+tc.name, update(tc.name), meta)
+			cf.AssertGolden(t, meta)
 		})
 	}
 }
