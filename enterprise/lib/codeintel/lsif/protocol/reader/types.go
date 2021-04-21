@@ -44,6 +44,7 @@ type Diagnostic struct {
 	Code           string
 	Message        string
 	Source         string
+	Tags           []int
 	StartLine      int
 	StartCharacter int
 	EndLine        int

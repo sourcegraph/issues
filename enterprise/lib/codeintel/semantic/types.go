@@ -63,6 +63,7 @@ type DiagnosticData struct {
 	Code           string
 	Message        string
 	Source         string
+	Tags           []int
 	StartLine      int // 0-indexed, inclusive
 	StartCharacter int // 0-indexed, inclusive
 	EndLine        int // 0-indexed, inclusive

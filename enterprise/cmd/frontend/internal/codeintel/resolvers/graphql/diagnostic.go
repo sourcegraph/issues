@@ -24,6 +24,13 @@ func (r *DiagnosticResolver) Severity() (*string, error) { return toSeverity(r.d
 func (r *DiagnosticResolver) Code() (*string, error)     { return strPtr(r.diagnostic.Code), nil }
 func (r *DiagnosticResolver) Source() (*string, error)   { return strPtr(r.diagnostic.Source), nil }
 func (r *DiagnosticResolver) Message() (*string, error)  { return strPtr(r.diagnostic.Message), nil }
+func (r *DiagnosticResolver) Tags() ([]int32, error) {
+	tags := make([]int32, len(r.diagnostic.Tags))
+	for index, tag := range r.diagnostic.Tags {
+		tags[index] = int32(tag)
+	}
+	return tags, nil
+}
 
 func (r *DiagnosticResolver) Location(ctx context.Context) (gql.LocationResolver, error) {
 	return resolveLocation(
