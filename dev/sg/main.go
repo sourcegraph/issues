@@ -68,6 +68,7 @@ var (
 
 func main() {
 	if err := rootCommand.Parse(os.Args[1:]); err != nil {
+		fmt.Println(rootCommand.ShortUsage)
 		os.Exit(1)
 	}
 

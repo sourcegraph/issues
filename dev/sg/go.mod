@@ -3,6 +3,7 @@ module github.com/sourcegraph/sourcegraph/dev/sg
 go 1.16
 
 require (
+	github.com/fatih/color v1.10.0 // indirect
 	github.com/hashicorp/errwrap v1.1.0 // indirect
 	github.com/hashicorp/go-multierror v1.1.1 // indirect
 	github.com/peterbourgon/ff/v3 v3.0.0

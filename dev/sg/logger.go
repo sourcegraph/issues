@@ -2,7 +2,10 @@ package main
 
 import (
 	"bytes"
+	"hash/fnv"
 	"time"
+
+	"github.com/fatih/color"
 
 	"github.com/sourcegraph/batch-change-utils/output"
 )
@@ -53,7 +56,7 @@ func (l *cmdLogger) flush() {
 	// we flush partial lines, we don't want to add a newline character. What
 	// we need to do: extend the `*output.Output` type to have a
 	// `WritefNoNewline` (yes, bad name) method.
-	l.out.Writef("%s[%s]%s %s", output.StyleBold, l.name, output.StyleReset, l.buf.String())
+	l.out.Writef("%s[%s]%s %s", output.StyleBold, hashColor(l.name), output.StyleReset, l.buf.String())
 	l.buf.Reset()
 }
 
@@ -109,4 +112,23 @@ func (l *cmdLogger) writeLines() {
 			tick.Stop()
 		}
 	}
+}
+
+func hashColor(s string, v ...interface{}) string {
+	colors := []func(string, ...interface{}) string{
+		color.GreenString,
+		color.CyanString,
+		color.YellowString,
+		color.BlueString,
+		color.MagentaString,
+		color.HiGreenString,
+		color.HiCyanString,
+		color.HiYellowString,
+		color.HiBlueString,
+		color.HiMagentaString,
+	}
+	h := fnv.New32()
+	h.Write([]byte(s))
+	colorFunc := colors[int(h.Sum32())%len(colors)]
+	return colorFunc(s, v...)
 }
