@@ -1,7 +1,7 @@
 import * as os from 'os'
 import * as path from 'path'
 
-import { percySnapshot as realPercySnapshot } from '@percy/puppeteer'
+import realPercySnapshot from '@percy/puppeteer'
 import * as jsonc from '@sqs/jsonc-parser'
 import * as jsoncEdit from '@sqs/jsonc-parser/lib/edit'
 import delay from 'delay'

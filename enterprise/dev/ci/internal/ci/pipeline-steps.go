@@ -85,6 +85,7 @@ func addSharedTests(c Config) func(pipeline *bk.Pipeline) {
 			bk.Env("PERCY_ON", "true"),
 			bk.Cmd("COVERAGE_INSTRUMENT=true dev/ci/yarn-run.sh build-web"),
 			bk.Cmd("yarn --cwd client/shared run download-puppeteer-browser"),
+			bk.Env("PERCY_BROWSER_EXECUTABLE", "/node_modules/puppeteer/.local-chromium/linux-818858/chrome-linux/chrome"),
 			bk.Cmd("yarn percy exec -- yarn run cover-integration"),
 			bk.Cmd("yarn nyc report -r json"),
 			bk.Cmd("dev/ci/codecov.sh -c -F typescript -F integration"),

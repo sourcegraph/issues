@@ -64,7 +64,7 @@ set -e
 echo "Waiting for $URL... done"
 
 echo "--- yarn run test-e2e"
-env SOURCEGRAPH_BASE_URL="$URL" PERCY_ON=true ./node_modules/.bin/percy exec -- yarn run cover-e2e
+env SOURCEGRAPH_BASE_URL="$URL" PERCY_ON=true PERCY_BROWSER_EXECUTABLE=./node_modules/puppeteer/.local-chromium/linux-818858/chrome-linux/chrome ./node_modules/.bin/percy exec -- yarn run cover-e2e
 
 echo "--- coverage"
 yarn nyc report -r json

@@ -1,10 +1,14 @@
-version: 1
+version: 2
 snapshot:
   widths:
-    - 960 # Half-width browser window (e.g. docked to the side next to an editor)
-    - 1920 # Full-width browser window
+    - 960
+    - 1920
   percy-css: |
     .percy-hide,
     .monaco-editor .cursor {
       visibility: hidden !important;
     }
+static:
+  base-url: /.assets
+discovery:
+  disable-cache: true
