@@ -636,3 +636,20 @@ func (s *Service) DetachChangesets(ctx context.Context, batchChangeID int64, ids
 
 	return nil
 }
+
+func (s *Service) RegisterBatchWorker(ctx context.Context, name string) (*btypes.Worker, error) {
+	// 🚨 SECURITY: an admin token must be in use.
+	//
+	// TODO: separate this into a batch-changes:worker scope and check that
+	// instead, so it's possible to create tokens with no other rights.
+	if err := backend.CheckCurrentUserIsSiteAdmin(ctx); err != nil {
+		return nil, err
+	}
+
+	worker := &btypes.Worker{Name: name}
+	if err := s.store.CreateWorker(ctx, worker); err != nil {
+		return nil, err
+	}
+
+	return worker, nil
+}

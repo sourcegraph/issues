@@ -204,6 +204,18 @@ type DetachChangesetsArgs struct {
 	Changesets  []graphql.ID
 }
 
+type RegisterBatchWorkerArgs struct {
+	Name string
+}
+
+type RegisterBatchWorkerResponse struct {
+	Token string
+}
+
+type GetNextWorkerJobArgs struct {
+	Token string
+}
+
 type BatchChangesResolver interface {
 	//
 	// MUTATIONS
@@ -232,6 +244,8 @@ type BatchChangesResolver interface {
 	ReenqueueChangeset(ctx context.Context, args *ReenqueueChangesetArgs) (ChangesetResolver, error)
 	DetachChangesets(ctx context.Context, args *DetachChangesetsArgs) (*EmptyResponse, error)
 
+	RegisterBatchWorker(ctx context.Context, args *RegisterBatchWorkerArgs) (RegisterBatchWorkerResponse, error)
+
 	// Queries
 
 	// TODO(campaigns-deprecation)
@@ -243,6 +257,8 @@ type BatchChangesResolver interface {
 	BatchChanges(cx context.Context, args *ListBatchChangesArgs) (BatchChangesConnectionResolver, error)
 
 	BatchChangesCodeHosts(ctx context.Context, args *ListBatchChangesCodeHostsArgs) (BatchChangesCodeHostConnectionResolver, error)
+
+	GetNextWorkerJob(ctx context.Context, args *GetNextWorkerJobArgs) (bool, error)
 
 	NodeResolvers() map[string]NodeByIDFunc
 }

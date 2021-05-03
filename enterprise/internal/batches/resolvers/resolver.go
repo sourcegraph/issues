@@ -1146,6 +1146,31 @@ func (r *Resolver) DetachChangesets(ctx context.Context, args *graphqlbackend.De
 	return &graphqlbackend.EmptyResponse{}, nil
 }
 
+func (r *Resolver) RegisterBatchWorker(ctx context.Context, args *graphqlbackend.RegisterBatchWorkerArgs) (resp graphqlbackend.RegisterBatchWorkerResponse, err error) {
+	tr, ctx := trace.New(ctx, "Resolver.RegisterBatchWorker", fmt.Sprintf("Name: %q", args.Name))
+	defer func() {
+		tr.SetError(err)
+		tr.Finish()
+	}()
+	if err := batchChangesEnabled(ctx); err != nil {
+		return resp, err
+	}
+
+	// 🚨 SECURITY: RegisterBatchWorker checks whether the current user is
+	// authorised.
+	worker, err := service.New(r.store).RegisterBatchWorker(ctx, args.Name)
+	if err != nil {
+		return
+	}
+
+	resp.Token = *worker.Token
+	return
+}
+
+func (r *Resolver) GetNextWorkerJob(ctx context.Context, args *graphqlbackend.GetNextWorkerJobArgs) (bool, error) {
+	return false, errors.New("unimplemented")
+}
+
 func parseBatchChangeState(s *string) (btypes.BatchChangeState, error) {
 	if s == nil {
 		return btypes.BatchChangeStateAny, nil

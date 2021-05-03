@@ -2612,3 +2612,27 @@ type BatchChangeDescription {
     """
     description: String!
 }
+
+type BatchWorker {
+    id: ID!
+    name: String!
+    createdAt: DateTime!
+    updatedAt: DateTime!
+    lastSeenAt: DateTime!
+}
+
+type RegisterBatchWorkerResponse {
+    token: String!
+}
+
+extend type Mutation {
+    """
+    Register a new batch worker. The token to be used when communicating with
+    Sourcegraph is returned.
+    """
+    registerBatchWorker(name: String!): RegisterBatchWorkerResponse!
+}
+
+extend type Query {
+    getNextWorkerJob(token: String!): Boolean!
+}
