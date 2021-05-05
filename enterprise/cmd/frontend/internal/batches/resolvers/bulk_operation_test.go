@@ -8,11 +8,12 @@ import (
 	"github.com/google/go-cmp/cmp"
 
 	"github.com/sourcegraph/sourcegraph/cmd/frontend/graphqlbackend"
-	"github.com/sourcegraph/sourcegraph/enterprise/internal/batches/resolvers/apitest"
+	"github.com/sourcegraph/sourcegraph/enterprise/cmd/frontend/internal/batches/resolvers/apitest"
 	"github.com/sourcegraph/sourcegraph/enterprise/internal/batches/store"
 	ct "github.com/sourcegraph/sourcegraph/enterprise/internal/batches/testing"
 	btypes "github.com/sourcegraph/sourcegraph/enterprise/internal/batches/types"
 	"github.com/sourcegraph/sourcegraph/internal/actor"
+	internalapitest "github.com/sourcegraph/sourcegraph/internal/apitest"
 	"github.com/sourcegraph/sourcegraph/internal/database/dbtesting"
 	"github.com/sourcegraph/sourcegraph/internal/timeutil"
 )
@@ -126,7 +127,7 @@ func TestBulkOperationResolver(t *testing.T) {
 
 	input := map[string]interface{}{"bulkOperation": bulkOperationAPIID}
 	var response struct{ Node apitest.BulkOperation }
-	apitest.MustExec(actor.WithActor(ctx, actor.FromUser(userID)), t, s, input, &response, queryBulkOperation)
+	internalapitest.MustExec(actor.WithActor(ctx, actor.FromUser(userID)), t, s, input, &response, queryBulkOperation)
 
 	if diff := cmp.Diff(wantBatchChange, response.Node); diff != "" {
 		t.Fatalf("wrong bulk operation response (-want +got):\n%s", diff)

@@ -16,7 +16,7 @@ import (
 
 	"github.com/sourcegraph/sourcegraph/cmd/frontend/backend"
 	"github.com/sourcegraph/sourcegraph/cmd/frontend/graphqlbackend"
-	"github.com/sourcegraph/sourcegraph/enterprise/internal/batches/resolvers/apitest"
+	"github.com/sourcegraph/sourcegraph/enterprise/cmd/frontend/internal/batches/resolvers/apitest"
 	"github.com/sourcegraph/sourcegraph/enterprise/internal/batches/search"
 	"github.com/sourcegraph/sourcegraph/enterprise/internal/batches/service"
 	"github.com/sourcegraph/sourcegraph/enterprise/internal/batches/store"
@@ -24,6 +24,7 @@ import (
 	btypes "github.com/sourcegraph/sourcegraph/enterprise/internal/batches/types"
 	"github.com/sourcegraph/sourcegraph/enterprise/internal/licensing"
 	"github.com/sourcegraph/sourcegraph/internal/actor"
+	internalapitest "github.com/sourcegraph/sourcegraph/internal/apitest"
 	"github.com/sourcegraph/sourcegraph/internal/conf"
 	"github.com/sourcegraph/sourcegraph/internal/database"
 	"github.com/sourcegraph/sourcegraph/internal/database/dbtesting"
@@ -59,7 +60,7 @@ func TestNullIDResilience(t *testing.T) {
 		var response struct{ Node struct{ ID string } }
 
 		query := `query($id: ID!) { node(id: $id) { id } }`
-		if errs := apitest.Exec(ctx, t, s, map[string]interface{}{"id": id}, &response, query); len(errs) > 0 {
+		if errs := internalapitest.Exec(ctx, t, s, map[string]interface{}{"id": id}, &response, query); len(errs) > 0 {
 			t.Errorf("GraphQL request failed: %#+v", errs[0])
 		}
 
@@ -85,7 +86,7 @@ func TestNullIDResilience(t *testing.T) {
 
 	for _, m := range mutations {
 		var response struct{}
-		errs := apitest.Exec(ctx, t, s, nil, &response, m)
+		errs := internalapitest.Exec(ctx, t, s, nil, &response, m)
 		if len(errs) == 0 {
 			t.Errorf("expected errors but none returned (mutation: %q)", m)
 		}
@@ -196,7 +197,7 @@ func TestCreateBatchSpec(t *testing.T) {
 			var response struct{ CreateBatchSpec apitest.BatchSpec }
 
 			actorCtx := actor.WithActor(ctx, actor.FromUser(userID))
-			errs := apitest.Exec(actorCtx, t, s, input, &response, mutationCreateBatchSpec)
+			errs := internalapitest.Exec(actorCtx, t, s, input, &response, mutationCreateBatchSpec)
 			if tc.wantErr {
 				if errs == nil {
 					t.Error("unexpected lack of errors")
@@ -308,7 +309,7 @@ func TestCreateChangesetSpec(t *testing.T) {
 	var response struct{ CreateChangesetSpec apitest.ChangesetSpec }
 
 	actorCtx := actor.WithActor(ctx, actor.FromUser(userID))
-	apitest.MustExec(actorCtx, t, s, input, &response, mutationCreateChangesetSpec)
+	internalapitest.MustExec(actorCtx, t, s, input, &response, mutationCreateChangesetSpec)
 
 	have := response.CreateChangesetSpec
 
@@ -423,7 +424,7 @@ func TestApplyBatchChange(t *testing.T) {
 
 	var response struct{ ApplyBatchChange apitest.BatchChange }
 	actorCtx := actor.WithActor(ctx, actor.FromUser(userID))
-	apitest.MustExec(actorCtx, t, s, input, &response, mutationApplyBatchChange)
+	internalapitest.MustExec(actorCtx, t, s, input, &response, mutationApplyBatchChange)
 
 	apiUser := &apitest.User{
 		ID:         userAPIID,
@@ -457,7 +458,7 @@ func TestApplyBatchChange(t *testing.T) {
 	}
 
 	// Now we execute it again and make sure we get the same batch change back
-	apitest.MustExec(actorCtx, t, s, input, &response, mutationApplyBatchChange)
+	internalapitest.MustExec(actorCtx, t, s, input, &response, mutationApplyBatchChange)
 	have2 := response.ApplyBatchChange
 	if diff := cmp.Diff(want, have2); diff != "" {
 		t.Fatalf("unexpected response (-want +got):\n%s", diff)
@@ -465,7 +466,7 @@ func TestApplyBatchChange(t *testing.T) {
 
 	// Execute it again with ensureBatchChange set to correct batch change's ID
 	input["ensureBatchChange"] = have2.ID
-	apitest.MustExec(actorCtx, t, s, input, &response, mutationApplyBatchChange)
+	internalapitest.MustExec(actorCtx, t, s, input, &response, mutationApplyBatchChange)
 	have3 := response.ApplyBatchChange
 	if diff := cmp.Diff(want, have3); diff != "" {
 		t.Fatalf("unexpected response (-want +got):\n%s", diff)
@@ -477,7 +478,7 @@ func TestApplyBatchChange(t *testing.T) {
 		t.Fatal(err)
 	}
 	input["ensureBatchChange"] = marshalBatchChangeID(batchChangeID + 999)
-	errs := apitest.Exec(actorCtx, t, s, input, &response, mutationApplyBatchChange)
+	errs := internalapitest.Exec(actorCtx, t, s, input, &response, mutationApplyBatchChange)
 	if len(errs) == 0 {
 		t.Fatalf("expected errors, got none")
 	}
@@ -549,14 +550,14 @@ func TestCreateBatchChange(t *testing.T) {
 	actorCtx := actor.WithActor(ctx, actor.FromUser(userID))
 
 	// First time it should work, because no batch change exists
-	apitest.MustExec(actorCtx, t, s, input, &response, mutationCreateBatchChange)
+	internalapitest.MustExec(actorCtx, t, s, input, &response, mutationCreateBatchChange)
 
 	if response.CreateBatchChange.ID == "" {
 		t.Fatalf("expected batch change to be created, but was not")
 	}
 
 	// Second time it should fail
-	errors := apitest.Exec(actorCtx, t, s, input, &response, mutationCreateBatchChange)
+	errors := internalapitest.Exec(actorCtx, t, s, input, &response, mutationCreateBatchChange)
 
 	if len(errors) != 1 {
 		t.Fatalf("expected single errors, but got none")
@@ -625,7 +626,7 @@ func TestMoveBatchChange(t *testing.T) {
 
 	var response struct{ MoveBatchChange apitest.BatchChange }
 	actorCtx := actor.WithActor(ctx, actor.FromUser(userID))
-	apitest.MustExec(actorCtx, t, s, input, &response, mutationMoveBatchChange)
+	internalapitest.MustExec(actorCtx, t, s, input, &response, mutationMoveBatchChange)
 
 	haveBatchChange := response.MoveBatchChange
 	if diff := cmp.Diff(input["newName"], haveBatchChange.Name); diff != "" {
@@ -644,7 +645,7 @@ func TestMoveBatchChange(t *testing.T) {
 		"newNamespace": orgAPIID,
 	}
 
-	apitest.MustExec(actorCtx, t, s, input, &response, mutationMoveBatchChange)
+	internalapitest.MustExec(actorCtx, t, s, input, &response, mutationMoveBatchChange)
 
 	haveBatchChange = response.MoveBatchChange
 	if diff := cmp.Diff(string(orgAPIID), haveBatchChange.Namespace.ID); diff != "" {
@@ -884,7 +885,7 @@ func TestCreateBatchChangesCredential(t *testing.T) {
 			t.Cleanup(func() {
 				validationErr = nil
 			})
-			errs := apitest.Exec(actorCtx, t, s, input, &response, mutationCreateCredential)
+			errs := internalapitest.Exec(actorCtx, t, s, input, &response, mutationCreateCredential)
 
 			if len(errs) != 1 {
 				t.Fatalf("expected single errors, but got none")
@@ -895,14 +896,14 @@ func TestCreateBatchChangesCredential(t *testing.T) {
 		})
 
 		// First time it should work, because no credential exists
-		apitest.MustExec(actorCtx, t, s, input, &response, mutationCreateCredential)
+		internalapitest.MustExec(actorCtx, t, s, input, &response, mutationCreateCredential)
 
 		if response.CreateBatchChangesCredential.ID == "" {
 			t.Fatalf("expected credential to be created, but was not")
 		}
 
 		// Second time it should fail
-		errs := apitest.Exec(actorCtx, t, s, input, &response, mutationCreateCredential)
+		errs := internalapitest.Exec(actorCtx, t, s, input, &response, mutationCreateCredential)
 
 		if len(errs) != 1 {
 			t.Fatalf("expected single errors, but got none")
@@ -930,7 +931,7 @@ func TestCreateBatchChangesCredential(t *testing.T) {
 			t.Cleanup(func() {
 				validationErr = nil
 			})
-			errs := apitest.Exec(actorCtx, t, s, input, &response, mutationCreateCredential)
+			errs := internalapitest.Exec(actorCtx, t, s, input, &response, mutationCreateCredential)
 
 			if len(errs) != 1 {
 				t.Fatalf("expected single errors, but got none")
@@ -941,14 +942,14 @@ func TestCreateBatchChangesCredential(t *testing.T) {
 		})
 
 		// First time it should work, because no site credential exists
-		apitest.MustExec(actorCtx, t, s, input, &response, mutationCreateCredential)
+		internalapitest.MustExec(actorCtx, t, s, input, &response, mutationCreateCredential)
 
 		if response.CreateBatchChangesCredential.ID == "" {
 			t.Fatalf("expected credential to be created, but was not")
 		}
 
 		// Second time it should fail
-		errors := apitest.Exec(actorCtx, t, s, input, &response, mutationCreateCredential)
+		errors := internalapitest.Exec(actorCtx, t, s, input, &response, mutationCreateCredential)
 
 		if len(errors) != 1 {
 			t.Fatalf("expected single errors, but got none")
@@ -1015,10 +1016,10 @@ func TestDeleteBatchChangesCredential(t *testing.T) {
 		actorCtx := actor.WithActor(ctx, actor.FromUser(userID))
 
 		// First time it should work, because a credential exists
-		apitest.MustExec(actorCtx, t, s, input, &response, mutationDeleteCredential)
+		internalapitest.MustExec(actorCtx, t, s, input, &response, mutationDeleteCredential)
 
 		// Second time it should fail
-		errors := apitest.Exec(actorCtx, t, s, input, &response, mutationDeleteCredential)
+		errors := internalapitest.Exec(actorCtx, t, s, input, &response, mutationDeleteCredential)
 
 		if len(errors) != 1 {
 			t.Fatalf("expected single errors, but got none")
@@ -1037,10 +1038,10 @@ func TestDeleteBatchChangesCredential(t *testing.T) {
 		actorCtx := actor.WithActor(ctx, actor.FromUser(userID))
 
 		// First time it should work, because a credential exists
-		apitest.MustExec(actorCtx, t, s, input, &response, mutationDeleteCredential)
+		internalapitest.MustExec(actorCtx, t, s, input, &response, mutationDeleteCredential)
 
 		// Second time it should fail
-		errors := apitest.Exec(actorCtx, t, s, input, &response, mutationDeleteCredential)
+		errors := internalapitest.Exec(actorCtx, t, s, input, &response, mutationDeleteCredential)
 
 		if len(errors) != 1 {
 			t.Fatalf("expected single errors, but got none")
@@ -1106,7 +1107,7 @@ func TestCreateChangesetComments(t *testing.T) {
 	t.Run("empty body fails", func(t *testing.T) {
 		input := generateInput()
 		input["body"] = ""
-		errs := apitest.Exec(actorCtx, t, s, input, &response, mutationCreateChangesetComments)
+		errs := internalapitest.Exec(actorCtx, t, s, input, &response, mutationCreateChangesetComments)
 
 		if len(errs) != 1 {
 			t.Fatalf("expected single errors, but got none")
@@ -1119,7 +1120,7 @@ func TestCreateChangesetComments(t *testing.T) {
 	t.Run("0 changesets fails", func(t *testing.T) {
 		input := generateInput()
 		input["changesets"] = []string{}
-		errs := apitest.Exec(actorCtx, t, s, input, &response, mutationCreateChangesetComments)
+		errs := internalapitest.Exec(actorCtx, t, s, input, &response, mutationCreateChangesetComments)
 
 		if len(errs) != 1 {
 			t.Fatalf("expected single errors, but got none")
@@ -1132,7 +1133,7 @@ func TestCreateChangesetComments(t *testing.T) {
 	t.Run("changeset in different batch change fails", func(t *testing.T) {
 		input := generateInput()
 		input["changesets"] = []string{string(marshalChangesetID(otherChangeset.ID))}
-		errs := apitest.Exec(actorCtx, t, s, input, &response, mutationCreateChangesetComments)
+		errs := internalapitest.Exec(actorCtx, t, s, input, &response, mutationCreateChangesetComments)
 
 		if len(errs) != 1 {
 			t.Fatalf("expected single errors, but got none")
@@ -1144,7 +1145,7 @@ func TestCreateChangesetComments(t *testing.T) {
 
 	t.Run("runs successfully", func(t *testing.T) {
 		input := generateInput()
-		apitest.MustExec(actorCtx, t, s, input, &response, mutationCreateChangesetComments)
+		internalapitest.MustExec(actorCtx, t, s, input, &response, mutationCreateChangesetComments)
 
 		if response.CreateChangesetComments.ID == "" {
 			t.Fatalf("expected bulk operation to be created, but was not")

@@ -9,11 +9,12 @@ import (
 
 	"github.com/sourcegraph/sourcegraph/cmd/frontend/backend"
 	"github.com/sourcegraph/sourcegraph/cmd/frontend/graphqlbackend"
-	"github.com/sourcegraph/sourcegraph/enterprise/internal/batches/resolvers/apitest"
+	"github.com/sourcegraph/sourcegraph/enterprise/cmd/frontend/internal/batches/resolvers/apitest"
 	"github.com/sourcegraph/sourcegraph/enterprise/internal/batches/store"
 	ct "github.com/sourcegraph/sourcegraph/enterprise/internal/batches/testing"
 	btypes "github.com/sourcegraph/sourcegraph/enterprise/internal/batches/types"
 	"github.com/sourcegraph/sourcegraph/internal/api"
+	internalapitest "github.com/sourcegraph/sourcegraph/internal/apitest"
 	"github.com/sourcegraph/sourcegraph/internal/conf"
 	"github.com/sourcegraph/sourcegraph/internal/database"
 	"github.com/sourcegraph/sourcegraph/internal/database/dbtesting"
@@ -316,7 +317,7 @@ func TestChangesetResolver(t *testing.T) {
 			input := map[string]interface{}{"changeset": apiID}
 
 			var response struct{ Node apitest.Changeset }
-			apitest.MustExec(ctx, t, s, input, &response, queryChangeset)
+			internalapitest.MustExec(ctx, t, s, input, &response, queryChangeset)
 
 			tc.want.ID = string(apiID)
 			if diff := cmp.Diff(tc.want, response.Node); diff != "" {

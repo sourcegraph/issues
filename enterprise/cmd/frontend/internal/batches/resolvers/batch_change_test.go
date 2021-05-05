@@ -10,10 +10,11 @@ import (
 
 	"github.com/sourcegraph/sourcegraph/cmd/frontend/backend"
 	"github.com/sourcegraph/sourcegraph/cmd/frontend/graphqlbackend"
-	"github.com/sourcegraph/sourcegraph/enterprise/internal/batches/resolvers/apitest"
+	"github.com/sourcegraph/sourcegraph/enterprise/cmd/frontend/internal/batches/resolvers/apitest"
 	"github.com/sourcegraph/sourcegraph/enterprise/internal/batches/store"
 	ct "github.com/sourcegraph/sourcegraph/enterprise/internal/batches/testing"
 	btypes "github.com/sourcegraph/sourcegraph/enterprise/internal/batches/types"
+	internalapitest "github.com/sourcegraph/sourcegraph/internal/apitest"
 	"github.com/sourcegraph/sourcegraph/internal/database"
 	"github.com/sourcegraph/sourcegraph/internal/database/dbtesting"
 	"github.com/sourcegraph/sourcegraph/internal/timeutil"
@@ -84,7 +85,7 @@ func TestBatchChangeResolver(t *testing.T) {
 	input := map[string]interface{}{"batchChange": batchChangeAPIID}
 	{
 		var response struct{ Node apitest.BatchChange }
-		apitest.MustExec(ctx, t, s, input, &response, queryBatchChange)
+		internalapitest.MustExec(ctx, t, s, input, &response, queryBatchChange)
 
 		if diff := cmp.Diff(wantBatchChange, response.Node); diff != "" {
 			t.Fatalf("wrong batch change response (-want +got):\n%s", diff)
@@ -94,7 +95,7 @@ func TestBatchChangeResolver(t *testing.T) {
 	byNameInput := map[string]interface{}{"name": batchChange.Name, "namespace": namespaceAPIID}
 	{
 		var response struct{ BatchChange apitest.BatchChange }
-		apitest.MustExec(ctx, t, s, byNameInput, &response, queryBatchChangeByName)
+		internalapitest.MustExec(ctx, t, s, byNameInput, &response, queryBatchChangeByName)
 
 		if diff := cmp.Diff(wantBatchChange, response.BatchChange); diff != "" {
 			t.Fatalf("wrong batch change response (-want +got):\n%s", diff)
@@ -113,7 +114,7 @@ func TestBatchChangeResolver(t *testing.T) {
 
 	{
 		var response struct{ Node apitest.BatchChange }
-		apitest.MustExec(ctx, t, s, input, &response, queryBatchChange)
+		internalapitest.MustExec(ctx, t, s, input, &response, queryBatchChange)
 
 		if diff := cmp.Diff(wantBatchChange, response.Node); diff != "" {
 			t.Fatalf("wrong batch change response (-want +got):\n%s", diff)
@@ -127,7 +128,7 @@ func TestBatchChangeResolver(t *testing.T) {
 	}
 	{
 		var response struct{ Node apitest.BatchChange }
-		apitest.MustExec(ctx, t, s, input, &response, queryBatchChange)
+		internalapitest.MustExec(ctx, t, s, input, &response, queryBatchChange)
 
 		if diff := cmp.Diff(wantBatchChange, response.Node); diff != "" {
 			t.Fatalf("wrong batch change response (-want +got):\n%s", diff)

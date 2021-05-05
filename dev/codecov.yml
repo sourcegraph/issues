@@ -14,7 +14,7 @@ coverage:
         informational: true
         paths:
           - cmd/frontend/graphqlbackend/batches.go
-          - internal/batches
+          - enterprise/cmd/frontend/internal/batches
           - enterprise/internal/batches
           - client/web/src/enterprise/batches
       search:

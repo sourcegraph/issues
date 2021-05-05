@@ -11,12 +11,13 @@ import (
 	"github.com/graph-gophers/graphql-go"
 
 	"github.com/sourcegraph/sourcegraph/cmd/frontend/graphqlbackend"
-	"github.com/sourcegraph/sourcegraph/enterprise/internal/batches/resolvers/apitest"
+	"github.com/sourcegraph/sourcegraph/enterprise/cmd/frontend/internal/batches/resolvers/apitest"
 	"github.com/sourcegraph/sourcegraph/enterprise/internal/batches/store"
 	ct "github.com/sourcegraph/sourcegraph/enterprise/internal/batches/testing"
 	btypes "github.com/sourcegraph/sourcegraph/enterprise/internal/batches/types"
 	"github.com/sourcegraph/sourcegraph/internal/actor"
 	"github.com/sourcegraph/sourcegraph/internal/api"
+	internalapitest "github.com/sourcegraph/sourcegraph/internal/apitest"
 	"github.com/sourcegraph/sourcegraph/internal/conf"
 	"github.com/sourcegraph/sourcegraph/internal/database"
 	"github.com/sourcegraph/sourcegraph/internal/database/dbtesting"
@@ -188,7 +189,7 @@ func TestPermissionLevels(t *testing.T) {
                 `
 
 					actorCtx := actor.WithActor(ctx, actor.FromUser(tc.currentUser))
-					apitest.MustExec(actorCtx, t, s, input, &res, queryBatchChange)
+					internalapitest.MustExec(actorCtx, t, s, input, &res, queryBatchChange)
 
 					if have, want := res.Node.ID, graphqlID; have != want {
 						t.Fatalf("queried batch change has wrong id %q, want %q", have, want)
@@ -247,7 +248,7 @@ func TestPermissionLevels(t *testing.T) {
                 `
 
 					actorCtx := actor.WithActor(ctx, actor.FromUser(tc.currentUser))
-					apitest.MustExec(actorCtx, t, s, input, &res, queryBatchSpec)
+					internalapitest.MustExec(actorCtx, t, s, input, &res, queryBatchSpec)
 
 					if have, want := res.Node.ID, graphqlID; have != want {
 						t.Fatalf("queried batch spec has wrong id %q, want %q", have, want)
@@ -303,7 +304,7 @@ func TestPermissionLevels(t *testing.T) {
                 `
 
 					actorCtx := actor.WithActor(ctx, actor.FromUser(tc.currentUser))
-					errors := apitest.Exec(actorCtx, t, s, input, &res, queryCodeHosts)
+					errors := internalapitest.Exec(actorCtx, t, s, input, &res, queryCodeHosts)
 					if !tc.wantErr && len(errors) != 0 {
 						t.Fatalf("got error but didn't expect one: %+v", errors)
 					} else if tc.wantErr && len(errors) == 0 {
@@ -394,7 +395,7 @@ func TestPermissionLevels(t *testing.T) {
                 `
 
 					actorCtx := actor.WithActor(ctx, actor.FromUser(tc.currentUser))
-					errors := apitest.Exec(actorCtx, t, s, input, &res, queryCodeHosts)
+					errors := internalapitest.Exec(actorCtx, t, s, input, &res, queryCodeHosts)
 					if !tc.wantErr && len(errors) != 0 {
 						t.Fatalf("got error but didn't expect one: %v", errors)
 					} else if tc.wantErr && len(errors) == 0 {
@@ -478,7 +479,7 @@ func TestPermissionLevels(t *testing.T) {
                 	`
 
 					actorCtx := actor.WithActor(ctx, actor.FromUser(tc.currentUser))
-					errors := apitest.Exec(actorCtx, t, s, input, &res, mutationCreateBatchChangesCredential)
+					errors := internalapitest.Exec(actorCtx, t, s, input, &res, mutationCreateBatchChangesCredential)
 					if tc.wantAuthErr {
 						if len(errors) != 1 {
 							t.Fatalf("expected 1 error, but got %d: %s", len(errors), errors)
@@ -585,7 +586,7 @@ func TestPermissionLevels(t *testing.T) {
                 `
 
 					actorCtx := actor.WithActor(ctx, actor.FromUser(tc.currentUser))
-					errors := apitest.Exec(actorCtx, t, s, input, &res, mutationDeleteBatchChangesCredential)
+					errors := internalapitest.Exec(actorCtx, t, s, input, &res, mutationDeleteBatchChangesCredential)
 					if tc.wantAuthErr {
 						if len(errors) != 1 {
 							t.Fatalf("expected 1 error, but got %d: %s", len(errors), errors)
@@ -664,7 +665,7 @@ func TestPermissionLevels(t *testing.T) {
 						BatchChanges apitest.BatchChangeConnection
 						Node         apitest.Changeset
 					}
-					apitest.MustExec(actorCtx, t, s, nil, &res, query)
+					internalapitest.MustExec(actorCtx, t, s, nil, &res, query)
 					for _, conn := range []apitest.BatchChangeConnection{res.BatchChanges, res.Node.BatchChanges} {
 						if have, want := conn.TotalCount, len(tc.wantBatchChanges); have != want {
 							t.Fatalf("wrong count of batch changes returned, want=%d have=%d", want, have)
@@ -806,7 +807,7 @@ func TestPermissionLevels(t *testing.T) {
 							defer conf.Mock(nil)
 
 							var response struct{}
-							errs := apitest.Exec(actorCtx, t, s, nil, &response, mutation)
+							errs := internalapitest.Exec(actorCtx, t, s, nil, &response, mutation)
 
 							// We don't care about other errors, we only want to
 							// check that we didn't get an auth error.
@@ -895,7 +896,7 @@ func TestPermissionLevels(t *testing.T) {
 						actorCtx := actor.WithActor(ctx, actor.FromUser(tc.currentUser))
 
 						var response struct{}
-						errs := apitest.Exec(actorCtx, t, s, nil, &response, mutation)
+						errs := internalapitest.Exec(actorCtx, t, s, nil, &response, mutation)
 
 						if tc.wantAuthErr {
 							if len(errs) != 1 {
@@ -1177,7 +1178,7 @@ func testBatchChangeResponse(t *testing.T, s *graphql.Schema, ctx context.Contex
 	t.Helper()
 
 	var response struct{ Node apitest.BatchChange }
-	apitest.MustExec(ctx, t, s, in, &response, queryBatchChangePermLevels)
+	internalapitest.MustExec(ctx, t, s, in, &response, queryBatchChangePermLevels)
 
 	if have, want := response.Node.ID, in["batchChange"]; have != want {
 		t.Fatalf("batch change id is wrong. have %q, want %q", have, want)
@@ -1244,7 +1245,7 @@ func testChangesetResponse(t *testing.T, s *graphql.Schema, ctx context.Context,
 
 	var res struct{ Node apitest.Changeset }
 	query := fmt.Sprintf(queryChangesetPermLevels, marshalChangesetID(id))
-	apitest.MustExec(ctx, t, s, nil, &res, query)
+	internalapitest.MustExec(ctx, t, s, nil, &res, query)
 
 	if have, want := res.Node.Typename, wantType; have != want {
 		t.Fatalf("changeset has wrong typename. want=%q, have=%q", want, have)
@@ -1323,7 +1324,7 @@ func testBatchSpecResponse(t *testing.T, s *graphql.Schema, ctx context.Context,
 	}
 
 	var response struct{ Node apitest.BatchSpec }
-	apitest.MustExec(ctx, t, s, in, &response, queryBatchSpecPermLevels)
+	internalapitest.MustExec(ctx, t, s, in, &response, queryBatchSpecPermLevels)
 
 	if have, want := response.Node.ID, in["batchSpec"]; have != want {
 		t.Fatalf("batch spec id is wrong. have %q, want %q", have, want)
@@ -1416,7 +1417,7 @@ func testChangesetSpecResponse(t *testing.T, s *graphql.Schema, ctx context.Cont
 
 	var res struct{ Node apitest.ChangesetSpec }
 	query := fmt.Sprintf(queryChangesetSpecPermLevels, marshalChangesetSpecRandID(randID))
-	apitest.MustExec(ctx, t, s, nil, &res, query)
+	internalapitest.MustExec(ctx, t, s, nil, &res, query)
 
 	if have, want := res.Node.Typename, wantType; have != want {
 		t.Fatalf("changesetspec has wrong typename. want=%q, have=%q", want, have)

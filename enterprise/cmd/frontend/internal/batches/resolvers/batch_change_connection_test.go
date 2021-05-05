@@ -10,11 +10,12 @@ import (
 
 	"github.com/sourcegraph/sourcegraph/cmd/frontend/backend"
 	"github.com/sourcegraph/sourcegraph/cmd/frontend/graphqlbackend"
-	"github.com/sourcegraph/sourcegraph/enterprise/internal/batches/resolvers/apitest"
+	"github.com/sourcegraph/sourcegraph/enterprise/cmd/frontend/internal/batches/resolvers/apitest"
 	"github.com/sourcegraph/sourcegraph/enterprise/internal/batches/store"
 	ct "github.com/sourcegraph/sourcegraph/enterprise/internal/batches/testing"
 	btypes "github.com/sourcegraph/sourcegraph/enterprise/internal/batches/types"
 	"github.com/sourcegraph/sourcegraph/internal/actor"
+	internalapitest "github.com/sourcegraph/sourcegraph/internal/apitest"
 	"github.com/sourcegraph/sourcegraph/internal/database"
 	"github.com/sourcegraph/sourcegraph/internal/database/dbtesting"
 )
@@ -106,7 +107,7 @@ func TestBatchChangeConnectionResolver(t *testing.T) {
 		t.Run(fmt.Sprintf("first=%d", tc.firstParam), func(t *testing.T) {
 			input := map[string]interface{}{"first": int64(tc.firstParam)}
 			var response struct{ BatchChanges apitest.BatchChangeConnection }
-			apitest.MustExec(actor.WithActor(context.Background(), actor.FromUser(userID)), t, s, input, &response, queryBatchChangesConnection)
+			internalapitest.MustExec(actor.WithActor(context.Background(), actor.FromUser(userID)), t, s, input, &response, queryBatchChangesConnection)
 
 			wantConnection := apitest.BatchChangeConnection{
 				TotalCount: tc.wantTotalCount,
@@ -134,7 +135,7 @@ func TestBatchChangeConnectionResolver(t *testing.T) {
 			wantHasNextPage := i != len(nodes)-1
 
 			var response struct{ BatchChanges apitest.BatchChangeConnection }
-			apitest.MustExec(ctx, t, s, input, &response, queryBatchChangesConnection)
+			internalapitest.MustExec(ctx, t, s, input, &response, queryBatchChangesConnection)
 
 			if diff := cmp.Diff(1, len(response.BatchChanges.Nodes)); diff != "" {
 				t.Fatalf("unexpected number of nodes (-want +got):\n%s", diff)
@@ -228,7 +229,7 @@ func TestBatchChangesListing(t *testing.T) {
 		input := map[string]interface{}{"node": userAPIID}
 
 		var response struct{ Node apitest.User }
-		apitest.MustExec(actorCtx, t, s, input, &response, listNamespacesBatchChanges)
+		internalapitest.MustExec(actorCtx, t, s, input, &response, listNamespacesBatchChanges)
 
 		want := apitest.User{
 			ID: userAPIID,
@@ -261,7 +262,7 @@ func TestBatchChangesListing(t *testing.T) {
 		input := map[string]interface{}{"node": orgAPIID}
 
 		var response struct{ Node apitest.Org }
-		apitest.MustExec(actorCtx, t, s, input, &response, listNamespacesBatchChanges)
+		internalapitest.MustExec(actorCtx, t, s, input, &response, listNamespacesBatchChanges)
 
 		want := apitest.Org{
 			ID: orgAPIID,

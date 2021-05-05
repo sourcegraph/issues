@@ -13,17 +13,17 @@ import (
 	"github.com/sourcegraph/sourcegraph/internal/jsonc"
 )
 
-// MustExec uses Exec to execute the given query and calls t.Fatalf if Exec failed.
+// MustExec uses Exec to execute the given query and calls t.Fatal if Exec failed.
 func MustExec(
 	ctx context.Context,
 	t testing.TB,
-	s *graphql.Schema,
-	in map[string]interface{},
-	out interface{},
+	schema *graphql.Schema,
+	variables map[string]interface{},
+	response interface{},
 	query string,
 ) {
 	t.Helper()
-	if errs := Exec(ctx, t, s, in, out, query); len(errs) > 0 {
+	if errs := Exec(ctx, t, schema, variables, response, query); len(errs) > 0 {
 		t.Fatalf("unexpected graphql query errors: %v", errs)
 	}
 }
@@ -33,16 +33,16 @@ func MustExec(
 func Exec(
 	ctx context.Context,
 	t testing.TB,
-	s *graphql.Schema,
-	in map[string]interface{},
-	out interface{},
+	schema *graphql.Schema,
+	variables map[string]interface{},
+	response interface{},
 	query string,
 ) []*gqlerrors.QueryError {
 	t.Helper()
 
 	query = strings.ReplaceAll(query, "\t", "  ")
 
-	b, err := json.Marshal(in)
+	b, err := json.Marshal(variables)
 	if err != nil {
 		t.Fatalf("failed to marshal input: %s", err)
 	}
@@ -53,7 +53,7 @@ func Exec(
 		t.Fatalf("failed to unmarshal input back: %s", err)
 	}
 
-	r := s.Exec(ctx, query, "", anonInput)
+	r := schema.Exec(ctx, query, "", anonInput)
 	if len(r.Errors) != 0 {
 		return r.Errors
 	}
@@ -61,10 +61,10 @@ func Exec(
 	_, disableLog := os.LookupEnv("NO_GRAPHQL_LOG")
 
 	if testing.Verbose() && !disableLog {
-		t.Logf("\n---- GraphQL Query ----\n%s\n\nVars: %s\n---- GraphQL Result ----\n%s\n -----------", query, toJSON(t, in), r.Data)
+		t.Logf("\n---- GraphQL Query ----\n%s\n\nVars: %s\n---- GraphQL Result ----\n%s\n -----------", query, toJSON(t, variables), r.Data)
 	}
 
-	if err := json.Unmarshal(r.Data, out); err != nil {
+	if err := json.Unmarshal(r.Data, response); err != nil {
 		t.Fatalf("failed to unmarshal graphql data: %v", err)
 	}
 

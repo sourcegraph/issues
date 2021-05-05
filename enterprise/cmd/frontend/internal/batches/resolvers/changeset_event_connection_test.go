@@ -10,11 +10,12 @@ import (
 
 	"github.com/sourcegraph/sourcegraph/cmd/frontend/backend"
 	"github.com/sourcegraph/sourcegraph/cmd/frontend/graphqlbackend"
-	"github.com/sourcegraph/sourcegraph/enterprise/internal/batches/resolvers/apitest"
+	"github.com/sourcegraph/sourcegraph/enterprise/cmd/frontend/internal/batches/resolvers/apitest"
 	"github.com/sourcegraph/sourcegraph/enterprise/internal/batches/store"
 	ct "github.com/sourcegraph/sourcegraph/enterprise/internal/batches/testing"
 	btypes "github.com/sourcegraph/sourcegraph/enterprise/internal/batches/types"
 	"github.com/sourcegraph/sourcegraph/internal/actor"
+	internalapitest "github.com/sourcegraph/sourcegraph/internal/apitest"
 	"github.com/sourcegraph/sourcegraph/internal/database"
 	"github.com/sourcegraph/sourcegraph/internal/database/dbtesting"
 	"github.com/sourcegraph/sourcegraph/internal/extsvc/github"
@@ -132,7 +133,7 @@ func TestChangesetEventConnectionResolver(t *testing.T) {
 		t.Run(fmt.Sprintf("first=%d", tc.firstParam), func(t *testing.T) {
 			input := map[string]interface{}{"changeset": changesetAPIID, "first": int64(tc.firstParam)}
 			var response struct{ Node apitest.Changeset }
-			apitest.MustExec(actor.WithActor(context.Background(), actor.FromUser(userID)), t, s, input, &response, queryChangesetEventConnection)
+			internalapitest.MustExec(actor.WithActor(context.Background(), actor.FromUser(userID)), t, s, input, &response, queryChangesetEventConnection)
 
 			wantEvents := apitest.ChangesetEventConnection{
 				TotalCount: tc.wantTotalCount,
@@ -159,7 +160,7 @@ func TestChangesetEventConnectionResolver(t *testing.T) {
 		wantHasNextPage := i != len(nodes)-1
 
 		var response struct{ Node apitest.Changeset }
-		apitest.MustExec(ctx, t, s, input, &response, queryChangesetEventConnection)
+		internalapitest.MustExec(ctx, t, s, input, &response, queryChangesetEventConnection)
 
 		events := response.Node.Events
 		if diff := cmp.Diff(1, len(events.Nodes)); diff != "" {

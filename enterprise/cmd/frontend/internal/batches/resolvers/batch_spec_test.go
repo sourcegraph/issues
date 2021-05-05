@@ -11,11 +11,12 @@ import (
 
 	"github.com/sourcegraph/sourcegraph/cmd/frontend/backend"
 	"github.com/sourcegraph/sourcegraph/cmd/frontend/graphqlbackend"
-	"github.com/sourcegraph/sourcegraph/enterprise/internal/batches/resolvers/apitest"
+	"github.com/sourcegraph/sourcegraph/enterprise/cmd/frontend/internal/batches/resolvers/apitest"
 	"github.com/sourcegraph/sourcegraph/enterprise/internal/batches/store"
 	ct "github.com/sourcegraph/sourcegraph/enterprise/internal/batches/testing"
 	btypes "github.com/sourcegraph/sourcegraph/enterprise/internal/batches/types"
 	"github.com/sourcegraph/sourcegraph/internal/actor"
+	internalapitest "github.com/sourcegraph/sourcegraph/internal/apitest"
 	"github.com/sourcegraph/sourcegraph/internal/database"
 	"github.com/sourcegraph/sourcegraph/internal/database/dbtesting"
 	"github.com/sourcegraph/sourcegraph/internal/extsvc"
@@ -147,7 +148,7 @@ func TestBatchSpecResolver(t *testing.T) {
 	input := map[string]interface{}{"batchSpec": apiID}
 	{
 		var response struct{ Node apitest.BatchSpec }
-		apitest.MustExec(actor.WithActor(context.Background(), actor.FromUser(userID)), t, s, input, &response, queryBatchSpecNode)
+		internalapitest.MustExec(actor.WithActor(context.Background(), actor.FromUser(userID)), t, s, input, &response, queryBatchSpecNode)
 
 		if diff := cmp.Diff(want, response.Node); diff != "" {
 			t.Fatalf("unexpected response (-want +got):\n%s", diff)
@@ -171,7 +172,7 @@ func TestBatchSpecResolver(t *testing.T) {
 
 		// Note that we have to execute as the actual user, since a superseding
 		// spec isn't returned for an admin.
-		apitest.MustExec(actor.WithActor(context.Background(), actor.FromUser(userID)), t, s, input, &response, queryBatchSpecNode)
+		internalapitest.MustExec(actor.WithActor(context.Background(), actor.FromUser(userID)), t, s, input, &response, queryBatchSpecNode)
 
 		// Expect an ID on the superseding batch spec.
 		want.SupersedingBatchSpec = &apitest.BatchSpec{
@@ -195,7 +196,7 @@ func TestBatchSpecResolver(t *testing.T) {
 
 		// Note that we have to execute as the actual user, since a superseding
 		// spec isn't returned for an admin.
-		apitest.MustExec(actor.WithActor(context.Background(), actor.FromUser(userID)), t, s, input, &response, queryBatchSpecNode)
+		internalapitest.MustExec(actor.WithActor(context.Background(), actor.FromUser(userID)), t, s, input, &response, queryBatchSpecNode)
 
 		// Expect no superseding batch spec, since this request is run as a
 		// different user.
@@ -213,7 +214,7 @@ func TestBatchSpecResolver(t *testing.T) {
 	}
 	{
 		var response struct{ Node apitest.BatchSpec }
-		apitest.MustExec(actor.WithActor(context.Background(), actor.FromUser(adminID)), t, s, input, &response, queryBatchSpecNode)
+		internalapitest.MustExec(actor.WithActor(context.Background(), actor.FromUser(adminID)), t, s, input, &response, queryBatchSpecNode)
 
 		// Expect creator to not be returned anymore.
 		want.Creator = nil
@@ -233,7 +234,7 @@ func TestBatchSpecResolver(t *testing.T) {
 	}
 	{
 		var response struct{ Node apitest.BatchSpec }
-		apitest.MustExec(actor.WithActor(context.Background(), actor.FromUser(adminID)), t, s, input, &response, queryBatchSpecNode)
+		internalapitest.MustExec(actor.WithActor(context.Background(), actor.FromUser(adminID)), t, s, input, &response, queryBatchSpecNode)
 
 		// Expect creator to not be returned anymore.
 		want.Creator = nil

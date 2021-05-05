@@ -11,10 +11,11 @@ import (
 
 	"github.com/sourcegraph/sourcegraph/cmd/frontend/backend"
 	"github.com/sourcegraph/sourcegraph/cmd/frontend/graphqlbackend"
-	"github.com/sourcegraph/sourcegraph/enterprise/internal/batches/resolvers/apitest"
+	"github.com/sourcegraph/sourcegraph/enterprise/cmd/frontend/internal/batches/resolvers/apitest"
 	"github.com/sourcegraph/sourcegraph/enterprise/internal/batches/store"
 	ct "github.com/sourcegraph/sourcegraph/enterprise/internal/batches/testing"
 	btypes "github.com/sourcegraph/sourcegraph/enterprise/internal/batches/types"
+	internalapitest "github.com/sourcegraph/sourcegraph/internal/apitest"
 	"github.com/sourcegraph/sourcegraph/internal/database"
 	"github.com/sourcegraph/sourcegraph/internal/database/dbtesting"
 	"github.com/sourcegraph/sourcegraph/internal/types"
@@ -92,7 +93,7 @@ func TestChangesetApplyPreviewConnectionResolver(t *testing.T) {
 	for _, tc := range tests {
 		input := map[string]interface{}{"batchSpec": apiID, "first": tc.first}
 		var response struct{ Node apitest.BatchSpec }
-		apitest.MustExec(ctx, t, s, input, &response, queryChangesetApplyPreviewConnection)
+		internalapitest.MustExec(ctx, t, s, input, &response, queryChangesetApplyPreviewConnection)
 
 		specs := response.Node.ApplyPreview
 		if diff := cmp.Diff(tc.wantTotalCount, specs.TotalCount); diff != "" {
@@ -113,7 +114,7 @@ func TestChangesetApplyPreviewConnectionResolver(t *testing.T) {
 		wantHasNextPage := i != len(changesetSpecs)-1
 
 		var response struct{ Node apitest.BatchSpec }
-		apitest.MustExec(ctx, t, s, input, &response, queryChangesetApplyPreviewConnection)
+		internalapitest.MustExec(ctx, t, s, input, &response, queryChangesetApplyPreviewConnection)
 
 		specs := response.Node.ApplyPreview
 		if diff := cmp.Diff(1, len(specs.Nodes)); diff != "" {

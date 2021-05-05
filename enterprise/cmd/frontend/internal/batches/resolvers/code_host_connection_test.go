@@ -10,11 +10,12 @@ import (
 
 	"github.com/sourcegraph/sourcegraph/cmd/frontend/backend"
 	"github.com/sourcegraph/sourcegraph/cmd/frontend/graphqlbackend"
-	"github.com/sourcegraph/sourcegraph/enterprise/internal/batches/resolvers/apitest"
+	"github.com/sourcegraph/sourcegraph/enterprise/cmd/frontend/internal/batches/resolvers/apitest"
 	"github.com/sourcegraph/sourcegraph/enterprise/internal/batches/store"
 	ct "github.com/sourcegraph/sourcegraph/enterprise/internal/batches/testing"
 	btypes "github.com/sourcegraph/sourcegraph/enterprise/internal/batches/types"
 	"github.com/sourcegraph/sourcegraph/internal/actor"
+	internalapitest "github.com/sourcegraph/sourcegraph/internal/apitest"
 	"github.com/sourcegraph/sourcegraph/internal/database"
 	"github.com/sourcegraph/sourcegraph/internal/database/dbtesting"
 	"github.com/sourcegraph/sourcegraph/internal/extsvc"
@@ -98,7 +99,7 @@ func TestCodeHostConnectionResolver(t *testing.T) {
 				var response struct {
 					BatchChangesCodeHosts apitest.BatchChangesCodeHostsConnection
 				}
-				apitest.MustExec(actor.WithActor(context.Background(), actor.FromUser(userID)), t, s, input, &response, queryCodeHostConnection)
+				internalapitest.MustExec(actor.WithActor(context.Background(), actor.FromUser(userID)), t, s, input, &response, queryCodeHostConnection)
 
 				var wantEndCursor *string
 				if tc.wantEndCursor != "" {
@@ -131,7 +132,7 @@ func TestCodeHostConnectionResolver(t *testing.T) {
 			var response struct {
 				BatchChangesCodeHosts apitest.BatchChangesCodeHostsConnection
 			}
-			apitest.MustExec(actor.WithActor(context.Background(), actor.FromUser(userID)), t, s, input, &response, queryCodeHostConnection)
+			internalapitest.MustExec(actor.WithActor(context.Background(), actor.FromUser(userID)), t, s, input, &response, queryCodeHostConnection)
 
 			hosts := response.BatchChangesCodeHosts
 			if diff := cmp.Diff(1, len(hosts.Nodes)); diff != "" {
@@ -217,7 +218,7 @@ func TestCodeHostConnectionResolver(t *testing.T) {
 			t.Run(fmt.Sprintf("First %d", tc.firstParam), func(t *testing.T) {
 				input := map[string]interface{}{"user": userAPIID, "first": int64(tc.firstParam)}
 				var response struct{ Node apitest.User }
-				apitest.MustExec(actor.WithActor(context.Background(), actor.FromUser(userID)), t, s, input, &response, queryUserCodeHostConnection)
+				internalapitest.MustExec(actor.WithActor(context.Background(), actor.FromUser(userID)), t, s, input, &response, queryUserCodeHostConnection)
 
 				var wantEndCursor *string
 				if tc.wantEndCursor != "" {
@@ -248,7 +249,7 @@ func TestCodeHostConnectionResolver(t *testing.T) {
 			wantHasNextPage := i != len(nodes)-1
 
 			var response struct{ Node apitest.User }
-			apitest.MustExec(actor.WithActor(context.Background(), actor.FromUser(userID)), t, s, input, &response, queryUserCodeHostConnection)
+			internalapitest.MustExec(actor.WithActor(context.Background(), actor.FromUser(userID)), t, s, input, &response, queryUserCodeHostConnection)
 
 			hosts := response.Node.BatchChangesCodeHosts
 			if diff := cmp.Diff(1, len(hosts.Nodes)); diff != "" {
