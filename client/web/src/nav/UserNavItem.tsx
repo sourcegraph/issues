@@ -154,13 +154,17 @@ export const UserNavItem: React.FunctionComponent<UserNavItemProps> = props => {
                     Signed in as <strong>@{props.authenticatedUser.username}</strong>
                 </DropdownItem>
                 <DropdownItem divider={true} />
-                <Link to={props.authenticatedUser.settingsURL!} className="dropdown-item">
+                <Link to={props.authenticatedUser.settingsURL!} className="dropdown-item" role="menuitem">
                     Settings
                 </Link>
-                <Link to="/extensions" className="dropdown-item">
+                <Link to="/extensions" className="dropdown-item" role="menuitem">
                     Extensions
                 </Link>
-                <Link to={`/users/${props.authenticatedUser.username}/searches`} className="dropdown-item">
+                <Link
+                    to={`/users/${props.authenticatedUser.username}/searches`}
+                    className="dropdown-item"
+                    role="menuitem"
+                >
                     Saved searches
                 </Link>
                 <DropdownItem divider={true} />
@@ -202,7 +206,12 @@ export const UserNavItem: React.FunctionComponent<UserNavItemProps> = props => {
                         <DropdownItem divider={true} />
                         <DropdownItem header={true}>Organizations</DropdownItem>
                         {props.authenticatedUser.organizations.nodes.map(org => (
-                            <Link key={org.id} to={org.settingsURL || org.url} className="dropdown-item">
+                            <Link
+                                key={org.id}
+                                to={org.settingsURL || org.url}
+                                className="dropdown-item"
+                                role="menuitem"
+                            >
                                 {org.displayName || org.name}
                             </Link>
                         ))}
@@ -210,21 +219,27 @@ export const UserNavItem: React.FunctionComponent<UserNavItemProps> = props => {
                 )}
                 <DropdownItem divider={true} />
                 {props.authenticatedUser.siteAdmin && (
-                    <Link to="/site-admin" className="dropdown-item">
+                    <Link to="/site-admin" className="dropdown-item" role="menuitem">
                         Site admin
                     </Link>
                 )}
-                <Link to="/help" className="dropdown-item" target="_blank" rel="noopener">
+                <Link to="/help" className="dropdown-item" role="menuitem" target="_blank" rel="noopener">
                     Help <OpenInNewIcon className="icon-inline" />
                 </Link>
                 {props.authenticatedUser.session?.canSignOut && (
-                    <a href="/-/sign-out" className="dropdown-item">
+                    <a href="/-/sign-out" className="dropdown-item" role="menuitem">
                         Sign out
                     </a>
                 )}
                 <DropdownItem divider={true} />
                 {props.showDotComMarketing && (
-                    <a href="https://about.sourcegraph.com" target="_blank" rel="noopener" className="dropdown-item">
+                    <a
+                        href="https://about.sourcegraph.com"
+                        target="_blank"
+                        rel="noopener"
+                        className="dropdown-item"
+                        role="menuitem"
+                    >
                         About Sourcegraph <OpenInNewIcon className="icon-inline" />
                     </a>
                 )}
@@ -234,6 +249,7 @@ export const UserNavItem: React.FunctionComponent<UserNavItemProps> = props => {
                         target="_blank"
                         rel="noopener"
                         className="dropdown-item"
+                        role="menuitem"
                     >
                         Browser extension <OpenInNewIcon className="icon-inline" />
                     </a>
