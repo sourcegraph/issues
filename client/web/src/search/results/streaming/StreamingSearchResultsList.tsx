@@ -13,7 +13,6 @@ import { VirtualList } from '@sourcegraph/shared/src/components/VirtualList'
 import * as GQL from '@sourcegraph/shared/src/graphql/schema'
 import { SettingsCascadeProps } from '@sourcegraph/shared/src/settings/settings'
 import { TelemetryProps } from '@sourcegraph/shared/src/telemetry/telemetryService'
-import { ThemeProps } from '@sourcegraph/shared/src/theme'
 
 import { SearchResult } from '../../../components/SearchResult'
 import { eventLogger } from '../../../tracking/eventLogger'
@@ -24,7 +23,7 @@ import { StreamingSearchResultFooter } from './StreamingSearchResultsFooter'
 const initialItemsToShow = 15
 const incrementalItemsToShow = 10
 
-interface StreamingSearchResultsListProps extends ThemeProps, SettingsCascadeProps, TelemetryProps {
+interface StreamingSearchResultsListProps extends SettingsCascadeProps, TelemetryProps {
     results?: AggregateStreamingSearchResults
 
     location: H.Location
@@ -39,7 +38,6 @@ export const StreamingSearchResultsList: React.FunctionComponent<StreamingSearch
     results,
     location,
     history,
-    isLightTheme,
     allExpanded,
     fetchHighlightedFileLineRanges,
     settingsCascade,
@@ -78,7 +76,6 @@ export const StreamingSearchResultsList: React.FunctionComponent<StreamingSearch
                             onSelect={logSearchResultClicked}
                             expanded={false}
                             showAllMatches={false}
-                            isLightTheme={isLightTheme}
                             allExpanded={allExpanded}
                             fetchHighlightedFileLineRanges={fetchHighlightedFileLineRanges}
                             repoDisplayName={displayRepoName(result.repository.name)}
@@ -86,34 +83,12 @@ export const StreamingSearchResultsList: React.FunctionComponent<StreamingSearch
                         />
                     )
                 case 'CommitSearchResult':
-                    return (
-                        <SearchResult
-                            icon={SourceCommitIcon}
-                            result={result}
-                            isLightTheme={isLightTheme}
-                            history={history}
-                        />
-                    )
+                    return <SearchResult icon={SourceCommitIcon} result={result} history={history} />
                 case 'Repository':
-                    return (
-                        <SearchResult
-                            icon={SourceRepositoryMultipleIcon}
-                            result={result}
-                            isLightTheme={isLightTheme}
-                            history={history}
-                        />
-                    )
+                    return <SearchResult icon={SourceRepositoryMultipleIcon} result={result} history={history} />
             }
         },
-        [
-            isLightTheme,
-            history,
-            location,
-            logSearchResultClicked,
-            allExpanded,
-            fetchHighlightedFileLineRanges,
-            settingsCascade,
-        ]
+        [history, location, logSearchResultClicked, allExpanded, fetchHighlightedFileLineRanges, settingsCascade]
     )
 
     return (

@@ -184,7 +184,6 @@ export class FileLocations extends React.PureComponent<Props, State> {
             icon={this.props.icon}
             onSelect={this.onSelect}
             showAllMatches={true}
-            isLightTheme={this.props.isLightTheme}
             fetchHighlightedFileLineRanges={this.props.fetchHighlightedFileLineRanges}
             settingsCascade={this.props.settingsCascade}
         />

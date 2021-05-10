@@ -175,7 +175,7 @@ export const resolveRevision = memoizeObservable(
  * them as a list of ranges, each describing a list of lines in the form of HTML table '<tr>...</tr>'.
  */
 export const fetchHighlightedFileLineRanges = memoizeObservable(
-    (context: FetchFileParameters, force?: boolean): Observable<string[][]> =>
+    (context: FetchFileParameters): Observable<string[][]> =>
         queryGraphQL(
             gql`
                 query HighlightedFile(
@@ -183,7 +183,6 @@ export const fetchHighlightedFileLineRanges = memoizeObservable(
                     $commitID: String!
                     $filePath: String!
                     $disableTimeout: Boolean!
-                    $isLightTheme: Boolean!
                     $ranges: [HighlightLineRange!]!
                 ) {
                     repository(name: $repoName) {
@@ -191,7 +190,7 @@ export const fetchHighlightedFileLineRanges = memoizeObservable(
                             file(path: $filePath) {
                                 isDirectory
                                 richHTML
-                                highlight(disableTimeout: $disableTimeout, isLightTheme: $isLightTheme) {
+                                highlight(disableTimeout: $disableTimeout) {
                                     aborted
                                     lineRanges(ranges: $ranges)
                                 }
@@ -215,9 +214,9 @@ export const fetchHighlightedFileLineRanges = memoizeObservable(
         ),
     context =>
         makeRepoURI(context) +
-        `?disableTimeout=${String(context.disableTimeout)}&isLightTheme=${String(
-            context.isLightTheme
-        )}&ranges=${context.ranges.map(range => `${range.startLine}:${range.endLine}`).join(',')}`
+        `?disableTimeout=${String(context.disableTimeout)}&ranges=${context.ranges
+            .map(range => `${range.startLine}:${range.endLine}`)
+            .join(',')}`
 )
 
 export const fetchFileExternalLinks = memoizeObservable(

@@ -288,11 +288,10 @@ export const queryChangesetSpecFileDiffs = ({
     changesetSpec,
     first,
     after,
-    isLightTheme,
 }: ChangesetSpecFileDiffsVariables): Observable<ChangesetSpecFileDiffConnectionFields> =>
     requestGraphQL<ChangesetSpecFileDiffsResult, ChangesetSpecFileDiffsVariables>(
         gql`
-            query ChangesetSpecFileDiffs($changesetSpec: ID!, $first: Int, $after: String, $isLightTheme: Boolean!) {
+            query ChangesetSpecFileDiffs($changesetSpec: ID!, $first: Int, $after: String) {
                 node(id: $changesetSpec) {
                     __typename
                     ...ChangesetSpecFileDiffsFields
@@ -301,7 +300,7 @@ export const queryChangesetSpecFileDiffs = ({
 
             ${changesetSpecFileDiffsFields}
         `,
-        { changesetSpec, first, after, isLightTheme }
+        { changesetSpec, first, after }
     ).pipe(
         map(dataOrThrowErrors),
         map(({ node }) => {

@@ -323,7 +323,6 @@ export class RepositoryCommitPage extends React.Component<Props, State> {
             repo: this.props.repo.id,
             base: commitParentOrEmpty(this.state.commitOrError as GitCommitFields),
             head: (this.state.commitOrError as GitCommitFields).oid,
-            isLightTheme: this.props.isLightTheme,
         })
 }
 

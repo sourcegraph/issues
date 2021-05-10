@@ -31,7 +31,6 @@ export interface ChangesetFileDiffProps extends ThemeProps {
 }
 
 export const ChangesetFileDiff: React.FunctionComponent<ChangesetFileDiffProps> = ({
-    isLightTheme,
     changesetID,
     history,
     location,
@@ -39,6 +38,7 @@ export const ChangesetFileDiff: React.FunctionComponent<ChangesetFileDiffProps> 
     repositoryID,
     repositoryName,
     updateOnChange,
+    isLightTheme,
     queryExternalChangesetWithFileDiffs = _queryExternalChangesetWithFileDiffs,
 }) => {
     const [isNotImplemented, setIsNotImplemented] = useState<boolean>(false)
@@ -53,7 +53,6 @@ export const ChangesetFileDiff: React.FunctionComponent<ChangesetFileDiffProps> 
                 after: args.after ?? null,
                 first: args.first ?? null,
                 externalChangeset: changesetID,
-                isLightTheme,
             }).pipe(
                 map(changeset => changeset.diff),
                 tap(diff => {
@@ -75,7 +74,7 @@ export const ChangesetFileDiff: React.FunctionComponent<ChangesetFileDiffProps> 
                         }
                 )
             ),
-        [changesetID, isLightTheme, queryExternalChangesetWithFileDiffs]
+        [changesetID, queryExternalChangesetWithFileDiffs]
     )
 
     const hydratedExtensionInfo = useMemo(() => {
@@ -115,10 +114,10 @@ export const ChangesetFileDiff: React.FunctionComponent<ChangesetFileDiffProps> 
             nodeComponentProps={{
                 history,
                 location,
-                isLightTheme,
                 persistLines: true,
                 extensionInfo: hydratedExtensionInfo,
                 lineNumbers: true,
+                isLightTheme,
             }}
             updateOnChange={`${repositoryID}-${updateOnChange ?? ''}`}
             defaultFirst={15}

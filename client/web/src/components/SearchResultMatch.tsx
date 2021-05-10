@@ -10,13 +10,12 @@ import sanitizeHtml from 'sanitize-html'
 import { LoadingSpinner } from '@sourcegraph/react-loading-spinner'
 import { Markdown } from '@sourcegraph/shared/src/components/Markdown'
 import * as GQL from '@sourcegraph/shared/src/graphql/schema'
-import { ThemeProps } from '@sourcegraph/shared/src/theme'
 import { highlightNode } from '@sourcegraph/shared/src/util/dom'
 import { renderMarkdown } from '@sourcegraph/shared/src/util/markdown'
 
 import { highlightCode } from '../search/backend'
 
-interface SearchResultMatchProps extends ThemeProps {
+interface SearchResultMatchProps {
     item: GQL.ISearchResultMatch
     highlightRanges: GQL.IHighlight[]
     history: H.History
@@ -75,7 +74,6 @@ export class SearchResultMatch extends React.Component<SearchResultMatchProps, S
                                     code: codeContent,
                                     fuzzyLanguage: lang,
                                     disableTimeout: false,
-                                    isLightTheme: props.isLightTheme,
                                 }).pipe(
                                     // Return the rendered markdown if highlighting fails.
                                     catchError(error => {

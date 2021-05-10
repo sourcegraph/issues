@@ -475,7 +475,6 @@ func (r *fileDiffHighlighter) Highlight(ctx context.Context, args *HighlightArgs
 				Filepath:           file.Path(),
 				DisableTimeout:     args.DisableTimeout,
 				HighlightLongLines: args.HighlightLongLines,
-				IsLightTheme:       args.IsLightTheme,
 			})
 			if aborted {
 				r.highlightAborted = aborted

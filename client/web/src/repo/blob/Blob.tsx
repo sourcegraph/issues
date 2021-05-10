@@ -69,7 +69,7 @@ interface BlobProps
     blobInfo: BlobInfo
 }
 
-export interface BlobInfo extends AbsoluteRepoFile, ThemeProps, ModeSpec {
+export interface BlobInfo extends AbsoluteRepoFile, ModeSpec {
     /** The raw content of the blob. */
     content: string
 

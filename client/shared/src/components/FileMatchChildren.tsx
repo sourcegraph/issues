@@ -6,7 +6,6 @@ import { map } from 'rxjs/operators'
 import { ISymbol, IHighlightLineRange } from '../graphql/schema'
 import { isSettingsValid, SettingsCascadeProps } from '../settings/settings'
 import { SymbolIcon } from '../symbols/SymbolIcon'
-import { ThemeProps } from '../theme'
 import { isErrorLike } from '../util/errors'
 import { toPositionOrRangeHash, appendSubtreeQueryParameter } from '../util/url'
 
@@ -20,7 +19,7 @@ export interface EventLogger {
     log: (eventLabel: string, eventProperties?: any) => void
 }
 
-interface FileMatchProps extends SettingsCascadeProps, ThemeProps {
+interface FileMatchProps extends SettingsCascadeProps {
     location: H.Location
     eventLogger?: EventLogger
     items: MatchItem[]
@@ -76,9 +75,9 @@ export const FileMatchChildren: React.FunctionComponent<FileMatchProps> = props 
         props.settingsCascade.final.experimentalFeatures &&
         props.settingsCascade.final.experimentalFeatures.enableFastResultLoading
 
-    const { result, isLightTheme, fetchHighlightedFileLineRanges, eventLogger, onFirstResultLoad } = props
+    const { result, fetchHighlightedFileLineRanges, eventLogger, onFirstResultLoad } = props
     const fetchHighlightedFileRangeLines = React.useCallback(
-        (isFirst, startLine, endLine, isLightTheme) => {
+        (isFirst, startLine, endLine) => {
             const startTime = Date.now()
             return fetchHighlightedFileLineRanges(
                 {
@@ -86,7 +85,6 @@ export const FileMatchChildren: React.FunctionComponent<FileMatchProps> = props 
                     commitID: result.file.commit.oid,
                     filePath: result.file.path,
                     disableTimeout: false,
-                    isLightTheme,
                     ranges: optimizeHighlighting
                         ? grouped.map(
                               (group): IHighlightLineRange => ({
@@ -156,7 +154,6 @@ export const FileMatchChildren: React.FunctionComponent<FileMatchProps> = props 
                             endLine={group.endLine}
                             highlightRanges={group.matches}
                             className="file-match-children__item-code-excerpt"
-                            isLightTheme={isLightTheme}
                             fetchHighlightedFileRangeLines={fetchHighlightedFileRangeLines}
                             isFirst={index === 0}
                         />

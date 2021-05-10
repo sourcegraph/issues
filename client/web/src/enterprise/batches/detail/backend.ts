@@ -381,16 +381,10 @@ export const queryExternalChangesetWithFileDiffs = ({
     externalChangeset,
     first,
     after,
-    isLightTheme,
 }: ExternalChangesetFileDiffsVariables): Observable<ExternalChangesetFileDiffsFields> =>
     requestGraphQL<ExternalChangesetFileDiffsResult, ExternalChangesetFileDiffsVariables>(
         gql`
-            query ExternalChangesetFileDiffs(
-                $externalChangeset: ID!
-                $first: Int
-                $after: String
-                $isLightTheme: Boolean!
-            ) {
+            query ExternalChangesetFileDiffs($externalChangeset: ID!, $first: Int, $after: String) {
                 node(id: $externalChangeset) {
                     __typename
                     ...ExternalChangesetFileDiffsFields
@@ -399,7 +393,7 @@ export const queryExternalChangesetWithFileDiffs = ({
 
             ${externalChangesetFileDiffsFields}
         `,
-        { externalChangeset, first, after, isLightTheme }
+        { externalChangeset, first, after }
     ).pipe(
         map(dataOrThrowErrors),
         map(({ node }) => {

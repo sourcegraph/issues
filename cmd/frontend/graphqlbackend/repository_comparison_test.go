@@ -395,7 +395,6 @@ func TestDiffHunk(t *testing.T) {
 		body, err := hunk.Highlight(ctx, &HighlightArgs{
 			DisableTimeout:     false,
 			HighlightLongLines: false,
-			IsLightTheme:       true,
 		})
 		if err != nil {
 			t.Fatal(err)
@@ -558,7 +557,6 @@ func TestFileDiffHighlighter(t *testing.T) {
 	highlightedBase, highlightedHead, aborted, err := highlighter.Highlight(ctx, &HighlightArgs{
 		DisableTimeout:     false,
 		HighlightLongLines: false,
-		IsLightTheme:       true,
 	})
 	if err != nil {
 		t.Fatal(err)

@@ -518,7 +518,6 @@ export class SearchResultsList extends React.PureComponent<SearchResultsListProp
                         onSelect={this.logEvent}
                         expanded={false}
                         showAllMatches={false}
-                        isLightTheme={this.props.isLightTheme}
                         allExpanded={this.props.allExpanded}
                         fetchHighlightedFileLineRanges={this.props.fetchHighlightedFileLineRanges}
                         repoDisplayName={this.state.fileMatchRepoDisplayNames.get(result.repository.name)}
@@ -526,23 +525,9 @@ export class SearchResultsList extends React.PureComponent<SearchResultsListProp
                     />
                 )
             case 'CommitSearchResult':
-                return (
-                    <SearchResult
-                        icon={SourceCommitIcon}
-                        result={result}
-                        isLightTheme={this.props.isLightTheme}
-                        history={this.props.history}
-                    />
-                )
+                return <SearchResult icon={SourceCommitIcon} result={result} history={this.props.history} />
             case 'Repository':
-                return (
-                    <SearchResult
-                        icon={SourceRepositoryMultipleIcon}
-                        result={result}
-                        isLightTheme={this.props.isLightTheme}
-                        history={this.props.history}
-                    />
-                )
+                return <SearchResult icon={SourceRepositoryMultipleIcon} result={result} history={this.props.history} />
         }
     }
 

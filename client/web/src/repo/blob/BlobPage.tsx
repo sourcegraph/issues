@@ -38,33 +38,21 @@ import { GoToRawAction } from './GoToRawAction'
 import { useBlobPanelViews } from './panel/BlobPanel'
 import { RenderedFile } from './RenderedFile'
 
-function fetchBlobCacheKey(parsed: ParsedRepoURI & { isLightTheme: boolean; disableTimeout: boolean }): string {
-    return makeRepoURI(parsed) + String(parsed.isLightTheme) + String(parsed.disableTimeout)
+function fetchBlobCacheKey(parsed: ParsedRepoURI & { disableTimeout: boolean }): string {
+    return makeRepoURI(parsed) + String(parsed.disableTimeout)
 }
 
 const fetchBlob = memoizeObservable(
-    (args: {
-        repoName: string
-        commitID: string
-        filePath: string
-        isLightTheme: boolean
-        disableTimeout: boolean
-    }): Observable<GQL.File2> =>
+    (args: { repoName: string; commitID: string; filePath: string; disableTimeout: boolean }): Observable<GQL.File2> =>
         queryGraphQL(
             gql`
-                query Blob(
-                    $repoName: String!
-                    $commitID: String!
-                    $filePath: String!
-                    $isLightTheme: Boolean!
-                    $disableTimeout: Boolean!
-                ) {
+                query Blob($repoName: String!, $commitID: String!, $filePath: String!, $disableTimeout: Boolean!) {
                     repository(name: $repoName) {
                         commit(rev: $commitID) {
                             file(path: $filePath) {
                                 content
                                 richHTML
-                                highlight(disableTimeout: $disableTimeout, isLightTheme: $isLightTheme) {
+                                highlight(disableTimeout: $disableTimeout) {
                                     aborted
                                     html
                                 }
@@ -93,8 +81,8 @@ interface Props
         SettingsCascadeProps,
         PlatformContextProps,
         TelemetryProps,
-        ExtensionsControllerProps,
         ThemeProps,
+        ExtensionsControllerProps,
         HoverThresholdProps,
         BreadcrumbSetters {
     location: H.Location
@@ -106,12 +94,12 @@ interface Props
 export const BlobPage: React.FunctionComponent<Props> = props => {
     const [wrapCode, setWrapCode] = useState(ToggleLineWrap.getValue())
     let renderMode = ToggleRenderedFileMode.getModeFromURL(props.location)
-    const { repoName, revision, commitID, filePath, isLightTheme, useBreadcrumb, mode } = props
+    const { repoName, revision, commitID, filePath, useBreadcrumb, mode } = props
 
     // Log view event whenever a new Blob, or a Blob with a different render mode, is visited.
     useEffect(() => {
         props.telemetryService.logViewEvent('Blob', { repoName, filePath })
-    }, [repoName, commitID, filePath, isLightTheme, renderMode, props.telemetryService])
+    }, [repoName, commitID, filePath, renderMode, props.telemetryService])
 
     useBreadcrumb(
         useMemo(() => {
@@ -154,7 +142,6 @@ export const BlobPage: React.FunctionComponent<Props> = props => {
                             repoName,
                             commitID,
                             filePath,
-                            isLightTheme,
                             disableTimeout,
                         })
                     ),
@@ -167,7 +154,6 @@ export const BlobPage: React.FunctionComponent<Props> = props => {
                             commitID,
                             filePath,
                             mode,
-                            isLightTheme,
                             // Properties used in `BlobPage` but not `Blob`
                             richHTML: blob.richHTML,
                             aborted: blob.highlight.aborted,
@@ -179,7 +165,7 @@ export const BlobPage: React.FunctionComponent<Props> = props => {
                         return [asError(error)]
                     })
                 ),
-            [repoName, revision, commitID, filePath, isLightTheme, mode]
+            [repoName, revision, commitID, filePath, mode]
         )
     )
 
@@ -329,9 +315,9 @@ export const BlobPage: React.FunctionComponent<Props> = props => {
                     settingsCascade={props.settingsCascade}
                     onHoverShown={props.onHoverShown}
                     history={props.history}
-                    isLightTheme={isLightTheme}
                     telemetryService={props.telemetryService}
                     location={props.location}
+                    isLightTheme={props.isLightTheme}
                 />
             )}
         </>

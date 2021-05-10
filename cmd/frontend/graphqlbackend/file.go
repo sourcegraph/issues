@@ -51,7 +51,8 @@ func (*schemaResolver) HighlightCode(ctx context.Context, args *struct {
 	Code           string
 	FuzzyLanguage  string
 	DisableTimeout bool
-	IsLightTheme   bool
+	// Deprecated field. graphql-go dictates us to keep it around, though.
+	IsLightTheme *bool
 }) (string, error) {
 	language := highlight.SyntectLanguageMap[strings.ToLower(args.FuzzyLanguage)]
 	filePath := "file." + language
@@ -59,7 +60,6 @@ func (*schemaResolver) HighlightCode(ctx context.Context, args *struct {
 		Content:        []byte(args.Code),
 		Filepath:       filePath,
 		DisableTimeout: args.DisableTimeout,
-		IsLightTheme:   args.IsLightTheme,
 	})
 	if err != nil {
 		return args.Code, err

@@ -60,9 +60,6 @@ type Params struct {
 	// default, as some files can take a very long time to highlight).
 	DisableTimeout bool
 
-	// Whether or not the light theme should be used to highlight the code.
-	IsLightTheme bool
-
 	// HighlightLongLines, if true, highlighting lines which are greater than
 	// 2000 bytes is enabled. This may produce a significant amount of HTML
 	// which some browsers (such as Chrome, but not Firefox) may have trouble

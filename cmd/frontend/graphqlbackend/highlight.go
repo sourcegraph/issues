@@ -43,8 +43,9 @@ func fromVCSHighlights(vcsHighlights []git.Highlight) []result.HighlightedRange 
 }
 
 type HighlightArgs struct {
-	DisableTimeout     bool
-	IsLightTheme       bool
+	DisableTimeout bool
+	// Deprecated field. graphql-go dictates us to keep it around, though.
+	IsLightTheme       *bool
 	HighlightLongLines bool
 }
 
@@ -69,7 +70,6 @@ func highlightContent(ctx context.Context, args *HighlightArgs, content, path st
 		Content:            []byte(content),
 		Filepath:           path,
 		DisableTimeout:     args.DisableTimeout,
-		IsLightTheme:       args.IsLightTheme,
 		HighlightLongLines: args.HighlightLongLines,
 		SimulateTimeout:    simulateTimeout,
 		Metadata:           metadata,

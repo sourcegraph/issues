@@ -4,12 +4,11 @@ import React from 'react'
 import { Markdown } from '@sourcegraph/shared/src/components/Markdown'
 import { ResultContainer } from '@sourcegraph/shared/src/components/ResultContainer'
 import * as GQL from '@sourcegraph/shared/src/graphql/schema'
-import { ThemeProps } from '@sourcegraph/shared/src/theme'
 import { renderMarkdown } from '@sourcegraph/shared/src/util/markdown'
 
 import { SearchResultMatch } from './SearchResultMatch'
 
-interface Props extends ThemeProps {
+interface Props {
     result: Omit<GQL.IGenericSearchResultInterface, '__typename'>
     history: H.History
     icon: React.ComponentType<{ className?: string }>
@@ -48,7 +47,6 @@ export class SearchResult extends React.Component<Props> {
                     key={match.url}
                     item={match}
                     highlightRanges={match.highlights}
-                    isLightTheme={this.props.isLightTheme}
                     history={this.props.history}
                 />
             ))}
