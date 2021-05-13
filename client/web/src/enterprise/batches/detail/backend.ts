@@ -156,6 +156,14 @@ export const externalChangesetFieldsFragment = gql`
             id
             name
             url
+            metadataTags(first: 5) {
+                nodes {
+                    tag
+                }
+                pageInfo {
+                    hasNextPage
+                }
+            }
         }
         externalURL {
             url

@@ -237,9 +237,14 @@ func (s *Store) CountChangesets(ctx context.Context, opts CountChangesetsOpts) (
 
 var countChangesetsQueryFmtstr = `
 -- source: enterprise/internal/batches/store.go:CountChangesets
-SELECT COUNT(changesets.id)
+SELECT COUNT(DISTINCT changesets.id)
 FROM changesets
 INNER JOIN repo ON repo.id = changesets.repo_id
+LEFT JOIN (
+	SELECT repo_id, tag
+	FROM repo_tags
+	WHERE deleted_at IS NULL
+) repo_tags ON repo_tags.repo_id = changesets.repo_id
 %s -- optional LEFT JOIN to changeset_specs if required
 WHERE %s
 `
@@ -296,6 +301,7 @@ func countChangesetsQuery(opts *CountChangesetsOpts, authzConds *sqlf.Query) *sq
 				// changeset, if it has been published or if it's tracked.
 				sqlf.Sprintf("COALESCE(changesets.external_title, changeset_specs.title)"),
 				sqlf.Sprintf("repo.name"),
+				sqlf.Sprintf("repo_tags.tag"),
 			))
 		}
 	}
@@ -507,8 +513,14 @@ var listChangesetsQueryFmtstr = `
 -- source: enterprise/internal/batches/store.go:ListChangesets
 SELECT %s FROM changesets
 INNER JOIN repo ON repo.id = changesets.repo_id
+LEFT JOIN (
+	SELECT repo_id, tag
+	FROM repo_tags
+	WHERE deleted_at IS NULL
+) repo_tags ON repo_tags.repo_id = changesets.repo_id
 %s -- optional LEFT JOIN to changeset_specs if required
 WHERE %s
+GROUP BY changesets.id
 ORDER BY id ASC
 `
 
@@ -578,6 +590,7 @@ func listChangesetsQuery(opts *ListChangesetsOpts, authzConds *sqlf.Query) *sqlf
 				// changeset, if it has been published or if it's tracked.
 				sqlf.Sprintf("COALESCE(changesets.external_title, changeset_specs.title)"),
 				sqlf.Sprintf("repo.name"),
+				sqlf.Sprintf("repo_tags.tag"),
 			))
 		}
 	}

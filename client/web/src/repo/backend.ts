@@ -1,5 +1,5 @@
 import { Observable } from 'rxjs'
-import { map } from 'rxjs/operators'
+import { map, tap } from 'rxjs/operators'
 
 import {
     CloneInProgressError,
@@ -9,6 +9,7 @@ import {
 } from '@sourcegraph/shared/src/backend/errors'
 import { FetchFileParameters } from '@sourcegraph/shared/src/components/CodeExcerpt'
 import { dataOrThrowErrors, gql } from '@sourcegraph/shared/src/graphql/graphql'
+import { IPageInfo, IRepositoryMetadataTag } from '@sourcegraph/shared/src/graphql/schema'
 import { createAggregateError } from '@sourcegraph/shared/src/util/errors'
 import { memoizeObservable } from '@sourcegraph/shared/src/util/memoizeObservable'
 import {
@@ -27,6 +28,12 @@ import {
     RepositoryRedirectResult,
     RepositoryRedirectVariables,
     RepositoryFields,
+    RepoTagsResult,
+    RepoTagsVariables,
+    AddRepoTagResult,
+    AddRepoTagVariables,
+    DeleteRepoTagResult,
+    DeleteRepoTagVariables,
 } from '../graphql-operations'
 
 export const externalLinkFieldsFragment = gql`
@@ -299,3 +306,77 @@ export const fetchTreeEntries = memoizeObservable(
         ),
     ({ first, ...args }) => `${makeRepoURI(args)}:first-${String(first)}`
 )
+
+interface FetchRepoTagsArguments {
+    id: string
+    first?: number
+    after?: string
+}
+
+export interface FetchRepoTagsResult {
+    nodes: Pick<IRepositoryMetadataTag, 'id' | 'tag'>[]
+    pageInfo: Pick<IPageInfo, 'endCursor' | 'hasNextPage'>
+}
+
+export const fetchRepoTags = memoizeObservable(
+    ({ id, first, after }: FetchRepoTagsArguments, force?: boolean): Observable<FetchRepoTagsResult> =>
+        requestGraphQL<RepoTagsResult, RepoTagsVariables>(
+            gql`
+                query RepoTags($id: ID!, $first: Int, $after: String) {
+                    node(id: $id) {
+                        ... on Repository {
+                            metadataTags(first: $first, after: $after) {
+                                nodes {
+                                    id
+                                    tag
+                                }
+                                pageInfo {
+                                    endCursor
+                                    hasNextPage
+                                }
+                            }
+                        }
+                    }
+                }
+            `,
+            { id, first: first || 15, after: after || null }
+        ).pipe(
+            tap(({ data }) => console.log('tap', data)),
+            map(({ data, errors }) => {
+                const metadataTags = data?.node?.metadataTags
+                if (!metadataTags) {
+                    throw createAggregateError(errors)
+                }
+                return metadataTags
+            })
+        ),
+    ({ id, first, after }) => `${id}-${first || ''}-${after || ''}`
+)
+
+export const addRepoTag = async (repo: string, tag: string): Promise<void> => {
+    const result = await requestGraphQL<AddRepoTagResult, AddRepoTagVariables>(
+        gql`
+            mutation AddRepoTag($repo: ID!, $tag: String!) {
+                setTag(node: $repo, tag: $tag, present: true) {
+                    alwaysNil
+                }
+            }
+        `,
+        { repo, tag }
+    ).toPromise()
+    dataOrThrowErrors(result)
+}
+
+export const deleteRepoTag = async (repo: string, tag: string): Promise<void> => {
+    const result = await requestGraphQL<DeleteRepoTagResult, DeleteRepoTagVariables>(
+        gql`
+            mutation DeleteRepoTag($repo: ID!, $tag: String!) {
+                setTag(node: $repo, tag: $tag, present: false) {
+                    alwaysNil
+                }
+            }
+        `,
+        { repo, tag }
+    ).toPromise()
+    dataOrThrowErrors(result)
+}

@@ -1311,6 +1311,7 @@ Referenced by:
     TABLE "external_service_repos" CONSTRAINT "external_service_repos_repo_id_fkey" FOREIGN KEY (repo_id) REFERENCES repo(id) ON DELETE CASCADE DEFERRABLE
     TABLE "gitserver_repos" CONSTRAINT "gitserver_repos_repo_id_fkey" FOREIGN KEY (repo_id) REFERENCES repo(id) ON DELETE CASCADE
     TABLE "lsif_index_configuration" CONSTRAINT "lsif_index_configuration_repository_id_fkey" FOREIGN KEY (repository_id) REFERENCES repo(id) ON DELETE CASCADE
+    TABLE "repo_tags" CONSTRAINT "repo_tags_repo_id_fkey" FOREIGN KEY (repo_id) REFERENCES repo(id) ON UPDATE CASCADE ON DELETE RESTRICT
     TABLE "search_context_repos" CONSTRAINT "search_context_repos_repo_id_fk" FOREIGN KEY (repo_id) REFERENCES repo(id) ON DELETE CASCADE
     TABLE "user_public_repos" CONSTRAINT "user_public_repos_repo_id_fkey" FOREIGN KEY (repo_id) REFERENCES repo(id) ON DELETE CASCADE
 Triggers:
@@ -1344,6 +1345,26 @@ Indexes:
  user_ids_ints | integer[]                |           | not null | '{}'::integer[]
 Indexes:
     "repo_permissions_perm_unique" UNIQUE CONSTRAINT, btree (repo_id, permission)
+
+```
+
+# Table "public.repo_tags"
+```
+   Column   |           Type           | Collation | Nullable |                Default                
+------------+--------------------------+-----------+----------+---------------------------------------
+ id         | bigint                   |           | not null | nextval('repo_tags_id_seq'::regclass)
+ repo_id    | integer                  |           | not null | 
+ tag        | character varying(100)   |           | not null | 
+ created_at | timestamp with time zone |           | not null | now()
+ updated_at | timestamp with time zone |           | not null | now()
+ deleted_at | timestamp with time zone |           |          | 
+Indexes:
+    "repo_tags_pkey" PRIMARY KEY, btree (id)
+    "repo_tag" UNIQUE CONSTRAINT, btree (repo_id, tag, deleted_at)
+    "repo_tags_deleted_at_idx" btree (deleted_at)
+    "repo_tags_tag_trgm" gin (lower(tag::text) gin_trgm_ops)
+Foreign-key constraints:
+    "repo_tags_repo_id_fkey" FOREIGN KEY (repo_id) REFERENCES repo(id) ON UPDATE CASCADE ON DELETE RESTRICT
 
 ```
 

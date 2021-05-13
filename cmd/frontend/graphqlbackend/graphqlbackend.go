@@ -469,6 +469,9 @@ func newSchemaResolver(db dbutil.DB) *schemaResolver {
 		"SearchContext": func(ctx context.Context, id graphql.ID) (Node, error) {
 			return r.SearchContextByID(ctx, id)
 		},
+		repositoryMetadataTagIDKind: func(ctx context.Context, id graphql.ID) (Node, error) {
+			return r.RepositoryMetadataTagByID(ctx, id)
+		},
 	}
 	return r
 }

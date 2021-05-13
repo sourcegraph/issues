@@ -50,6 +50,7 @@ import { fetchTreeEntries } from '../backend'
 import { GitCommitNode, GitCommitNodeProps } from '../commits/GitCommitNode'
 import { gitCommitFragment } from '../commits/RepositoryCommitsPage'
 import { FilePathBreadcrumbs } from '../FilePathBreadcrumbs'
+import { RepoTags } from '../metadata/RepoTags'
 
 import { TreeEntriesSection } from './TreeEntriesSection'
 
@@ -365,9 +366,12 @@ export const TreePage: React.FunctionComponent<Props> = ({
                     <header className="mb-3">
                         {treeOrError.isRoot ? (
                             <>
-                                <h2 className="tree-page__title">
-                                    <SourceRepositoryIcon className="icon-inline" /> {displayRepoName(repo.name)}
-                                </h2>
+                                <div className="mb-2">
+                                    <h2 className="tree-page__title d-inline">
+                                        <SourceRepositoryIcon className="icon-inline" /> {displayRepoName(repo.name)}
+                                    </h2>
+                                    <RepoTags repo={repo} />
+                                </div>
                                 {repo.description && <p>{repo.description}</p>}
                                 <div className="btn-group mb-3">
                                     <Link className="btn btn-secondary" to={`${treeOrError.url}/-/commits`}>

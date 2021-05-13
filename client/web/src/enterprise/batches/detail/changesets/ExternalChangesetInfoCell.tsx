@@ -66,10 +66,20 @@ export const ExternalChangesetInfoCell: React.FunctionComponent<ExternalChangese
             <span className="mr-2 d-block d-mdinline-block">
                 <Link to={node.repository.url} target="_blank" rel="noopener noreferrer">
                     {node.repository.name}
-                </Link>{' '}
+                </Link>
+                {node.repository.metadataTags.nodes.map(({ tag }) => (
+                    <span key={tag} className="badge badge-secondary ml-1">
+                        {tag}
+                    </span>
+                ))}
+                {node.repository.metadataTags.pageInfo.hasNextPage && (
+                    <span key="overflow" className="badge badge-secondary ml-1">
+                        &hellip;
+                    </span>
+                )}
                 {hasHeadReference(node) && (
-                    <div className="d-block d-sm-inline-block">
-                        <span className="badge badge-secondary text-monospace">{headReference(node)}</span>
+                    <div className="d-block d-sm-inline-block ml-1">
+                        <span className="badge badge-info text-monospace">{headReference(node)}</span>
                     </div>
                 )}
             </span>

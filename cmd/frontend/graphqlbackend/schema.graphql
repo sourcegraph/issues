@@ -2215,6 +2215,11 @@ type Repository implements Node & GenericSearchResultInterface {
     for use by code intelligence features.
     """
     codeIntelligenceCommitGraph: CodeIntelligenceCommitGraph!
+
+    """
+    Metadata tags (not to be confused with Git tags!).
+    """
+    metadataTags(first: Int = 15, after: String, tag: String): RepositoryMetadataTagConnection!
 }
 
 """
@@ -6095,4 +6100,18 @@ type CodeHostRepository {
     Is the repo private
     """
     private: Boolean!
+}
+
+type RepositoryMetadataTagConnection {
+    nodes: [RepositoryMetadataTag!]!
+    totalCount: Int!
+    pageInfo: PageInfo!
+}
+
+type RepositoryMetadataTag implements Node {
+    id: ID!
+    repository: Repository!
+    tag: String!
+    createdAt: DateTime!
+    updatedAt: DateTime!
 }

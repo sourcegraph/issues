@@ -14,3 +14,4 @@ The following is a list of how-tos that show how to use [Sourcegraph Batch Chang
 - <span class="badge badge-experimental">Experimental</span> [Creating multiple changesets in large repositories](creating_multiple_changesets_in_large_repositories.md)
 - [Creating changesets per project in monorepos](creating_changesets_per_project_in_monorepos.md)
 - [Opting out of batch changes](opting_out_of_batch_changes.md)
+- [Organizing Batch Changes with repository labels](organizing_batch_changes_with_repo_tags.md)

@@ -1531,3 +1531,12 @@ type SearchContextRepositoryRevisions struct {
 	Repo      RepoName
 	Revisions []string
 }
+
+type RepoTag struct {
+	ID        int64
+	RepoID    int
+	Tag       string
+	CreatedAt time.Time
+	UpdatedAt time.Time
+	DeletedAt *time.Time
+}
