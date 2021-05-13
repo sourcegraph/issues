@@ -868,6 +868,34 @@ type Log struct {
 	Sentry *Sentry `json:"sentry,omitempty"`
 }
 
+// MavenConnection description: Configuration for a connection to a Maven repository.
+type MavenConnection struct {
+	// Artifacts description: An array of artifact "groupID:artifactID" strings specifying which Maven artifacts to mirror on Sourcegraph.
+	Artifacts []string `json:"artifacts,omitempty"`
+	// Credentials description: Contents of a coursier.credentials file needed for accessing the Maven repositories.
+	Credentials string `json:"credentials,omitempty"`
+	// Groups description: An array of Maven groups whose artifacts should be mirrored on Sourcegraph.
+	Groups []string `json:"groups,omitempty"`
+	// RateLimit description: Rate limit applied when making background API requests to the Maven repository.
+	RateLimit *MavenRateLimit `json:"rateLimit,omitempty"`
+	// Repositories description: The url at which the maven repository can be found.
+	Repositories []string `json:"repositories"`
+	// RepositoryPathPattern description: The pattern used to generate the corresponding Sourcegraph repository name for a Maven artifact. In the pattern, the variable "{artifact}" is replaced with the Maven artifact's path.
+	//
+	// For example, if your Maven artifact path is "//Sourcegraph/" and your Sourcegraph URL is https://src.example.com, then a repositoryPathPattern of "maven/{artifact}" would mean that the Maven artifact is available on Sourcegraph at https://src.example.com/maven/Sourcegraph.
+	//
+	// It is important that the Sourcegraph repository name generated with this pattern be unique to this Maven repository. If different Maven repositories generate repository names that collide, Sourcegraph's behavior is undefined.
+	RepositoryPathPattern string `json:"repositoryPathPattern"`
+}
+
+// MavenRateLimit description: Rate limit applied when making background API requests to the Maven repository.
+type MavenRateLimit struct {
+	// Enabled description: true if rate limiting is enabled.
+	Enabled bool `json:"enabled"`
+	// RequestsPerHour description: Requests per hour permitted. This is an average, calculated per second. Internally, the burst limit is set to 100, which implies that for a requests per hour limit as low as 1, users will continue to be able to send a maximum of 100 requests immediately, provided that the complexity cost of each request is 1.
+	RequestsPerHour float64 `json:"requestsPerHour"`
+}
+
 // MountedEncryptionKey description: This encryption key is mounted from a given file path or an environment variable.
 type MountedEncryptionKey struct {
 	EnvVarName string `json:"envVarName,omitempty"`

@@ -193,7 +193,11 @@ func Main(enterpriseInit EnterpriseInit) {
 			// cloud_default flag has been set.
 			NoNamespace:      true,
 			OnlyCloudDefault: true,
-			Kinds:            []string{extsvc.KindGitHub, extsvc.KindGitLab},
+			Kinds: []string{
+				extsvc.KindGitHub,
+				extsvc.KindGitLab,
+				extsvc.KindMaven,
+			},
 		})
 
 		if err != nil {
@@ -215,6 +219,8 @@ func Main(enterpriseInit EnterpriseInit) {
 				if strings.HasPrefix(c.Url, "https://gitlab.com") && c.Token != "" {
 					server.GitLabDotComSource, err = repos.NewGitLabSource(e, cf)
 				}
+			case *schema.MavenConnection:
+				server.MavenSource, err = repos.NewMavenSource(e)
 			}
 
 			if err != nil {

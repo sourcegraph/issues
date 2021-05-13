@@ -1,0 +1,89 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "maven.schema.json#",
+  "title": "MavenConnection",
+  "description": "Configuration for a connection to a Maven repository.",
+  "allowComments": true,
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["repositories", "repositoryPathPattern"],
+  "properties": {
+    "repositories": {
+      "description": "The url at which the maven repository can be found.",
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "default": ["https://repo1.maven.org/maven2"]
+    },
+    "credentials": {
+      "description": "Contents of a coursier.credentials file needed for accessing the Maven repositories.",
+      "type": "string"
+    },
+    "rateLimit": {
+      "description": "Rate limit applied when making background API requests to the Maven repository.",
+      "title": "MavenRateLimit",
+      "type": "object",
+      "required": [
+        "enabled",
+        "requestsPerHour"
+      ],
+      "properties": {
+        "enabled": {
+          "description": "true if rate limiting is enabled.",
+          "type": "boolean",
+          "default": true
+        },
+        "requestsPerHour": {
+          "description": "Requests per hour permitted. This is an average, calculated per second. Internally, the burst limit is set to 100, which implies that for a requests per hour limit as low as 1, users will continue to be able to send a maximum of 100 requests immediately, provided that the complexity cost of each request is 1.",
+          "type": "number",
+          "default": 5000,
+          "minimum": 0
+        }
+      },
+      "default": {
+        "enabled": true,
+        "requestsPerHour": 5000
+      }
+    },
+    "repositoryPathPattern": {
+      "description": "The pattern used to generate the corresponding Sourcegraph repository name for a Maven artifact. In the pattern, the variable \"{artifact}\" is replaced with the Maven artifact's path.\n\nFor example, if your Maven artifact path is \"//Sourcegraph/\" and your Sourcegraph URL is https://src.example.com, then a repositoryPathPattern of \"maven/{artifact}\" would mean that the Maven artifact is available on Sourcegraph at https://src.example.com/maven/Sourcegraph.\n\nIt is important that the Sourcegraph repository name generated with this pattern be unique to this Maven repository. If different Maven repositories generate repository names that collide, Sourcegraph's behavior is undefined.",
+      "type": "string",
+      "default": "maven/{depot}"
+    },
+    "artifacts": {
+      "description": "An array of artifact \"groupID:artifactID\" strings specifying which Maven artifacts to mirror on Sourcegraph.",
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^[\\w-]+:[\\w.-]+$"
+      },
+      "examples": [
+        [
+          "groupID:artifactID"
+        ],
+        [
+          "org.apache.commons:commons-csv",
+          "com.google.guava:guava"
+        ]
+      ]
+    },
+    "groups": {
+      "description": "An array of Maven groups whose artifacts should be mirrored on Sourcegraph.",
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^[\\w-]+$"
+      },
+      "examples": [
+        [
+          "groupID"
+        ],
+        [
+          "org.apache.",
+          "com.google.guava."
+        ]
+      ]
+    }
+  }
+}

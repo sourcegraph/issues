@@ -15,6 +15,7 @@ import (
 
 	"github.com/sourcegraph/sourcegraph/internal/api"
 	"github.com/sourcegraph/sourcegraph/internal/database"
+	"github.com/sourcegraph/sourcegraph/internal/errcode"
 	"github.com/sourcegraph/sourcegraph/internal/extsvc"
 	"github.com/sourcegraph/sourcegraph/internal/extsvc/awscodecommit"
 	"github.com/sourcegraph/sourcegraph/internal/extsvc/bitbucketserver"
@@ -37,6 +38,9 @@ type Server struct {
 	}
 	GitLabDotComSource interface {
 		GetRepo(ctx context.Context, projectWithNamespace string) (*types.Repo, error)
+	}
+	MavenSource interface {
+		GetRepo(ctx context.Context, artifactName string) (*types.Repo, error)
 	}
 	Scheduler interface {
 		UpdateOnce(id api.RepoID, name api.RepoName)
@@ -429,6 +433,17 @@ func (s *Server) remoteRepoSync(ctx context.Context, codehost *extsvc.CodeHost, 
 			if isUnauthorized(err) {
 				return &protocol.RepoLookupResult{
 					ErrorUnauthorized: true,
+				}, nil
+			}
+			return nil, err
+		}
+	case extsvc.Maven:
+		artifactPath := strings.TrimPrefix(remoteName, "maven/")
+		repo, err = s.MavenSource.GetRepo(ctx, artifactPath)
+		if err != nil {
+			if errcode.IsNotFound(err) {
+				return &protocol.RepoLookupResult{
+					ErrorNotFound: true,
 				}, nil
 			}
 			return nil, err

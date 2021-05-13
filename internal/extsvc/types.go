@@ -82,6 +82,7 @@ const (
 	KindGitolite        = "GITOLITE"
 	KindPerforce        = "PERFORCE"
 	KindPhabricator     = "PHABRICATOR"
+	KindMaven           = "MAVEN"
 	KindOther           = "OTHER"
 )
 
@@ -118,6 +119,9 @@ const (
 	// TypePhabricator is the (api.ExternalRepoSpec).ServiceType value for Phabricator projects.
 	TypePhabricator = "phabricator"
 
+	// TypePhabricator is the (api.ExternalRepoSpec).ServiceType value for Phabricator projects.
+	TypeMaven = "maven"
+
 	// TypeOther is the (api.ExternalRepoSpec).ServiceType value for other projects.
 	TypeOther = "other"
 )
@@ -142,6 +146,8 @@ func KindToType(kind string) string {
 		return TypePhabricator
 	case KindPerforce:
 		return TypePerforce
+	case KindMaven:
+		return TypeMaven
 	case KindOther:
 		return TypeOther
 	default:
@@ -169,6 +175,8 @@ func TypeToKind(t string) string {
 		return KindPerforce
 	case TypePhabricator:
 		return KindPhabricator
+	case TypeMaven:
+		return KindMaven
 	case TypeOther:
 		return KindOther
 	default:
@@ -202,6 +210,8 @@ func ParseServiceType(s string) (string, bool) {
 		return TypePerforce, true
 	case TypePhabricator:
 		return TypePhabricator, true
+	case TypeMaven:
+		return TypeMaven, true
 	case TypeOther:
 		return TypeOther, true
 	default:
@@ -229,6 +239,8 @@ func ParseServiceKind(s string) (string, bool) {
 		return KindPerforce, true
 	case KindPhabricator:
 		return KindPhabricator, true
+	case KindMaven:
+		return KindMaven, true
 	case KindOther:
 		return KindOther, true
 	default:
@@ -268,6 +280,8 @@ func ParseConfig(kind, config string) (cfg interface{}, _ error) {
 		cfg = &schema.PerforceConnection{}
 	case KindPhabricator:
 		cfg = &schema.PhabricatorConnection{}
+	case KindMaven:
+		cfg = &schema.MavenConnection{}
 	case KindOther:
 		cfg = &schema.OtherExternalServiceConnection{}
 	default:
@@ -368,6 +382,14 @@ func GetLimitFromConfig(kind string, config interface{}) (rlc RateLimitConfig, e
 			rlc.IsDefault = false
 		}
 		rlc.BaseURL = c.P4Port
+	case *schema.MavenConnection:
+		// 2/s is the default limit we enforce
+		rlc.Limit = rate.Limit(5000.0 / 3600.0)
+		if c != nil && c.RateLimit != nil {
+			rlc.Limit = limitOrInf(c.RateLimit.Enabled, c.RateLimit.RequestsPerHour)
+			rlc.IsDefault = false
+		}
+		rlc.BaseURL = "maven"
 	default:
 		return rlc, ErrRateLimitUnsupported{codehostKind: kind}
 	}
