@@ -12,14 +12,18 @@ import (
 	"github.com/gorilla/mux"
 
 	"github.com/sourcegraph/sourcegraph/cmd/frontend/envvar"
-	frontendregistry "github.com/sourcegraph/sourcegraph/cmd/frontend/registry/api"
+	"github.com/sourcegraph/sourcegraph/enterprise/cmd/frontend/internal/registry/store"
 	"github.com/sourcegraph/sourcegraph/internal/conf"
+	"github.com/sourcegraph/sourcegraph/internal/database/dbconn"
 	"github.com/sourcegraph/sourcegraph/internal/errcode"
 	"github.com/sourcegraph/sourcegraph/internal/lazyregexp"
 )
 
-func init() {
-	frontendregistry.HandleRegistryExtensionBundle = handleRegistryExtensionBundle
+// HandleRegistryExtensionBundle is called to handle HTTP requests for an extension's JavaScript
+// bundle and other assets. If there is no local extension registry, it returns an HTTP error
+// response.
+var HandleRegistryExtensionBundle = func(w http.ResponseWriter, r *http.Request) {
+	http.Error(w, "no local extension registry exists", http.StatusNotFound)
 }
 
 // sourceMappingURLLineRegex is a regular expression that matches all lines with a `//# sourceMappingURL` comment
@@ -41,7 +45,7 @@ func handleRegistryExtensionBundle(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	bundle, sourceMap, err := dbReleases{}.GetArtifacts(r.Context(), releaseID)
+	bundle, sourceMap, err := store.NewDBReleases(dbconn.Global).GetArtifacts(r.Context(), releaseID)
 	if errcode.IsNotFound(err) {
 		http.Error(w, err.Error(), http.StatusNotFound)
 		return

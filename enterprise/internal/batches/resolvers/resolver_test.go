@@ -38,7 +38,7 @@ func TestNullIDResilience(t *testing.T) {
 	db := dbtesting.GetDB(t)
 	sr := New(store.New(db, nil))
 
-	s, err := graphqlbackend.NewSchema(db, sr, nil, nil, nil, nil, nil, nil)
+	s, err := graphqlbackend.NewSchema(db, sr, nil, nil, nil, nil, nil, nil, nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -131,7 +131,7 @@ func TestCreateBatchSpec(t *testing.T) {
 	}
 
 	r := &Resolver{store: cstore}
-	s, err := graphqlbackend.NewSchema(db, r, nil, nil, nil, nil, nil, nil)
+	s, err := graphqlbackend.NewSchema(db, r, nil, nil, nil, nil, nil, nil, nil)
 	if err != nil {
 		t.Fatal(err)
 	}

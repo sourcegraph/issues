@@ -1,0 +1,437 @@
+package store
+
+import (
+	"context"
+	"encoding/json"
+	"reflect"
+	"testing"
+	"time"
+
+	"github.com/jackc/pgconn"
+
+	"github.com/sourcegraph/sourcegraph/internal/database"
+	"github.com/sourcegraph/sourcegraph/internal/database/dbtesting"
+	"github.com/sourcegraph/sourcegraph/internal/errcode"
+)
+
+// registryExtensionNamesForTests is a list of test cases containing valid and invalid registry
+// extension names.
+var registryExtensionNamesForTests = []struct {
+	name      string
+	wantValid bool
+}{
+	{"", false},
+	{"a", true},
+	{"-a", false},
+	{"a-", false},
+	{"a-b", true},
+	{"a--b", false},
+	{"a---b", false},
+	{"a.b", true},
+	{"a..b", false},
+	{"a...b", false},
+	{"a_b", true},
+	{"a__b", false},
+	{"a___b", false},
+	{"a-.b", false},
+	{"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx", false},
+}
+
+func TestRegistryExtensions_validNames(t *testing.T) {
+	if testing.Short() {
+		t.Skip()
+	}
+	db := dbtesting.GetDB(t)
+	estore := NewDBExtensions(db)
+	ctx := context.Background()
+
+	user, err := database.GlobalUsers.Create(ctx, database.NewUser{Username: "u"})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	for _, test := range registryExtensionNamesForTests {
+		t.Run(test.name, func(t *testing.T) {
+			valid := true
+			if _, err := estore.Create(ctx, user.ID, 0, test.name); err != nil {
+				if e, ok := err.(*pgconn.PgError); ok && (e.ConstraintName == "registry_extensions_name_valid_chars" || e.ConstraintName == "registry_extensions_name_length") {
+					valid = false
+				} else {
+					t.Fatal(err)
+				}
+			}
+			if valid != test.wantValid {
+				t.Errorf("%q: got valid %v, want %v", test.name, valid, test.wantValid)
+			}
+		})
+	}
+}
+
+func TestRegistryExtensions(t *testing.T) {
+	if testing.Short() {
+		t.Skip()
+	}
+	db := dbtesting.GetDB(t)
+	s := NewDBReleases(db)
+	estore := NewDBExtensions(db)
+	ctx := context.Background()
+
+	testGetByID := func(t *testing.T, id int32, want *DBExtension, wantPublisherName string) {
+		t.Helper()
+		x, err := estore.GetByID(ctx, id)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if !reflect.DeepEqual(x, want) {
+			t.Errorf("got %+v, want %+v", x, want)
+		}
+		if x.Publisher.NonCanonicalName != wantPublisherName {
+			t.Errorf("got publisher name %q, want %q", x.Publisher.NonCanonicalName, wantPublisherName)
+		}
+	}
+	testGetByExtensionID := func(t *testing.T, extensionID string, want *DBExtension) {
+		t.Helper()
+		x, err := estore.GetByExtensionID(ctx, extensionID)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if !reflect.DeepEqual(x, want) {
+			t.Errorf("got %+v, want %+v", x, want)
+		}
+		if x.NonCanonicalExtensionID != extensionID {
+			t.Errorf("got extension ID %q, want %q", x.NonCanonicalExtensionID, extensionID)
+		}
+	}
+	testList := func(t *testing.T, opt DBExtensionsListOptions, want []*DBExtension) {
+		t.Helper()
+		if ois, err := estore.List(ctx, opt); err != nil {
+			t.Fatal(err)
+		} else if !reflect.DeepEqual(ois, want) {
+			t.Errorf("got %s, want %s", asJSON(t, ois), asJSON(t, want))
+		}
+	}
+	testListCount := func(t *testing.T, opt DBExtensionsListOptions, want []*DBExtension) {
+		t.Helper()
+		testList(t, opt, want)
+		if n, err := estore.Count(ctx, opt); err != nil {
+			t.Fatal(err)
+		} else if want := len(want); n != want {
+			t.Errorf("got %d, want %d", n, want)
+		}
+	}
+
+	user, err := database.Users(db).Create(ctx, database.NewUser{Username: "u"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	org, err := database.Orgs(db).Create(ctx, "o", nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	createAndGet := func(t *testing.T, publisherUserID, publisherOrgID int32, name string) *DBExtension {
+		t.Helper()
+		xID, err := estore.Create(ctx, publisherUserID, publisherOrgID, name)
+		if err != nil {
+			t.Fatal(err)
+		}
+		x, err := estore.GetByID(ctx, xID)
+		if err != nil {
+			t.Fatal(err)
+		}
+		return x
+	}
+	xu := createAndGet(t, user.ID, 0, "xu")
+	xo := createAndGet(t, 0, org.ID, "xo")
+
+	t.Run("List/Count/Get publishers", func(t *testing.T) {
+		publishers, err := estore.ListPublishers(ctx, DBPublishersListOptions{})
+		if err != nil {
+			t.Fatal(err)
+		}
+		if want := []*DBPublisher{
+			&xo.Publisher,
+			&xu.Publisher,
+		}; !reflect.DeepEqual(publishers, want) {
+			t.Errorf("got publishers %+v, want %+v", publishers, want)
+		}
+
+		if n, err := estore.CountPublishers(ctx, DBPublishersListOptions{}); err != nil {
+			t.Fatal(err)
+		} else if want := 2; n != 2 {
+			t.Errorf("got count %d, want %d", n, want)
+		}
+
+		for _, p := range []*DBPublisher{&xo.Publisher, &xu.Publisher} {
+			got, err := estore.GetPublisher(ctx, p.NonCanonicalName)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if !reflect.DeepEqual(got, p) {
+				t.Errorf("got %+v, want %+v", got, p)
+			}
+		}
+		if _, err := estore.GetPublisher(ctx, "doesntexist"); !errcode.IsNotFound(err) {
+			t.Errorf("got err %v, want errcode.IsNotFound", err)
+		}
+	})
+
+	publishers := map[string]struct {
+		publisherUserID, publisherOrgID int32
+		publisherName                   string
+	}{
+		"user": {publisherUserID: user.ID, publisherName: "u"},
+		"org":  {publisherOrgID: org.ID, publisherName: "o"},
+	}
+	for name, c := range publishers {
+		t.Run(name+" publisher", func(t *testing.T) {
+			x := createAndGet(t, c.publisherUserID, c.publisherOrgID, "x")
+
+			t.Run("GetByID", func(t *testing.T) {
+				testGetByID(t, x.ID, x, c.publisherName)
+				if _, err := estore.GetByID(ctx, 12345 /* doesn't exist */); !errcode.IsNotFound(err) {
+					t.Errorf("got err %v, want errcode.IsNotFound", err)
+				}
+			})
+
+			t.Run("GetByExtensionID", func(t *testing.T) {
+				testGetByExtensionID(t, c.publisherName+"/"+x.Name, x)
+				if _, err := estore.GetByExtensionID(ctx, "foo.bar"); !errcode.IsNotFound(err) {
+					t.Errorf("got err %v, want errcode.IsNotFound", err)
+				}
+			})
+
+			t.Run("List/Count all", func(t *testing.T) {
+				testListCount(t, DBExtensionsListOptions{}, []*DBExtension{xu, xo, x})
+			})
+			wantByPublisherUser := []*DBExtension{xu}
+			wantByPublisherOrg := []*DBExtension{xo}
+			var wantByCurrent []*DBExtension
+			if c.publisherUserID != 0 {
+				wantByPublisherUser = append(wantByPublisherUser, x)
+				wantByCurrent = wantByPublisherUser
+			} else {
+				wantByPublisherOrg = append(wantByPublisherOrg, x)
+				wantByCurrent = wantByPublisherOrg
+			}
+			t.Run("List/Count by PublisherUserID", func(t *testing.T) {
+				testListCount(t, DBExtensionsListOptions{Publisher: DBPublisher{UserID: user.ID}}, wantByPublisherUser)
+			})
+			t.Run("List/Count by Publisher.OrgID", func(t *testing.T) {
+				testListCount(t, DBExtensionsListOptions{Publisher: DBPublisher{OrgID: org.ID}}, wantByPublisherOrg)
+			})
+			t.Run("List/Count by Publisher.Query all", func(t *testing.T) {
+				testListCount(t, DBExtensionsListOptions{Query: "x"}, []*DBExtension{xu, xo, x})
+			})
+			t.Run("List/Count by Publisher.Query one", func(t *testing.T) {
+				testListCount(t, DBExtensionsListOptions{Query: c.publisherName + "/" + x.Name}, wantByCurrent)
+			})
+			t.Run("List/Count with prioritizeExtensionIDs", func(t *testing.T) {
+				testList(t, DBExtensionsListOptions{PrioritizeExtensionIDs: []string{xu.NonCanonicalExtensionID}, LimitOffset: &database.LimitOffset{Limit: 1}}, []*DBExtension{xu})
+				testList(t, DBExtensionsListOptions{PrioritizeExtensionIDs: []string{xo.NonCanonicalExtensionID}, LimitOffset: &database.LimitOffset{Limit: 1}}, []*DBExtension{xo})
+			})
+
+			if err := estore.Delete(ctx, x.ID); err != nil {
+				t.Fatal(err)
+			}
+			if err := estore.Delete(ctx, x.ID); !errcode.IsNotFound(err) {
+				t.Errorf("2nd Delete: got err %v, want errcode.IsNotFound", err)
+			}
+			if _, err := estore.GetByID(ctx, x.ID); !errcode.IsNotFound(err) {
+				t.Errorf("GetByID after Delete: got err %v, want errcode.IsNotFound", err)
+			}
+		})
+	}
+
+	t.Run("Update", func(t *testing.T) {
+		x := xu
+		if err := estore.Update(ctx, x.ID, nil); err != nil {
+			t.Fatal(err)
+		}
+		x1, err := estore.GetByID(ctx, x.ID)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if time.Since(x1.UpdatedAt) > 1*time.Minute {
+			t.Errorf("got UpdatedAt %v, want recent", x1.UpdatedAt)
+		}
+		if x1.Name != x.Name {
+			t.Errorf("got name %q, want %q", x1.Name, x.Name)
+		}
+	})
+
+	t.Run("Create with same publisher and name", func(t *testing.T) {
+		_, err := estore.Create(ctx, user.ID, 0, "zzz")
+		if err != nil {
+			t.Fatal(err)
+		}
+		if _, err := estore.Create(ctx, user.ID, 0, "zzz"); err == nil {
+			t.Fatal("err == nil")
+		}
+	})
+
+	t.Run("List sort non-WIP first", func(t *testing.T) {
+		// xwip1 is a WIP extension because its title begins with "WIP:".
+		xwip1 := createAndGet(t, user.ID, 0, "wiptest1")
+		_, err := s.Create(ctx, &DBRelease{
+			RegistryExtensionID: xwip1.ID,
+			CreatorUserID:       user.ID,
+			ReleaseTag:          "release",
+			Manifest:            `{"title": "WIP: x"}`,
+			Bundle:              strptr(""),
+			SourceMap:           strptr(""),
+		})
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		// xwip2 is a WIP extension because it has no published releases.
+		xwip2 := createAndGet(t, user.ID, 0, "wiptest2")
+
+		// xwip3 is a WIP extension because it has a "wip": true property.
+		xwip3 := createAndGet(t, user.ID, 0, "wiptest3")
+		_, err = s.Create(ctx, &DBRelease{
+			RegistryExtensionID: xwip3.ID,
+			CreatorUserID:       user.ID,
+			ReleaseTag:          "release",
+			Manifest:            `{"wip": true}`,
+			Bundle:              strptr(""),
+			SourceMap:           strptr(""),
+		})
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		// xnonwip1 is a non-WIP extension.
+		xnonwip1 := createAndGet(t, user.ID, 0, "wiptest4")
+		_, err = s.Create(ctx, &DBRelease{
+			RegistryExtensionID: xnonwip1.ID,
+			CreatorUserID:       user.ID,
+			ReleaseTag:          "release",
+			Manifest:            `{"title": "x"}`,
+			Bundle:              strptr(""),
+			SourceMap:           strptr(""),
+		})
+		if err != nil {
+			t.Fatal(err)
+		}
+		xnonwip1.NonCanonicalIsWorkInProgress = false
+
+		// xnonwip2 is a non-WIP extension because its wip property is not true.
+		xnonwip2 := createAndGet(t, user.ID, 0, "wiptest5")
+		_, err = s.Create(ctx, &DBRelease{
+			RegistryExtensionID: xnonwip2.ID,
+			CreatorUserID:       user.ID,
+			ReleaseTag:          "release",
+			Manifest:            `{"wip": 123}`,
+			Bundle:              strptr(""),
+			SourceMap:           strptr(""),
+		})
+		if err != nil {
+			t.Fatal(err)
+		}
+		xnonwip2.NonCanonicalIsWorkInProgress = false
+
+		// The non-WIP extension should be sorted first.
+		testList(t, DBExtensionsListOptions{Query: "wiptest", LimitOffset: &database.LimitOffset{Limit: 5}}, []*DBExtension{xnonwip1, xnonwip2, xwip1, xwip2, xwip3})
+	})
+}
+
+func TestRegistryExtensions_ListCount(t *testing.T) {
+	if testing.Short() {
+		t.Skip()
+	}
+	db := dbtesting.GetDB(t)
+	s := NewDBReleases(db)
+	estore := NewDBExtensions(db)
+	ctx := context.Background()
+
+	testList := func(t *testing.T, opt DBExtensionsListOptions, want []*DBExtension) {
+		t.Helper()
+		if ois, err := estore.List(ctx, opt); err != nil {
+			t.Fatal(err)
+		} else if !reflect.DeepEqual(ois, want) {
+			t.Errorf("got %s, want %s", asJSON(t, ois), asJSON(t, want))
+		}
+	}
+	testListCount := func(t *testing.T, opt DBExtensionsListOptions, want []*DBExtension) {
+		t.Helper()
+		testList(t, opt, want)
+		if n, err := estore.Count(ctx, opt); err != nil {
+			t.Fatal(err)
+		} else if want := len(want); n != want {
+			t.Errorf("got %d, want %d", n, want)
+		}
+	}
+
+	user, err := database.GlobalUsers.Create(ctx, database.NewUser{Username: "u"})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	createAndGet := func(t *testing.T, name, manifest string) *DBExtension {
+		t.Helper()
+		xID, err := estore.Create(ctx, user.ID, 0, name)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if manifest != "" {
+			_, err = s.Create(ctx, &DBRelease{
+				RegistryExtensionID: xID,
+				CreatorUserID:       user.ID,
+				ReleaseTag:          "release",
+				Manifest:            manifest,
+				Bundle:              strptr(""),
+				SourceMap:           strptr(""),
+			})
+			if err != nil {
+				t.Fatal(err)
+			}
+		}
+		x, err := estore.GetByID(ctx, xID)
+		if err != nil {
+			t.Fatal(err)
+		}
+		return x
+	}
+
+	createAndGet(t, "xnomanifest", ``) // create extension without manifest to ensure it is not matched
+	createAndGet(t, "xinvalidmanifest", `123`)
+	createAndGet(t, "xinvalidtitle", `{"title": 123}`)
+	createAndGet(t, "xinvaliddescription", `{"description": 123}`)
+	createAndGet(t, "xinvalidcategoriestags", `{"title": "invalidcategories", "categories": 123, "tags": 123}`)
+	x1 := createAndGet(t, "x", `{"title": "foo1", "description": "foo2", "categories": ["mycategory1", "Mycategory2"], "tags": ["t1", "T2"], "xyz": 1}`)
+	t.Run("by title", func(t *testing.T) {
+		testListCount(t, DBExtensionsListOptions{Query: "foo"}, []*DBExtension{x1})
+		// BACKCOMPAT: match on title even though extension manifests no longer have a title property.
+		testListCount(t, DBExtensionsListOptions{Query: "foo1"}, []*DBExtension{x1})
+		testListCount(t, DBExtensionsListOptions{Query: "foo2"}, []*DBExtension{x1})
+		// Ensure it's not just searching the full JSON manifest.
+		testListCount(t, DBExtensionsListOptions{Query: "xyz"}, nil)
+		// Ensure it's not matching on category.
+		testListCount(t, DBExtensionsListOptions{Query: "mycategory1"}, nil)
+		testListCount(t, DBExtensionsListOptions{Query: "Mycategory2"}, nil)
+	})
+	t.Run("by category", func(t *testing.T) {
+		testListCount(t, DBExtensionsListOptions{Category: "mycategory1"}, []*DBExtension{x1})
+		testListCount(t, DBExtensionsListOptions{Category: "Mycategory2"}, []*DBExtension{x1})
+		testListCount(t, DBExtensionsListOptions{Category: "mycategory2"}, nil) // case-sensitive
+		testListCount(t, DBExtensionsListOptions{Category: "mycateg"}, nil)     // no partial matches
+		testListCount(t, DBExtensionsListOptions{Category: "othercategory"}, nil)
+	})
+	t.Run("by tag", func(t *testing.T) {
+		testListCount(t, DBExtensionsListOptions{Tag: "t1"}, []*DBExtension{x1})
+		testListCount(t, DBExtensionsListOptions{Tag: "T2"}, []*DBExtension{x1})
+		testListCount(t, DBExtensionsListOptions{Tag: "t2"}, nil) // case-sensitive
+		testListCount(t, DBExtensionsListOptions{Tag: "t"}, nil)  // no partial matches
+		testListCount(t, DBExtensionsListOptions{Tag: "t3"}, nil)
+	})
+}
+
+func asJSON(t *testing.T, v interface{}) string {
+	b, err := json.MarshalIndent(v, "", "  ")
+	if err != nil {
+		t.Fatal(err)
+	}
+	return string(b)
+}

@@ -330,7 +330,7 @@ func prometheusGraphQLRequestName(requestName string) string {
 	return "other"
 }
 
-func NewSchema(db dbutil.DB, batchChanges BatchChangesResolver, codeIntel CodeIntelResolver, insights InsightsResolver, authz AuthzResolver, codeMonitors CodeMonitorsResolver, license LicenseResolver, dotcom DotcomRootResolver) (*graphql.Schema, error) {
+func NewSchema(db dbutil.DB, batchChanges BatchChangesResolver, codeIntel CodeIntelResolver, insights InsightsResolver, authz AuthzResolver, codeMonitors CodeMonitorsResolver, license LicenseResolver, dotcom DotcomRootResolver, registry ExtensionRegistryRootResolver) (*graphql.Schema, error) {
 	resolver := newSchemaResolver(db)
 	schemas := []string{mainSchema}
 
@@ -393,6 +393,16 @@ func NewSchema(db dbutil.DB, batchChanges BatchChangesResolver, codeIntel CodeIn
 		}
 	}
 
+	if registry != nil {
+		EnterpriseResolvers.registryResolver = registry
+		resolver.ExtensionRegistryRootResolver = registry
+		schemas = append(schemas, registrySchema)
+		// Register NodeByID handlers.
+		for kind, res := range registry.NodeResolvers() {
+			resolver.nodeByIDFns[kind] = res
+		}
+	}
+
 	return graphql.ParseSchema(
 		strings.Join(schemas, "\n"),
 		resolver,
@@ -412,6 +422,7 @@ type schemaResolver struct {
 	CodeMonitorsResolver
 	LicenseResolver
 	DotcomRootResolver
+	ExtensionRegistryRootResolver
 
 	db                dbutil.DB
 	repoupdaterClient *repoupdater.Client
@@ -454,9 +465,6 @@ func newSchemaResolver(db dbutil.DB) *schemaResolver {
 		"GitCommit": func(ctx context.Context, id graphql.ID) (Node, error) {
 			return r.gitCommitByID(ctx, id)
 		},
-		"RegistryExtension": func(ctx context.Context, id graphql.ID) (Node, error) {
-			return RegistryExtensionByID(ctx, db, id)
-		},
 		"SavedSearch": func(ctx context.Context, id graphql.ID) (Node, error) {
 			return r.savedSearchByID(ctx, id)
 		},
@@ -483,6 +491,7 @@ var EnterpriseResolvers = struct {
 	codeMonitorsResolver CodeMonitorsResolver
 	licenseResolver      LicenseResolver
 	dotcomResolver       DotcomRootResolver
+	registryResolver     ExtensionRegistryRootResolver
 }{}
 
 // DEPRECATED

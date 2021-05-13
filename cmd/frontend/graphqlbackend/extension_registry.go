@@ -8,28 +8,36 @@ import (
 
 	"github.com/sourcegraph/sourcegraph/cmd/frontend/graphqlbackend/graphqlutil"
 	"github.com/sourcegraph/sourcegraph/internal/conf"
-	"github.com/sourcegraph/sourcegraph/internal/database/dbutil"
 )
 
 var ErrExtensionsDisabled = errors.New("extensions are disabled in site configuration (contact the site admin to enable extensions)")
+var ErrNoExtensionsInOSS = errors.New("no extension registry is available (use Sourcegraph Free or Sourcegraph Enterprise to access the Sourcegraph extension registry and/or to host a private internal extension registry)")
 
 func (r *schemaResolver) ExtensionRegistry(ctx context.Context) (ExtensionRegistryResolver, error) {
-	reg := ExtensionRegistry(r.db)
 	if conf.Extensions() == nil {
-		if !reg.ImplementsLocalExtensionRegistry() {
+		if r.ExtensionRegistryRootResolver == nil {
 			// The OSS build doesn't implement a local extension registry, so the reason for
 			// extensions being disabled is probably that the OSS build is in use.
-			return nil, errors.New("no extension registry is available (use Sourcegraph Free or Sourcegraph Enterprise to access the Sourcegraph extension registry and/or to host a private internal extension registry)")
+			return nil, ErrNoExtensionsInOSS
 		}
 
 		return nil, ErrExtensionsDisabled
 	}
-	return reg, nil
+	return r.ExtensionRegistryRootResolver.ExtensionRegistry(), nil
 }
 
 // ExtensionRegistry is the implementation of the GraphQL types ExtensionRegistry and
 // ExtensionRegistryMutation.
-var ExtensionRegistry func(db dbutil.DB) ExtensionRegistryResolver
+// var ExtensionRegistry func(db dbutil.DB) ExtensionRegistryResolver
+
+type ExtensionRegistryRootResolver interface {
+	ExtensionRegistry() ExtensionRegistryResolver
+	NodeResolvers() map[string]NodeByIDFunc
+}
+
+// "RegistryExtension": func(ctx context.Context, id graphql.ID) (Node, error) {
+// 	return RegistryExtensionByID(ctx, db, id)
+// },
 
 // ExtensionRegistryResolver is the interface for the GraphQL types ExtensionRegistry and
 // ExtensionRegistryMutation.
@@ -47,7 +55,6 @@ type ExtensionRegistryResolver interface {
 	DeleteExtension(context.Context, *ExtensionRegistryDeleteExtensionArgs) (*EmptyResponse, error)
 	LocalExtensionIDPrefix() *string
 
-	ImplementsLocalExtensionRegistry() bool // not exposed via GraphQL
 	// FilterRemoteExtensions enforces `allowRemoteExtensions` by returning a
 	// new slice with extension IDs that were present in
 	// `allowRemoteExtensions`. It returns the original extension IDs if
@@ -97,11 +104,11 @@ type ExtensionRegistryMutationResult interface {
 
 // NodeToRegistryExtension is called to convert GraphQL node values to values of type
 // RegistryExtension. It is assigned at init time.
-var NodeToRegistryExtension func(interface{}) (RegistryExtension, bool)
+// var NodeToRegistryExtension func(interface{}) (RegistryExtension, bool)
 
 // RegistryExtensionByID is called to look up values of GraphQL type RegistryExtension. It is
 // assigned at init time.
-var RegistryExtensionByID func(context.Context, dbutil.DB, graphql.ID) (RegistryExtension, error)
+// var RegistryExtensionByID func(context.Context, dbutil.DB, graphql.ID) (RegistryExtension, error)
 
 // RegistryExtension is the interface for the GraphQL type RegistryExtension.
 type RegistryExtension interface {

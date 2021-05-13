@@ -35,3 +35,7 @@ var insightsSchema string
 // authzSchema is the Authz raw graqhql schema.
 //go:embed authz.graphql
 var authzSchema string
+
+// registrySchema is the extension registry raw graqhql schema.
+//go:embed extension_registry.graphql
+var registrySchema string
