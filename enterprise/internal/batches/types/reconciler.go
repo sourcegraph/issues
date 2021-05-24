@@ -7,6 +7,7 @@ const (
 	ReconcilerOperationPush         ReconcilerOperation = "PUSH"
 	ReconcilerOperationUpdate       ReconcilerOperation = "UPDATE"
 	ReconcilerOperationUndraft      ReconcilerOperation = "UNDRAFT"
+	ReconcilerOperationRedraft      ReconcilerOperation = "REDRAFT"
 	ReconcilerOperationPublish      ReconcilerOperation = "PUBLISH"
 	ReconcilerOperationPublishDraft ReconcilerOperation = "PUBLISH_DRAFT"
 	ReconcilerOperationSync         ReconcilerOperation = "SYNC"
@@ -24,6 +25,7 @@ func (r ReconcilerOperation) Valid() bool {
 	case ReconcilerOperationPush,
 		ReconcilerOperationUpdate,
 		ReconcilerOperationUndraft,
+		ReconcilerOperationRedraft,
 		ReconcilerOperationPublish,
 		ReconcilerOperationPublishDraft,
 		ReconcilerOperationSync,

@@ -251,6 +251,12 @@ func (s *GitLabSource) ReopenChangeset(ctx context.Context, c *Changeset) error 
 	return nil
 }
 
+// RedraftChangeset marks the changeset as work in progress again.
+func (s *GitLabSource) RedraftChangeset(ctx context.Context, c *Changeset) error {
+	c.Title = gitlab.SetWIP(c.Title)
+	return s.UpdateChangeset(ctx, c)
+}
+
 func (s *GitLabSource) decorateMergeRequestData(ctx context.Context, project *gitlab.Project, mr *gitlab.MergeRequest) error {
 	notes, err := s.getMergeRequestNotes(ctx, project, mr)
 	if err != nil {

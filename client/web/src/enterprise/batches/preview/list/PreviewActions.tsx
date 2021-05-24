@@ -66,6 +66,8 @@ const PreviewAction: React.FunctionComponent<PreviewActionProps> = ({ operation,
             return <PreviewActionReopen className={className} />
         case ChangesetSpecOperation.UNDRAFT:
             return <PreviewActionUndraft className={className} />
+        case ChangesetSpecOperation.REDRAFT:
+            return <PreviewActionRedraft className={className} />
         case ChangesetSpecOperation.UPDATE:
             return <PreviewActionUpdate className={className} />
         case ChangesetSpecOperation.PUSH:
@@ -207,6 +209,18 @@ export const PreviewActionArchive: React.FunctionComponent<{ label?: string; cla
         <ArchiveIcon
             className="text-muted mr-1 icon-inline"
             data-tooltip="This changeset will be kept and marked as archived in this batch change"
+        />
+        <span>{label}</span>
+    </div>
+)
+export const PreviewActionRedraft: React.FunctionComponent<{ label?: string; className?: string }> = ({
+    label = 'Redraft',
+    className,
+}) => (
+    <div className={classNames(className, iconClassNames)}>
+        <SourceBranchCheckIcon
+            className="icon-inline text-warning mr-1"
+            data-tooltip="This changeset will be marked as not ready for review on the code host"
         />
         <span>{label}</span>
     </div>

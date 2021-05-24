@@ -690,6 +690,55 @@ func (c *V4Client) MarkPullRequestReadyForReview(ctx context.Context, pr *PullRe
 	return nil
 }
 
+// ConvertPullRequestToDraft marks the PullRequest on Github as draft.
+func (c *V4Client) ConvertPullRequestToDraft(ctx context.Context, pr *PullRequest) error {
+	version := c.determineGitHubVersion(ctx)
+	prFragment, err := pullRequestFragments(version)
+	if err != nil {
+		return err
+	}
+	var q strings.Builder
+	q.WriteString(prFragment)
+	q.WriteString(`mutation	ConvertPullRequestToDraft($input: ConvertPullRequestToDraftInput!) {
+  convertPullRequestToDraft(input:$input) {
+    pullRequest {
+      ... pr
+    }
+  }
+}`)
+
+	var result struct {
+		ConvertPullRequestToDraft struct {
+			PullRequest struct {
+				PullRequest
+				Participants  struct{ Nodes []Actor }
+				TimelineItems TimelineItemConnection
+			} `json:"pullRequest"`
+		} `json:"convertPullRequestToDraft"`
+	}
+
+	input := map[string]interface{}{"input": struct {
+		ID string `json:"pullRequestId"`
+	}{ID: pr.ID}}
+	err = c.requestGraphQL(ctx, q.String(), input, &result)
+	if err != nil {
+		return err
+	}
+
+	ti := result.ConvertPullRequestToDraft.PullRequest.TimelineItems
+	*pr = result.ConvertPullRequestToDraft.PullRequest.PullRequest
+	pr.TimelineItems = ti.Nodes
+	pr.Participants = result.ConvertPullRequestToDraft.PullRequest.Participants.Nodes
+
+	items, err := c.loadRemainingTimelineItems(ctx, pr.ID, ti.PageInfo)
+	if err != nil {
+		return err
+	}
+	pr.TimelineItems = append(pr.TimelineItems, items...)
+
+	return nil
+}
+
 // ClosePullRequest closes the PullRequest on Github.
 func (c *V4Client) ClosePullRequest(ctx context.Context, pr *PullRequest) error {
 	version := c.determineGitHubVersion(ctx)

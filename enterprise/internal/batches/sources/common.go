@@ -35,6 +35,8 @@ type DraftChangesetSource interface {
 	CreateDraftChangeset(context.Context, *Changeset) (bool, error)
 	// UndraftChangeset will update the Changeset on the source to be not in draft mode anymore.
 	UndraftChangeset(context.Context, *Changeset) error
+	// RedraftChangest will update the Changeset on the source to be in draft mode again.
+	RedraftChangeset(context.Context, *Changeset) error
 }
 
 // A ChangesetSource can load the latest state of a list of Changesets.

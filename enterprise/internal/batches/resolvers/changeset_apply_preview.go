@@ -335,9 +335,6 @@ func (c *changesetSpecDeltaResolver) TitleChanged() bool {
 func (c *changesetSpecDeltaResolver) BodyChanged() bool {
 	return c.delta.BodyChanged
 }
-func (c *changesetSpecDeltaResolver) Undraft() bool {
-	return c.delta.Undraft
-}
 func (c *changesetSpecDeltaResolver) BaseRefChanged() bool {
 	return c.delta.BaseRefChanged
 }

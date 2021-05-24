@@ -248,10 +248,6 @@ type Changeset struct {
 	NumResets        int64
 	NumFailures      int64
 	SyncErrorMessage *string
-
-	// Closing is set to true (along with the ReocncilerState) when the
-	// reconciler should close the changeset.
-	Closing bool
 }
 
 // RecordID is needed to implement the workerutil.Record interface.

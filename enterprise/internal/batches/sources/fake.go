@@ -41,6 +41,7 @@ type FakeChangesetSource struct {
 
 	CreateDraftChangesetCalled  bool
 	UndraftedChangesetsCalled   bool
+	RedraftChangesetCalled      bool
 	CreateChangesetCalled       bool
 	UpdateChangesetCalled       bool
 	ListReposCalled             bool
@@ -123,6 +124,16 @@ func (s *FakeChangesetSource) CreateDraftChangeset(ctx context.Context, c *Chang
 
 	s.CreatedChangesets = append(s.CreatedChangesets, c)
 	return s.ChangesetExists, s.Err
+}
+
+func (s *FakeChangesetSource) RedraftChangeset(ctx context.Context, c *Changeset) error {
+	s.RedraftChangesetCalled = true
+
+	if s.Err != nil {
+		return s.Err
+	}
+
+	return c.SetMetadata(s.FakeMetadata)
 }
 
 func (s *FakeChangesetSource) UndraftChangeset(ctx context.Context, c *Changeset) error {

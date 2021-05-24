@@ -117,8 +117,6 @@ func testStoreChangesets(t *testing.T, ctx context.Context, s *Store, clock ct.C
 				FailureMessage:  &failureMessage,
 				NumResets:       18,
 				NumFailures:     25,
-
-				Closing: true,
 			}
 
 			if i != 0 {

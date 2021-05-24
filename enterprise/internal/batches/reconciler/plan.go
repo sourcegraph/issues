@@ -6,6 +6,9 @@ import (
 	"strings"
 
 	btypes "github.com/sourcegraph/sourcegraph/enterprise/internal/batches/types"
+	"github.com/sourcegraph/sourcegraph/internal/extsvc/bitbucketserver"
+	"github.com/sourcegraph/sourcegraph/internal/extsvc/github"
+	"github.com/sourcegraph/sourcegraph/internal/extsvc/gitlab"
 )
 
 var operationPrecedence = map[btypes.ReconcilerOperation]int{
@@ -18,6 +21,7 @@ var operationPrecedence = map[btypes.ReconcilerOperation]int{
 	btypes.ReconcilerOperationClose:        1,
 	btypes.ReconcilerOperationReopen:       2,
 	btypes.ReconcilerOperationUndraft:      3,
+	btypes.ReconcilerOperationRedraft:      3,
 	btypes.ReconcilerOperationUpdate:       4,
 	btypes.ReconcilerOperationSleep:        5,
 	btypes.ReconcilerOperationSync:         6,
@@ -112,6 +116,7 @@ func DeterminePlan(previousSpec, currentSpec *btypes.ChangesetSpec, ch *btypes.C
 	}
 
 	wantDetach := false
+	wantClose := false
 	wantArchive := false
 	isArchived := false
 	isStillAttached := false
@@ -125,6 +130,15 @@ func DeterminePlan(previousSpec, currentSpec *btypes.ChangesetSpec, ch *btypes.C
 		} else if assoc.Archive && assoc.BatchChangeID == ch.OwnedByBatchChangeID && ch.Published() {
 			wantArchive = !assoc.IsArchived
 			isArchived = assoc.IsArchived
+			if wantArchive {
+				// If the changeset hasn't been closed/merged yet, we close it.
+				// Marking it as Closing would be a noop, but it's weird to show a
+				// changeset as will-be-closed on the preview page when it's
+				// already closed.
+				if ch.Published() && ch.Closeable() {
+					wantClose = true
+				}
+			}
 		} else {
 			isStillAttached = true
 		}
@@ -134,10 +148,10 @@ func DeterminePlan(previousSpec, currentSpec *btypes.ChangesetSpec, ch *btypes.C
 	}
 
 	if wantArchive {
-		pl.SetOp(btypes.ReconcilerOperationArchive)
+		pl.AddOp(btypes.ReconcilerOperationArchive)
 	}
 
-	if ch.Closing {
+	if wantClose {
 		pl.AddOp(btypes.ReconcilerOperationClose)
 		// Close is a final operation, nothing else should overwrite it.
 		return pl, nil
@@ -185,13 +199,36 @@ func DeterminePlan(previousSpec, currentSpec *btypes.ChangesetSpec, ch *btypes.C
 		if ch.ExternalState == btypes.ChangesetExternalStateMerged {
 			return pl, nil
 		}
-		if reopenAfterDetach(ch) {
+		if reopenAfterDetach(ch, delta) {
 			pl.SetOp(btypes.ReconcilerOperationReopen)
 		}
 
-		// Only do undraft, when the codehost supports draft changesets.
-		if delta.Undraft && btypes.ExternalServiceSupports(ch.ExternalServiceType, btypes.CodehostCapabilityDraftChangesets) {
-			pl.AddOp(btypes.ReconcilerOperationUndraft)
+		// If was set to "draft" and now "true", need to undraft the changeset.
+		if previousSpec.Spec.Published.Draft() && currentSpec.Spec.Published.True() {
+			if ch.SupportsDraft() {
+				pl.AddOp(btypes.ReconcilerOperationUndraft)
+			}
+		} else if previousSpec.Spec.Published.True() && currentSpec.Spec.Published.Draft() {
+			if ch.SupportsDraft() {
+				pl.AddOp(btypes.ReconcilerOperationRedraft)
+			}
+		} else if !previousSpec.Spec.Published.False() && currentSpec.Spec.Published.False() {
+			pl.AddOp(btypes.ReconcilerOperationClose)
+		} else if previousSpec.Spec.Published.False() && !currentSpec.Spec.Published.False() {
+			pl.AddOp(btypes.ReconcilerOperationReopen)
+			if ch.SupportsDraft() {
+				isDraft, err := changesetIsDraft(ch)
+				if err != nil {
+					return nil, err
+				}
+				if currentSpec.Spec.Published.Draft() {
+					if !isDraft {
+						pl.AddOp(btypes.ReconcilerOperationRedraft)
+					}
+				} else if isDraft {
+					pl.AddOp(btypes.ReconcilerOperationUndraft)
+				}
+			}
 		}
 
 		if delta.AttributesChanged() {
@@ -228,7 +265,7 @@ func DeterminePlan(previousSpec, currentSpec *btypes.ChangesetSpec, ch *btypes.C
 	return pl, nil
 }
 
-func reopenAfterDetach(ch *btypes.Changeset) bool {
+func reopenAfterDetach(ch *btypes.Changeset, delta *ChangesetSpecDelta) bool {
 	closed := ch.ExternalState == btypes.ChangesetExternalStateClosed
 	if !closed {
 		return false
@@ -246,7 +283,7 @@ func reopenAfterDetach(ch *btypes.Changeset) bool {
 	// At this point the changeset is closed and not marked as to-be-closed.
 
 	// TODO: What if somebody closed the changeset on purpose on the codehost?
-	return ch.AttachedTo(ch.OwnedByBatchChangeID)
+	return ch.AttachedTo(ch.OwnedByBatchChangeID) && delta.Reopen
 }
 
 func compareChangesetSpecs(previous, current *btypes.ChangesetSpec) (*ChangesetSpecDelta, error) {
@@ -264,12 +301,6 @@ func compareChangesetSpecs(previous, current *btypes.ChangesetSpec) (*ChangesetS
 	}
 	if previous.Spec.BaseRef != current.Spec.BaseRef {
 		delta.BaseRefChanged = true
-	}
-
-	// If was set to "draft" and now "true", need to undraft the changeset.
-	// We currently ignore going from "true" to "draft".
-	if previous.Spec.Published.Draft() && current.Spec.Published.True() {
-		delta.Undraft = true
 	}
 
 	// Diff
@@ -330,7 +361,6 @@ func compareChangesetSpecs(previous, current *btypes.ChangesetSpec) (*ChangesetS
 type ChangesetSpecDelta struct {
 	TitleChanged         bool
 	BodyChanged          bool
-	Undraft              bool
 	BaseRefChanged       bool
 	DiffChanged          bool
 	CommitMessageChanged bool
@@ -350,4 +380,18 @@ func (d *ChangesetSpecDelta) NeedCodeHostUpdate() bool {
 
 func (d *ChangesetSpecDelta) AttributesChanged() bool {
 	return d.NeedCommitUpdate() || d.NeedCodeHostUpdate()
+}
+
+func changesetIsDraft(ch *btypes.Changeset) (bool, error) {
+	switch m := ch.Metadata.(type) {
+	case *github.PullRequest:
+		return m.IsDraft, nil
+	case *gitlab.MergeRequest:
+		return m.WorkInProgress, nil
+	case *bitbucketserver.PullRequest:
+		return false, nil
+
+	default:
+		return false, fmt.Errorf("invalid changeset metadata %T", ch.Metadata)
+	}
 }

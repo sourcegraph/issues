@@ -251,3 +251,18 @@ func (s GithubSource) CreateComment(ctx context.Context, c *Changeset, text stri
 
 	return s.client.CreatePullRequestComment(ctx, pr, text)
 }
+
+// RedraftChangeset will update the Changeset on the source to be in draft mode again.
+func (s GithubSource) RedraftChangeset(ctx context.Context, c *Changeset) error {
+	pr, ok := c.Changeset.Metadata.(*github.PullRequest)
+	if !ok {
+		return errors.New("Changeset is not a GitHub pull request")
+	}
+
+	err := s.client.ConvertPullRequestToDraft(ctx, pr)
+	if err != nil {
+		return err
+	}
+
+	return c.Changeset.SetMetadata(pr)
+}

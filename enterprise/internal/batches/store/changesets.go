@@ -57,7 +57,6 @@ var ChangesetColumns = []*sqlf.Query{
 	sqlf.Sprintf("changesets.process_after"),
 	sqlf.Sprintf("changesets.num_resets"),
 	sqlf.Sprintf("changesets.num_failures"),
-	sqlf.Sprintf("changesets.closing"),
 	sqlf.Sprintf("changesets.syncer_error"),
 }
 
@@ -92,7 +91,6 @@ var changesetInsertColumns = []*sqlf.Query{
 	sqlf.Sprintf("process_after"),
 	sqlf.Sprintf("num_resets"),
 	sqlf.Sprintf("num_failures"),
-	sqlf.Sprintf("closing"),
 	sqlf.Sprintf("syncer_error"),
 	// We additionally store the result of changeset.Title() in a column, so
 	// the business logic for determining it is in one place and the field is
@@ -154,7 +152,6 @@ func (s *Store) changesetWriteQuery(q string, includeID bool, c *btypes.Changese
 		nullTimeColumn(c.ProcessAfter),
 		c.NumResets,
 		c.NumFailures,
-		c.Closing,
 		c.SyncErrorMessage,
 		nullStringColumn(title),
 	}
@@ -197,7 +194,7 @@ func (s *Store) CreateChangeset(ctx context.Context, c *btypes.Changeset) error 
 var createChangesetQueryFmtstr = `
 -- source: enterprise/internal/batches/store.go:CreateChangeset
 INSERT INTO changesets (%s)
-VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
 RETURNING %s
 `
 
@@ -607,7 +604,7 @@ func (s *Store) UpdateChangeset(ctx context.Context, cs *btypes.Changeset) error
 var updateChangesetQueryFmtstr = `
 -- source: enterprise/internal/batches/store_changesets.go:UpdateChangeset
 UPDATE changesets
-SET (%s) = (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+SET (%s) = (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
 WHERE id = %s
 RETURNING
   %s
@@ -829,7 +826,6 @@ func scanChangeset(t *btypes.Changeset, s scanner) error {
 		&dbutil.NullTime{Time: &t.ProcessAfter},
 		&t.NumResets,
 		&t.NumFailures,
-		&t.Closing,
 		&dbutil.NullString{S: &syncErrorMessage},
 	)
 	if err != nil {
