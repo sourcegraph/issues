@@ -119,7 +119,7 @@ const (
 	// TypePhabricator is the (api.ExternalRepoSpec).ServiceType value for Phabricator projects.
 	TypePhabricator = "phabricator"
 
-	// TypePhabricator is the (api.ExternalRepoSpec).ServiceType value for Phabricator projects.
+	// TypeMaven is the (api.ExternalRepoSpec).ServiceType value for Maven packages (Java/JVM ecosystem libraries).
 	TypeMaven = "maven"
 
 	// TypeOther is the (api.ExternalRepoSpec).ServiceType value for other projects.
