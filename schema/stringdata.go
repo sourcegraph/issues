@@ -34,6 +34,10 @@ var GitLabSchemaJSON string
 //go:embed gitolite.schema.json
 var GitoliteSchemaJSON string
 
+// MavenSchemaJSON is the content of the file "maven.schema.json".
+//go:embed maven.schema.json
+var MavenSchemaJSON string
+
 // OtherExternalServiceSchemaJSON is the content of the file "other_external_service.schema.json".
 //go:embed other_external_service.schema.json
 var OtherExternalServiceSchemaJSON string
