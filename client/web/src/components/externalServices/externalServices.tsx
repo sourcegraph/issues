@@ -15,6 +15,7 @@ import bitbucketServerSchemaJSON from '../../../../../schema/bitbucket_server.sc
 import githubSchemaJSON from '../../../../../schema/github.schema.json'
 import gitlabSchemaJSON from '../../../../../schema/gitlab.schema.json'
 import gitoliteSchemaJSON from '../../../../../schema/gitolite.schema.json'
+import mavenSchemaJSON from '../../../../../schema/maven.schema.json'
 import otherExternalServiceSchemaJSON from '../../../../../schema/other_external_service.schema.json'
 import perforceSchemaJSON from '../../../../../schema/perforce.schema.json'
 import phabricatorSchemaJSON from '../../../../../schema/phabricator.schema.json'
@@ -1175,6 +1176,35 @@ const PERFORCE: AddExternalServiceOptions = {
         },
     ],
 }
+const MAVEN: AddExternalServiceOptions = {
+    kind: ExternalServiceKind.MAVEN,
+    title: 'Maven',
+    icon: GitIcon,
+    jsonSchema: mavenSchemaJSON,
+    defaultDisplayName: 'Maven',
+    defaultConfig: `{
+        "???": []
+}`,
+    instructions: (
+        <div>
+            <ol>
+                <li>Update your Maven repositories! Poop</li>
+            </ol>
+            <p>
+                See{' '}
+                <a
+                    rel="noopener noreferrer"
+                    target="_blank"
+                    href="https://docs.sourcegraph.com/admin/repo/maven#configuration"
+                >
+                    the docs for more advanced options
+                </a>
+                , or try one of the buttons below.
+            </p>
+        </div>
+    ),
+    editorActions: [],
+}
 
 export const codeHostExternalServices: Record<string, AddExternalServiceOptions> = {
     github: GITHUB_DOTCOM,
@@ -1188,6 +1218,7 @@ export const codeHostExternalServices: Record<string, AddExternalServiceOptions>
     gitolite: GITOLITE,
     git: GENERIC_GIT,
     ...(window.context?.experimentalFeatures?.perforce === 'enabled' ? { perforce: PERFORCE } : {}),
+    ...(window.context?.experimentalFeatures?.maven === 'enabled' ? { maven: MAVEN } : {}),
 }
 
 export const nonCodeHostExternalServices: Record<string, AddExternalServiceOptions> = {
@@ -1209,4 +1240,5 @@ export const defaultExternalServices: Record<ExternalServiceKind, AddExternalSer
     [ExternalServiceKind.OTHER]: GENERIC_GIT,
     [ExternalServiceKind.AWSCODECOMMIT]: AWS_CODE_COMMIT,
     [ExternalServiceKind.PERFORCE]: PERFORCE,
+    [ExternalServiceKind.MAVEN]: MAVEN,
 }

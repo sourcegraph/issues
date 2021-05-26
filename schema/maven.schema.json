@@ -24,10 +24,7 @@
       "description": "Rate limit applied when making background API requests to the Maven repository.",
       "title": "MavenRateLimit",
       "type": "object",
-      "required": [
-        "enabled",
-        "requestsPerHour"
-      ],
+      "required": ["enabled", "requestsPerHour"],
       "properties": {
         "enabled": {
           "description": "true if rate limiting is enabled.",
@@ -58,15 +55,7 @@
         "type": "string",
         "pattern": "^[\\w-]+:[\\w.-]+$"
       },
-      "examples": [
-        [
-          "groupID:artifactID"
-        ],
-        [
-          "org.apache.commons:commons-csv",
-          "com.google.guava:guava"
-        ]
-      ]
+      "examples": [["groupID:artifactID"], ["org.apache.commons:commons-csv", "com.google.guava:guava"]]
     },
     "groups": {
       "description": "An array of Maven groups whose artifacts should be mirrored on Sourcegraph.",
@@ -75,15 +64,7 @@
         "type": "string",
         "pattern": "^[\\w-]+$"
       },
-      "examples": [
-        [
-          "groupID"
-        ],
-        [
-          "org.apache.",
-          "com.google.guava."
-        ]
-      ]
+      "examples": [["groupID"], ["org.apache.", "com.google.guava."]]
     }
   }
 }
