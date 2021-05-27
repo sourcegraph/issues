@@ -1183,7 +1183,8 @@ const MAVEN: AddExternalServiceOptions = {
     jsonSchema: mavenSchemaJSON,
     defaultDisplayName: 'Maven',
     defaultConfig: `{
-        "???": []
+        "repositories": ["central"],
+        "repositoryPathPattern": ""
 }`,
     instructions: (
         <div>

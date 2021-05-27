@@ -6,7 +6,10 @@
   "allowComments": true,
   "type": "object",
   "additionalProperties": false,
-  "required": ["repositories", "repositoryPathPattern"],
+  "required": [
+    "repositories",
+    "repositoryPathPattern"
+  ],
   "properties": {
     "repositories": {
       "description": "The url at which the maven repository can be found.",
@@ -14,7 +17,9 @@
       "items": {
         "type": "string"
       },
-      "default": ["https://repo1.maven.org/maven2"]
+      "default": [
+        "central"
+      ]
     },
     "credentials": {
       "description": "Contents of a coursier.credentials file needed for accessing the Maven repositories.",
@@ -24,7 +29,10 @@
       "description": "Rate limit applied when making background API requests to the Maven repository.",
       "title": "MavenRateLimit",
       "type": "object",
-      "required": ["enabled", "requestsPerHour"],
+      "required": [
+        "enabled",
+        "requestsPerHour"
+      ],
       "properties": {
         "enabled": {
           "description": "true if rate limiting is enabled.",
@@ -43,11 +51,6 @@
         "requestsPerHour": 5000
       }
     },
-    "repositoryPathPattern": {
-      "description": "The pattern used to generate the corresponding Sourcegraph repository name for a Maven artifact. In the pattern, the variable \"{artifact}\" is replaced with the Maven artifact's path.\n\nFor example, if your Maven artifact path is \"//Sourcegraph/\" and your Sourcegraph URL is https://src.example.com, then a repositoryPathPattern of \"maven/{artifact}\" would mean that the Maven artifact is available on Sourcegraph at https://src.example.com/maven/Sourcegraph.\n\nIt is important that the Sourcegraph repository name generated with this pattern be unique to this Maven repository. If different Maven repositories generate repository names that collide, Sourcegraph's behavior is undefined.",
-      "type": "string",
-      "default": "maven/{depot}"
-    },
     "artifacts": {
       "description": "An array of artifact \"groupID:artifactID\" strings specifying which Maven artifacts to mirror on Sourcegraph.",
       "type": "array",
@@ -55,7 +58,15 @@
         "type": "string",
         "pattern": "^[\\w-]+:[\\w.-]+$"
       },
-      "examples": [["groupID:artifactID"], ["org.apache.commons:commons-csv", "com.google.guava:guava"]]
+      "examples": [
+        [
+          "groupID:artifactID"
+        ],
+        [
+          "org.apache.commons:commons-csv",
+          "com.google.guava:guava"
+        ]
+      ]
     },
     "groups": {
       "description": "An array of Maven groups whose artifacts should be mirrored on Sourcegraph.",
@@ -64,7 +75,15 @@
         "type": "string",
         "pattern": "^[\\w-]+$"
       },
-      "examples": [["groupID"], ["org.apache.", "com.google.guava."]]
+      "examples": [
+        [
+          "groupID"
+        ],
+        [
+          "org.apache.",
+          "com.google.guava."
+        ]
+      ]
     }
   }
 }

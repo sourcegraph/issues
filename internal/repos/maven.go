@@ -130,23 +130,15 @@ func (e *mavenArtifactNotFound) Error() string {
 
 func (s MavenSource) makeRepo(groupID, artifactID, version string) *types.Repo {
 	fullArtifactID := strings.Join([]string{groupID, artifactID, version}, ":")
-	artifactPath := strings.Join([]string{artifactID, version}, "/")
-	fullArtifactPath := strings.Join([]string{groupID, artifactPath}, "/")
-
+	repoName := "maven/" + fullArtifactID
 	urn := s.svc.URN()
 	cloneURL := url.URL{
 		Host: "maven",
-		Path: strings.Join([]string{groupID, artifactID, version}, "/"),
+		Path: repoName,
 	}
 	return &types.Repo{
-		Name: reposource.MavenRepoName(
-			s.config.RepositoryPathPattern,
-			fullArtifactID,
-		),
-		URI: string(reposource.MavenRepoName(
-			s.config.RepositoryPathPattern,
-			fullArtifactPath,
-		)),
+		Name: api.RepoName(repoName),
+		URI:  repoName,
 		ExternalRepo: api.ExternalRepoSpec{
 			ID:          fullArtifactID,
 			ServiceType: extsvc.TypeMaven,
