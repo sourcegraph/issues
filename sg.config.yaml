@@ -395,7 +395,7 @@ checks:
     failMessage: "Failed to run 'docker -v'. Please make sure Docker is running."
 
   redis:
-    cmd: echo "PING" | nc localhost 6379
+    cmd: redis-cli ping
     failMessage: "Failed to connect to Redis on port 6379. Please make sure Redis is running."
 
   postgres:
