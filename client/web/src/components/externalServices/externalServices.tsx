@@ -1184,12 +1184,13 @@ const MAVEN: AddExternalServiceOptions = {
     defaultDisplayName: 'Maven',
     defaultConfig: `{
         "repositories": ["central"],
-        "repositoryPathPattern": ""
 }`,
     instructions: (
         <div>
             <ol>
-                <li>Update your Maven repositories! Poop</li>
+                <li>
+                    In the configuration below, set <Field>maven.repositories</Field> to the list of Maven repositories
+                </li>
             </ol>
             <p>
                 See{' '}
