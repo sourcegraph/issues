@@ -7,8 +7,7 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
-    "repositories",
-    "repositoryPathPattern"
+    "repositories"
   ],
   "properties": {
     "repositories": {

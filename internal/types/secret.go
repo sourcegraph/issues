@@ -69,6 +69,8 @@ func (e *ExternalService) RedactConfigSecrets() error {
 		newCfg, err = redactField(e.Config)
 	case *schema.OtherExternalServiceConnection:
 		newCfg, err = redactField(e.Config, "url")
+	case *schema.MavenConnection:
+		newCfg, err = e.Config, nil
 	default:
 		// return an error here, it's safer to fail than to incorrectly return unsafe data.
 		err = fmt.Errorf("RedactExternalServiceConfig: kind %q not implemented", e.Kind)
