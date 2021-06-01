@@ -14,6 +14,7 @@ import (
 	"github.com/sourcegraph/sourcegraph/internal/extsvc/github"
 	"github.com/sourcegraph/sourcegraph/internal/extsvc/gitlab"
 	"github.com/sourcegraph/sourcegraph/internal/extsvc/gitolite"
+	"github.com/sourcegraph/sourcegraph/internal/extsvc/maven"
 	"github.com/sourcegraph/sourcegraph/internal/extsvc/perforce"
 	"github.com/sourcegraph/sourcegraph/internal/extsvc/phabricator"
 	"github.com/sourcegraph/sourcegraph/internal/types"
@@ -67,7 +68,7 @@ func CloneURL(kind, config string, repo *types.Repo) (string, error) {
 			return otherCloneURL(repo, r), nil
 		}
 	case *schema.MavenConnection:
-		if r, ok := repo.Metadata.(*MavenMetadata); ok {
+		if r, ok := repo.Metadata.(*maven.MavenMetadata); ok {
 			return MavenCloneURL(r.Dependency), nil
 		} else {
 			log15.Info("", "r", repo, "metadata", repo.Metadata)

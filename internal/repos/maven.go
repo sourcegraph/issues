@@ -10,6 +10,7 @@ import (
 	"github.com/sourcegraph/sourcegraph/internal/api"
 	"github.com/sourcegraph/sourcegraph/internal/conf/reposource"
 	"github.com/sourcegraph/sourcegraph/internal/extsvc"
+	"github.com/sourcegraph/sourcegraph/internal/extsvc/maven"
 	"github.com/sourcegraph/sourcegraph/internal/extsvc/maven/coursier"
 	"github.com/sourcegraph/sourcegraph/internal/jsonc"
 	"github.com/sourcegraph/sourcegraph/internal/types"
@@ -47,12 +48,12 @@ func (s MavenSource) ListRepos(ctx context.Context, results chan SourceResult) {
 }
 
 func (s MavenSource) listDependentRepos(ctx context.Context, results chan SourceResult) {
-	listed := make(map[string]struct{})
 	for _, dependency := range s.config.Artifacts {
-		listed[dependency] = struct{}{}
+		repo := s.makeRepo(dependency)
+		log15.Info("listDependentRepos", "repo", repo, "metadata", repo.Metadata)
 		results <- SourceResult{
 			Source: s,
-			Repo:   s.makeRepo(dependency),
+			Repo:   repo,
 		}
 	}
 
@@ -117,7 +118,7 @@ func (s MavenSource) makeRepo(dependency string) *types.Repo {
 				CloneURL: cloneURL,
 			},
 		},
-		Metadata: &MavenMetadata{
+		Metadata: &maven.MavenMetadata{
 			Dependency: dependency,
 		},
 	}
@@ -126,8 +127,4 @@ func (s MavenSource) makeRepo(dependency string) *types.Repo {
 // ExternalServices returns a singleton slice containing the external service.
 func (s MavenSource) ExternalServices() types.ExternalServices {
 	return types.ExternalServices{s.svc}
-}
-
-type MavenMetadata struct {
-	Dependency string
 }

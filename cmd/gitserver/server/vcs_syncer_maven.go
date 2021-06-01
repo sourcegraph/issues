@@ -5,7 +5,9 @@ import (
 	"encoding/json"
 	"os"
 	"os/exec"
+	"path/filepath"
 
+	"github.com/inconshreveable/log15"
 	"github.com/pkg/errors"
 
 	"github.com/sourcegraph/sourcegraph/internal/conf/reposource"
@@ -28,6 +30,7 @@ func (s MavenArtifactSyncer) Type() string {
 // error indicates there is a problem.
 func (s MavenArtifactSyncer) IsCloneable(ctx context.Context, remoteURL *vcs.URL) error {
 	dependency := reposource.DecomposeMavenPath(remoteURL.Path)
+	log15.Info("Maven.IsCloneable", "dependency", dependency, "url", remoteURL.Path)
 	sources, err := coursier.FetchSources(ctx, s.Config, dependency)
 	if err != nil {
 		return err
@@ -39,7 +42,7 @@ func (s MavenArtifactSyncer) IsCloneable(ctx context.Context, remoteURL *vcs.URL
 }
 
 // CloneCommand returns the command to be executed for cloning from remote.
-func (s MavenArtifactSyncer) CloneCommand(ctx context.Context, remoteURL *vcs.URL, tmpPath string) (cmd *exec.Cmd, err error) {
+func (s MavenArtifactSyncer) CloneCommand(ctx context.Context, remoteURL *vcs.URL, tmpPath string) (*exec.Cmd, error) {
 	dependency := reposource.DecomposeMavenPath(remoteURL.Path)
 
 	paths, err := coursier.FetchSources(ctx, s.Config, dependency)
@@ -53,13 +56,16 @@ func (s MavenArtifactSyncer) CloneCommand(ctx context.Context, remoteURL *vcs.UR
 
 	path := paths[0]
 
+	workingDir := filepath.Dir(tmpPath)
+
 	initCmd := exec.CommandContext(ctx, "git", "init")
-	initCmd.Dir = tmpPath
-	if output, err := runWith(ctx, cmd, false, nil); err != nil {
+	initCmd.Dir = workingDir
+	log15.Info("CloneCommand", "tmpPath", tmpPath, "cwd", initCmd.Dir)
+	if output, err := runWith(ctx, initCmd, false, nil); err != nil {
 		return nil, errors.Wrapf(err, "failed to init git repository with output %q", string(output))
 	}
 
-	return exec.CommandContext(ctx, "git", "--version"), s.commitJar(ctx, GitDir(tmpPath), dependency, path)
+	return exec.CommandContext(ctx, "git", "--version"), s.commitJar(ctx, GitDir(tmpPath), initCmd.Dir, dependency, path)
 }
 
 // Fetch does nothing for Maven packages because they are immutable and cannot be updated after publishing.
@@ -72,8 +78,8 @@ func (s MavenArtifactSyncer) RemoteShowCommand(ctx context.Context, remoteURL *v
 	return exec.CommandContext(ctx, "git", "remote", "show", "./"), nil
 }
 
-func (s MavenArtifactSyncer) commitJar(ctx context.Context, dir GitDir, dependency, path string) error {
-	cmd := exec.CommandContext(ctx, "unzip", path, "-d", "./")
+func (s MavenArtifactSyncer) commitJar(ctx context.Context, dir GitDir, workingDir, dependency, path string) error {
+	cmd := exec.CommandContext(ctx, "unzip", path, "-d", workingDir)
 	dir.Set(cmd)
 	if output, err := runWith(ctx, cmd, false, nil); err != nil {
 		return errors.Wrapf(err, "failed to unzip with output %q", string(output))
