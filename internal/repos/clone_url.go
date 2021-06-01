@@ -69,6 +69,9 @@ func CloneURL(kind, config string, repo *types.Repo) (string, error) {
 	case *schema.MavenConnection:
 		if r, ok := repo.Metadata.(*MavenMetadata); ok {
 			return MavenCloneURL(r.Dependency), nil
+		} else {
+			log15.Info("", "r", repo, "metadata", repo.Metadata)
+			fmt.Printf("%T", repo.Metadata)
 		}
 	default:
 		return "", errors.Errorf("unknown external service kind %q for repo %d", kind, repo.ID)
