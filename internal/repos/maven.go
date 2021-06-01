@@ -4,7 +4,8 @@ import (
 	"context"
 	"fmt"
 	"net/url"
-	"strings"
+
+	"github.com/inconshreveable/log15"
 
 	"github.com/sourcegraph/sourcegraph/internal/api"
 	"github.com/sourcegraph/sourcegraph/internal/conf/reposource"
@@ -47,77 +48,34 @@ func (s MavenSource) ListRepos(ctx context.Context, results chan SourceResult) {
 
 func (s MavenSource) listDependentRepos(ctx context.Context, results chan SourceResult) {
 	listed := make(map[string]struct{})
-	for _, artifact := range s.config.Artifacts {
-		split := strings.Split(artifact, ":")
-		groupID := split[0]
-		artifactID := split[1]
-		versions, err := coursier.ListVersions(ctx, s.config, groupID, artifactID)
-		if err != nil {
-			results <- SourceResult{Err: err}
-			continue
-		}
-		if len(versions) == 0 {
-			results <- SourceResult{
-				Err: &mavenArtifactNotFound{groupID: groupID, artifactID: artifactID},
-			}
-			continue
-		}
-
-		listed[artifact] = struct{}{}
+	for _, dependency := range s.config.Artifacts {
+		listed[dependency] = struct{}{}
 		results <- SourceResult{
 			Source: s,
-			Repo:   s.makeRepo(groupID, artifactID, versions[len(versions)-1]),
+			Repo:   s.makeRepo(dependency),
 		}
 	}
 
-	for _, groupID := range s.config.Groups {
-		artifacts, err := coursier.ListArtifactIDs(ctx, s.config, groupID)
-		if err != nil {
-			results <- SourceResult{Err: err}
-			continue
-		}
-
-		for _, artifactID := range artifacts {
-			versions, err := coursier.ListVersions(ctx, s.config, groupID, artifactID)
-			if err != nil {
-				results <- SourceResult{Err: err}
-			}
-			if len(versions) == 0 {
-				results <- SourceResult{
-					Err: &mavenArtifactNotFound{
-						groupID:    groupID,
-						artifactID: artifactID,
-					},
-				}
-			}
-			results <- SourceResult{
-				Source: s,
-				Repo:   s.makeRepo(groupID, artifactID, versions[len(versions)-1]),
-			}
-		}
-	}
 }
 
 func (s MavenSource) GetRepo(ctx context.Context, artifactPath string) (*types.Repo, error) {
-	groupID, artifactID, version := reposource.DecomposeMavenPath(artifactPath)
+	dependency := reposource.DecomposeMavenPath(artifactPath)
 
-	exists, err := coursier.Exists(ctx, s.config, groupID, artifactID, version)
+	exists, err := coursier.Exists(ctx, s.config, dependency)
 	if err != nil {
 		return nil, err
 	}
 	if !exists {
 		return nil, &mavenArtifactNotFound{
-			groupID:    groupID,
-			artifactID: artifactID,
+			dependency: dependency,
 		}
 	}
 
-	return s.makeRepo(groupID, artifactID, version), nil
+	return s.makeRepo(dependency), nil
 }
 
 type mavenArtifactNotFound struct {
-	groupID    string
-	artifactID string
+	dependency string
 }
 
 func (mavenArtifactNotFound) NotFound() bool {
@@ -125,36 +83,51 @@ func (mavenArtifactNotFound) NotFound() bool {
 }
 
 func (e *mavenArtifactNotFound) Error() string {
-	return fmt.Sprintf("maven artifact %v:%v not found", e.groupID, e.artifactID)
+	return fmt.Sprintf("not found: maven dependency '%v'", e.dependency)
 }
 
-func (s MavenSource) makeRepo(groupID, artifactID, version string) *types.Repo {
-	fullArtifactID := strings.Join([]string{groupID, artifactID, version}, ":")
-	repoName := "maven/" + fullArtifactID
-	urn := s.svc.URN()
+func MavenRepoName(dependency string) string {
+	return "maven/" + dependency
+}
+func MavenCloneURL(dependency string) string {
 	cloneURL := url.URL{
 		Host: "maven",
-		Path: repoName,
+		Path: MavenRepoName(dependency),
 	}
+	return cloneURL.String()
+}
+
+func (s MavenSource) makeRepo(dependency string) *types.Repo {
+	repoName := MavenRepoName(dependency)
+	urn := s.svc.URN()
+	cloneURL := MavenCloneURL(dependency)
+	log15.Info("maven", "cloneURL", cloneURL)
 	return &types.Repo{
 		Name: api.RepoName(repoName),
 		URI:  repoName,
 		ExternalRepo: api.ExternalRepoSpec{
-			ID:          fullArtifactID,
+			ID:          dependency,
+			ServiceID:   extsvc.TypeMaven,
 			ServiceType: extsvc.TypeMaven,
 		},
 		Private: false,
 		Sources: map[string]*types.SourceInfo{
 			urn: {
 				ID:       urn,
-				CloneURL: cloneURL.String(),
+				CloneURL: cloneURL,
 			},
 		},
-		Metadata: nil,
+		Metadata: &MavenMetadata{
+			Dependency: dependency,
+		},
 	}
 }
 
 // ExternalServices returns a singleton slice containing the external service.
 func (s MavenSource) ExternalServices() types.ExternalServices {
 	return types.ExternalServices{s.svc}
+}
+
+type MavenMetadata struct {
+	Dependency string
 }

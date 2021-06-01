@@ -51,11 +51,11 @@
       }
     },
     "artifacts": {
-      "description": "An array of artifact \"groupID:artifactID\" strings specifying which Maven artifacts to mirror on Sourcegraph.",
+      "description": "An array of artifact \"groupID:artifactID:version\" strings specifying which Maven artifacts to mirror on Sourcegraph.",
       "type": "array",
       "items": {
         "type": "string",
-        "pattern": "^[\\w-]+:[\\w.-]+$"
+        "pattern": "^[^:]+:[^:]+:[^:]+$"
       },
       "examples": [
         [

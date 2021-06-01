@@ -146,6 +146,8 @@ func (e *ExternalService) UnredactConfig(old *ExternalService) error {
 		unredacted, err = unredactField(old.Config, e.Config, &cfg)
 	case *schema.OtherExternalServiceConnection:
 		unredacted, err = unredactField(old.Config, e.Config, &cfg, jsonStringField{"url", &cfg.Url})
+	case *schema.MavenConnection:
+		unredacted, err = e.Config, nil
 	default:
 		// return an error here, it's safer to fail than to incorrectly return unsafe data.
 		err = fmt.Errorf("UnRedactExternalServiceConfig: kind %q not implemented", e.Kind)

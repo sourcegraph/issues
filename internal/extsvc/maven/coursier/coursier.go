@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/pkg/errors"
+
 	"github.com/sourcegraph/sourcegraph/schema"
 )
 
@@ -19,42 +20,37 @@ func ListVersions(ctx context.Context, config *schema.MavenConnection, groupID, 
 	return runCoursierCommand(ctx, config, "complete", groupID+":"+artifactID+":")
 }
 
-func FetchVersion(ctx context.Context, config *schema.MavenConnection, groupID, artifactID, version string) (string, error) {
-	fetched, err := runCoursierCommand(
+func FetchSources(ctx context.Context, config *schema.MavenConnection, dependency string) ([]string, error) {
+	return runCoursierCommand(
 		ctx,
 		config,
 		"fetch", "--intransitive",
-		strings.Join([]string{groupID, artifactID, version}, ":"),
+		dependency,
 		"--classifier", "sources",
 	)
-
-	if err != nil {
-		return "", err
-	}
-	if len(fetched) != 1 {
-		return "", errors.Errorf("unexpected number of paths returned from coursier fetch, want %v, got %v", 1, len(fetched))
-	}
-
-	return fetched[0], nil
 }
 
-func Exists(ctx context.Context, config *schema.MavenConnection, groupID, artifactID, version string) (bool, error) {
+func Exists(ctx context.Context, config *schema.MavenConnection, dependency string) (bool, error) {
 	versions, err := runCoursierCommand(
 		ctx,
 		config,
 		"complete",
-		strings.Join([]string{groupID, artifactID, version}, ":"),
+		dependency,
 	)
 	return len(versions) > 0, err
 }
 
 func runCoursierCommand(ctx context.Context, config *schema.MavenConnection, args ...string) ([]string, error) {
 	cmd := exec.CommandContext(ctx, "coursier", args...)
-	cmd.Env = append(cmd.Env, fmt.Sprintf("COURSIER_CREDENTIALS=%v", config.Credentials))
-	cmd.Env = append(
-		cmd.Env,
-		fmt.Sprintf("COURSIER_REPOSITORIES=%v", strings.Join(config.Repositories, "|")),
-	)
+	if config.Credentials != "" {
+		cmd.Env = append(cmd.Env, fmt.Sprintf("COURSIER_CREDENTIALS=%v", config.Credentials))
+	}
+	if len(config.Repositories) > 0 {
+		cmd.Env = append(
+			cmd.Env,
+			fmt.Sprintf("COURSIER_REPOSITORIES=%v", strings.Join(config.Repositories, "|")),
+		)
+	}
 	var stdout, stderr bytes.Buffer
 	cmd.Stdout = &stdout
 	cmd.Stderr = &stderr
@@ -63,5 +59,5 @@ func runCoursierCommand(ctx context.Context, config *schema.MavenConnection, arg
 		return nil, errors.Wrap(err, stderr.String())
 	}
 
-	return strings.Split(string(stdout.String()), "\n"), nil
+	return strings.Split(strings.Trim(stdout.String(), " \n"), "\n"), nil
 }
