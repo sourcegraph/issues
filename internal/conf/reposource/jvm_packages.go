@@ -10,7 +10,7 @@ func DecomposeMavenPath(path string) string {
 }
 
 func MavenRepoName(dependency string) string {
-	return "maven/" + dependency
+	return "maven/" + strings.Replace(dependency, ":", "/", -1)
 }
 
 func MavenCloneURL(dependency string) string {

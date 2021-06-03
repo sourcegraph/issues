@@ -6,9 +6,6 @@
   "allowComments": true,
   "type": "object",
   "additionalProperties": false,
-  "required": [
-    "repositories"
-  ],
   "properties": {
     "maven": {
       "description": "Configuration for resolving from Maven repositories.",
