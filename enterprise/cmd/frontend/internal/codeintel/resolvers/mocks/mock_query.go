@@ -4,11 +4,10 @@ package mocks
 
 import (
 	"context"
-	"sync"
-
 	resolvers "github.com/sourcegraph/sourcegraph/enterprise/cmd/frontend/internal/codeintel/resolvers"
 	lsifstore "github.com/sourcegraph/sourcegraph/enterprise/internal/codeintel/stores/lsifstore"
 	semantic "github.com/sourcegraph/sourcegraph/lib/codeintel/semantic"
+	"sync"
 )
 
 // MockQueryResolver is a mock implementation of the QueryResolver interface

@@ -4,10 +4,9 @@ package background
 
 import (
 	"context"
-	"sync"
-
 	api "github.com/sourcegraph/sourcegraph/internal/api"
 	types "github.com/sourcegraph/sourcegraph/internal/types"
+	"sync"
 )
 
 // MockRepoStore is a mock implementation of the RepoStore interface (from

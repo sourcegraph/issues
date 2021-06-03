@@ -4,9 +4,8 @@ package resolvers
 
 import (
 	"context"
-	"sync"
-
 	lsifstore "github.com/sourcegraph/sourcegraph/enterprise/internal/codeintel/stores/lsifstore"
+	"sync"
 )
 
 // MockPositionAdjuster is a mock implementation of the PositionAdjuster

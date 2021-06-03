@@ -1,5 +1,5 @@
 package jvmpackages
 
-type MavenMetadata struct {
+type Metadata struct {
 	Dependency string
 }

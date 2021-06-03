@@ -108,8 +108,8 @@
           "enum": ["enabled", "disabled"],
           "default": "enabled"
         },
-        "maven": {
-          "description": "Allow adding Maven code host connections",
+        "jvmPackages": {
+          "description": "Allow adding JVM packages code host connections",
           "type": "string",
           "enum": ["enabled", "disabled"],
           "default": "enabled"

@@ -1,21 +1,22 @@
 package reposource
 
 import (
+	"net/url"
 	"strings"
-
-	"github.com/sourcegraph/sourcegraph/internal/api"
 )
-
-func MavenRepoName(repositoryPathPattern, artifact string) api.RepoName {
-	if repositoryPathPattern == "" {
-		repositoryPathPattern = "{artifact}"
-	}
-
-	return api.RepoName(strings.NewReplacer(
-		"{artifact}", artifact,
-	).Replace(repositoryPathPattern))
-}
 
 func DecomposeMavenPath(path string) string {
 	return strings.TrimPrefix(path, "//maven/maven/")
+}
+
+func MavenRepoName(dependency string) string {
+	return "maven/" + dependency
+}
+
+func MavenCloneURL(dependency string) string {
+	cloneURL := url.URL{
+		Host: "maven",
+		Path: MavenRepoName(dependency),
+	}
+	return cloneURL.String()
 }

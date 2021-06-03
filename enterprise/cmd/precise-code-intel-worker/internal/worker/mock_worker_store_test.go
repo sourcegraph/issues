@@ -4,13 +4,12 @@ package worker
 
 import (
 	"context"
-	"sync"
-	"time"
-
 	sqlf "github.com/keegancsmith/sqlf"
 	basestore "github.com/sourcegraph/sourcegraph/internal/database/basestore"
 	workerutil "github.com/sourcegraph/sourcegraph/internal/workerutil"
 	store "github.com/sourcegraph/sourcegraph/internal/workerutil/dbworker/store"
+	"sync"
+	"time"
 )
 
 // MockWorkerStore is a mock implementation of the Store interface (from the

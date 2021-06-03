@@ -53,7 +53,6 @@ type AWSKMSEncryptionKey struct {
 	Region          string `json:"region,omitempty"`
 	Type            string `json:"type"`
 }
-
 type AdditionalProperties struct {
 	// Format description: The expected format of the output. If set, the output is being parsed in that format before being stored in the var. If not set, 'text' is assumed to the format.
 	Format string `json:"format,omitempty"`
@@ -84,7 +83,6 @@ type AuthProviderCommon struct {
 	// DisplayName description: The name to use when displaying this authentication provider in the UI. Defaults to an auto-generated name with the type of authentication provider and other relevant identifiers (such as a hostname).
 	DisplayName string `json:"displayName,omitempty"`
 }
-
 type AuthProviders struct {
 	Builtin       *BuiltinAuthProvider
 	Saml          *SAMLAuthProvider
@@ -115,7 +113,6 @@ func (v AuthProviders) MarshalJSON() ([]byte, error) {
 	}
 	return nil, errors.New("tagged union type must have exactly 1 non-nil field value")
 }
-
 func (v *AuthProviders) UnmarshalJSON(data []byte) error {
 	var d struct {
 		DiscriminantProperty string `json:"type"`
@@ -288,7 +285,6 @@ func (v BitbucketServerIdentityProvider) MarshalJSON() ([]byte, error) {
 	}
 	return nil, errors.New("tagged union type must have exactly 1 non-nil field value")
 }
-
 func (v *BitbucketServerIdentityProvider) UnmarshalJSON(data []byte) error {
 	var d struct {
 		DiscriminantProperty string `json:"type"`
@@ -317,7 +313,6 @@ type BitbucketServerPlugin struct {
 	Permissions string                         `json:"permissions,omitempty"`
 	Webhooks    *BitbucketServerPluginWebhooks `json:"webhooks,omitempty"`
 }
-
 type BitbucketServerPluginWebhooks struct {
 	// DisableSync description: Disallow Sourcegraph from automatically syncing webhook config with the Bitbucket Server instance. For details of how the webhook is configured, see our docs: https://docs.sourcegraph.com/admin/external_service/bitbucket_server#webhooks
 	DisableSync bool `json:"disableSync,omitempty"`
@@ -332,11 +327,9 @@ type BitbucketServerRateLimit struct {
 	// RequestsPerHour description: Requests per hour permitted. This is an average, calculated per second. Internally, the burst limit is set to 500, which implies that for a requests per hour limit as low as 1, users will continue to be able to send a maximum of 500 requests immediately, provided that the complexity cost of each request is 1.
 	RequestsPerHour float64 `json:"requestsPerHour"`
 }
-
 type BitbucketServerUsernameIdentity struct {
 	Type string `json:"type"`
 }
-
 type BrandAssets struct {
 	// Logo description: The URL to the image used on the homepage. This will replace the Sourcegraph logo on the homepage. Maximum width: 320px. We recommend using the following file formats: SVG, PNG
 	Logo string `json:"logo,omitempty"`
@@ -439,7 +432,6 @@ func (v EncryptionKey) MarshalJSON() ([]byte, error) {
 	}
 	return nil, errors.New("tagged union type must have exactly 1 non-nil field value")
 }
-
 func (v *EncryptionKey) UnmarshalJSON(data []byte) error {
 	var d struct {
 		DiscriminantProperty string `json:"type"`
@@ -470,14 +462,12 @@ type EncryptionKeys struct {
 	ExternalServiceKey     *EncryptionKey `json:"externalServiceKey,omitempty"`
 	UserExternalAccountKey *EncryptionKey `json:"userExternalAccountKey,omitempty"`
 }
-
 type ExcludedAWSCodeCommitRepo struct {
 	// Id description: The ID of an AWS Code Commit repository (as returned by the AWS API) to exclude from mirroring. Use this to exclude the repository, even if renamed, or to differentiate between repositories with the same name in multiple regions.
 	Id string `json:"id,omitempty"`
 	// Name description: The name of an AWS CodeCommit repository ("repo-name") to exclude from mirroring.
 	Name string `json:"name,omitempty"`
 }
-
 type ExcludedBitbucketCloudRepo struct {
 	// Name description: The name of a Bitbucket Cloud repo ("myorg/myrepo") to exclude from mirroring.
 	Name string `json:"name,omitempty"`
@@ -486,7 +476,6 @@ type ExcludedBitbucketCloudRepo struct {
 	// Uuid description: The UUID of a Bitbucket Cloud repo (as returned by the Bitbucket Cloud's API) to exclude from mirroring.
 	Uuid string `json:"uuid,omitempty"`
 }
-
 type ExcludedBitbucketServerRepo struct {
 	// Id description: The ID of a Bitbucket Server repo (as returned by the Bitbucket Server instance's API) to exclude from mirroring.
 	Id int `json:"id,omitempty"`
@@ -495,7 +484,6 @@ type ExcludedBitbucketServerRepo struct {
 	// Pattern description: Regular expression which matches against the name of a Bitbucket Server repo.
 	Pattern string `json:"pattern,omitempty"`
 }
-
 type ExcludedGitHubRepo struct {
 	// Archived description: If set to true, archived repositories will be excluded.
 	Archived bool `json:"archived,omitempty"`
@@ -508,14 +496,12 @@ type ExcludedGitHubRepo struct {
 	// Pattern description: Regular expression which matches against the name of a GitHub repository ("owner/name").
 	Pattern string `json:"pattern,omitempty"`
 }
-
 type ExcludedGitLabProject struct {
 	// Id description: The ID of a GitLab project (as returned by the GitLab instance's API) to exclude from mirroring.
 	Id int `json:"id,omitempty"`
 	// Name description: The name of a GitLab project ("group/name") to exclude from mirroring.
 	Name string `json:"name,omitempty"`
 }
-
 type ExcludedGitoliteRepo struct {
 	// Name description: The name of a Gitolite repo ("my-repo") to exclude from mirroring.
 	Name string `json:"name,omitempty"`
@@ -547,8 +533,8 @@ type ExperimentalFeatures struct {
 	EnablePostSignupFlow bool `json:"enablePostSignupFlow,omitempty"`
 	// EventLogging description: Enables user event logging inside of the Sourcegraph instance. This will allow admins to have greater visibility of user activity, such as frequently viewed pages, frequent searches, and more. These event logs (and any specific user actions) are only stored locally, and never leave this Sourcegraph instance.
 	EventLogging string `json:"eventLogging,omitempty"`
-	// Maven description: Allow adding Maven code host connections
-	Maven string `json:"maven,omitempty"`
+	// JvmPackages description: Allow adding JVM packages code host connections
+	JvmPackages string `json:"jvmPackages,omitempty"`
 	// Perforce description: Allow adding Perforce code host connections
 	Perforce string `json:"perforce,omitempty"`
 	// RateLimitAnonymous description: Configures the hourly rate limits for anonymous calls to the GraphQL API. Setting limit to 0 disables the limiter. This is only relevant if unauthenticated calls to the API are permitted.
@@ -576,7 +562,6 @@ type Extensions struct {
 	// RemoteRegistry description: The remote extension registry URL, or `false` to not use a remote extension registry. If not set, the default remote extension registry URL is used.
 	RemoteRegistry interface{} `json:"remoteRegistry,omitempty"`
 }
-
 type ExternalIdentity struct {
 	// AuthProviderID description: The value of the `configID` field of the targeted authentication provider.
 	AuthProviderID string `json:"authProviderID"`
@@ -624,7 +609,8 @@ type GitHubAuthProvider struct {
 }
 
 // GitHubAuthorization description: If non-null, enforces GitHub repository permissions. This requires that there is an item in the `auth.providers` field of type "github" with the same `url` field as specified in this `GitHubConnection`.
-type GitHubAuthorization struct{}
+type GitHubAuthorization struct {
+}
 
 // GitHubConnection description: Configuration for a connection to GitHub or GitHub Enterprise.
 type GitHubConnection struct {
@@ -694,7 +680,6 @@ type GitHubRateLimit struct {
 	// RequestsPerHour description: Requests per hour permitted. This is an average, calculated per second. Internally, the burst limit is set to 100, which implies that for a requests per hour limit as low as 1, users will continue to be able to send a maximum of 100 requests immediately, provided that the complexity cost of each request is 1.
 	RequestsPerHour float64 `json:"requestsPerHour"`
 }
-
 type GitHubWebhook struct {
 	// Org description: The name of the GitHub organization to which the webhook belongs
 	Org string `json:"org"`
@@ -765,14 +750,12 @@ type GitLabConnection struct {
 	// Webhooks description: An array of webhook configurations
 	Webhooks []*GitLabWebhook `json:"webhooks,omitempty"`
 }
-
 type GitLabNameTransformation struct {
 	// Regex description: The regex to match for the occurrences of its replacement.
 	Regex string `json:"regex,omitempty"`
 	// Replacement description: The replacement used to replace all matched occurrences by the regex.
 	Replacement string `json:"replacement,omitempty"`
 }
-
 type GitLabProject struct {
 	// Id description: The ID of a GitLab project (as returned by the GitLab instance's API) to mirror.
 	Id int `json:"id,omitempty"`
@@ -787,7 +770,6 @@ type GitLabRateLimit struct {
 	// RequestsPerHour description: Requests per hour permitted. This is an average, calculated per second. Internally the burst limit is set to 100, which implies that for a requests per hour limit as low as 1, users will continue to be able to send a maximum of 100 requests immediately, provided that the complexity cost of each request is 1.
 	RequestsPerHour float64 `json:"requestsPerHour"`
 }
-
 type GitLabWebhook struct {
 	// Secret description: The secret used to authenticate incoming webhook requests
 	Secret string `json:"secret"`
@@ -839,7 +821,6 @@ func (v IdentityProvider) MarshalJSON() ([]byte, error) {
 	}
 	return nil, errors.New("tagged union type must have exactly 1 non-nil field value")
 }
-
 func (v *IdentityProvider) UnmarshalJSON(data []byte) error {
 	var d struct {
 		DiscriminantProperty string `json:"type"`
@@ -864,7 +845,6 @@ type ImportChangesets struct {
 	// Repository description: The repository name as configured on your Sourcegraph instance.
 	Repository string `json:"repository"`
 }
-
 type Insight struct {
 	// Description description: The description of this insight
 	Description string `json:"description"`
@@ -873,7 +853,6 @@ type Insight struct {
 	// Title description: The short title of this insight
 	Title string `json:"title"`
 }
-
 type InsightSeries struct {
 	// Label description: The label to use for the series in the graph.
 	Label string `json:"label"`
@@ -885,30 +864,28 @@ type InsightSeries struct {
 	Webhook string `json:"webhook,omitempty"`
 }
 
+// JvmPackagesConnection description: Configuration for a connection to a JVM packages repository.
+type JvmPackagesConnection struct {
+	// Maven description: Configuration for resolving from Maven repositories.
+	Maven *Maven `json:"maven,omitempty"`
+}
+
 // Log description: Configuration for logging and alerting, including to external services.
 type Log struct {
 	// Sentry description: Configuration for Sentry
 	Sentry *Sentry `json:"sentry,omitempty"`
 }
 
-// JvmPackagesConnection description: Configuration for a connection to a Maven repository.
-type JvmPackagesConnection struct {
-	// Artifacts description: An array of artifact "groupID:artifactID" strings specifying which Maven artifacts to mirror on Sourcegraph.
+// Maven description: Configuration for resolving from Maven repositories.
+type Maven struct {
+	// Artifacts description: An array of artifact "groupID:artifactID:version" strings specifying which Maven artifacts to mirror on Sourcegraph.
 	Artifacts []string `json:"artifacts,omitempty"`
 	// Credentials description: Contents of a coursier.credentials file needed for accessing the Maven repositories.
 	Credentials string `json:"credentials,omitempty"`
-	// Groups description: An array of Maven groups whose artifacts should be mirrored on Sourcegraph.
-	Groups []string `json:"groups,omitempty"`
 	// RateLimit description: Rate limit applied when making background API requests to the Maven repository.
 	RateLimit *MavenRateLimit `json:"rateLimit,omitempty"`
 	// Repositories description: The url at which the maven repository can be found.
-	Repositories []string `json:"repositories"`
-	// RepositoryPathPattern description: The pattern used to generate the corresponding Sourcegraph repository name for a Maven artifact. In the pattern, the variable "{artifact}" is replaced with the Maven artifact's path.
-	//
-	// For example, if your Maven artifact path is "//Sourcegraph/" and your Sourcegraph URL is https://src.example.com, then a repositoryPathPattern of "maven/{artifact}" would mean that the Maven artifact is available on Sourcegraph at https://src.example.com/maven/Sourcegraph.
-	//
-	// It is important that the Sourcegraph repository name generated with this pattern be unique to this Maven repository. If different Maven repositories generate repository names that collide, Sourcegraph's behavior is undefined.
-	RepositoryPathPattern string `json:"repositoryPathPattern"`
+	Repositories []string `json:"repositories,omitempty"`
 }
 
 // MavenRateLimit description: Rate limit applied when making background API requests to the Maven repository.
@@ -932,7 +909,6 @@ type MountedEncryptionKey struct {
 type NoOpEncryptionKey struct {
 	Type string `json:"type"`
 }
-
 type Notice struct {
 	// Dismissible description: Whether this notice can be dismissed (closed) by the user.
 	Dismissible bool `json:"dismissible,omitempty"`
@@ -941,7 +917,6 @@ type Notice struct {
 	// Message description: The message to display. Markdown formatting is supported.
 	Message string `json:"message"`
 }
-
 type Notifier struct {
 	Slack     *NotifierSlack
 	Pagerduty *NotifierPagerduty
@@ -968,7 +943,6 @@ func (v Notifier) MarshalJSON() ([]byte, error) {
 	}
 	return nil, errors.New("tagged union type must have exactly 1 non-nil field value")
 }
-
 func (v *Notifier) UnmarshalJSON(data []byte) error {
 	var d struct {
 		DiscriminantProperty string `json:"type"`
@@ -1041,11 +1015,9 @@ type NotifierWebhook struct {
 	Url         string `json:"url"`
 	Username    string `json:"username,omitempty"`
 }
-
 type OAuthIdentity struct {
 	Type string `json:"type"`
 }
-
 type ObservabilityAlerts struct {
 	// DisableSendResolved description: Disable notifications when alerts resolve themselves.
 	DisableSendResolved bool `json:"disableSendResolved,omitempty"`
@@ -1111,7 +1083,6 @@ type OtherExternalServiceConnection struct {
 	RepositoryPathPattern string `json:"repositoryPathPattern,omitempty"`
 	Url                   string `json:"url,omitempty"`
 }
-
 type Overrides struct {
 	// Key description: The key that we want to override for example a username
 	Key string `json:"key,omitempty"`
@@ -1125,7 +1096,8 @@ type ParentSourcegraph struct {
 }
 
 // PerforceAuthorization description: If non-null, enforces Perforce depot permissions.
-type PerforceAuthorization struct{}
+type PerforceAuthorization struct {
+}
 
 // PerforceConnection description: Configuration for a connection to Perforce Server.
 type PerforceConnection struct {
@@ -1184,7 +1156,6 @@ type PhabricatorConnection struct {
 	// Url description: URL of a Phabricator instance, such as https://phabricator.example.com
 	Url string `json:"url,omitempty"`
 }
-
 type QuickLink struct {
 	// Description description: A description for this quick link
 	Description string `json:"description,omitempty"`
@@ -1193,14 +1164,12 @@ type QuickLink struct {
 	// Url description: The URL of this quick link (absolute or relative)
 	Url string `json:"url"`
 }
-
 type Repos struct {
 	// Callsign description: The unique Phabricator identifier for the repository, like 'MUX'.
 	Callsign string `json:"callsign"`
 	// Path description: Display path for the url e.g. gitolite/my/repo
 	Path string `json:"path"`
 }
-
 type Responders struct {
 	Id       string `json:"id,omitempty"`
 	Name     string `json:"name,omitempty"`
@@ -1267,7 +1236,6 @@ type SearchLimits struct {
 	// MaxTimeoutSeconds description: The maximum value for "timeout:" that search will respect. "timeout:" values larger than maxTimeoutSeconds are capped at maxTimeoutSeconds. Note: You need to ensure your load balancer / reverse proxy in front of Sourcegraph won't timeout the request for larger values. Note: Too many large rearch requests may harm Soucregraph for other users. Defaults to 1 minute.
 	MaxTimeoutSeconds int `json:"maxTimeoutSeconds,omitempty"`
 }
-
 type SearchSavedQueries struct {
 	// Description description: Description of this saved query
 	Description string `json:"description"`
@@ -1282,7 +1250,6 @@ type SearchSavedQueries struct {
 	// ShowOnHomepage description: DEPRECATED: saved searches are no longer shown on the homepage. This will be removed in a future release.
 	ShowOnHomepage bool `json:"showOnHomepage,omitempty"`
 }
-
 type SearchScope struct {
 	// Name description: The human-readable name for this search scope
 	Name string `json:"name"`
@@ -1593,14 +1560,12 @@ type TransformChanges struct {
 	// Group description: A list of groups of changes in a repository that each create a separate, additional changeset for this repository, with all ungrouped changes being in the default changeset.
 	Group []interface{} `json:"group,omitempty"`
 }
-
 type UpdateIntervalRule struct {
 	// Interval description: An integer representing the number of minutes to wait until the next update
 	Interval int `json:"interval"`
 	// Pattern description: A regular expression matching a repo name
 	Pattern string `json:"pattern"`
 }
-
 type UsernameIdentity struct {
 	Type string `json:"type"`
 }

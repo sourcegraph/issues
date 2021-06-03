@@ -1874,7 +1874,7 @@ enum ExternalServiceKind {
     GITHUB
     GITLAB
     GITOLITE
-    MAVEN
+    JVMPACKAGES
     PERFORCE
     PHABRICATOR
     OTHER

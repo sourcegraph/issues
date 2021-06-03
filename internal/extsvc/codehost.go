@@ -21,13 +21,13 @@ var (
 	GitLabDotComURL = mustParseURL("https://gitlab.com")
 	GitLabDotCom    = NewCodeHost(GitLabDotComURL, TypeGitLab)
 
-	MavenURL = &url.URL{Host: "maven"}
-	Maven    = NewCodeHost(MavenURL, TypeJvmPackages)
+	MavenURL    = &url.URL{Host: "maven"}
+	JvmPackages = NewCodeHost(MavenURL, TypeJvmPackages)
 
 	PublicCodeHosts = []*CodeHost{
 		GitHubDotCom,
 		GitLabDotCom,
-		Maven,
+		JvmPackages,
 	}
 )
 

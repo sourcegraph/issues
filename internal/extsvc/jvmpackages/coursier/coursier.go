@@ -42,13 +42,13 @@ func Exists(ctx context.Context, config *schema.JvmPackagesConnection, dependenc
 
 func runCoursierCommand(ctx context.Context, config *schema.JvmPackagesConnection, args ...string) ([]string, error) {
 	cmd := exec.CommandContext(ctx, "coursier", args...)
-	if config.Credentials != "" {
-		cmd.Env = append(cmd.Env, fmt.Sprintf("COURSIER_CREDENTIALS=%v", config.Credentials))
+	if config.Maven.Credentials != "" {
+		cmd.Env = append(cmd.Env, fmt.Sprintf("COURSIER_CREDENTIALS=%v", config.Maven.Credentials))
 	}
-	if len(config.Repositories) > 0 {
+	if len(config.Maven.Repositories) > 0 {
 		cmd.Env = append(
 			cmd.Env,
-			fmt.Sprintf("COURSIER_REPOSITORIES=%v", strings.Join(config.Repositories, "|")),
+			fmt.Sprintf("COURSIER_REPOSITORIES=%v", strings.Join(config.Maven.Repositories, "|")),
 		)
 	}
 	var stdout, stderr bytes.Buffer

@@ -39,7 +39,7 @@ type Server struct {
 	GitLabDotComSource interface {
 		GetRepo(ctx context.Context, projectWithNamespace string) (*types.Repo, error)
 	}
-	MavenSource interface {
+	JvmPackagesSource interface {
 		GetRepo(ctx context.Context, artifactName string) (*types.Repo, error)
 	}
 	Scheduler interface {
@@ -437,9 +437,9 @@ func (s *Server) remoteRepoSync(ctx context.Context, codehost *extsvc.CodeHost, 
 			}
 			return nil, err
 		}
-	case extsvc.Maven:
+	case extsvc.JvmPackages:
 		artifactPath := strings.TrimPrefix(remoteName, "maven/")
-		repo, err = s.MavenSource.GetRepo(ctx, artifactPath)
+		repo, err = s.JvmPackagesSource.GetRepo(ctx, artifactPath)
 		if err != nil {
 			if errcode.IsNotFound(err) {
 				return &protocol.RepoLookupResult{

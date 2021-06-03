@@ -10,6 +10,7 @@ import (
 
 	dbstore "github.com/sourcegraph/sourcegraph/enterprise/internal/codeintel/stores/dbstore"
 	api "github.com/sourcegraph/sourcegraph/internal/api"
+
 	basestore "github.com/sourcegraph/sourcegraph/internal/database/basestore"
 	semantic "github.com/sourcegraph/sourcegraph/lib/codeintel/semantic"
 )

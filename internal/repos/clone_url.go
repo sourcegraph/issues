@@ -7,6 +7,7 @@ import (
 	"github.com/inconshreveable/log15"
 	"github.com/pkg/errors"
 
+	"github.com/sourcegraph/sourcegraph/internal/conf/reposource"
 	"github.com/sourcegraph/sourcegraph/internal/extsvc"
 	"github.com/sourcegraph/sourcegraph/internal/extsvc/awscodecommit"
 	"github.com/sourcegraph/sourcegraph/internal/extsvc/bitbucketcloud"
@@ -68,8 +69,8 @@ func CloneURL(kind, config string, repo *types.Repo) (string, error) {
 			return otherCloneURL(repo, r), nil
 		}
 	case *schema.JvmPackagesConnection:
-		if r, ok := repo.Metadata.(*jvmpackages.MavenMetadata); ok {
-			return MavenCloneURL(r.Dependency), nil
+		if r, ok := repo.Metadata.(*jvmpackages.Metadata); ok {
+			return reposource.MavenCloneURL(r.Dependency), nil
 		} else {
 			log15.Info("", "r", repo, "metadata", repo.Metadata)
 			fmt.Printf("%T", repo.Metadata)

@@ -3,7 +3,6 @@ package repos
 import (
 	"context"
 	"fmt"
-	"net/url"
 
 	"github.com/inconshreveable/log15"
 
@@ -48,7 +47,7 @@ func (s JvmPackagesSource) ListRepos(ctx context.Context, results chan SourceRes
 }
 
 func (s JvmPackagesSource) listDependentRepos(ctx context.Context, results chan SourceResult) {
-	for _, dependency := range s.config.Artifacts {
+	for _, dependency := range s.config.Maven.Artifacts {
 		repo := s.makeRepo(dependency)
 		log15.Info("listDependentRepos", "repo", repo, "metadata", repo.Metadata)
 		results <- SourceResult{
@@ -86,22 +85,10 @@ func (e *mavenArtifactNotFound) Error() string {
 	return fmt.Sprintf("not found: maven dependency '%v'", e.dependency)
 }
 
-func MavenRepoName(dependency string) string {
-	return "maven/" + dependency
-}
-
-func MavenCloneURL(dependency string) string {
-	cloneURL := url.URL{
-		Host: "maven",
-		Path: MavenRepoName(dependency),
-	}
-	return cloneURL.String()
-}
-
 func (s JvmPackagesSource) makeRepo(dependency string) *types.Repo {
-	repoName := MavenRepoName(dependency)
+	repoName := reposource.MavenRepoName(dependency)
 	urn := s.svc.URN()
-	cloneURL := MavenCloneURL(dependency)
+	cloneURL := reposource.MavenCloneURL(dependency)
 	log15.Info("maven", "cloneURL", cloneURL)
 	return &types.Repo{
 		Name: api.RepoName(repoName),
@@ -118,7 +105,7 @@ func (s JvmPackagesSource) makeRepo(dependency string) *types.Repo {
 				CloneURL: cloneURL,
 			},
 		},
-		Metadata: &jvmpackages.MavenMetadata{
+		Metadata: &jvmpackages.Metadata{
 			Dependency: dependency,
 		},
 	}

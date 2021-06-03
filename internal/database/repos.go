@@ -353,7 +353,7 @@ func scanRepo(rows *sql.Rows, r *types.Repo) (err error) {
 	case extsvc.TypeOther:
 		r.Metadata = new(extsvc.OtherRepoMetadata)
 	case extsvc.TypeJvmPackages:
-		r.Metadata = new(jvmpackages.MavenMetadata)
+		r.Metadata = new(jvmpackages.Metadata)
 	default:
 		return nil
 	}

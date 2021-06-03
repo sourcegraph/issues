@@ -4,10 +4,9 @@ package discovery
 
 import (
 	"context"
-	"sync"
-
 	database "github.com/sourcegraph/sourcegraph/internal/database"
 	types "github.com/sourcegraph/sourcegraph/internal/types"
+	"sync"
 )
 
 // MockRepoStore is a mock implementation of the RepoStore interface (from

@@ -15,7 +15,7 @@ import bitbucketServerSchemaJSON from '../../../../../schema/bitbucket_server.sc
 import githubSchemaJSON from '../../../../../schema/github.schema.json'
 import gitlabSchemaJSON from '../../../../../schema/gitlab.schema.json'
 import gitoliteSchemaJSON from '../../../../../schema/gitolite.schema.json'
-import mavenSchemaJSON from '../../../../../schema/maven.schema.json'
+import jvmPackagesSchemaJSON from '../../../../../schema/jvm-packages.schema.json'
 import otherExternalServiceSchemaJSON from '../../../../../schema/other_external_service.schema.json'
 import perforceSchemaJSON from '../../../../../schema/perforce.schema.json'
 import phabricatorSchemaJSON from '../../../../../schema/phabricator.schema.json'
@@ -1176,33 +1176,28 @@ const PERFORCE: AddExternalServiceOptions = {
         },
     ],
 }
-const MAVEN: AddExternalServiceOptions = {
-    kind: ExternalServiceKind.MAVEN,
-    title: 'Maven',
+const JVM_PACKAGES: AddExternalServiceOptions = {
+    kind: ExternalServiceKind.JVMPACKAGES,
+    title: 'JVM Packages', // or JVM Dependencies
     icon: GitIcon,
-    jsonSchema: mavenSchemaJSON,
-    defaultDisplayName: 'Maven',
+    jsonSchema: jvmPackagesSchemaJSON,
+    defaultDisplayName: 'JVM Packages', // or JVM Dependencies
     defaultConfig: `{
-        "repositories": ["central"],
+  "repositories": ["central"],
 }`,
     instructions: (
         <div>
             <ol>
                 <li>
-                    In the configuration below, set <Field>maven.repositories</Field> to the list of Maven repositories
+                    In the configuration below, set <Field>maven.repositories</Field> to the list of Maven repositories.
+                    For example,
+                    <code>"https://maven.google.com"</code>.
+                </li>
+                <li>
+                    In the configuration below, set <Field>maven.manuallyMirroredArtifacts</Field> to the list of
+                    artifacts that you want to manually add. For example, <code>"junit:junit:4.13.2"</code>.
                 </li>
             </ol>
-            <p>
-                See{' '}
-                <a
-                    rel="noopener noreferrer"
-                    target="_blank"
-                    href="https://docs.sourcegraph.com/admin/repo/maven#configuration"
-                >
-                    the docs for more advanced options
-                </a>
-                , or try one of the buttons below.
-            </p>
         </div>
     ),
     editorActions: [],
@@ -1220,7 +1215,7 @@ export const codeHostExternalServices: Record<string, AddExternalServiceOptions>
     gitolite: GITOLITE,
     git: GENERIC_GIT,
     ...(window.context?.experimentalFeatures?.perforce === 'enabled' ? { perforce: PERFORCE } : {}),
-    ...(window.context?.experimentalFeatures?.maven === 'enabled' ? { maven: MAVEN } : {}),
+    ...(window.context?.experimentalFeatures?.jvmPackages === 'enabled' ? { jvmPackages: JVM_PACKAGES } : {}),
 }
 
 export const nonCodeHostExternalServices: Record<string, AddExternalServiceOptions> = {
@@ -1242,5 +1237,5 @@ export const defaultExternalServices: Record<ExternalServiceKind, AddExternalSer
     [ExternalServiceKind.OTHER]: GENERIC_GIT,
     [ExternalServiceKind.AWSCODECOMMIT]: AWS_CODE_COMMIT,
     [ExternalServiceKind.PERFORCE]: PERFORCE,
-    [ExternalServiceKind.MAVEN]: MAVEN,
+    [ExternalServiceKind.JVMPACKAGES]: JVM_PACKAGES,
 }

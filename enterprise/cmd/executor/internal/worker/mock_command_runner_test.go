@@ -4,9 +4,8 @@ package worker
 
 import (
 	"context"
-	"sync"
-
 	command "github.com/sourcegraph/sourcegraph/enterprise/cmd/executor/internal/command"
+	"sync"
 )
 
 // MockRunner is a mock implementation of the Runner interface (from the

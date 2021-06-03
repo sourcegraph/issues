@@ -3,11 +3,10 @@
 package uploadstore
 
 import (
+	storage "cloud.google.com/go/storage"
 	"context"
 	"io"
 	"sync"
-
-	storage "cloud.google.com/go/storage"
 )
 
 // MockGcsAPI is a mock implementation of the gcsAPI interface (from the

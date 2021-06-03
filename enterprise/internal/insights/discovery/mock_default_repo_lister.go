@@ -4,9 +4,8 @@ package discovery
 
 import (
 	"context"
-	"sync"
-
 	types "github.com/sourcegraph/sourcegraph/internal/types"
+	"sync"
 )
 
 // MockDefaultRepoLister is a mock implementation of the DefaultRepoLister

@@ -4,14 +4,13 @@ package enqueuer
 
 import (
 	"context"
-	"regexp"
-	"sync"
-	"time"
-
 	dbstore "github.com/sourcegraph/sourcegraph/enterprise/internal/codeintel/stores/dbstore"
 	api "github.com/sourcegraph/sourcegraph/internal/api"
 	basestore "github.com/sourcegraph/sourcegraph/internal/database/basestore"
 	protocol "github.com/sourcegraph/sourcegraph/internal/repoupdater/protocol"
+	"regexp"
+	"sync"
+	"time"
 )
 
 // MockDBStore is a mock implementation of the DBStore interface (from the
