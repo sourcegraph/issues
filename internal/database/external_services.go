@@ -124,7 +124,7 @@ var ExternalServiceKinds = map[string]ExternalServiceKind{
 	extsvc.KindGitHub:          {CodeHost: true, JSONSchema: schema.GitHubSchemaJSON},
 	extsvc.KindGitLab:          {CodeHost: true, JSONSchema: schema.GitLabSchemaJSON},
 	extsvc.KindGitolite:        {CodeHost: true, JSONSchema: schema.GitoliteSchemaJSON},
-	extsvc.KindMaven:           {CodeHost: true, JSONSchema: schema.MavenSchemaJSON},
+	extsvc.KindJvmPackages:     {CodeHost: true, JSONSchema: schema.MavenSchemaJSON},
 	extsvc.KindPerforce:        {CodeHost: true, JSONSchema: schema.PerforceSchemaJSON},
 	extsvc.KindPhabricator:     {CodeHost: true, JSONSchema: schema.PhabricatorSchemaJSON},
 	extsvc.KindOther:           {CodeHost: true, JSONSchema: schema.OtherExternalServiceSchemaJSON},
@@ -615,7 +615,7 @@ func (e *ExternalServiceStore) maybeDecryptConfig(ctx context.Context, config st
 		// config is not encrypted, return plaintext
 		return config, nil
 	}
-	var key = keyring.Default().ExternalServiceKey
+	key := keyring.Default().ExternalServiceKey
 	if e.key != nil {
 		key = e.key
 	}

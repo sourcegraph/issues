@@ -11,24 +11,24 @@ import (
 	"github.com/pkg/errors"
 
 	"github.com/sourcegraph/sourcegraph/internal/conf/reposource"
-	"github.com/sourcegraph/sourcegraph/internal/extsvc/maven/coursier"
+	"github.com/sourcegraph/sourcegraph/internal/extsvc/jvmpackages/coursier"
 	"github.com/sourcegraph/sourcegraph/internal/vcs"
 	"github.com/sourcegraph/sourcegraph/schema"
 )
 
-type MavenArtifactSyncer struct {
-	Config *schema.MavenConnection
+type JvmPackagesArtifactSyncer struct {
+	Config *schema.JvmPackagesConnection
 }
 
-var _ VCSSyncer = &MavenArtifactSyncer{}
+var _ VCSSyncer = &JvmPackagesArtifactSyncer{}
 
-func (s MavenArtifactSyncer) Type() string {
-	return "maven"
+func (s JvmPackagesArtifactSyncer) Type() string {
+	return "jvm_packages"
 }
 
 // IsCloneable checks to see if the VCS remote URL is cloneable. Any non-nil
 // error indicates there is a problem.
-func (s MavenArtifactSyncer) IsCloneable(ctx context.Context, remoteURL *vcs.URL) error {
+func (s JvmPackagesArtifactSyncer) IsCloneable(ctx context.Context, remoteURL *vcs.URL) error {
 	dependency := reposource.DecomposeMavenPath(remoteURL.Path)
 	log15.Info("Maven.IsCloneable", "dependency", dependency, "url", remoteURL.Path)
 	sources, err := coursier.FetchSources(ctx, s.Config, dependency)
@@ -42,7 +42,7 @@ func (s MavenArtifactSyncer) IsCloneable(ctx context.Context, remoteURL *vcs.URL
 }
 
 // CloneCommand returns the command to be executed for cloning from remote.
-func (s MavenArtifactSyncer) CloneCommand(ctx context.Context, remoteURL *vcs.URL, tmpPath string) (*exec.Cmd, error) {
+func (s JvmPackagesArtifactSyncer) CloneCommand(ctx context.Context, remoteURL *vcs.URL, tmpPath string) (*exec.Cmd, error) {
 	dependency := reposource.DecomposeMavenPath(remoteURL.Path)
 
 	paths, err := coursier.FetchSources(ctx, s.Config, dependency)
@@ -69,16 +69,16 @@ func (s MavenArtifactSyncer) CloneCommand(ctx context.Context, remoteURL *vcs.UR
 }
 
 // Fetch does nothing for Maven packages because they are immutable and cannot be updated after publishing.
-func (s MavenArtifactSyncer) Fetch(ctx context.Context, remoteURL *vcs.URL, dir GitDir) error {
+func (s JvmPackagesArtifactSyncer) Fetch(ctx context.Context, remoteURL *vcs.URL, dir GitDir) error {
 	return nil
 }
 
 // RemoteShowCommand returns the command to be executed for showing remote.
-func (s MavenArtifactSyncer) RemoteShowCommand(ctx context.Context, remoteURL *vcs.URL) (cmd *exec.Cmd, err error) {
+func (s JvmPackagesArtifactSyncer) RemoteShowCommand(ctx context.Context, remoteURL *vcs.URL) (cmd *exec.Cmd, err error) {
 	return exec.CommandContext(ctx, "git", "remote", "show", "./"), nil
 }
 
-func (s MavenArtifactSyncer) commitJar(ctx context.Context, dir GitDir, workingDir, dependency, path string) error {
+func (s JvmPackagesArtifactSyncer) commitJar(ctx context.Context, dir GitDir, workingDir, dependency, path string) error {
 	cmd := exec.CommandContext(ctx, "unzip", path, "-d", workingDir)
 	dir.Set(cmd)
 	if output, err := runWith(ctx, cmd, false, nil); err != nil {

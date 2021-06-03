@@ -22,7 +22,7 @@ var (
 	GitLabDotCom    = NewCodeHost(GitLabDotComURL, TypeGitLab)
 
 	MavenURL = &url.URL{Host: "maven"}
-	Maven    = NewCodeHost(MavenURL, TypeMaven)
+	Maven    = NewCodeHost(MavenURL, TypeJvmPackages)
 
 	PublicCodeHosts = []*CodeHost{
 		GitHubDotCom,

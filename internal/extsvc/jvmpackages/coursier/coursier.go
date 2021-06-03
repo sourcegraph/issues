@@ -12,15 +12,15 @@ import (
 	"github.com/sourcegraph/sourcegraph/schema"
 )
 
-func ListArtifactIDs(ctx context.Context, config *schema.MavenConnection, groupID string) ([]string, error) {
+func ListArtifactIDs(ctx context.Context, config *schema.JvmPackagesConnection, groupID string) ([]string, error) {
 	return runCoursierCommand(ctx, config, "complete", groupID+":")
 }
 
-func ListVersions(ctx context.Context, config *schema.MavenConnection, groupID, artifactID string) ([]string, error) {
+func ListVersions(ctx context.Context, config *schema.JvmPackagesConnection, groupID, artifactID string) ([]string, error) {
 	return runCoursierCommand(ctx, config, "complete", groupID+":"+artifactID+":")
 }
 
-func FetchSources(ctx context.Context, config *schema.MavenConnection, dependency string) ([]string, error) {
+func FetchSources(ctx context.Context, config *schema.JvmPackagesConnection, dependency string) ([]string, error) {
 	return runCoursierCommand(
 		ctx,
 		config,
@@ -30,7 +30,7 @@ func FetchSources(ctx context.Context, config *schema.MavenConnection, dependenc
 	)
 }
 
-func Exists(ctx context.Context, config *schema.MavenConnection, dependency string) (bool, error) {
+func Exists(ctx context.Context, config *schema.JvmPackagesConnection, dependency string) (bool, error) {
 	versions, err := runCoursierCommand(
 		ctx,
 		config,
@@ -40,7 +40,7 @@ func Exists(ctx context.Context, config *schema.MavenConnection, dependency stri
 	return len(versions) > 0, err
 }
 
-func runCoursierCommand(ctx context.Context, config *schema.MavenConnection, args ...string) ([]string, error) {
+func runCoursierCommand(ctx context.Context, config *schema.JvmPackagesConnection, args ...string) ([]string, error) {
 	cmd := exec.CommandContext(ctx, "coursier", args...)
 	if config.Credentials != "" {
 		cmd.Env = append(cmd.Env, fmt.Sprintf("COURSIER_CREDENTIALS=%v", config.Credentials))

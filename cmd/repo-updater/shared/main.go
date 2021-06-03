@@ -196,10 +196,9 @@ func Main(enterpriseInit EnterpriseInit) {
 			Kinds: []string{
 				extsvc.KindGitHub,
 				extsvc.KindGitLab,
-				extsvc.KindMaven,
+				extsvc.KindJvmPackages,
 			},
 		})
-
 		if err != nil {
 			log.Fatalf("failed to list external services: %v", err)
 		}
@@ -219,8 +218,8 @@ func Main(enterpriseInit EnterpriseInit) {
 				if strings.HasPrefix(c.Url, "https://gitlab.com") && c.Token != "" {
 					server.GitLabDotComSource, err = repos.NewGitLabSource(e, cf)
 				}
-			case *schema.MavenConnection:
-				server.MavenSource, err = repos.NewMavenSource(e)
+			case *schema.JvmPackagesConnection:
+				server.MavenSource, err = repos.NewJvmPackagesSource(e)
 			}
 
 			if err != nil {

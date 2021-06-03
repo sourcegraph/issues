@@ -10,32 +10,32 @@ import (
 	"github.com/sourcegraph/sourcegraph/internal/api"
 	"github.com/sourcegraph/sourcegraph/internal/conf/reposource"
 	"github.com/sourcegraph/sourcegraph/internal/extsvc"
-	"github.com/sourcegraph/sourcegraph/internal/extsvc/maven"
-	"github.com/sourcegraph/sourcegraph/internal/extsvc/maven/coursier"
+	"github.com/sourcegraph/sourcegraph/internal/extsvc/jvmpackages"
+	"github.com/sourcegraph/sourcegraph/internal/extsvc/jvmpackages/coursier"
 	"github.com/sourcegraph/sourcegraph/internal/jsonc"
 	"github.com/sourcegraph/sourcegraph/internal/types"
 	"github.com/sourcegraph/sourcegraph/schema"
 )
 
-// A MavenSource yields depots from a single Maven connection configured
+// A JvmPackagesSource yields depots from a single Maven connection configured
 // in Sourcegraph via the external services configuration.
-type MavenSource struct {
+type JvmPackagesSource struct {
 	svc    *types.ExternalService
-	config *schema.MavenConnection
+	config *schema.JvmPackagesConnection
 }
 
-// NewMavenSource returns a new MavenSource from the given external
+// NewJvmPackagesSource returns a new MavenSource from the given external
 // service.
-func NewMavenSource(svc *types.ExternalService) (*MavenSource, error) {
-	var c schema.MavenConnection
+func NewJvmPackagesSource(svc *types.ExternalService) (*JvmPackagesSource, error) {
+	var c schema.JvmPackagesConnection
 	if err := jsonc.Unmarshal(svc.Config, &c); err != nil {
 		return nil, fmt.Errorf("external service id=%d config error: %s", svc.ID, err)
 	}
-	return newMavenSource(svc, &c)
+	return newJvmPackagesSource(svc, &c)
 }
 
-func newMavenSource(svc *types.ExternalService, c *schema.MavenConnection) (*MavenSource, error) {
-	return &MavenSource{
+func newJvmPackagesSource(svc *types.ExternalService, c *schema.JvmPackagesConnection) (*JvmPackagesSource, error) {
+	return &JvmPackagesSource{
 		svc:    svc,
 		config: c,
 	}, nil
@@ -43,11 +43,11 @@ func newMavenSource(svc *types.ExternalService, c *schema.MavenConnection) (*Mav
 
 // ListRepos returns all Maven artifacts accessible to all connections
 // configured in Sourcegraph via the external services configuration.
-func (s MavenSource) ListRepos(ctx context.Context, results chan SourceResult) {
+func (s JvmPackagesSource) ListRepos(ctx context.Context, results chan SourceResult) {
 	s.listDependentRepos(ctx, results)
 }
 
-func (s MavenSource) listDependentRepos(ctx context.Context, results chan SourceResult) {
+func (s JvmPackagesSource) listDependentRepos(ctx context.Context, results chan SourceResult) {
 	for _, dependency := range s.config.Artifacts {
 		repo := s.makeRepo(dependency)
 		log15.Info("listDependentRepos", "repo", repo, "metadata", repo.Metadata)
@@ -56,10 +56,9 @@ func (s MavenSource) listDependentRepos(ctx context.Context, results chan Source
 			Repo:   repo,
 		}
 	}
-
 }
 
-func (s MavenSource) GetRepo(ctx context.Context, artifactPath string) (*types.Repo, error) {
+func (s JvmPackagesSource) GetRepo(ctx context.Context, artifactPath string) (*types.Repo, error) {
 	dependency := reposource.DecomposeMavenPath(artifactPath)
 
 	exists, err := coursier.Exists(ctx, s.config, dependency)
@@ -90,6 +89,7 @@ func (e *mavenArtifactNotFound) Error() string {
 func MavenRepoName(dependency string) string {
 	return "maven/" + dependency
 }
+
 func MavenCloneURL(dependency string) string {
 	cloneURL := url.URL{
 		Host: "maven",
@@ -98,7 +98,7 @@ func MavenCloneURL(dependency string) string {
 	return cloneURL.String()
 }
 
-func (s MavenSource) makeRepo(dependency string) *types.Repo {
+func (s JvmPackagesSource) makeRepo(dependency string) *types.Repo {
 	repoName := MavenRepoName(dependency)
 	urn := s.svc.URN()
 	cloneURL := MavenCloneURL(dependency)
@@ -108,8 +108,8 @@ func (s MavenSource) makeRepo(dependency string) *types.Repo {
 		URI:  repoName,
 		ExternalRepo: api.ExternalRepoSpec{
 			ID:          dependency,
-			ServiceID:   extsvc.TypeMaven,
-			ServiceType: extsvc.TypeMaven,
+			ServiceID:   extsvc.TypeJvmPackages,
+			ServiceType: extsvc.TypeJvmPackages,
 		},
 		Private: false,
 		Sources: map[string]*types.SourceInfo{
@@ -118,13 +118,13 @@ func (s MavenSource) makeRepo(dependency string) *types.Repo {
 				CloneURL: cloneURL,
 			},
 		},
-		Metadata: &maven.MavenMetadata{
+		Metadata: &jvmpackages.MavenMetadata{
 			Dependency: dependency,
 		},
 	}
 }
 
 // ExternalServices returns a singleton slice containing the external service.
-func (s MavenSource) ExternalServices() types.ExternalServices {
+func (s JvmPackagesSource) ExternalServices() types.ExternalServices {
 	return types.ExternalServices{s.svc}
 }
