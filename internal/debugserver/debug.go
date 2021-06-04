@@ -27,7 +27,21 @@ func init() {
 		panic("failed to JSON unmarshal SRC_PROF_SERVICES: " + err.Error())
 	}
 
-	if addr == "" {
+	if os.Getenv("DEPLOY_TYPE") == "DOCKER_COMPOSE" && len(Services) == 0 {
+		Services = []Service{
+			{Name: "frontend", Host: "sourcegraph-frontend-0"},
+			{Name: "gitserver", Host: "gitserver-0"},
+			{Name: "searcher", Host: "searchers-0"},
+			{Name: "symbols", Host: "symbols-0"},
+			{Name: "repo-updater", Host: "repo-updater"},
+			{Name: "query-runner", Host: "query-runner"},
+			{Name: "precise-code-intel-worker", Host: "precise-code-intel-worker"},
+			{Name: "executor-queue", Host: "executor-queue"},
+			{Name: "executor", Host: "executor"},
+			{Name: "zoekt-indexserver-0", Host: "zoekt-indexserver-0"},
+			{Name: "zoekt-webserver-0", Host: "zoekt-webserver-0", DefaultPath: "/debug/requests/"},
+		}
+	} else if addr == "" {
 		// Look for our binname in the services list
 		name := filepath.Base(os.Args[0])
 		for _, svc := range Services {
