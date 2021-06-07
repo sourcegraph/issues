@@ -142,6 +142,7 @@ func (r *Resolver) NodeResolvers() map[string]graphqlbackend.NodeByIDFunc {
 		bulkOperationIDKind: func(ctx context.Context, id graphql.ID) (graphqlbackend.Node, error) {
 			return r.bulkOperationByID(ctx, id)
 		},
+		// TODO: implement pending batch spec reverse mapping.
 	}
 }
 
@@ -1248,6 +1249,36 @@ func (r *Resolver) CreateChangesetComments(ctx context.Context, args *graphqlbac
 	}
 
 	return r.bulkOperationByIDString(ctx, bulkGroupID)
+}
+
+func (r *Resolver) CreatePendingBatchSpec(ctx context.Context, args *graphqlbackend.CreatePendingBatchSpecArgs) (_ graphqlbackend.PendingBatchSpecResolver, err error) {
+	tr, ctx := trace.New(ctx, "Resolver.CreatePendingBatchSpec", "??")
+	defer func() {
+		tr.SetError(err)
+		tr.Finish()
+	}()
+	if err := batchChangesEnabled(ctx); err != nil {
+		return nil, err
+	}
+
+	if err := batchChangesCreateAccess(ctx); err != nil {
+		return nil, err
+	}
+
+	act := actor.FromContext(ctx)
+	// Actor MUST be logged in at this stage, because batchChangesCreateAccess checks that already.
+	// To be extra safe, we'll just do the cheap check again here so if anyone ever modifies
+	// batchChangesCreateAccess, we still enforce it here.
+	if !act.IsAuthenticated() {
+		return nil, backend.ErrNotAuthenticated
+	}
+
+	pbs, err := r.store.CreatePendingBatchSpec(ctx, args.Spec, act.UID)
+	if err != nil {
+		return nil, err
+	}
+
+	return &pendingBatchSpecResolver{pbs: pbs}, nil
 }
 
 func parseBatchChangeState(s *string) (btypes.BatchChangeState, error) {

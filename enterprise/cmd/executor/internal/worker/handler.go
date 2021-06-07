@@ -80,8 +80,20 @@ func (h *handler) Handle(ctx context.Context, s workerutil.Store, record workeru
 	// If a repository is supplied as part of the job configuration, it will be cloned into
 	// the working directory.
 
+	// Temporary shim: older Sourcegraph versions use Job.RepositoryName instead
+	// of Job.Workspace, so let's set up a fake workspace if we need to.
+	//
+	// TOOD: there should really be a check in here for the case where both
+	// RepositoryName and Workspace are non-empty.
+	workspace := &job.Workspace
+	if job.RepositoryName != "" {
+		workspace = &executor.Workspace{
+			RepositoryName: job.RepositoryName,
+		}
+	}
+
 	hostRunner := h.runnerFactory("", logger, command.Options{}, h.operations)
-	workingDirectory, err := h.prepareWorkspace(ctx, hostRunner, job.RepositoryName, job.Commit)
+	workingDirectory, err := h.prepareWorkspace(ctx, hostRunner, workspace, job.Commit)
 	if err != nil {
 		return wrapError(err, "failed to prepare workspace")
 	}

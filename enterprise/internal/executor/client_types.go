@@ -10,7 +10,11 @@ type Job struct {
 
 	// RepositoryName is the name of the repository to be cloned into the
 	// workspace prior to job execution.
-	RepositoryName string `json:"repositoryName"`
+	RepositoryName string `json:"repositoryName,omitempty"`
+
+	// Workspace replaces RepositoryName, and defines a repository and optional
+	// path that describes a workspace.
+	Workspace Workspace `json:"workspace,omitempty"`
 
 	// Commit is the revhash that should be checked out prior to job execution.
 	Commit string `json:"commit"`
@@ -38,6 +42,20 @@ type Job struct {
 
 func (j Job) RecordID() int {
 	return j.ID
+}
+
+type Workspace struct {
+	// RepositoryName is the name of the repository to be cloned into the
+	// workspace prior to job execution.
+	RepositoryName string `json:"repositoryName"`
+
+	// Path is the name of the path relative to the repository root in which
+	// jobs should be executed.
+	Path string `json:"path"`
+
+	// OnlyFetchWorkspace will cause _only_ the path within the repository to be
+	// downloaded if enabled. If Path is empty, then this field has no effect.
+	OnlyFetchWorkspace bool `json:"onlyFetchWorkspace"`
 }
 
 type DockerStep struct {

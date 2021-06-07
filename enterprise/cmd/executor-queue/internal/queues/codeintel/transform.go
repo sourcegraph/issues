@@ -33,12 +33,12 @@ func transformRecord(index store.Index, config *Config) (apiclient.Job, error) {
 		})
 	}
 
-	srcEndpoint, err := makeURL(config.FrontendURL, config.FrontendUsername, config.FrontendPassword)
+	srcEndpoint, err := makeURL(config.Shared.FrontendURL, config.Shared.FrontendUsername, config.Shared.FrontendPassword)
 	if err != nil {
 		return apiclient.Job{}, err
 	}
 
-	redactedSrcEndpoint, err := makeURL(config.FrontendURL, "USERNAME_REMOVED", "PASSWORD_REMOVED")
+	redactedSrcEndpoint, err := makeURL(config.Shared.FrontendURL, "USERNAME_REMOVED", "PASSWORD_REMOVED")
 	if err != nil {
 		return apiclient.Job{}, err
 	}
@@ -54,10 +54,12 @@ func transformRecord(index store.Index, config *Config) (apiclient.Job, error) {
 	}
 
 	return apiclient.Job{
-		ID:             index.ID,
-		Commit:         index.Commit,
-		RepositoryName: index.RepositoryName,
-		DockerSteps:    dockerSteps,
+		ID:     index.ID,
+		Commit: index.Commit,
+		Workspace: apiclient.Workspace{
+			RepositoryName: index.RepositoryName,
+		},
+		DockerSteps: dockerSteps,
 		CliSteps: []apiclient.CliStep{
 			{
 				Commands: []string{
@@ -86,8 +88,8 @@ func transformRecord(index store.Index, config *Config) (apiclient.Job, error) {
 			// (in src-cli). We only pass the constructed URL to src-cli, which we trust not to
 			// ship the values to a third party, but not to trust to ensure the values are absent
 			// from the command's stdout or stderr streams.
-			config.FrontendUsername: "USERNAME_REMOVED",
-			config.FrontendPassword: "PASSWORD_REMOVED",
+			config.Shared.FrontendUsername: "USERNAME_REMOVED",
+			config.Shared.FrontendPassword: "PASSWORD_REMOVED",
 		},
 	}, nil
 }

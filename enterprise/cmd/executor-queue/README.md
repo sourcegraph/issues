@@ -5,3 +5,4 @@ The executor-queue service maintains the executor work queues. Executor instance
 ## Work queues
 
 - The `codeintel` queue contains unprocessed lsif_index records
+- The `batches` queue contains unprocessed pending_batch_workspace records

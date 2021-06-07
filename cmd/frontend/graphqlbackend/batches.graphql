@@ -2760,3 +2760,12 @@ type BatchChangeDescription {
     """
     description: String!
 }
+
+type PendingBatchSpec {
+    id: ID!
+    state: String!
+}
+
+extend type Mutation {
+    createPendingBatchSpec(spec: String!): PendingBatchSpec!
+}

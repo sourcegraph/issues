@@ -25,6 +25,9 @@ func Routines(ctx context.Context, batchesStore *store.Store, cf *httpcli.Factor
 
 		newBulkOperationWorker(ctx, batchesStore, sourcer, metrics),
 		newBulkOperationWorkerResetter(batchesStore, metrics),
+
+		newPendingBatchSpecWorker(ctx, batchesStore, metrics),
+		newPendingBatchSpecWorkerResetter(batchesStore, metrics),
 	}
 	return routines
 }

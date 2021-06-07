@@ -21,8 +21,6 @@ import (
 	"github.com/sourcegraph/sourcegraph/internal/workerutil"
 )
 
-const addr = ":3192"
-
 func main() {
 	config := &Config{}
 	config.Load()
@@ -53,7 +51,7 @@ func main() {
 		worker.NewWorker(config.APIWorkerOptions(nil), observationContext),
 	}
 	if !config.DisableHealthServer {
-		routines = append(routines, httpserver.NewFromAddr(addr, &http.Server{
+		routines = append(routines, httpserver.NewFromAddr(config.HealthServerAddress, &http.Server{
 			ReadTimeout:  75 * time.Second,
 			WriteTimeout: 10 * time.Minute,
 			Handler:      httpserver.NewHandler(nil),

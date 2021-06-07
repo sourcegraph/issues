@@ -216,6 +216,10 @@ type CreateChangesetCommentsArgs struct {
 	Body        string
 }
 
+type CreatePendingBatchSpecArgs struct {
+	Spec string
+}
+
 type BatchChangesResolver interface {
 	//
 	// MUTATIONS
@@ -238,6 +242,7 @@ type BatchChangesResolver interface {
 	DeleteBatchChange(ctx context.Context, args *DeleteBatchChangeArgs) (*EmptyResponse, error)
 	CreateBatchChangesCredential(ctx context.Context, args *CreateBatchChangesCredentialArgs) (BatchChangesCredentialResolver, error)
 	DeleteBatchChangesCredential(ctx context.Context, args *DeleteBatchChangesCredentialArgs) (*EmptyResponse, error)
+	CreatePendingBatchSpec(ctx context.Context, args *CreatePendingBatchSpecArgs) (PendingBatchSpecResolver, error)
 
 	CreateChangesetSpec(ctx context.Context, args *CreateChangesetSpecArgs) (ChangesetSpecResolver, error)
 	SyncChangeset(ctx context.Context, args *SyncChangesetArgs) (*EmptyResponse, error)
@@ -677,4 +682,9 @@ type ChangesetCountsResolver interface {
 	OpenApproved() int32
 	OpenChangesRequested() int32
 	OpenPending() int32
+}
+
+type PendingBatchSpecResolver interface {
+	ID() graphql.ID
+	State() string
 }

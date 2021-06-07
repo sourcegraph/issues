@@ -24,9 +24,11 @@ func TestHandle(t *testing.T) {
 	runner := NewMockRunner()
 
 	job := executor.Job{
-		ID:             42,
-		Commit:         "deadbeef",
-		RepositoryName: "linux",
+		ID:     42,
+		Commit: "deadbeef",
+		Workspace: executor.Workspace{
+			RepositoryName: "linux",
+		},
 		VirtualMachineFiles: map[string]string{
 			"test.txt": "<file payload>",
 		},

@@ -14,10 +14,12 @@ import (
 )
 
 type batchChangesMetrics struct {
-	reconcilerWorkerMetrics            workerutil.WorkerMetrics
-	bulkProcessorWorkerMetrics         workerutil.WorkerMetrics
-	reconcilerWorkerResetterMetrics    dbworker.ResetterMetrics
-	bulkProcessorWorkerResetterMetrics dbworker.ResetterMetrics
+	reconcilerWorkerMetrics               workerutil.WorkerMetrics
+	bulkProcessorWorkerMetrics            workerutil.WorkerMetrics
+	pendingBatchSpecWorkerMetrics         workerutil.WorkerMetrics
+	reconcilerWorkerResetterMetrics       dbworker.ResetterMetrics
+	bulkProcessorWorkerResetterMetrics    dbworker.ResetterMetrics
+	pendingBatchSpecWorkerResetterMetrics dbworker.ResetterMetrics
 }
 
 func newMetrics() batchChangesMetrics {
@@ -28,10 +30,12 @@ func newMetrics() batchChangesMetrics {
 	}
 
 	return batchChangesMetrics{
-		reconcilerWorkerMetrics:            workerutil.NewMetrics(observationContext, "batch_changes_reconciler", nil),
-		bulkProcessorWorkerMetrics:         workerutil.NewMetrics(observationContext, "batch_changes_bulk_processor", nil),
-		reconcilerWorkerResetterMetrics:    makeResetterMetrics(observationContext, "batch_changes_reconciler"),
-		bulkProcessorWorkerResetterMetrics: makeResetterMetrics(observationContext, "batch_changes_bulk_processor"),
+		reconcilerWorkerMetrics:               workerutil.NewMetrics(observationContext, "batch_changes_reconciler", nil),
+		bulkProcessorWorkerMetrics:            workerutil.NewMetrics(observationContext, "batch_changes_bulk_processor", nil),
+		pendingBatchSpecWorkerMetrics:         workerutil.NewMetrics(observationContext, "batch_changes_pending_batch_specs", nil),
+		reconcilerWorkerResetterMetrics:       makeResetterMetrics(observationContext, "batch_changes_reconciler"),
+		bulkProcessorWorkerResetterMetrics:    makeResetterMetrics(observationContext, "batch_changes_bulk_processor"),
+		pendingBatchSpecWorkerResetterMetrics: makeResetterMetrics(observationContext, "batch_changes_pending_batch_specs"),
 	}
 }
 

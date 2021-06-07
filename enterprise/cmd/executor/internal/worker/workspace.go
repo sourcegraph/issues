@@ -10,13 +10,14 @@ import (
 	"github.com/pkg/errors"
 
 	"github.com/sourcegraph/sourcegraph/enterprise/cmd/executor/internal/command"
+	"github.com/sourcegraph/sourcegraph/enterprise/internal/executor"
 )
 
 // prepareWorkspace creates and returns a temporary director in which acts the workspace
 // while processing a single job. It is up to the caller to ensure that this directory is
 // removed after the job has finished processing. If a repository name is supplied, then
 // that repository will be cloned (through the frontend API) into the workspace.
-func (h *handler) prepareWorkspace(ctx context.Context, commandRunner command.Runner, repositoryName, commit string) (_ string, err error) {
+func (h *handler) prepareWorkspace(ctx context.Context, commandRunner command.Runner, workspace *executor.Workspace, commit string) (_ string, err error) {
 	tempDir, err := makeTempDir()
 	if err != nil {
 		return "", err
@@ -27,18 +28,20 @@ func (h *handler) prepareWorkspace(ctx context.Context, commandRunner command.Ru
 		}
 	}()
 
-	if repositoryName != "" {
+	if workspace.RepositoryName != "" {
 		cloneURL, err := makeURL(
 			h.options.ClientOptions.EndpointOptions.URL,
 			h.options.ClientOptions.EndpointOptions.Username,
 			h.options.ClientOptions.EndpointOptions.Password,
 			h.options.GitServicePath,
-			repositoryName,
+			workspace.RepositoryName,
 		)
 		if err != nil {
 			return "", err
 		}
 
+		// TODO: support OnlyFetchWorkspace, presumably by stealing lots of code
+		// from repo_fetcher.go in src-cli.
 		gitCommands := []command.CommandSpec{
 			{Key: "setup.git.init", Command: []string{"git", "-C", tempDir, "init"}, Operation: h.operations.SetupGitInit},
 			{Key: "setup.git.fetch", Command: []string{"git", "-C", tempDir, "-c", "protocol.version=2", "fetch", cloneURL.String(), "-t", commit}, Operation: h.operations.SetupGitFetch},
