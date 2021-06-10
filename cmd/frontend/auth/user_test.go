@@ -12,6 +12,7 @@ import (
 
 	"github.com/sourcegraph/sourcegraph/internal/actor"
 	"github.com/sourcegraph/sourcegraph/internal/database"
+	"github.com/sourcegraph/sourcegraph/internal/database/dbtesting"
 	"github.com/sourcegraph/sourcegraph/internal/errcode"
 	"github.com/sourcegraph/sourcegraph/internal/extsvc"
 	"github.com/sourcegraph/sourcegraph/internal/types"
@@ -393,7 +394,7 @@ func TestGetAndSaveUser(t *testing.T) {
 						}
 						op := c.op
 						op.CreateIfNotExist = createIfNotExist
-						userID, safeErr, err := GetAndSaveUser(ctx, op)
+						userID, safeErr, err := GetAndSaveUser(ctx, &dbtesting.MockDB{}, op)
 						for _, v := range []struct {
 							label string
 							got   interface{}
@@ -519,7 +520,7 @@ func TestMetadataOnlyAutomaticallySetOnFirstOccurrence(t *testing.T) {
 				ExternalAccount: ext("github", "fake-service", "fake-client", "account-u1"),
 				UserProps:       database.NewUser{DisplayName: test.displayName, AvatarURL: test.avatarURL},
 			}
-			if _, _, err := GetAndSaveUser(ctx, op); err != nil {
+			if _, _, err := GetAndSaveUser(ctx, &dbtesting.MockDB{}, op); err != nil {
 				t.Fatal(err)
 			}
 			if user.DisplayName != test.wantDisplayName {

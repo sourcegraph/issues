@@ -10,12 +10,8 @@ import (
 
 	"github.com/sourcegraph/sourcegraph/cmd/frontend/backend"
 	"github.com/sourcegraph/sourcegraph/internal/database/basestore"
-	"github.com/sourcegraph/sourcegraph/internal/database/dbtesting"
+	"github.com/sourcegraph/sourcegraph/internal/database/dbtest"
 )
-
-func init() {
-	dbtesting.DBNameSuffix = "codeinsightsbackendqueryrunner"
-}
 
 // TestJobQueue tests that EnqueueJob and dequeueJob work mutually to transfer jobs to/from the
 // database.
@@ -23,11 +19,11 @@ func TestJobQueue(t *testing.T) {
 	if testing.Short() {
 		t.Skip()
 	}
-	//t.Parallel() // TODO: dbtesting.GetDB is not parallel-safe, yuck.
+	t.Parallel()
 
 	ctx := backend.WithAuthzBypass(context.Background())
 
-	mainAppDB := dbtesting.GetDB(t)
+	mainAppDB := dbtest.NewDB(t, "")
 	workerBaseStore := basestore.NewWithDB(mainAppDB, sql.TxOptions{})
 
 	// Check we get no dequeued job first.

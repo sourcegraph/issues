@@ -85,7 +85,7 @@ func NewDB(t testing.TB, dsn string) *sql.DB {
 
 	config.Path = "/" + dbname
 	testDB := dbConn(t, config)
-	testDB.SetMaxOpenConns(3)
+	testDB.SetMaxOpenConns(8)
 
 	t.Cleanup(func() {
 		defer db.Close()

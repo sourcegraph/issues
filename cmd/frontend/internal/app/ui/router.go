@@ -218,9 +218,9 @@ func initRouter(db dbutil.DB, router *mux.Router) {
 	uirouter.Router = router // make accessible to other packages
 
 	// basic pages with static titles
-	router.Get(routeHome).Handler(handler(serveHome))
-	router.Get(routeThreads).Handler(handler(serveBrandedPageString("Threads", nil)))
-	router.Get(routeInsights).Handler(handler(serveBrandedPageString("Insights", nil)))
+	router.Get(routeHome).Handler(handler(db, serveHome(db)))
+	router.Get(routeThreads).Handler(handler(db, serveBrandedPageString(db, "Threads", nil)))
+	router.Get(routeInsights).Handler(handler(db, serveBrandedPageString(db, "Insights", nil)))
 	router.Get(routeLegacyCampaigns).Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		r.URL.Path = "/batch-changes" + mux.Vars(r)["Path"]
 		// Temporary redirect so at some point we can reuse the /campaigns path, if needed.
@@ -229,43 +229,43 @@ func initRouter(db dbutil.DB, router *mux.Router) {
 	if envvar.SourcegraphDotComMode() {
 		router.Get(routeBatchChanges).Handler(staticRedirectHandler("https://about.sourcegraph.com/batch-changes", http.StatusTemporaryRedirect))
 	} else {
-		router.Get(routeBatchChanges).Handler(handler(serveBrandedPageString("Batch Changes", nil)))
+		router.Get(routeBatchChanges).Handler(handler(db, serveBrandedPageString(db, "Batch Changes", nil)))
 	}
-	router.Get(routeCodeMonitoring).Handler(handler(serveBrandedPageString("Code Monitoring", nil)))
-	router.Get(routeContexts).Handler(handler(serveBrandedPageString("Search Contexts", nil)))
-	router.Get(uirouter.RouteSignIn).Handler(handler(serveSignIn))
-	router.Get(uirouter.RouteSignUp).Handler(handler(serveBrandedPageString("Sign up", nil)))
-	router.Get(routeOrganizations).Handler(handler(serveBrandedPageString("Organization", nil)))
-	router.Get(routeSettings).Handler(handler(serveBrandedPageString("Settings", nil)))
-	router.Get(routeSiteAdmin).Handler(handler(serveBrandedPageString("Admin", nil)))
-	router.Get(uirouter.RoutePasswordReset).Handler(handler(serveBrandedPageString("Reset password", nil)))
-	router.Get(routeAPIConsole).Handler(handler(serveBrandedPageString("API console", nil)))
-	router.Get(routeRepoSettings).Handler(handler(serveBrandedPageString("Repository settings", nil)))
-	router.Get(routeRepoCommit).Handler(handler(serveBrandedPageString("Commit", nil)))
-	router.Get(routeRepoBranches).Handler(handler(serveBrandedPageString("Branches", nil)))
-	router.Get(routeRepoDocs).Handler(handler(serveBrandedPageString("API docs", nil)))
-	router.Get(routeRepoCommits).Handler(handler(serveBrandedPageString("Commits", nil)))
-	router.Get(routeRepoTags).Handler(handler(serveBrandedPageString("Tags", nil)))
-	router.Get(routeRepoCompare).Handler(handler(serveBrandedPageString("Compare", nil)))
-	router.Get(routeRepoStats).Handler(handler(serveBrandedPageString("Stats", nil)))
-	router.Get(routeSurvey).Handler(handler(serveBrandedPageString("Survey", nil)))
-	router.Get(routeSurveyScore).Handler(handler(serveBrandedPageString("Survey", nil)))
-	router.Get(routeRegistry).Handler(handler(serveBrandedPageString("Registry", nil)))
-	router.Get(routeExtensions).Handler(handler(serveBrandedPageString("Extensions", nil)))
+	router.Get(routeCodeMonitoring).Handler(handler(db, serveBrandedPageString(db, "Code Monitoring", nil)))
+	router.Get(routeContexts).Handler(handler(db, serveBrandedPageString(db, "Search Contexts", nil)))
+	router.Get(uirouter.RouteSignIn).Handler(handler(db, serveSignIn(db)))
+	router.Get(uirouter.RouteSignUp).Handler(handler(db, serveBrandedPageString(db, "Sign up", nil)))
+	router.Get(routeOrganizations).Handler(handler(db, serveBrandedPageString(db, "Organization", nil)))
+	router.Get(routeSettings).Handler(handler(db, serveBrandedPageString(db, "Settings", nil)))
+	router.Get(routeSiteAdmin).Handler(handler(db, serveBrandedPageString(db, "Admin", nil)))
+	router.Get(uirouter.RoutePasswordReset).Handler(handler(db, serveBrandedPageString(db, "Reset password", nil)))
+	router.Get(routeAPIConsole).Handler(handler(db, serveBrandedPageString(db, "API console", nil)))
+	router.Get(routeRepoSettings).Handler(handler(db, serveBrandedPageString(db, "Repository settings", nil)))
+	router.Get(routeRepoCommit).Handler(handler(db, serveBrandedPageString(db, "Commit", nil)))
+	router.Get(routeRepoBranches).Handler(handler(db, serveBrandedPageString(db, "Branches", nil)))
+	router.Get(routeRepoDocs).Handler(handler(db, serveBrandedPageString(db, "API docs", nil)))
+	router.Get(routeRepoCommits).Handler(handler(db, serveBrandedPageString(db, "Commits", nil)))
+	router.Get(routeRepoTags).Handler(handler(db, serveBrandedPageString(db, "Tags", nil)))
+	router.Get(routeRepoCompare).Handler(handler(db, serveBrandedPageString(db, "Compare", nil)))
+	router.Get(routeRepoStats).Handler(handler(db, serveBrandedPageString(db, "Stats", nil)))
+	router.Get(routeSurvey).Handler(handler(db, serveBrandedPageString(db, "Survey", nil)))
+	router.Get(routeSurveyScore).Handler(handler(db, serveBrandedPageString(db, "Survey", nil)))
+	router.Get(routeRegistry).Handler(handler(db, serveBrandedPageString(db, "Registry", nil)))
+	router.Get(routeExtensions).Handler(handler(db, serveBrandedPageString(db, "Extensions", nil)))
 	router.Get(routeHelp).HandlerFunc(serveHelp)
-	router.Get(routeSnippets).Handler(handler(serveBrandedPageString("Snippets", nil)))
-	router.Get(routeSubscriptions).Handler(handler(serveBrandedPageString("Subscriptions", nil)))
-	router.Get(routeStats).Handler(handler(serveBrandedPageString("Stats", nil)))
-	router.Get(routeViews).Handler(handler(serveBrandedPageString("View", nil)))
-	router.Get(uirouter.RoutePingFromSelfHosted).Handler(handler(servePingFromSelfHosted))
+	router.Get(routeSnippets).Handler(handler(db, serveBrandedPageString(db, "Snippets", nil)))
+	router.Get(routeSubscriptions).Handler(handler(db, serveBrandedPageString(db, "Subscriptions", nil)))
+	router.Get(routeStats).Handler(handler(db, serveBrandedPageString(db, "Stats", nil)))
+	router.Get(routeViews).Handler(handler(db, serveBrandedPageString(db, "View", nil)))
+	router.Get(uirouter.RoutePingFromSelfHosted).Handler(handler(db, servePingFromSelfHosted))
 
-	router.Get(routeUserSettings).Handler(handler(serveBrandedPageString("User settings", nil)))
-	router.Get(routeUserRedirect).Handler(handler(serveBrandedPageString("User", nil)))
-	router.Get(routeUser).Handler(handler(serveBasicPage(func(c *Common, r *http.Request) string {
+	router.Get(routeUserSettings).Handler(handler(db, serveBrandedPageString(db, "User settings", nil)))
+	router.Get(routeUserRedirect).Handler(handler(db, serveBrandedPageString(db, "User", nil)))
+	router.Get(routeUser).Handler(handler(db, serveBasicPage(db, func(c *Common, r *http.Request) string {
 		return brandNameSubtitle(mux.Vars(r)["username"])
 	}, nil)))
-	router.Get(routeSearchQueryBuilder).Handler(handler(serveBrandedPageString("Query builder", nil)))
-	router.Get(routeSearchConsole).Handler(handler(serveBrandedPageString("Search console", nil)))
+	router.Get(routeSearchQueryBuilder).Handler(handler(db, serveBrandedPageString(db, "Query builder", nil)))
+	router.Get(routeSearchConsole).Handler(handler(db, serveBrandedPageString(db, "Search console", nil)))
 
 	// Legacy redirects
 	if envvar.SourcegraphDotComMode() {
@@ -273,12 +273,12 @@ func initRouter(db dbutil.DB, router *mux.Router) {
 		router.Get(routeLegacyCareers).Handler(staticRedirectHandler("https://about.sourcegraph.com/jobs", http.StatusMovedPermanently))
 		router.Get(routeLegacyOldRouteDefLanding).Handler(http.HandlerFunc(serveOldRouteDefLanding))
 		router.Get(routeLegacyDefRedirectToDefLanding).Handler(http.HandlerFunc(serveDefRedirectToDefLanding))
-		router.Get(routeLegacyDefLanding).Handler(handler(serveDefLanding))
-		router.Get(routeLegacyRepoLanding).Handler(handler(serveRepoLanding))
+		router.Get(routeLegacyDefLanding).Handler(handler(db, serveDefLanding))
+		router.Get(routeLegacyRepoLanding).Handler(handler(db, serveRepoLanding))
 	}
 
 	// search
-	router.Get(routeSearch).Handler(handler(serveBasicPage(func(c *Common, r *http.Request) string {
+	router.Get(routeSearch).Handler(handler(db, serveBasicPage(db, func(c *Common, r *http.Request) string {
 		shortQuery := limitString(r.URL.Query().Get("q"), 25, true)
 		if shortQuery == "" {
 			return globals.Branding().BrandName
@@ -302,21 +302,21 @@ func initRouter(db dbutil.DB, router *mux.Router) {
 			r.URL.Path = "/" + aboutRedirects[mux.Vars(r)["Path"]]
 			http.Redirect(w, r, r.URL.String(), http.StatusTemporaryRedirect)
 		}))
-		router.Get(routeRepoGroups).Handler(handler(serveBrandedPageString("Repogroup", nil)))
+		router.Get(routeRepoGroups).Handler(handler(db, serveBrandedPageString(db, "Repogroup", nil)))
 		cncfDescription := "Search all repositories in the Cloud Native Computing Foundation (CNCF)."
-		router.Get(routeCncf).Handler(handler(serveBrandedPageString("CNCF code search", &cncfDescription)))
+		router.Get(routeCncf).Handler(handler(db, serveBrandedPageString(db, "CNCF code search", &cncfDescription)))
 		router.Get(routeDevToolTime).Handler(staticRedirectHandler("https://info.sourcegraph.com/dev-tool-time", http.StatusMovedPermanently))
 	}
 
 	// repo
-	serveRepoHandler := handler(serveRepoOrBlob(routeRepo, func(c *Common, r *http.Request) string {
+	serveRepoHandler := handler(db, serveRepoOrBlob(db, routeRepo, func(c *Common, r *http.Request) string {
 		// e.g. "gorilla/mux - Sourcegraph"
 		return brandNameSubtitle(repoShortName(c.Repo.Name))
 	}))
 	router.Get(routeRepo).Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// Debug mode: register the __errorTest handler.
 		if env.InsecureDev && r.URL.Path == "/__errorTest" {
-			handler(serveErrorTest).ServeHTTP(w, r)
+			handler(db, serveErrorTest(db)).ServeHTTP(w, r)
 			return
 		}
 
@@ -328,25 +328,25 @@ func initRouter(db dbutil.DB, router *mux.Router) {
 	}))
 
 	// tree
-	router.Get(routeTree).Handler(handler(serveTree(func(c *Common, r *http.Request) string {
+	router.Get(routeTree).Handler(handler(db, serveTree(db, func(c *Common, r *http.Request) string {
 		// e.g. "src - gorilla/mux - Sourcegraph"
 		dirName := path.Base(mux.Vars(r)["Path"])
 		return brandNameSubtitle(dirName, repoShortName(c.Repo.Name))
 	})))
 
 	// blob
-	router.Get(routeBlob).Handler(handler(serveRepoOrBlob(routeBlob, func(c *Common, r *http.Request) string {
+	router.Get(routeBlob).Handler(handler(db, serveRepoOrBlob(db, routeBlob, func(c *Common, r *http.Request) string {
 		// e.g. "mux.go - gorilla/mux - Sourcegraph"
 		fileName := path.Base(mux.Vars(r)["Path"])
 		return brandNameSubtitle(fileName, repoShortName(c.Repo.Name))
 	})))
 
 	// raw
-	router.Get(routeRaw).Handler(handler(serveRaw))
+	router.Get(routeRaw).Handler(handler(db, serveRaw(db)))
 
 	// All other routes that are not found.
 	router.NotFoundHandler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		serveError(w, r, errors.New("route not found"), http.StatusNotFound)
+		serveError(db)(w, r, errors.New("route not found"), http.StatusNotFound)
 	})
 }
 
@@ -401,15 +401,15 @@ func limitString(s string, n int, ellipsis bool) string {
 // 	serveError(w, r, err, http.MyStatusCode)
 //  return nil
 //
-func handler(f func(w http.ResponseWriter, r *http.Request) error) http.Handler {
+func handler(db dbutil.DB, f func(w http.ResponseWriter, r *http.Request) error) http.Handler {
 	h := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		defer func() {
 			if rec := recover(); rec != nil {
-				serveError(w, r, recoverError{recover: rec, stack: debug.Stack()}, http.StatusInternalServerError)
+				serveError(db)(w, r, recoverError{recover: rec, stack: debug.Stack()}, http.StatusInternalServerError)
 			}
 		}()
 		if err := f(w, r); err != nil {
-			serveError(w, r, err, http.StatusInternalServerError)
+			serveError(db)(w, r, err, http.StatusInternalServerError)
 		}
 	})
 	return trace.Route(gziphandler.GzipHandler(h))
@@ -427,8 +427,10 @@ func (r recoverError) Error() string {
 // serveError serves the error template with the specified error message. It is
 // assumed that the error message could accidentally contain sensitive data,
 // and as such is only presented to the user in debug mode.
-func serveError(w http.ResponseWriter, r *http.Request, err error, statusCode int) {
-	serveErrorNoDebug(w, r, err, statusCode, false, false)
+func serveError(db dbutil.DB) func(http.ResponseWriter, *http.Request, error, int) {
+	return func(w http.ResponseWriter, r *http.Request, err error, statusCode int) {
+		serveErrorNoDebug(w, r, db, err, statusCode, false, false)
+	}
 }
 
 // dangerouslyServeError is like serveError except it always shows the error to
@@ -436,8 +438,8 @@ func serveError(w http.ResponseWriter, r *http.Request, err error, statusCode in
 // sensitive information.
 //
 // See https://github.com/sourcegraph/sourcegraph/issues/9453
-func dangerouslyServeError(w http.ResponseWriter, r *http.Request, err error, statusCode int) {
-	serveErrorNoDebug(w, r, err, statusCode, false, true)
+func dangerouslyServeError(w http.ResponseWriter, r *http.Request, db dbutil.DB, err error, statusCode int) {
+	serveErrorNoDebug(w, r, db, err, statusCode, false, true)
 }
 
 type pageError struct {
@@ -448,7 +450,7 @@ type pageError struct {
 }
 
 // serveErrorNoDebug should not be called by anyone except serveErrorTest.
-func serveErrorNoDebug(w http.ResponseWriter, r *http.Request, err error, statusCode int, nodebug, forceServeError bool) {
+func serveErrorNoDebug(w http.ResponseWriter, r *http.Request, db dbutil.DB, err error, statusCode int, nodebug, forceServeError bool) {
 	w.WriteHeader(statusCode)
 	errorID := randstring.NewLen(6)
 
@@ -488,7 +490,7 @@ func serveErrorNoDebug(w http.ResponseWriter, r *http.Request, err error, status
 	delete(mux.Vars(r), "Repo")
 	var commonServeErr error
 	title := brandNameSubtitle(fmt.Sprintf("%v %s", statusCode, http.StatusText(statusCode)))
-	common, commonErr := newCommon(w, r, title, func(w http.ResponseWriter, r *http.Request, err error, statusCode int) {
+	common, commonErr := newCommon(w, r, db, title, func(w http.ResponseWriter, r *http.Request, err error, statusCode int) {
 		// Stub out serveError to newCommon so that it is not reentrant.
 		commonServeErr = err
 	})
@@ -526,17 +528,19 @@ func serveErrorNoDebug(w http.ResponseWriter, r *http.Request, err error, status
 // The `nodebug=true` parameter hides error messages (which is ALWAYS the case
 // in production), `error` controls the error message text, and status controls
 // the status code.
-func serveErrorTest(w http.ResponseWriter, r *http.Request) error {
-	if !env.InsecureDev {
-		w.WriteHeader(http.StatusNotFound)
+func serveErrorTest(db dbutil.DB) func(w http.ResponseWriter, r *http.Request) error {
+	return func(w http.ResponseWriter, r *http.Request) error {
+		if !env.InsecureDev {
+			w.WriteHeader(http.StatusNotFound)
+			return nil
+		}
+		q := r.URL.Query()
+		nodebug := q.Get("nodebug") == "true"
+		errorText := q.Get("error")
+		statusCode, _ := strconv.Atoi(q.Get("status"))
+		serveErrorNoDebug(w, r, db, errors.New(errorText), statusCode, nodebug, false)
 		return nil
 	}
-	q := r.URL.Query()
-	nodebug := q.Get("nodebug") == "true"
-	errorText := q.Get("error")
-	statusCode, _ := strconv.Atoi(q.Get("status"))
-	serveErrorNoDebug(w, r, errors.New(errorText), statusCode, nodebug, false)
-	return nil
 }
 
 func mapKeys(m map[string]string) (keys []string) {

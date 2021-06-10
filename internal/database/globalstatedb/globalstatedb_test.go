@@ -4,16 +4,19 @@ import (
 	"context"
 	"testing"
 
-	"github.com/sourcegraph/sourcegraph/internal/database/dbtesting"
+	"github.com/sourcegraph/sourcegraph/internal/database/dbtest"
 )
 
 func TestGet(t *testing.T) {
 	if testing.Short() {
 		t.Skip()
 	}
-	dbtesting.SetupGlobalTestDB(t)
+
+	t.Parallel()
+
+	db := dbtest.NewDB(t, "")
 	ctx := context.Background()
-	config, err := Get(ctx)
+	config, err := Get(ctx, db)
 	if err != nil {
 		t.Fatal(err)
 	}

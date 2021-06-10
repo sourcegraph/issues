@@ -10,6 +10,7 @@ import (
 	"github.com/sourcegraph/sourcegraph/cmd/frontend/auth"
 	"github.com/sourcegraph/sourcegraph/internal/actor"
 	"github.com/sourcegraph/sourcegraph/internal/database"
+	"github.com/sourcegraph/sourcegraph/internal/database/dbconn"
 	"github.com/sourcegraph/sourcegraph/internal/extsvc"
 )
 
@@ -89,7 +90,7 @@ func middleware(next http.Handler) http.Handler {
 				return
 			}
 		}
-		userID, safeErrMsg, err := auth.GetAndSaveUser(r.Context(), auth.GetAndSaveUserOp{
+		userID, safeErrMsg, err := auth.GetAndSaveUser(r.Context(), dbconn.Global, auth.GetAndSaveUserOp{
 			UserProps: database.NewUser{Username: username, Email: rawEmail, EmailIsVerified: true},
 			ExternalAccount: extsvc.AccountSpec{
 				ServiceType: providerType,

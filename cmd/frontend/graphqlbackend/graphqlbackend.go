@@ -557,7 +557,7 @@ func (r *schemaResolver) RepositoryRedirect(ctx context.Context, args *struct {
 	} else if args.CloneURL != nil {
 		// Query by git clone URL
 		var err error
-		name, err = cloneurls.ReposourceCloneURLToRepoName(ctx, *args.CloneURL)
+		name, err = cloneurls.ReposourceCloneURLToRepoName(ctx, r.db, *args.CloneURL)
 		if err != nil {
 			return nil, err
 		}

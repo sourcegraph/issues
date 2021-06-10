@@ -15,6 +15,7 @@ import (
 	"github.com/sourcegraph/sourcegraph/internal/actor"
 	"github.com/sourcegraph/sourcegraph/internal/conf"
 	"github.com/sourcegraph/sourcegraph/internal/database"
+	"github.com/sourcegraph/sourcegraph/internal/database/dbutil"
 	"github.com/sourcegraph/sourcegraph/internal/env"
 	"github.com/sourcegraph/sourcegraph/internal/errcode"
 	"github.com/sourcegraph/sourcegraph/internal/redispool"
@@ -266,9 +267,9 @@ func deleteSession(w http.ResponseWriter, r *http.Request) error {
 }
 
 // InvalidateSessionCurrentUser invalidates all sessions for the current user.
-func InvalidateSessionCurrentUser(w http.ResponseWriter, r *http.Request) error {
+func InvalidateSessionCurrentUser(db dbutil.DB, w http.ResponseWriter, r *http.Request) error {
 	a := actor.FromContext(r.Context())
-	err := database.GlobalUsers.InvalidateSessionsByID(r.Context(), a.UID)
+	err := database.Users(db).InvalidateSessionsByID(r.Context(), a.UID)
 	if err != nil {
 		return err
 	}
@@ -281,17 +282,17 @@ func InvalidateSessionCurrentUser(w http.ResponseWriter, r *http.Request) error 
 
 // InvalidateSessionsByID invalidates all sessions for a user
 // If an error occurs, it returns the error
-func InvalidateSessionsByID(ctx context.Context, id int32) error {
+func InvalidateSessionsByID(ctx context.Context, db dbutil.DB, id int32) error {
 	// Get the user from the request context
-	return database.GlobalUsers.InvalidateSessionsByID(ctx, id)
+	return database.Users(db).InvalidateSessionsByID(ctx, id)
 }
 
 // CookieMiddleware is an http.Handler middleware that authenticates
 // future HTTP request via cookie.
-func CookieMiddleware(next http.Handler) http.Handler {
+func CookieMiddleware(db dbutil.DB, next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Add("Vary", "Cookie")
-		next.ServeHTTP(w, r.WithContext(authenticateByCookie(r, w)))
+		next.ServeHTTP(w, r.WithContext(authenticateByCookie(db)(r, w)))
 	})
 }
 
@@ -314,7 +315,7 @@ func CookieMiddleware(next http.Handler) http.Handler {
 // If the request is a simple CORS request, or if neither of these is true, then the cookie is not
 // used to authenticate the request. The request is still allowed to proceed (but will be
 // unauthenticated unless some other authentication is provided, such as an access token).
-func CookieMiddlewareWithCSRFSafety(next http.Handler, corsAllowHeader string, isTrustedOrigin func(*http.Request) bool) http.Handler {
+func CookieMiddlewareWithCSRFSafety(db dbutil.DB, next http.Handler, corsAllowHeader string, isTrustedOrigin func(*http.Request) bool) http.Handler {
 	corsAllowHeader = textproto.CanonicalMIMEHeaderKey(corsAllowHeader)
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Add("Vary", "Cookie, Authorization, "+corsAllowHeader)
@@ -328,93 +329,95 @@ func CookieMiddlewareWithCSRFSafety(next http.Handler, corsAllowHeader string, i
 			isTrusted = contentType == "application/json" || contentType == "application/json; charset=utf-8"
 		}
 		if isTrusted {
-			r = r.WithContext(authenticateByCookie(r, w))
+			r = r.WithContext(authenticateByCookie(db)(r, w))
 		}
 
 		next.ServeHTTP(w, r)
 	})
 }
 
-func authenticateByCookie(r *http.Request, w http.ResponseWriter) context.Context {
-	// If the request is already authenticated from a cookie (and not a token), then do not clobber the request's existing
-	// authenticated actor with the actor (if any) derived from the session cookie.
-	if a := actor.FromContext(r.Context()); a.IsAuthenticated() && a.FromSessionCookie {
-		if hasSessionCookie(r) {
-			// Delete the session cookie to avoid confusion. (This occurs most often when switching
-			// the auth provider to http-header; in that case, we want to rely on the http-header
-			// auth provider for auth, not the user's old session.
-			_ = deleteSession(w, r)
+func authenticateByCookie(db dbutil.DB) func(r *http.Request, w http.ResponseWriter) context.Context {
+	return func(r *http.Request, w http.ResponseWriter) context.Context {
+		// If the request is already authenticated from a cookie (and not a token), then do not clobber the request's existing
+		// authenticated actor with the actor (if any) derived from the session cookie.
+		if a := actor.FromContext(r.Context()); a.IsAuthenticated() && a.FromSessionCookie {
+			if hasSessionCookie(r) {
+				// Delete the session cookie to avoid confusion. (This occurs most often when switching
+				// the auth provider to http-header; in that case, we want to rely on the http-header
+				// auth provider for auth, not the user's old session.
+				_ = deleteSession(w, r)
+			}
+			return r.Context() // unchanged
 		}
-		return r.Context() // unchanged
-	}
 
-	var info *sessionInfo
-	if err := GetData(r, "actor", &info); err != nil {
-		if !strings.Contains(err.Error(), "illegal base64 data at input byte 36") {
-			// Skip log if the error message indicates the cookie value was a JWT (which almost
-			// certainly means that the cookie was a pre-2.8 SAML cookie, so this error will only
-			// occur once and the user will be automatically redirected to the SAML auth flow).
-			log15.Warn("Error reading session actor. The session cookie was invalid and will be cleared. This error can be safely ignored unless it persists.", "err", err)
+		var info *sessionInfo
+		if err := GetData(r, "actor", &info); err != nil {
+			if !strings.Contains(err.Error(), "illegal base64 data at input byte 36") {
+				// Skip log if the error message indicates the cookie value was a JWT (which almost
+				// certainly means that the cookie was a pre-2.8 SAML cookie, so this error will only
+				// occur once and the user will be automatically redirected to the SAML auth flow).
+				log15.Warn("Error reading session actor. The session cookie was invalid and will be cleared. This error can be safely ignored unless it persists.", "err", err)
+			}
+			_ = deleteSession(w, r) // clear the bad value
+			return r.Context()
 		}
-		_ = deleteSession(w, r) // clear the bad value
+		if info != nil {
+			// Check expiry
+			if info.LastActive.Add(info.ExpiryPeriod).Before(time.Now()) {
+				_ = deleteSession(w, r) // clear the bad value
+				return actor.WithActor(r.Context(), &actor.Actor{})
+			}
+
+			// Check that user still exists.
+			usr, err := database.Users(db).GetByID(r.Context(), info.Actor.UID)
+			if err != nil {
+				if errcode.IsNotFound(err) {
+					_ = deleteSession(w, r) // clear the bad value
+				} else {
+					// Don't delete session, since the error might be an ephemeral DB error, and we don't
+					// want that to cause all active users to be signed out.
+					log15.Error("Error looking up user for session.", "uid", info.Actor.UID, "error", err)
+				}
+				return r.Context() // not authenticated
+			}
+
+			// Check that the session is still valid
+			if info.LastActive.Before(usr.InvalidatedSessionsAt) {
+				_ = deleteSession(w, r) // Delete the now invalid session
+				return r.Context()
+			}
+
+			// If the session does not have the user's creation date, it's an old (valid)
+			// session from before the check was introduced. In that case, we manually
+			// set the user creation date
+			if info.UserCreatedAt.IsZero() {
+				info.UserCreatedAt = usr.CreatedAt
+				if err := SetData(w, r, "actor", info); err != nil {
+					log15.Error("error setting user creation timestamp", "error", err)
+					return r.Context()
+				}
+			}
+
+			// Verify that the user's creation date in the database matches what is stored
+			// in the session. If not, invalidate the session immediately.
+			if !info.UserCreatedAt.Equal(usr.CreatedAt) {
+				_ = deleteSession(w, r)
+				return r.Context()
+			}
+
+			// Renew session
+			if time.Since(info.LastActive) > 5*time.Minute {
+				info.LastActive = time.Now()
+				if err := SetData(w, r, "actor", info); err != nil {
+					log15.Error("error renewing session", "error", err)
+					return r.Context()
+				}
+			}
+
+			info.Actor.FromSessionCookie = true
+			return actor.WithActor(r.Context(), info.Actor)
+		}
+
 		return r.Context()
 	}
-	if info != nil {
-		// Check expiry
-		if info.LastActive.Add(info.ExpiryPeriod).Before(time.Now()) {
-			_ = deleteSession(w, r) // clear the bad value
-			return actor.WithActor(r.Context(), &actor.Actor{})
-		}
-
-		// Check that user still exists.
-		usr, err := database.GlobalUsers.GetByID(r.Context(), info.Actor.UID)
-		if err != nil {
-			if errcode.IsNotFound(err) {
-				_ = deleteSession(w, r) // clear the bad value
-			} else {
-				// Don't delete session, since the error might be an ephemeral DB error, and we don't
-				// want that to cause all active users to be signed out.
-				log15.Error("Error looking up user for session.", "uid", info.Actor.UID, "error", err)
-			}
-			return r.Context() // not authenticated
-		}
-
-		// Check that the session is still valid
-		if info.LastActive.Before(usr.InvalidatedSessionsAt) {
-			_ = deleteSession(w, r) // Delete the now invalid session
-			return r.Context()
-		}
-
-		// If the session does not have the user's creation date, it's an old (valid)
-		// session from before the check was introduced. In that case, we manually
-		// set the user creation date
-		if info.UserCreatedAt.IsZero() {
-			info.UserCreatedAt = usr.CreatedAt
-			if err := SetData(w, r, "actor", info); err != nil {
-				log15.Error("error setting user creation timestamp", "error", err)
-				return r.Context()
-			}
-		}
-
-		// Verify that the user's creation date in the database matches what is stored
-		// in the session. If not, invalidate the session immediately.
-		if !info.UserCreatedAt.Equal(usr.CreatedAt) {
-			_ = deleteSession(w, r)
-			return r.Context()
-		}
-
-		// Renew session
-		if time.Since(info.LastActive) > 5*time.Minute {
-			info.LastActive = time.Now()
-			if err := SetData(w, r, "actor", info); err != nil {
-				log15.Error("error renewing session", "error", err)
-				return r.Context()
-			}
-		}
-
-		info.Actor.FromSessionCookie = true
-		return actor.WithActor(r.Context(), info.Actor)
-	}
-
-	return r.Context()
 }

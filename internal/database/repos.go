@@ -7,7 +7,6 @@ import (
 	"fmt"
 	regexpsyntax "regexp/syntax"
 	"strings"
-	"sync"
 	"time"
 
 	"github.com/keegancsmith/sqlf"
@@ -17,7 +16,6 @@ import (
 	"github.com/sourcegraph/sourcegraph/internal/api"
 	"github.com/sourcegraph/sourcegraph/internal/conf"
 	"github.com/sourcegraph/sourcegraph/internal/database/basestore"
-	"github.com/sourcegraph/sourcegraph/internal/database/dbconn"
 	"github.com/sourcegraph/sourcegraph/internal/database/dbutil"
 	"github.com/sourcegraph/sourcegraph/internal/database/query"
 	"github.com/sourcegraph/sourcegraph/internal/extsvc"
@@ -60,8 +58,6 @@ func (e *RepoNotFoundErr) NotFound() bool {
 // RepoStore handles access to the repo table
 type RepoStore struct {
 	*basestore.Store
-
-	once sync.Once
 }
 
 // Repos instantiates and returns a new RepoStore with prepared statements.
@@ -84,17 +80,6 @@ func (s *RepoStore) Transact(ctx context.Context) (*RepoStore, error) {
 	return &RepoStore{Store: txBase}, err
 }
 
-// ensureStore instantiates a basestore.Store if necessary, using the dbconn.Global handle.
-// This function ensures access to dbconn happens after the rest of the code or tests have
-// initialized it.
-func (s *RepoStore) ensureStore() {
-	s.once.Do(func() {
-		if s.Store == nil {
-			s.Store = basestore.NewWithDB(dbconn.Global, sql.TxOptions{})
-		}
-	})
-}
-
 // Get returns metadata for the request repository ID. It fetches data
 // only from the database and NOT from any external sources. If the
 // caller is concerned the copy of the data in the database might be
@@ -104,7 +89,6 @@ func (s *RepoStore) Get(ctx context.Context, id api.RepoID) (_ *types.Repo, err 
 	if Mocks.Repos.Get != nil {
 		return Mocks.Repos.Get(ctx, id)
 	}
-	s.ensureStore()
 
 	tr, ctx := trace.New(ctx, "repos.Get", "")
 	defer func() {
@@ -137,7 +121,6 @@ func (s *RepoStore) GetByName(ctx context.Context, nameOrURI api.RepoName) (_ *t
 	if Mocks.Repos.GetByName != nil {
 		return Mocks.Repos.GetByName(ctx, nameOrURI)
 	}
-	s.ensureStore()
 
 	tr, ctx := trace.New(ctx, "repos.GetByName", "")
 	defer func() {
@@ -181,7 +164,6 @@ func (s *RepoStore) GetByIDs(ctx context.Context, ids ...api.RepoID) (_ []*types
 	if Mocks.Repos.GetByIDs != nil {
 		return Mocks.Repos.GetByIDs(ctx, ids...)
 	}
-	s.ensureStore()
 
 	tr, ctx := trace.New(ctx, "repos.GetByIDs", "")
 	defer func() {
@@ -212,7 +194,6 @@ func (s *RepoStore) Count(ctx context.Context, opt ReposListOptions) (ct int, er
 	if Mocks.Repos.Count != nil {
 		return Mocks.Repos.Count(ctx, opt)
 	}
-	s.ensureStore()
 
 	tr, ctx := trace.New(ctx, "repos.Count", "")
 	defer func() {
@@ -549,7 +530,6 @@ func (s *RepoStore) List(ctx context.Context, opt ReposListOptions) (results []*
 	if Mocks.Repos.List != nil {
 		return Mocks.Repos.List(ctx, opt)
 	}
-	s.ensureStore()
 
 	if len(opt.OrderBy) == 0 {
 		opt.OrderBy = append(opt.OrderBy, RepoListSort{Field: RepoListID})
@@ -568,7 +548,6 @@ func (s *RepoStore) ListRepoNames(ctx context.Context, opt ReposListOptions) (re
 	if Mocks.Repos.ListRepoNames != nil {
 		return Mocks.Repos.ListRepoNames(ctx, opt)
 	}
-	s.ensureStore()
 
 	opt.Select = minimalColumns(repoColumns)
 	if len(opt.OrderBy) == 0 {
@@ -852,7 +831,6 @@ func (s *RepoStore) ListDefaultRepos(ctx context.Context, opts ListDefaultReposO
 		tr.SetError(err)
 		tr.Finish()
 	}()
-	s.ensureStore()
 
 	var where, joins []*sqlf.Query
 
@@ -934,7 +912,6 @@ func (s *RepoStore) Create(ctx context.Context, repos ...*types.Repo) (err error
 		tr.SetError(err)
 		tr.Finish()
 	}()
-	s.ensureStore()
 
 	records := make([]*repoRecord, 0, len(repos))
 
@@ -1190,7 +1167,6 @@ func (s *RepoStore) Delete(ctx context.Context, ids ...api.RepoID) error {
 	if len(ids) == 0 {
 		return nil
 	}
-	s.ensureStore()
 
 	// The number of deleted repos can potentially be higher
 	// than the maximum number of arguments we can pass to postgres.
@@ -1228,7 +1204,6 @@ AND repo.id = repo_ids.id::int
 // indexed-search). We special case just returning enabled names so that we
 // read much less data into memory.
 func (s *RepoStore) ListEnabledNames(ctx context.Context) ([]string, error) {
-	s.ensureStore()
 	q := sqlf.Sprintf("SELECT name FROM repo WHERE deleted_at IS NULL")
 	return basestore.ScanStrings(s.Query(ctx, q))
 }

@@ -103,7 +103,7 @@ func (r *extensionDBResolver) release(ctx context.Context) (*dbRelease, error) {
 	}
 
 	var err error
-	r.r, err = getLatestRelease(ctx, r.v.NonCanonicalExtensionID, r.v.ID, "release")
+	r.r, err = getLatestRelease(ctx, r.db, r.v.NonCanonicalExtensionID, r.v.ID, "release")
 	return r.r, err
 }
 

@@ -16,6 +16,7 @@ import (
 	frontendregistry "github.com/sourcegraph/sourcegraph/cmd/frontend/registry/api"
 	registry "github.com/sourcegraph/sourcegraph/cmd/frontend/registry/client"
 	"github.com/sourcegraph/sourcegraph/internal/conf"
+	"github.com/sourcegraph/sourcegraph/internal/database/dbutil"
 	"github.com/sourcegraph/sourcegraph/internal/errcode"
 	"github.com/sourcegraph/sourcegraph/internal/jsonc"
 	"github.com/sourcegraph/sourcegraph/schema"
@@ -28,13 +29,13 @@ func init() {
 // Funcs called by serveRegistry to get registry data. If fakeRegistryData is set, it is used as
 // the data source instead of the database.
 var (
-	registryList = func(ctx context.Context, opt dbExtensionsListOptions) ([]*registry.Extension, error) {
-		vs, err := dbExtensions{}.List(ctx, opt)
+	registryList = func(ctx context.Context, db dbutil.DB, opt dbExtensionsListOptions) ([]*registry.Extension, error) {
+		vs, err := dbExtensions{db: db}.List(ctx, opt)
 		if err != nil {
 			return nil, err
 		}
 
-		xs, err := toRegistryAPIExtensionBatch(ctx, vs)
+		xs, err := toRegistryAPIExtensionBatch(ctx, db, vs)
 		if err != nil {
 			return nil, err
 		}
@@ -54,25 +55,25 @@ var (
 		return ys, nil
 	}
 
-	registryGetByUUID = func(ctx context.Context, uuid string) (*registry.Extension, error) {
-		x, err := dbExtensions{}.GetByUUID(ctx, uuid)
+	registryGetByUUID = func(ctx context.Context, db dbutil.DB, uuid string) (*registry.Extension, error) {
+		x, err := dbExtensions{db: db}.GetByUUID(ctx, uuid)
 		if err != nil {
 			return nil, err
 		}
-		return toRegistryAPIExtension(ctx, x)
+		return toRegistryAPIExtension(ctx, db, x)
 	}
 
-	registryGetByExtensionID = func(ctx context.Context, extensionID string) (*registry.Extension, error) {
-		x, err := dbExtensions{}.GetByExtensionID(ctx, extensionID)
+	registryGetByExtensionID = func(ctx context.Context, db dbutil.DB, extensionID string) (*registry.Extension, error) {
+		x, err := dbExtensions{db: db}.GetByExtensionID(ctx, extensionID)
 		if err != nil {
 			return nil, err
 		}
-		return toRegistryAPIExtension(ctx, x)
+		return toRegistryAPIExtension(ctx, db, x)
 	}
 )
 
-func toRegistryAPIExtension(ctx context.Context, v *dbExtension) (*registry.Extension, error) {
-	release, err := getLatestRelease(ctx, v.NonCanonicalExtensionID, v.ID, "release")
+func toRegistryAPIExtension(ctx context.Context, db dbutil.DB, v *dbExtension) (*registry.Extension, error) {
+	release, err := getLatestRelease(ctx, db, v.NonCanonicalExtensionID, v.ID, "release")
 	if err != nil {
 		return nil, err
 	}
@@ -84,8 +85,8 @@ func toRegistryAPIExtension(ctx context.Context, v *dbExtension) (*registry.Exte
 	return newExtension(v, &release.Manifest, release.CreatedAt), nil
 }
 
-func toRegistryAPIExtensionBatch(ctx context.Context, vs []*dbExtension) ([]*registry.Extension, error) {
-	releasesByExtensionID, err := getLatestForBatch(ctx, vs)
+func toRegistryAPIExtensionBatch(ctx context.Context, db dbutil.DB, vs []*dbExtension) ([]*registry.Extension, error) {
+	releasesByExtensionID, err := getLatestForBatch(ctx, db, vs)
 	if err != nil {
 		return nil, err
 	}
@@ -131,93 +132,95 @@ func (r *responseRecorder) WriteHeader(code int) {
 }
 
 // handleRegistry serves the external HTTP API for the extension registry.
-func handleRegistry(w http.ResponseWriter, r *http.Request) (err error) {
-	recorder := &responseRecorder{ResponseWriter: w, code: http.StatusOK}
-	w = recorder
+func handleRegistry(db dbutil.DB) func(http.ResponseWriter, *http.Request) error {
+	return func(w http.ResponseWriter, r *http.Request) (err error) {
+		recorder := &responseRecorder{ResponseWriter: w, code: http.StatusOK}
+		w = recorder
 
-	var operation string
-	defer func(began time.Time) {
-		seconds := time.Since(began).Seconds()
-		if err != nil && recorder.code == http.StatusOK {
-			recorder.code = http.StatusInternalServerError
+		var operation string
+		defer func(began time.Time) {
+			seconds := time.Since(began).Seconds()
+			if err != nil && recorder.code == http.StatusOK {
+				recorder.code = http.StatusInternalServerError
+			}
+			code := strconv.Itoa(recorder.code)
+			registryRequestsDuration.WithLabelValues(operation, code).Observe(seconds)
+		}(time.Now())
+
+		if conf.Extensions() == nil {
+			w.WriteHeader(http.StatusNotFound)
+			return nil
 		}
-		code := strconv.Itoa(recorder.code)
-		registryRequestsDuration.WithLabelValues(operation, code).Observe(seconds)
-	}(time.Now())
 
-	if conf.Extensions() == nil {
-		w.WriteHeader(http.StatusNotFound)
-		return nil
-	}
+		// Identify this response as coming from the registry API.
+		w.Header().Set(registry.MediaTypeHeaderName, registry.MediaType)
+		w.Header().Set("Vary", registry.MediaTypeHeaderName)
 
-	// Identify this response as coming from the registry API.
-	w.Header().Set(registry.MediaTypeHeaderName, registry.MediaType)
-	w.Header().Set("Vary", registry.MediaTypeHeaderName)
-
-	// Validate API version.
-	if v := r.Header.Get("Accept"); v != registry.AcceptHeader {
-		http.Error(w, fmt.Sprintf("invalid Accept header: expected %q", registry.AcceptHeader), http.StatusBadRequest)
-		return nil
-	}
-
-	// This handler can be mounted at either /.internal or /.api.
-	urlPath := r.URL.Path
-	switch {
-	case strings.HasPrefix(urlPath, "/.internal"):
-		urlPath = strings.TrimPrefix(urlPath, "/.internal")
-	case strings.HasPrefix(urlPath, "/.api"):
-		urlPath = strings.TrimPrefix(urlPath, "/.api")
-	}
-
-	const extensionsPath = "/registry/extensions"
-	var result interface{}
-	switch {
-	case urlPath == extensionsPath:
-		operation = "list"
-
-		query := r.URL.Query().Get("q")
-		var opt dbExtensionsListOptions
-		opt.Query, opt.Category, opt.Tag = parseExtensionQuery(query)
-		xs, err := registryList(r.Context(), opt)
-		if err != nil {
-			return err
+		// Validate API version.
+		if v := r.Header.Get("Accept"); v != registry.AcceptHeader {
+			http.Error(w, fmt.Sprintf("invalid Accept header: expected %q", registry.AcceptHeader), http.StatusBadRequest)
+			return nil
 		}
-		result = xs
 
-	case strings.HasPrefix(urlPath, extensionsPath+"/"):
-		var (
-			spec = strings.TrimPrefix(urlPath, extensionsPath+"/")
-			x    *registry.Extension
-			err  error
-		)
+		// This handler can be mounted at either /.internal or /.api.
+		urlPath := r.URL.Path
 		switch {
-		case strings.HasPrefix(spec, "uuid/"):
-			operation = "get-by-uuid"
-			x, err = registryGetByUUID(r.Context(), strings.TrimPrefix(spec, "uuid/"))
-		case strings.HasPrefix(spec, "extension-id/"):
-			operation = "get-by-extension-id"
-			x, err = registryGetByExtensionID(r.Context(), strings.TrimPrefix(spec, "extension-id/"))
+		case strings.HasPrefix(urlPath, "/.internal"):
+			urlPath = strings.TrimPrefix(urlPath, "/.internal")
+		case strings.HasPrefix(urlPath, "/.api"):
+			urlPath = strings.TrimPrefix(urlPath, "/.api")
+		}
+
+		const extensionsPath = "/registry/extensions"
+		var result interface{}
+		switch {
+		case urlPath == extensionsPath:
+			operation = "list"
+
+			query := r.URL.Query().Get("q")
+			var opt dbExtensionsListOptions
+			opt.Query, opt.Category, opt.Tag = parseExtensionQuery(query)
+			xs, err := registryList(r.Context(), db, opt)
+			if err != nil {
+				return err
+			}
+			result = xs
+
+		case strings.HasPrefix(urlPath, extensionsPath+"/"):
+			var (
+				spec = strings.TrimPrefix(urlPath, extensionsPath+"/")
+				x    *registry.Extension
+				err  error
+			)
+			switch {
+			case strings.HasPrefix(spec, "uuid/"):
+				operation = "get-by-uuid"
+				x, err = registryGetByUUID(r.Context(), db, strings.TrimPrefix(spec, "uuid/"))
+			case strings.HasPrefix(spec, "extension-id/"):
+				operation = "get-by-extension-id"
+				x, err = registryGetByExtensionID(r.Context(), db, strings.TrimPrefix(spec, "extension-id/"))
+			default:
+				w.WriteHeader(http.StatusNotFound)
+				return nil
+			}
+			if x == nil || err != nil {
+				if x == nil || errcode.IsNotFound(err) {
+					w.Header().Set("Cache-Control", "max-age=5, private")
+					http.Error(w, "extension not found", http.StatusNotFound)
+					return nil
+				}
+				return err
+			}
+			result = x
+
 		default:
 			w.WriteHeader(http.StatusNotFound)
 			return nil
 		}
-		if x == nil || err != nil {
-			if x == nil || errcode.IsNotFound(err) {
-				w.Header().Set("Cache-Control", "max-age=5, private")
-				http.Error(w, "extension not found", http.StatusNotFound)
-				return nil
-			}
-			return err
-		}
-		result = x
 
-	default:
-		w.WriteHeader(http.StatusNotFound)
-		return nil
+		w.Header().Set("Cache-Control", "max-age=30, private")
+		return json.NewEncoder(w).Encode(result)
 	}
-
-	w.Header().Set("Cache-Control", "max-age=30, private")
-	return json.NewEncoder(w).Encode(result)
 }
 
 var (
@@ -249,21 +252,21 @@ func init() {
 		return xs, nil
 	}
 
-	registryList = func(ctx context.Context, opt dbExtensionsListOptions) ([]*registry.Extension, error) {
+	registryList = func(ctx context.Context, db dbutil.DB, opt dbExtensionsListOptions) ([]*registry.Extension, error) {
 		xs, err := readFakeExtensions()
 		if err != nil {
 			return nil, err
 		}
 		return frontendregistry.FilterRegistryExtensions(xs, opt.Query), nil
 	}
-	registryGetByUUID = func(ctx context.Context, uuid string) (*registry.Extension, error) {
+	registryGetByUUID = func(ctx context.Context, db dbutil.DB, uuid string) (*registry.Extension, error) {
 		xs, err := readFakeExtensions()
 		if err != nil {
 			return nil, err
 		}
 		return frontendregistry.FindRegistryExtension(xs, "uuid", uuid), nil
 	}
-	registryGetByExtensionID = func(ctx context.Context, extensionID string) (*registry.Extension, error) {
+	registryGetByExtensionID = func(ctx context.Context, db dbutil.DB, extensionID string) (*registry.Extension, error) {
 		xs, err := readFakeExtensions()
 		if err != nil {
 			return nil, err

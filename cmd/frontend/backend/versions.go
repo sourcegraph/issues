@@ -9,7 +9,6 @@ import (
 	"github.com/Masterminds/semver"
 	"github.com/keegancsmith/sqlf"
 
-	"github.com/sourcegraph/sourcegraph/internal/database/dbconn"
 	"github.com/sourcegraph/sourcegraph/internal/database/dbutil"
 )
 
@@ -35,9 +34,9 @@ func (e UpgradeError) Error() string {
 // GetFirstServiceVersion returns the first version registered for the given Sourcegraph service.
 // This method will return an error if UpdateServiceVersion has never been called for the given
 // service.
-func GetFirstServiceVersion(ctx context.Context, service string) (version string, err error) {
+func GetFirstServiceVersion(ctx context.Context, db dbutil.DB, service string) (version string, err error) {
 	q := sqlf.Sprintf(getFirstVersionQuery, service)
-	row := dbconn.Global.QueryRowContext(ctx, q.Query(sqlf.PostgresBindVar), q.Args()...)
+	row := db.QueryRowContext(ctx, q.Query(sqlf.PostgresBindVar), q.Args()...)
 	if err = row.Scan(&version); err != nil {
 		return "", err
 	}
@@ -50,8 +49,8 @@ const getFirstVersionQuery = `SELECT first_version FROM versions WHERE service =
 // UpdateServiceVersion updates the latest version for the given Sourcegraph
 // service. It enforces our documented upgrade policy.
 // https://docs.sourcegraph.com/#upgrading-sourcegraph
-func UpdateServiceVersion(ctx context.Context, service, version string) error {
-	return dbutil.Transaction(ctx, dbconn.Global, func(tx *sql.Tx) (err error) {
+func UpdateServiceVersion(ctx context.Context, db *sql.DB, service, version string) error {
+	return dbutil.Transaction(ctx, db, func(tx *sql.Tx) (err error) {
 		var prev string
 
 		q := sqlf.Sprintf(getVersionQuery, service)

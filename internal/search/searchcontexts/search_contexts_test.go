@@ -13,14 +13,11 @@ import (
 
 	"github.com/sourcegraph/sourcegraph/internal/actor"
 	"github.com/sourcegraph/sourcegraph/internal/database"
+	"github.com/sourcegraph/sourcegraph/internal/database/dbtest"
 	"github.com/sourcegraph/sourcegraph/internal/database/dbtesting"
 	"github.com/sourcegraph/sourcegraph/internal/types"
 	"github.com/sourcegraph/sourcegraph/schema"
 )
-
-func init() {
-	dbtesting.DBNameSuffix = "searchcontexts"
-}
 
 func TestResolvingValidSearchContextSpecs(t *testing.T) {
 	tests := []struct {
@@ -170,7 +167,7 @@ func TestConvertingVersionContextToSearchContext(t *testing.T) {
 	}
 
 	internalCtx := actor.WithInternalActor(context.Background())
-	db := dbtesting.GetDB(t)
+	db := dbtest.NewDB(t, "")
 	u := database.Users(db)
 
 	user, err := u.Create(internalCtx, database.NewUser{Username: "u", Password: "p"})
@@ -226,7 +223,7 @@ func TestResolvingSearchContextRepoNames(t *testing.T) {
 	}
 
 	internalCtx := actor.WithInternalActor(context.Background())
-	db := dbtesting.GetDB(t)
+	db := dbtest.NewDB(t, "")
 	u := database.Users(db)
 	r := database.Repos(db)
 
@@ -265,7 +262,7 @@ func TestSearchContextWriteAccessValidation(t *testing.T) {
 	}
 
 	internalCtx := actor.WithInternalActor(context.Background())
-	db := dbtesting.GetDB(t)
+	db := dbtest.NewDB(t, "")
 	u := database.Users(db)
 
 	org, err := database.Orgs(db).Create(internalCtx, "myorg", nil)
@@ -385,7 +382,7 @@ func TestCreatingSearchContexts(t *testing.T) {
 	}
 
 	internalCtx := actor.WithInternalActor(context.Background())
-	db := dbtesting.GetDB(t)
+	db := dbtest.NewDB(t, "")
 	u := database.Users(db)
 
 	user1, err := u.Create(internalCtx, database.NewUser{Username: "u1", Password: "p"})
@@ -486,7 +483,7 @@ func TestUpdatingSearchContexts(t *testing.T) {
 	}
 
 	internalCtx := actor.WithInternalActor(context.Background())
-	db := dbtesting.GetDB(t)
+	db := dbtest.NewDB(t, "")
 	u := database.Users(db)
 
 	user1, err := u.Create(internalCtx, database.NewUser{Username: "u1", Password: "p"})
@@ -570,7 +567,7 @@ func TestDeletingAutoDefinedSearchContext(t *testing.T) {
 	}
 
 	internalCtx := actor.WithInternalActor(context.Background())
-	db := dbtesting.GetDB(t)
+	db := dbtest.NewDB(t, "")
 	u := database.Users(db)
 
 	user1, err := u.Create(internalCtx, database.NewUser{Username: "u1", Password: "p"})

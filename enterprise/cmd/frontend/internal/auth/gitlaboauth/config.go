@@ -5,19 +5,21 @@ import (
 
 	"github.com/sourcegraph/sourcegraph/cmd/frontend/auth/providers"
 	"github.com/sourcegraph/sourcegraph/internal/conf"
+	"github.com/sourcegraph/sourcegraph/internal/database/dbutil"
+	"github.com/sourcegraph/sourcegraph/internal/goroutine"
 	"github.com/sourcegraph/sourcegraph/schema"
 )
 
 const PkgName = "gitlaboauth"
 
-func init() {
+func Init(db dbutil.DB) {
 	conf.ContributeValidator(func(cfg conf.Unified) conf.Problems {
-		_, problems := parseConfig(&cfg)
+		_, problems := parseConfig(db, &cfg)
 		return problems
 	})
-	go func() {
+	goroutine.Go(func() {
 		conf.Watch(func() {
-			newProviders, _ := parseConfig(conf.Get())
+			newProviders, _ := parseConfig(db, conf.Get())
 			if len(newProviders) == 0 {
 				providers.Update(PkgName, nil)
 			} else {
@@ -28,10 +30,10 @@ func init() {
 				providers.Update(PkgName, newProvidersList)
 			}
 		})
-	}()
+	})
 }
 
-func parseConfig(cfg *conf.Unified) (ps map[schema.GitLabAuthProvider]providers.Provider, problems conf.Problems) {
+func parseConfig(db dbutil.DB, cfg *conf.Unified) (ps map[schema.GitLabAuthProvider]providers.Provider, problems conf.Problems) {
 	ps = make(map[schema.GitLabAuthProvider]providers.Provider)
 	for _, pr := range cfg.AuthProviders {
 		if pr.Gitlab == nil {
@@ -50,7 +52,7 @@ func parseConfig(cfg *conf.Unified) (ps map[schema.GitLabAuthProvider]providers.
 		callbackURL := *externalURL
 		callbackURL.Path = "/.auth/gitlab/callback"
 
-		provider, providerMessages := parseProvider(callbackURL.String(), pr.Gitlab, pr)
+		provider, providerMessages := parseProvider(db, callbackURL.String(), pr.Gitlab, pr)
 		problems = append(problems, conf.NewSiteProblems(providerMessages...)...)
 		if provider != nil {
 			ps[*pr.Gitlab] = provider

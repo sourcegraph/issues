@@ -54,13 +54,13 @@ var (
 	}, []string{"status"})
 )
 
-func overrideSiteConfig(ctx context.Context) error {
+func overrideSiteConfig(ctx context.Context, db dbutil.DB) error {
 	path := os.Getenv("SITE_CONFIG_FILE")
 	if path == "" {
 		return nil
 	}
 	var updateFunc = func(ctx context.Context) error {
-		raw, err := (&configurationSource{}).Read(ctx)
+		raw, err := (&configurationSource{db: db}).Read(ctx)
 		if err != nil {
 			return err
 		}
@@ -70,7 +70,7 @@ func overrideSiteConfig(ctx context.Context) error {
 		}
 		raw.Site = string(site)
 
-		err = (&configurationSource{}).Write(ctx, raw)
+		err = (&configurationSource{db: db}).Write(ctx, raw)
 		if err != nil {
 			return errors.Wrap(err, "writing site config overrides to database")
 		}
@@ -132,7 +132,7 @@ func overrideExtSvcConfig(ctx context.Context, db dbutil.DB) error {
 	extsvcs := database.ExternalServices(db)
 
 	var update = func(ctx context.Context) error {
-		raw, err := (&configurationSource{}).Read(ctx)
+		raw, err := (&configurationSource{db: db}).Read(ctx)
 		if err != nil {
 			return err
 		}
@@ -342,10 +342,12 @@ func watchPaths(ctx context.Context, paths ...string) (<-chan error, error) {
 	return out, nil
 }
 
-type configurationSource struct{}
+type configurationSource struct {
+	db dbutil.DB
+}
 
 func (c configurationSource) Read(ctx context.Context) (conftypes.RawUnified, error) {
-	site, err := confdb.SiteGetLatest(ctx)
+	site, err := confdb.SiteGetLatest(ctx, c.db)
 	if err != nil {
 		return conftypes.RawUnified{}, errors.Wrap(err, "confdb.SiteGetLatest")
 	}
@@ -357,11 +359,11 @@ func (c configurationSource) Read(ctx context.Context) (conftypes.RawUnified, er
 
 func (c configurationSource) Write(ctx context.Context, input conftypes.RawUnified) error {
 	// TODO(slimsag): future: pass lastID through for race prevention
-	site, err := confdb.SiteGetLatest(ctx)
+	site, err := confdb.SiteGetLatest(ctx, c.db)
 	if err != nil {
 		return errors.Wrap(err, "confdb.SiteGetLatest")
 	}
-	_, err = confdb.SiteCreateIfUpToDate(ctx, &site.ID, input.Site)
+	_, err = confdb.SiteCreateIfUpToDate(ctx, c.db, &site.ID, input.Site)
 	if err != nil {
 		return errors.Wrap(err, "confdb.SiteCreateIfUpToDate")
 	}

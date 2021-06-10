@@ -12,7 +12,7 @@ import (
 
 	"github.com/sourcegraph/sourcegraph/cmd/frontend/globals"
 	"github.com/sourcegraph/sourcegraph/internal/database/basestore"
-	"github.com/sourcegraph/sourcegraph/internal/database/dbtesting"
+	"github.com/sourcegraph/sourcegraph/internal/database/dbtest"
 	"github.com/sourcegraph/sourcegraph/schema"
 )
 
@@ -20,7 +20,7 @@ func TestGetUploadByID(t *testing.T) {
 	if testing.Short() {
 		t.Skip()
 	}
-	db := dbtesting.GetDB(t)
+	db := dbtest.NewDB(t, "")
 	store := testStore(db)
 	ctx := context.Background()
 
@@ -84,7 +84,7 @@ func TestGetUploadByIDDeleted(t *testing.T) {
 	if testing.Short() {
 		t.Skip()
 	}
-	db := dbtesting.GetDB(t)
+	db := dbtest.NewDB(t, "")
 	store := testStore(db)
 
 	// Upload does not exist initially
@@ -128,7 +128,7 @@ func TestGetQueuedUploadRank(t *testing.T) {
 	if testing.Short() {
 		t.Skip()
 	}
-	db := dbtesting.GetDB(t)
+	db := dbtest.NewDB(t, "")
 	store := testStore(db)
 
 	t1 := time.Unix(1587396557, 0).UTC()
@@ -180,7 +180,7 @@ func TestGetUploadsByIDs(t *testing.T) {
 	if testing.Short() {
 		t.Skip()
 	}
-	db := dbtesting.GetDB(t)
+	db := dbtest.NewDB(t, "")
 	store := testStore(db)
 	ctx := context.Background()
 
@@ -236,7 +236,7 @@ func TestDeleteUploadsStuckUploading(t *testing.T) {
 	if testing.Short() {
 		t.Skip()
 	}
-	db := dbtesting.GetDB(t)
+	db := dbtest.NewDB(t, "")
 	store := testStore(db)
 
 	t1 := time.Unix(1587396557, 0).UTC()
@@ -286,7 +286,7 @@ func TestGetUploads(t *testing.T) {
 	if testing.Short() {
 		t.Skip()
 	}
-	db := dbtesting.GetDB(t)
+	db := dbtest.NewDB(t, "")
 	store := testStore(db)
 	ctx := context.Background()
 
@@ -419,7 +419,7 @@ func TestInsertUploadUploading(t *testing.T) {
 	if testing.Short() {
 		t.Skip()
 	}
-	db := dbtesting.GetDB(t)
+	db := dbtest.NewDB(t, "")
 	store := testStore(db)
 
 	insertRepo(t, db, 50, "")
@@ -471,7 +471,7 @@ func TestInsertUploadQueued(t *testing.T) {
 	if testing.Short() {
 		t.Skip()
 	}
-	db := dbtesting.GetDB(t)
+	db := dbtest.NewDB(t, "")
 	store := testStore(db)
 
 	insertRepo(t, db, 50, "")
@@ -526,7 +526,7 @@ func TestInsertUploadWithAssociatedIndexID(t *testing.T) {
 	if testing.Short() {
 		t.Skip()
 	}
-	db := dbtesting.GetDB(t)
+	db := dbtest.NewDB(t, "")
 	store := testStore(db)
 
 	insertRepo(t, db, 50, "")
@@ -585,7 +585,7 @@ func TestMarkQueued(t *testing.T) {
 	if testing.Short() {
 		t.Skip()
 	}
-	db := dbtesting.GetDB(t)
+	db := dbtest.NewDB(t, "")
 	store := testStore(db)
 
 	insertUploads(t, db, Upload{ID: 1, State: "uploading"})
@@ -614,7 +614,7 @@ func TestMarkFailed(t *testing.T) {
 	if testing.Short() {
 		t.Skip()
 	}
-	db := dbtesting.GetDB(t)
+	db := dbtest.NewDB(t, "")
 	store := testStore(db)
 
 	insertUploads(t, db, Upload{ID: 1, State: "uploading"})
@@ -645,7 +645,7 @@ func TestAddUploadPart(t *testing.T) {
 	if testing.Short() {
 		t.Skip()
 	}
-	db := dbtesting.GetDB(t)
+	db := dbtest.NewDB(t, "")
 	store := testStore(db)
 
 	insertUploads(t, db, Upload{ID: 1, State: "uploading"})
@@ -671,7 +671,7 @@ func TestDeleteUploadByID(t *testing.T) {
 	if testing.Short() {
 		t.Skip()
 	}
-	db := dbtesting.GetDB(t)
+	db := dbtest.NewDB(t, "")
 	store := testStore(db)
 
 	insertUploads(t, db,
@@ -711,7 +711,7 @@ func TestDeleteUploadByIDMissingRow(t *testing.T) {
 	if testing.Short() {
 		t.Skip()
 	}
-	db := dbtesting.GetDB(t)
+	db := dbtest.NewDB(t, "")
 	store := testStore(db)
 
 	if found, err := store.DeleteUploadByID(context.Background(), 1); err != nil {
@@ -725,7 +725,7 @@ func TestDeleteUploadsWithoutRepository(t *testing.T) {
 	if testing.Short() {
 		t.Skip()
 	}
-	db := dbtesting.GetDB(t)
+	db := dbtest.NewDB(t, "")
 	store := testStore(db)
 
 	var uploads []Upload
@@ -798,7 +798,7 @@ func TestHardDeleteUploadByID(t *testing.T) {
 	if testing.Short() {
 		t.Skip()
 	}
-	db := dbtesting.GetDB(t)
+	db := dbtest.NewDB(t, "")
 	store := testStore(db)
 
 	insertUploads(t, db, Upload{ID: 1, State: "deleted"})
@@ -819,7 +819,7 @@ func TestSoftDeleteOldUploads(t *testing.T) {
 	if testing.Short() {
 		t.Skip()
 	}
-	db := dbtesting.GetDB(t)
+	db := dbtest.NewDB(t, "")
 	store := testStore(db)
 
 	t1 := time.Unix(1587396557, 0).UTC()
@@ -886,7 +886,7 @@ func TestGetOldestCommitDate(t *testing.T) {
 	if testing.Short() {
 		t.Skip()
 	}
-	db := dbtesting.GetDB(t)
+	db := dbtest.NewDB(t, "")
 	store := testStore(db)
 
 	t1 := time.Unix(1587396557, 0).UTC()
@@ -947,7 +947,7 @@ func TestUpdateCommitedAt(t *testing.T) {
 	if testing.Short() {
 		t.Skip()
 	}
-	db := dbtesting.GetDB(t)
+	db := dbtest.NewDB(t, "")
 	store := testStore(db)
 
 	t1 := time.Unix(1587396557, 0).UTC()

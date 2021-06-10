@@ -6,13 +6,11 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
-	"sync"
 	"time"
 
 	"github.com/keegancsmith/sqlf"
 
 	"github.com/sourcegraph/sourcegraph/internal/database/basestore"
-	"github.com/sourcegraph/sourcegraph/internal/database/dbconn"
 	"github.com/sourcegraph/sourcegraph/internal/database/dbutil"
 	"github.com/sourcegraph/sourcegraph/internal/database/globalstatedb"
 )
@@ -51,8 +49,6 @@ func (err userEmailNotFoundError) NotFound() bool {
 // UserEmailsStore provides access to the `user_emails` table.
 type UserEmailsStore struct {
 	*basestore.Store
-
-	once sync.Once
 }
 
 // UserEmails instantiates and returns a new UserEmailsStore with prepared statements.
@@ -74,27 +70,16 @@ func (s *UserEmailsStore) Transact(ctx context.Context) (*UserEmailsStore, error
 	return &UserEmailsStore{Store: txBase}, err
 }
 
-// ensureStore instantiates a basestore.Store if necessary, using the dbconn.Global handle.
-// This function ensures access to dbconn happens after the rest of the code or tests have
-// initialized it.
-func (s *UserEmailsStore) ensureStore() {
-	s.once.Do(func() {
-		if s.Store == nil {
-			s.Store = basestore.NewWithDB(dbconn.Global, sql.TxOptions{})
-		}
-	})
-}
-
 // GetInitialSiteAdminEmail returns a best guess of the email of the initial Sourcegraph installer/site admin.
 // Because the initial site admin's email isn't marked, this returns the email of the active site admin with
 // the lowest user ID.
 //
 // If the site has not yet been initialized, returns an empty string.
 func (s *UserEmailsStore) GetInitialSiteAdminEmail(ctx context.Context) (email string, err error) {
-	if init, err := globalstatedb.SiteInitialized(ctx); err != nil || !init {
+	if init, err := globalstatedb.SiteInitialized(ctx, s.Handle().DB()); err != nil || !init {
 		return "", err
 	}
-	s.ensureStore()
+
 	if err := s.Handle().DB().QueryRowContext(ctx, "SELECT email FROM user_emails JOIN users ON user_emails.user_id=users.id WHERE users.site_admin AND users.deleted_at IS NULL ORDER BY users.id ASC LIMIT 1").Scan(&email); err != nil {
 		return "", errors.New("initial site admin email not found")
 	}
@@ -107,7 +92,7 @@ func (s *UserEmailsStore) GetPrimaryEmail(ctx context.Context, id int32) (email 
 	if Mocks.UserEmails.GetPrimaryEmail != nil {
 		return Mocks.UserEmails.GetPrimaryEmail(ctx, id)
 	}
-	s.ensureStore()
+
 	if err := s.Handle().DB().QueryRowContext(ctx, "SELECT email, verified_at IS NOT NULL AS verified FROM user_emails WHERE user_id=$1 AND is_primary",
 		id,
 	).Scan(&email, &verified); err != nil {
@@ -120,7 +105,6 @@ func (s *UserEmailsStore) GetPrimaryEmail(ctx context.Context, id int32) (email 
 // The address must be verified.
 // All other addresses for the user will be set as not primary.
 func (s *UserEmailsStore) SetPrimaryEmail(ctx context.Context, userID int32, email string) error {
-	s.ensureStore()
 	tx, err := s.Transact(ctx)
 	if err != nil {
 		return err
@@ -159,7 +143,6 @@ func (s *UserEmailsStore) Get(ctx context.Context, userID int32, email string) (
 	if Mocks.UserEmails.Get != nil {
 		return Mocks.UserEmails.Get(userID, email)
 	}
-	s.ensureStore()
 
 	if err := s.Handle().DB().QueryRowContext(ctx, "SELECT email, verified_at IS NOT NULL AS verified FROM user_emails WHERE user_id=$1 AND email=$2",
 		userID, email,
@@ -171,7 +154,6 @@ func (s *UserEmailsStore) Get(ctx context.Context, userID int32, email string) (
 
 // Add adds new user email. When added, it is always unverified.
 func (s *UserEmailsStore) Add(ctx context.Context, userID int32, email string, verificationCode *string) error {
-	s.ensureStore()
 	_, err := s.Handle().DB().ExecContext(ctx, "INSERT INTO user_emails(user_id, email, verification_code) VALUES($1, $2, $3)", userID, email, verificationCode)
 	return err
 }
@@ -179,7 +161,6 @@ func (s *UserEmailsStore) Add(ctx context.Context, userID int32, email string, v
 // Remove removes a user email. It returns an error if there is no such email associated with the user or the email
 // is the user's primary address
 func (s *UserEmailsStore) Remove(ctx context.Context, userID int32, email string) error {
-	s.ensureStore()
 	tx, err := s.Transact(ctx)
 	if err != nil {
 		return err
@@ -208,7 +189,6 @@ func (s *UserEmailsStore) Remove(ctx context.Context, userID int32, email string
 // correct (not the one originally used when creating the user or adding the user email), then it
 // returns false.
 func (s *UserEmailsStore) Verify(ctx context.Context, userID int32, email, code string) (bool, error) {
-	s.ensureStore()
 	var dbCode sql.NullString
 	if err := s.Handle().DB().QueryRowContext(ctx, "SELECT verification_code FROM user_emails WHERE user_id=$1 AND email=$2", userID, email).Scan(&dbCode); err != nil {
 		return false, err
@@ -233,7 +213,6 @@ func (s *UserEmailsStore) SetVerified(ctx context.Context, userID int32, email s
 	if Mocks.UserEmails.SetVerified != nil {
 		return Mocks.UserEmails.SetVerified(ctx, userID, email, verified)
 	}
-	s.ensureStore()
 
 	var res sql.Result
 	var err error
@@ -262,7 +241,7 @@ func (s *UserEmailsStore) SetLastVerification(ctx context.Context, userID int32,
 	if Mocks.UserEmails.SetLastVerification != nil {
 		return Mocks.UserEmails.SetLastVerification(ctx, userID, email, code)
 	}
-	s.ensureStore()
+
 	res, err := s.Handle().DB().ExecContext(ctx, "UPDATE user_emails SET last_verification_sent_at=now(), verification_code = $3 WHERE user_id=$1 AND email=$2", userID, email, code)
 	if err != nil {
 		return err
@@ -344,7 +323,6 @@ func (s *UserEmailsStore) ListByUser(ctx context.Context, opt UserEmailsListOpti
 
 // getBySQL returns user emails matching the SQL query, if any exist.
 func (s *UserEmailsStore) getBySQL(ctx context.Context, query string, args ...interface{}) ([]*UserEmail, error) {
-	s.ensureStore()
 	rows, err := s.Handle().DB().QueryContext(ctx,
 		`SELECT user_emails.user_id, user_emails.email, user_emails.created_at, user_emails.verification_code,
 				user_emails.verified_at, user_emails.last_verification_sent_at, user_emails.is_primary FROM user_emails `+query, args...)

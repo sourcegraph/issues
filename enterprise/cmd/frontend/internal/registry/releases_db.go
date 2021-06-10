@@ -10,7 +10,7 @@ import (
 	"github.com/jackc/pgconn"
 	"github.com/keegancsmith/sqlf"
 
-	"github.com/sourcegraph/sourcegraph/internal/database/dbconn"
+	"github.com/sourcegraph/sourcegraph/internal/database/dbutil"
 )
 
 // dbRelease describes a release of an extension in the extension registry.
@@ -26,7 +26,9 @@ type dbRelease struct {
 	CreatedAt           time.Time
 }
 
-type dbReleases struct{}
+type dbReleases struct {
+	db dbutil.DB
+}
 
 // releaseNotFoundError occurs when an extension release is not found in the
 // extension registry.
@@ -45,12 +47,12 @@ var errInvalidJSONInManifest = errors.New("invalid syntax in extension manifest 
 
 // Create creates a new release of an extension in the extension registry. The release.ID and
 // release.CreatedAt fields are ignored (they are populated automatically by the database).
-func (dbReleases) Create(ctx context.Context, release *dbRelease) (id int64, err error) {
+func (s dbReleases) Create(ctx context.Context, release *dbRelease) (id int64, err error) {
 	if mocks.releases.Create != nil {
 		return mocks.releases.Create(release)
 	}
 
-	if err := dbconn.Global.QueryRowContext(ctx,
+	if err := s.db.QueryRowContext(ctx,
 		`
 INSERT INTO registry_extension_releases(registry_extension_id, creator_user_id, release_version, release_tag, manifest, bundle, source_map)
 VALUES($1, $2, $3, $4, $5, $6, $7)
@@ -70,7 +72,7 @@ RETURNING id
 
 // GetLatest gets the latest release for the extension with the given release tag (e.g., "release").
 // If includeArtifacts is true, it populates the (*dbRelease).{Bundle,SourceMap} fields, which may be large.
-func (dbReleases) GetLatest(ctx context.Context, registryExtensionID int32, releaseTag string, includeArtifacts bool) (*dbRelease, error) {
+func (s dbReleases) GetLatest(ctx context.Context, registryExtensionID int32, releaseTag string, includeArtifacts bool) (*dbRelease, error) {
 	if mocks.releases.GetLatest != nil {
 		return mocks.releases.GetLatest(registryExtensionID, releaseTag, includeArtifacts)
 	}
@@ -82,7 +84,7 @@ WHERE registry_extension_id=%d AND release_tag=%s AND deleted_at IS NULL
 ORDER BY created_at DESC
 LIMIT 1`, includeArtifacts, includeArtifacts, registryExtensionID, releaseTag)
 	var r dbRelease
-	err := dbconn.Global.QueryRowContext(ctx, q.Query(sqlf.PostgresBindVar), q.Args()...).Scan(&r.ID, &r.RegistryExtensionID, &r.CreatorUserID, &r.ReleaseVersion, &r.ReleaseTag, &r.Manifest, &r.Bundle, &r.SourceMap, &r.CreatedAt)
+	err := s.db.QueryRowContext(ctx, q.Query(sqlf.PostgresBindVar), q.Args()...).Scan(&r.ID, &r.RegistryExtensionID, &r.CreatorUserID, &r.ReleaseVersion, &r.ReleaseTag, &r.Manifest, &r.Bundle, &r.SourceMap, &r.CreatedAt)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return nil, releaseNotFoundError{[]interface{}{fmt.Sprintf("latest for registry extension ID %d tag %q", registryExtensionID, releaseTag)}}
@@ -95,7 +97,7 @@ LIMIT 1`, includeArtifacts, includeArtifacts, registryExtensionID, releaseTag)
 // GetLatestBatch gets the latest releases for the extensions with the given release tag
 // (e.g., "release"). If includeArtifacts is true, it populates the (*dbRelease).{Bundle,SourceMap}
 // fields, which may be large.
-func (dbReleases) GetLatestBatch(ctx context.Context, registryExtensionIDs []int32, releaseTag string, includeArtifacts bool) ([]*dbRelease, error) {
+func (s dbReleases) GetLatestBatch(ctx context.Context, registryExtensionIDs []int32, releaseTag string, includeArtifacts bool) ([]*dbRelease, error) {
 	if mocks.releases.GetLatestBatch != nil {
 		return mocks.releases.GetLatestBatch(registryExtensionIDs, releaseTag, includeArtifacts)
 	}
@@ -117,7 +119,7 @@ WHERE rer.registry_extension_id IN (%s) AND rer.release_tag=%s AND rer.deleted_a
 ORDER BY rer.registry_extension_id, rer.created_at DESC
 `, includeArtifacts, includeArtifacts, sqlf.Join(ids, ","), releaseTag)
 
-	rows, err := dbconn.Global.QueryContext(ctx, q.Query(sqlf.PostgresBindVar), q.Args()...)
+	rows, err := s.db.QueryContext(ctx, q.Query(sqlf.PostgresBindVar), q.Args()...)
 	if err != nil {
 		return nil, err
 	}
@@ -142,12 +144,12 @@ ORDER BY rer.registry_extension_id, rer.created_at DESC
 
 // GetArtifacts gets the bundled JavaScript source file contents and the source map for a release
 // (by ID).
-func (dbReleases) GetArtifacts(ctx context.Context, id int64) (bundle, sourcemap []byte, err error) {
+func (s dbReleases) GetArtifacts(ctx context.Context, id int64) (bundle, sourcemap []byte, err error) {
 	q := sqlf.Sprintf(`
 SELECT bundle, source_map
 FROM registry_extension_releases
 WHERE id=%d AND deleted_at IS NULL`, id)
-	if err := dbconn.Global.QueryRowContext(ctx, q.Query(sqlf.PostgresBindVar), q.Args()...).Scan(&bundle, &sourcemap); err != nil {
+	if err := s.db.QueryRowContext(ctx, q.Query(sqlf.PostgresBindVar), q.Args()...).Scan(&bundle, &sourcemap); err != nil {
 		if err == sql.ErrNoRows {
 			return nil, nil, releaseNotFoundError{[]interface{}{fmt.Sprintf("registry extension release %d", id)}}
 		}

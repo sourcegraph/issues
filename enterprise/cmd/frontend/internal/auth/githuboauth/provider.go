@@ -10,6 +10,7 @@ import (
 
 	"github.com/sourcegraph/sourcegraph/cmd/frontend/envvar"
 	"github.com/sourcegraph/sourcegraph/enterprise/cmd/frontend/internal/auth/oauth"
+	"github.com/sourcegraph/sourcegraph/internal/database/dbutil"
 	"github.com/sourcegraph/sourcegraph/internal/extsvc"
 	"github.com/sourcegraph/sourcegraph/internal/lazyregexp"
 	"github.com/sourcegraph/sourcegraph/schema"
@@ -17,7 +18,7 @@ import (
 
 const sessionKey = "githuboauth@0"
 
-func parseProvider(p *schema.GitHubAuthProvider, sourceCfg schema.AuthProviders) (provider *oauth.Provider, messages []string) {
+func parseProvider(db dbutil.DB, p *schema.GitHubAuthProvider, sourceCfg schema.AuthProviders) (provider *oauth.Provider, messages []string) {
 	rawURL := p.Url
 	if rawURL == "" {
 		rawURL = "https://github.com/"
@@ -58,7 +59,8 @@ func parseProvider(p *schema.GitHubAuthProvider, sourceCfg schema.AuthProviders)
 		Callback: func(oauth2Cfg oauth2.Config) http.Handler {
 			return github.CallbackHandler(
 				&oauth2Cfg,
-				oauth.SessionIssuer(&sessionIssuerHelper{
+				oauth.SessionIssuer(db, &sessionIssuerHelper{
+					db:          db,
 					CodeHost:    codeHost,
 					clientID:    p.ClientID,
 					allowSignup: p.AllowSignup,

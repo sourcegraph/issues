@@ -20,9 +20,11 @@ FROM cm_trigger_jobs;
 `
 
 func TestDeleteOldJobLogs(t *testing.T) {
+	t.Parallel()
+
 	retentionInDays := 7
 	ctx, s := newTestStore(t)
-	_, _, _, userCTX := newTestUser(ctx, t)
+	_, _, _, userCTX := newTestUser(ctx, t, s.Handle().DB())
 	_, err := s.insertTestMonitor(userCTX, t)
 	if err != nil {
 		t.Fatal(err)

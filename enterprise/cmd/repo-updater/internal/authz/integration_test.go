@@ -17,7 +17,6 @@ import (
 	"github.com/sourcegraph/sourcegraph/internal/authz"
 	authzGitHub "github.com/sourcegraph/sourcegraph/internal/authz/github"
 	"github.com/sourcegraph/sourcegraph/internal/database"
-	"github.com/sourcegraph/sourcegraph/internal/database/dbconn"
 	"github.com/sourcegraph/sourcegraph/internal/database/dbtest"
 	"github.com/sourcegraph/sourcegraph/internal/extsvc"
 	"github.com/sourcegraph/sourcegraph/internal/extsvc/auth"
@@ -107,7 +106,6 @@ func TestIntegration_GitHubPermissions(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	dbconn.Global = testDB
 	newUser := database.NewUser{
 		Email:           "sourcegraph-vcr-bob@sourcegraph.com",
 		Username:        "sourcegraph-vcr-bob",
@@ -118,7 +116,7 @@ func TestIntegration_GitHubPermissions(t *testing.T) {
 		ServiceID:   "https://github.com/",
 		AccountID:   "66464926",
 	}
-	userID, err := database.GlobalExternalAccounts.CreateUserAndSave(ctx, newUser, spec, extsvc.AccountData{})
+	userID, err := database.ExternalAccounts(testDB).CreateUserAndSave(ctx, newUser, spec, extsvc.AccountData{})
 	if err != nil {
 		t.Fatal(err)
 	}

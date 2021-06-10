@@ -13,7 +13,8 @@ import (
 	"github.com/sourcegraph/jsonx"
 
 	"github.com/sourcegraph/sourcegraph/internal/conf/confdefaults"
-	"github.com/sourcegraph/sourcegraph/internal/database/dbconn"
+	"github.com/sourcegraph/sourcegraph/internal/database/basestore"
+	"github.com/sourcegraph/sourcegraph/internal/database/dbutil"
 )
 
 // SiteConfig contains the contents of a site config along with associated metadata.
@@ -36,8 +37,8 @@ var ErrNewerEdit = errors.New("someone else has already applied a newer edit")
 //
 // 🚨 SECURITY: This method does NOT verify the user is an admin. The caller is
 // responsible for ensuring this or that the response never makes it to a user.
-func SiteCreateIfUpToDate(ctx context.Context, lastID *int32, contents string) (latest *SiteConfig, err error) {
-	tx, done, err := newTransaction(ctx)
+func SiteCreateIfUpToDate(ctx context.Context, db dbutil.DB, lastID *int32, contents string) (latest *SiteConfig, err error) {
+	tx, done, err := newTransaction(ctx, db)
 	if err != nil {
 		return nil, err
 	}
@@ -59,8 +60,8 @@ func SiteCreateIfUpToDate(ctx context.Context, lastID *int32, contents string) (
 //
 // 🚨 SECURITY: This method does NOT verify the user is an admin. The caller is
 // responsible for ensuring this or that the response never makes it to a user.
-func SiteGetLatest(ctx context.Context) (latest *SiteConfig, err error) {
-	tx, done, err := newTransaction(ctx)
+func SiteGetLatest(ctx context.Context, db dbutil.DB) (latest *SiteConfig, err error) {
+	tx, done, err := newTransaction(ctx, db)
 	if err != nil {
 		return nil, err
 	}
@@ -74,21 +75,22 @@ func SiteGetLatest(ctx context.Context) (latest *SiteConfig, err error) {
 	return getLatest(ctx, tx)
 }
 
-func newTransaction(ctx context.Context) (tx queryable, done func(), err error) {
-	rtx, err := dbconn.Global.BeginTx(ctx, nil)
+func newTransaction(ctx context.Context, db dbutil.DB) (tx queryable, done func(), err error) {
+	dbh := basestore.NewHandleWithDB(db, sql.TxOptions{})
+	rtx, err := dbh.Transact(ctx)
 	if err != nil {
 		return nil, nil, err
 	}
 
-	return rtx, func() {
+	return rtx.DB(), func() {
 		if err != nil {
-			rollErr := rtx.Rollback()
+			rollErr := rtx.Done(errors.New("always rollback"))
 			if rollErr != nil {
 				err = multierror.Append(err, rollErr)
 			}
 			return
 		}
-		err = rtx.Commit()
+		err = rtx.Done(nil)
 	}, nil
 }
 

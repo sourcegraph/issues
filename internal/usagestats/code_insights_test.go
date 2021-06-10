@@ -7,7 +7,7 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 
-	"github.com/sourcegraph/sourcegraph/internal/database/dbtesting"
+	"github.com/sourcegraph/sourcegraph/internal/database/dbtest"
 	"github.com/sourcegraph/sourcegraph/internal/types"
 )
 
@@ -22,7 +22,7 @@ func TestCodeInsightsUsageStatistics(t *testing.T) {
 	now := time.Date(2021, 1, 28, 0, 0, 0, 0, time.UTC)
 	mockTimeNow(now)
 
-	db := dbtesting.GetDB(t)
+	db := dbtest.NewDB(t, "")
 
 	_, err := db.Exec(`
 		INSERT INTO event_logs

@@ -10,6 +10,7 @@ import (
 	"github.com/sourcegraph/sourcegraph/internal/actor"
 	"github.com/sourcegraph/sourcegraph/internal/conf"
 	"github.com/sourcegraph/sourcegraph/internal/database"
+	"github.com/sourcegraph/sourcegraph/internal/database/dbutil"
 	"github.com/sourcegraph/sourcegraph/schema"
 )
 
@@ -35,7 +36,7 @@ func (r RepoRegexpPattern) String() string {
 
 var MockResolveRepoGroups func() (map[string][]RepoGroupValue, error)
 
-func ResolveRepoGroups(ctx context.Context, settings *schema.Settings) (groups map[string][]RepoGroupValue, err error) {
+func ResolveRepoGroups(ctx context.Context, db dbutil.DB, settings *schema.Settings) (groups map[string][]RepoGroupValue, err error) {
 	if MockResolveRepoGroups != nil {
 		return MockResolveRepoGroups()
 	}
@@ -61,14 +62,14 @@ func ResolveRepoGroups(ctx context.Context, settings *schema.Settings) (groups m
 		groups[name] = repos
 	}
 
-	if mode, err := database.GlobalUsers.CurrentUserAllowedExternalServices(ctx); err != nil {
+	if mode, err := database.Users(db).CurrentUserAllowedExternalServices(ctx); err != nil {
 		return groups, err
 	} else if mode == conf.ExternalServiceModeDisabled {
 		return groups, nil
 	}
 
 	a := actor.FromContext(ctx)
-	repos, err := database.GlobalRepos.ListRepoNames(ctx, database.ReposListOptions{UserID: a.UID})
+	repos, err := database.Repos(db).ListRepoNames(ctx, database.ReposListOptions{UserID: a.UID})
 	if err != nil {
 		log15.Warn("getting user added repos", "err", err)
 		return groups, nil

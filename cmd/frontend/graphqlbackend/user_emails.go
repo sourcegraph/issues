@@ -85,7 +85,7 @@ func (r *schemaResolver) AddUserEmail(ctx context.Context, args *struct {
 	}
 
 	if conf.CanSendEmail() {
-		if err := backend.UserEmails.SendUserEmailOnFieldUpdate(ctx, userID, "added an email"); err != nil {
+		if err := backend.UserEmails.SendUserEmailOnFieldUpdate(ctx, r.db, userID, "added an email"); err != nil {
 			log15.Warn("Failed to send email to inform user of email addition", "error", err)
 		}
 	}
@@ -117,7 +117,7 @@ func (r *schemaResolver) RemoveUserEmail(ctx context.Context, args *struct {
 	}
 
 	if conf.CanSendEmail() {
-		if err := backend.UserEmails.SendUserEmailOnFieldUpdate(ctx, userID, "removed an email"); err != nil {
+		if err := backend.UserEmails.SendUserEmailOnFieldUpdate(ctx, r.db, userID, "removed an email"); err != nil {
 			log15.Warn("Failed to send email to inform user of email removal", "error", err)
 		}
 	}
@@ -144,7 +144,7 @@ func (r *schemaResolver) SetUserEmailPrimary(ctx context.Context, args *struct {
 	}
 
 	if conf.CanSendEmail() {
-		if err := backend.UserEmails.SendUserEmailOnFieldUpdate(ctx, userID, "changed primary email"); err != nil {
+		if err := backend.UserEmails.SendUserEmailOnFieldUpdate(ctx, r.db, userID, "changed primary email"); err != nil {
 			log15.Warn("Failed to send email to inform user of primary address change", "error", err)
 		}
 	}

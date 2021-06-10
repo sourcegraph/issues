@@ -13,7 +13,7 @@ import (
 	insightsdbtesting "github.com/sourcegraph/sourcegraph/enterprise/internal/insights/dbtesting"
 	"github.com/sourcegraph/sourcegraph/enterprise/internal/insights/discovery"
 	"github.com/sourcegraph/sourcegraph/internal/api"
-	"github.com/sourcegraph/sourcegraph/internal/database/dbtesting"
+	"github.com/sourcegraph/sourcegraph/internal/database/dbtest"
 )
 
 // Note: You can `go test ./resolvers -update` to update the expected `want` values in these tests.
@@ -58,7 +58,7 @@ func TestResolver_InsightConnection(t *testing.T) {
 	if testing.Short() {
 		t.Skip()
 	}
-	//t.Parallel() // TODO: dbtesting.GetDB is not parallel-safe, yuck.
+	t.Parallel()
 
 	testSetup := func(t *testing.T) (context.Context, graphqlbackend.InsightConnectionResolver) {
 		// Setup the GraphQL resolver.
@@ -67,7 +67,7 @@ func TestResolver_InsightConnection(t *testing.T) {
 		clock := func() time.Time { return now }
 		timescale, cleanup := insightsdbtesting.TimescaleDB(t)
 		defer cleanup()
-		postgres := dbtesting.GetDB(t)
+		postgres := dbtest.NewDB(t, "")
 		resolver := newWithClock(timescale, postgres, clock)
 
 		// Create the insights connection resolver.

@@ -10,7 +10,7 @@ import (
 
 	"github.com/sourcegraph/sourcegraph/enterprise/internal/codeintel/stores/lsifstore"
 	"github.com/sourcegraph/sourcegraph/internal/database/basestore"
-	"github.com/sourcegraph/sourcegraph/internal/database/dbtesting"
+	"github.com/sourcegraph/sourcegraph/internal/database/dbtest"
 	"github.com/sourcegraph/sourcegraph/internal/observation"
 	"github.com/sourcegraph/sourcegraph/lib/codeintel/semantic"
 )
@@ -19,7 +19,7 @@ func TestLocationsCountMigrator(t *testing.T) {
 	if testing.Short() {
 		t.Skip()
 	}
-	db := dbtesting.GetDB(t)
+	db := dbtest.NewDB(t, "")
 	store := lsifstore.NewStore(db, &observation.TestContext)
 	migrator := NewLocationsCountMigrator(store, "lsif_data_definitions", 250)
 	serializer := lsifstore.NewSerializer()

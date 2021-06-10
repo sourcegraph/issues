@@ -6,18 +6,14 @@ import (
 	"testing"
 	"time"
 
-	"github.com/sourcegraph/sourcegraph/internal/database/dbtesting"
+	"github.com/sourcegraph/sourcegraph/internal/database/dbtest"
 )
-
-func init() {
-	dbtesting.DBNameSuffix = "locker"
-}
 
 func TestLock(t *testing.T) {
 	if testing.Short() {
 		t.Skip()
 	}
-	db := dbtesting.GetDB(t)
+	db := dbtest.NewDB(t, "")
 	locker := NewWithDB(db, "test")
 
 	key := rand.Intn(1000)
@@ -59,7 +55,7 @@ func TestLockBlockingAcquire(t *testing.T) {
 	if testing.Short() {
 		t.Skip()
 	}
-	db := dbtesting.GetDB(t)
+	db := dbtest.NewDB(t, "")
 	locker := NewWithDB(db, "test")
 
 	key := rand.Intn(1000)

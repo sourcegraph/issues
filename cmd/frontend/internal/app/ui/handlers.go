@@ -28,6 +28,7 @@ import (
 	"github.com/sourcegraph/sourcegraph/internal/actor"
 	"github.com/sourcegraph/sourcegraph/internal/api"
 	"github.com/sourcegraph/sourcegraph/internal/conf"
+	"github.com/sourcegraph/sourcegraph/internal/database/dbutil"
 	"github.com/sourcegraph/sourcegraph/internal/env"
 	"github.com/sourcegraph/sourcegraph/internal/errcode"
 	"github.com/sourcegraph/sourcegraph/internal/gitserver"
@@ -115,7 +116,7 @@ var mockNewCommon func(w http.ResponseWriter, r *http.Request, title string, ser
 //
 // In the case of a repository that is cloning, a Common data structure is
 // returned but it has an incomplete RevSpec.
-func newCommon(w http.ResponseWriter, r *http.Request, title string, serveError serveErrorHandler) (*Common, error) {
+func newCommon(w http.ResponseWriter, r *http.Request, db dbutil.DB, title string, serveError serveErrorHandler) (*Common, error) {
 	if mockNewCommon != nil {
 		return mockNewCommon(w, r, title, serveError)
 	}
@@ -132,7 +133,7 @@ func newCommon(w http.ResponseWriter, r *http.Request, title string, serveError 
 			BodyTop:    template.HTML(conf.Get().HtmlBodyTop),
 			BodyBottom: template.HTML(conf.Get().HtmlBodyBottom),
 		},
-		Context:  jscontext.NewJSContextFromRequest(r),
+		Context:  jscontext.NewJSContextFromRequest(r, db),
 		Title:    title,
 		Manifest: manifest,
 		Metadata: &Metadata{
@@ -183,7 +184,7 @@ func newCommon(w http.ResponseWriter, r *http.Request, title string, serveError 
 				}
 
 				// Repository is not clonable.
-				dangerouslyServeError(w, r, errors.New("repository could not be cloned"), http.StatusInternalServerError)
+				dangerouslyServeError(w, r, db, errors.New("repository could not be cloned"), http.StatusInternalServerError)
 				return nil, nil
 			}
 			if vcs.IsRepoNotExist(err) {
@@ -225,15 +226,15 @@ func newCommon(w http.ResponseWriter, r *http.Request, title string, serveError 
 
 type handlerFunc func(w http.ResponseWriter, r *http.Request) error
 
-func serveBrandedPageString(titles string, description *string) handlerFunc {
-	return serveBasicPage(func(c *Common, r *http.Request) string {
+func serveBrandedPageString(db dbutil.DB, titles string, description *string) handlerFunc {
+	return serveBasicPage(db, func(c *Common, r *http.Request) string {
 		return brandNameSubtitle(titles)
 	}, description)
 }
 
-func serveBasicPage(title func(c *Common, r *http.Request) string, description *string) handlerFunc {
+func serveBasicPage(db dbutil.DB, title func(c *Common, r *http.Request) string, description *string) handlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) error {
-		common, err := newCommon(w, r, "", serveError)
+		common, err := newCommon(w, r, db, "", serveError(db))
 		if err != nil {
 			return err
 		}
@@ -248,44 +249,48 @@ func serveBasicPage(title func(c *Common, r *http.Request) string, description *
 	}
 }
 
-func serveHome(w http.ResponseWriter, r *http.Request) error {
-	common, err := newCommon(w, r, globals.Branding().BrandName, serveError)
-	if err != nil {
-		return err
-	}
-	if common == nil {
-		return nil // request was handled
-	}
+func serveHome(db dbutil.DB) func(w http.ResponseWriter, r *http.Request) error {
+	return func(w http.ResponseWriter, r *http.Request) error {
+		common, err := newCommon(w, r, db, globals.Branding().BrandName, serveError(db))
+		if err != nil {
+			return err
+		}
+		if common == nil {
+			return nil // request was handled
+		}
 
-	if envvar.SourcegraphDotComMode() && !actor.FromContext(r.Context()).IsAuthenticated() && !strings.Contains(r.UserAgent(), "Cookiebot") {
-		// The user is not signed in and tried to access Sourcegraph.com.  Redirect to
-		// about.sourcegraph.com so they see general info page.
-		// Don't redirect Cookiebot so it can scan the website without authentication.
-		http.Redirect(w, r, (&url.URL{Scheme: aboutRedirectScheme, Host: aboutRedirectHost}).String(), http.StatusTemporaryRedirect)
+		if envvar.SourcegraphDotComMode() && !actor.FromContext(r.Context()).IsAuthenticated() && !strings.Contains(r.UserAgent(), "Cookiebot") {
+			// The user is not signed in and tried to access Sourcegraph.com.  Redirect to
+			// about.sourcegraph.com so they see general info page.
+			// Don't redirect Cookiebot so it can scan the website without authentication.
+			http.Redirect(w, r, (&url.URL{Scheme: aboutRedirectScheme, Host: aboutRedirectHost}).String(), http.StatusTemporaryRedirect)
+			return nil
+		}
+		// On non-Sourcegraph.com instances, there is no separate homepage, so redirect to /search.
+		r.URL.Path = "/search"
+		http.Redirect(w, r, r.URL.String(), http.StatusTemporaryRedirect)
 		return nil
 	}
-	// On non-Sourcegraph.com instances, there is no separate homepage, so redirect to /search.
-	r.URL.Path = "/search"
-	http.Redirect(w, r, r.URL.String(), http.StatusTemporaryRedirect)
-	return nil
 }
 
-func serveSignIn(w http.ResponseWriter, r *http.Request) error {
-	common, err := newCommon(w, r, "", serveError)
-	if err != nil {
-		return err
-	}
-	if common == nil {
-		return nil // request was handled
-	}
-	common.Title = brandNameSubtitle("Sign in")
+func serveSignIn(db dbutil.DB) func(w http.ResponseWriter, r *http.Request) error {
+	return func(w http.ResponseWriter, r *http.Request) error {
+		common, err := newCommon(w, r, db, "", serveError(db))
+		if err != nil {
+			return err
+		}
+		if common == nil {
+			return nil // request was handled
+		}
+		common.Title = brandNameSubtitle("Sign in")
 
-	return renderTemplate(w, "app.html", common)
+		return renderTemplate(w, "app.html", common)
+	}
 }
 
 // redirectTreeOrBlob redirects a blob page to a tree page if the file is actually a directory,
 // or a tree page to a blob page if the directory is actually a file.
-func redirectTreeOrBlob(routeName, path string, common *Common, w http.ResponseWriter, r *http.Request) (requestHandled bool, err error) {
+func redirectTreeOrBlob(routeName, path string, common *Common, w http.ResponseWriter, r *http.Request, db dbutil.DB) (requestHandled bool, err error) {
 	// NOTE: It makes no sense for this function to proceed if the commit ID
 	// for the repository is empty. It is most likely the repository is still
 	// clone in progress.
@@ -305,7 +310,7 @@ func redirectTreeOrBlob(routeName, path string, common *Common, w http.ResponseW
 	stat, err := git.Stat(r.Context(), common.Repo.Name, common.CommitID, path)
 	if err != nil {
 		if os.IsNotExist(err) {
-			serveError(w, r, err, http.StatusNotFound)
+			serveError(db)(w, r, err, http.StatusNotFound)
 			return true, nil
 		}
 		return false, err
@@ -326,9 +331,9 @@ func redirectTreeOrBlob(routeName, path string, common *Common, w http.ResponseW
 }
 
 // serveTree serves the tree (directory) pages.
-func serveTree(title func(c *Common, r *http.Request) string) handlerFunc {
+func serveTree(db dbutil.DB, title func(c *Common, r *http.Request) string) handlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) error {
-		common, err := newCommon(w, r, "", serveError)
+		common, err := newCommon(w, r, db, "", serveError(db))
 		if err != nil {
 			return err
 		}
@@ -336,7 +341,7 @@ func serveTree(title func(c *Common, r *http.Request) string) handlerFunc {
 			return nil // request was handled
 		}
 
-		handled, err := redirectTreeOrBlob(routeTree, mux.Vars(r)["Path"], common, w, r)
+		handled, err := redirectTreeOrBlob(routeTree, mux.Vars(r)["Path"], common, w, r, db)
 		if handled {
 			return nil
 		}
@@ -349,9 +354,9 @@ func serveTree(title func(c *Common, r *http.Request) string) handlerFunc {
 	}
 }
 
-func serveRepoOrBlob(routeName string, title func(c *Common, r *http.Request) string) handlerFunc {
+func serveRepoOrBlob(db dbutil.DB, routeName string, title func(c *Common, r *http.Request) string) handlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) error {
-		common, err := newCommon(w, r, "", serveError)
+		common, err := newCommon(w, r, db, "", serveError(db))
 		if err != nil {
 			return err
 		}
@@ -359,7 +364,7 @@ func serveRepoOrBlob(routeName string, title func(c *Common, r *http.Request) st
 			return nil // request was handled
 		}
 
-		handled, err := redirectTreeOrBlob(routeName, mux.Vars(r)["Path"], common, w, r)
+		handled, err := redirectTreeOrBlob(routeName, mux.Vars(r)["Path"], common, w, r, db)
 		if handled {
 			return nil
 		}

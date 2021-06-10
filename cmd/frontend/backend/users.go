@@ -6,6 +6,7 @@ import (
 	"strconv"
 
 	"github.com/sourcegraph/sourcegraph/internal/database"
+	"github.com/sourcegraph/sourcegraph/internal/database/dbutil"
 	"github.com/sourcegraph/sourcegraph/internal/randstring"
 )
 
@@ -15,11 +16,11 @@ func MakeRandomHardToGuessPassword() string {
 
 var MockMakePasswordResetURL func(ctx context.Context, userID int32) (*url.URL, error)
 
-func MakePasswordResetURL(ctx context.Context, userID int32) (*url.URL, error) {
+func MakePasswordResetURL(ctx context.Context, db dbutil.DB, userID int32) (*url.URL, error) {
 	if MockMakePasswordResetURL != nil {
 		return MockMakePasswordResetURL(ctx, userID)
 	}
-	resetCode, err := database.GlobalUsers.RenewPasswordResetCode(ctx, userID)
+	resetCode, err := database.Users(db).RenewPasswordResetCode(ctx, userID)
 	if err != nil {
 		return nil, err
 	}

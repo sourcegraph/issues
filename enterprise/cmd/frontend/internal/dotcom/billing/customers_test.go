@@ -6,11 +6,11 @@ import (
 	"testing"
 
 	"github.com/sourcegraph/sourcegraph/internal/database"
-	"github.com/sourcegraph/sourcegraph/internal/database/dbtesting"
+	"github.com/sourcegraph/sourcegraph/internal/database/dbtest"
 )
 
 func TestGetOrAssignUserCustomerID(t *testing.T) {
-	db := dbtesting.GetDB(t)
+	db := dbtest.NewDB(t, "")
 	ctx := context.Background()
 
 	c := 0
@@ -26,11 +26,11 @@ func TestGetOrAssignUserCustomerID(t *testing.T) {
 	}
 
 	t.Run("assigns and retrieves", func(t *testing.T) {
-		custID1, err := GetOrAssignUserCustomerID(ctx, u.ID)
+		custID1, err := GetOrAssignUserCustomerID(ctx, db, u.ID)
 		if err != nil {
 			t.Fatal(err)
 		}
-		custID2, err := GetOrAssignUserCustomerID(ctx, u.ID)
+		custID2, err := GetOrAssignUserCustomerID(ctx, db, u.ID)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -40,7 +40,7 @@ func TestGetOrAssignUserCustomerID(t *testing.T) {
 	})
 
 	t.Run("fails on nonexistent users", func(t *testing.T) {
-		if _, err := GetOrAssignUserCustomerID(ctx, 123 /* no such user */); err == nil {
+		if _, err := GetOrAssignUserCustomerID(ctx, db, 123 /* no such user */); err == nil {
 			t.Fatal("err == nil")
 		}
 	})

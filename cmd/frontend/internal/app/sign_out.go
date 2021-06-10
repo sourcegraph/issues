@@ -7,6 +7,7 @@ import (
 	"github.com/inconshreveable/log15"
 
 	"github.com/sourcegraph/sourcegraph/cmd/frontend/internal/session"
+	"github.com/sourcegraph/sourcegraph/internal/database/dbutil"
 )
 
 type SignOutURL struct {
@@ -27,18 +28,20 @@ func RegisterSSOSignOutHandler(f func(w http.ResponseWriter, r *http.Request)) {
 	ssoSignOutHandler = f
 }
 
-func serveSignOut(w http.ResponseWriter, r *http.Request) {
-	// Invalidate all user sessions first
-	// This way, any other signout failures should not leave a valid session
-	if err := session.InvalidateSessionCurrentUser(w, r); err != nil {
-		log15.Error("Error in signout.", "err", err)
-	}
-	if err := session.SetActor(w, r, nil, 0, time.Time{}); err != nil {
-		log15.Error("Error in signout.", "err", err)
-	}
-	if ssoSignOutHandler != nil {
-		ssoSignOutHandler(w, r)
-	}
+func serveSignOut(db dbutil.DB) func(w http.ResponseWriter, r *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		// Invalidate all user sessions first
+		// This way, any other signout failures should not leave a valid session
+		if err := session.InvalidateSessionCurrentUser(db, w, r); err != nil {
+			log15.Error("Error in signout.", "err", err)
+		}
+		if err := session.SetActor(w, r, nil, 0, time.Time{}); err != nil {
+			log15.Error("Error in signout.", "err", err)
+		}
+		if ssoSignOutHandler != nil {
+			ssoSignOutHandler(w, r)
+		}
 
-	http.Redirect(w, r, "/search", http.StatusSeeOther)
+		http.Redirect(w, r, "/search", http.StatusSeeOther)
+	}
 }

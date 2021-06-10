@@ -25,7 +25,7 @@ func listLocalRegistryExtensions(ctx context.Context, db dbutil.DB, args graphql
 		return nil, err
 	}
 
-	vs, err := dbExtensions{}.List(ctx, opt)
+	vs, err := dbExtensions{db: db}.List(ctx, opt)
 	if err != nil {
 		return nil, err
 	}
@@ -33,7 +33,7 @@ func listLocalRegistryExtensions(ctx context.Context, db dbutil.DB, args graphql
 		return nil, err
 	}
 
-	releasesByExtensionID, err := getLatestForBatch(ctx, vs)
+	releasesByExtensionID, err := getLatestForBatch(ctx, db, vs)
 	if err != nil {
 		return nil, err
 	}
@@ -49,7 +49,7 @@ func countLocalRegistryExtensions(ctx context.Context, db dbutil.DB, args graphq
 	if err != nil {
 		return 0, err
 	}
-	return dbExtensions{}.Count(ctx, opt)
+	return dbExtensions{db: db}.Count(ctx, opt)
 }
 
 func toDBExtensionsListOptions(args graphqlbackend.RegistryExtensionConnectionArgs) (dbExtensionsListOptions, error) {

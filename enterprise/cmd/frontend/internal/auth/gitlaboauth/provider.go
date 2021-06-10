@@ -10,13 +10,14 @@ import (
 
 	"github.com/sourcegraph/sourcegraph/enterprise/cmd/frontend/internal/auth/oauth"
 	"github.com/sourcegraph/sourcegraph/internal/conf"
+	"github.com/sourcegraph/sourcegraph/internal/database/dbutil"
 	"github.com/sourcegraph/sourcegraph/internal/extsvc"
 	"github.com/sourcegraph/sourcegraph/schema"
 )
 
 const sessionKey = "gitlaboauth@0"
 
-func parseProvider(callbackURL string, p *schema.GitLabAuthProvider, sourceCfg schema.AuthProviders) (provider *oauth.Provider, messages []string) {
+func parseProvider(db dbutil.DB, callbackURL string, p *schema.GitLabAuthProvider, sourceCfg schema.AuthProviders) (provider *oauth.Provider, messages []string) {
 	rawURL := p.Url
 	if rawURL == "" {
 		rawURL = "https://gitlab.com/"
@@ -52,7 +53,8 @@ func parseProvider(callbackURL string, p *schema.GitLabAuthProvider, sourceCfg s
 		Callback: func(oauth2Cfg oauth2.Config) http.Handler {
 			return CallbackHandler(
 				&oauth2Cfg,
-				oauth.SessionIssuer(&sessionIssuerHelper{
+				oauth.SessionIssuer(db, &sessionIssuerHelper{
+					db:       db,
 					CodeHost: codeHost,
 					clientID: p.ClientID,
 				}, sessionKey),

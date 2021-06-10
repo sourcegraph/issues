@@ -18,6 +18,7 @@ import (
 	"github.com/sourcegraph/sourcegraph/internal/conf"
 	"github.com/sourcegraph/sourcegraph/internal/database"
 	"github.com/sourcegraph/sourcegraph/internal/database/dbcache"
+	"github.com/sourcegraph/sourcegraph/internal/database/dbutil"
 	"github.com/sourcegraph/sourcegraph/internal/errcode"
 	"github.com/sourcegraph/sourcegraph/internal/extsvc"
 	"github.com/sourcegraph/sourcegraph/internal/gitserver"
@@ -39,9 +40,14 @@ func (e ErrRepoSeeOther) Error() string {
 	return fmt.Sprintf("repo not found at this location, but might exist at %s", e.RedirectURL)
 }
 
-var Repos = &repos{
-	store: database.GlobalRepos,
-	cache: dbcache.NewDefaultRepoLister(database.GlobalRepos),
+var Repos *repos
+
+func InitRepos(db dbutil.DB) {
+	rstore := database.Repos(db)
+	Repos = &repos{
+		store: rstore,
+		cache: dbcache.NewDefaultRepoLister(rstore),
+	}
 }
 
 type repos struct {
@@ -195,7 +201,7 @@ func (s *repos) ListDefault(ctx context.Context) (repos []types.RepoName, err er
 
 	// For authenticated users we also want to include any private repos they may have added
 	if a := actor.FromContext(ctx); a.IsAuthenticated() {
-		privateRepos, err := database.GlobalRepos.ListRepoNames(ctx, database.ReposListOptions{
+		privateRepos, err := s.store.ListRepoNames(ctx, database.ReposListOptions{
 			UserID:      a.UID,
 			OnlyPrivate: true,
 		})

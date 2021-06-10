@@ -40,7 +40,7 @@ func (r *registryPublisherConnection) compute(ctx context.Context) ([]*dbPublish
 			opt2.Limit++ // so we can detect if there is a next page
 		}
 
-		r.registryPublishers, r.err = dbExtensions{}.ListPublishers(ctx, opt2)
+		r.registryPublishers, r.err = dbExtensions{db: r.db}.ListPublishers(ctx, opt2)
 	})
 	return r.registryPublishers, r.err
 }
@@ -63,7 +63,7 @@ func (r *registryPublisherConnection) Nodes(ctx context.Context) ([]graphqlbacke
 }
 
 func (r *registryPublisherConnection) TotalCount(ctx context.Context) (int32, error) {
-	count, err := dbExtensions{}.CountPublishers(ctx, r.opt)
+	count, err := dbExtensions{db: r.db}.CountPublishers(ctx, r.opt)
 	return int32(count), err
 }
 

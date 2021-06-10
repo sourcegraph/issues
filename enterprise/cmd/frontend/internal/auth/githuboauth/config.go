@@ -5,18 +5,19 @@ import (
 
 	"github.com/sourcegraph/sourcegraph/cmd/frontend/auth/providers"
 	"github.com/sourcegraph/sourcegraph/internal/conf"
+	"github.com/sourcegraph/sourcegraph/internal/database/dbutil"
 	"github.com/sourcegraph/sourcegraph/schema"
 )
 
-func init() {
+func Init(db dbutil.DB) {
 	const pkgName = "githuboauth"
 	conf.ContributeValidator(func(cfg conf.Unified) conf.Problems {
-		_, problems := parseConfig(&cfg)
+		_, problems := parseConfig(db, &cfg)
 		return problems
 	})
 	go func() {
 		conf.Watch(func() {
-			newProviders, _ := parseConfig(conf.Get())
+			newProviders, _ := parseConfig(db, conf.Get())
 			if len(newProviders) == 0 {
 				providers.Update(pkgName, nil)
 			} else {
@@ -35,13 +36,13 @@ type Provider struct {
 	providers.Provider
 }
 
-func parseConfig(cfg *conf.Unified) (ps []Provider, problems conf.Problems) {
+func parseConfig(db dbutil.DB, cfg *conf.Unified) (ps []Provider, problems conf.Problems) {
 	for _, pr := range cfg.AuthProviders {
 		if pr.Github == nil {
 			continue
 		}
 
-		provider, providerProblems := parseProvider(pr.Github, pr)
+		provider, providerProblems := parseProvider(db, pr.Github, pr)
 		problems = append(problems, conf.NewSiteProblems(providerProblems...)...)
 		if provider != nil {
 			ps = append(ps, Provider{

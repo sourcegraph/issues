@@ -17,6 +17,7 @@ import (
 	"github.com/sourcegraph/sourcegraph/internal/actor"
 	"github.com/sourcegraph/sourcegraph/internal/conf"
 	"github.com/sourcegraph/sourcegraph/internal/database"
+	"github.com/sourcegraph/sourcegraph/internal/database/dbutil"
 	"github.com/sourcegraph/sourcegraph/internal/extsvc"
 	"github.com/sourcegraph/sourcegraph/internal/extsvc/gitlab"
 	"github.com/sourcegraph/sourcegraph/internal/types"
@@ -24,6 +25,8 @@ import (
 
 type sessionIssuerHelper struct {
 	*extsvc.CodeHost
+
+	db       dbutil.DB
 	clientID string
 }
 
@@ -44,7 +47,7 @@ func (s *sessionIssuerHelper) GetOrCreateUser(ctx context.Context, token *oauth2
 	// Unlike with GitHub, we can *only* use the primary email to resolve the user's identity,
 	// because the GitLab API does not return whether an email has been verified. The user's primary
 	// email on GitLab is always verified, so we use that.
-	userID, safeErrMsg, err := auth.GetAndSaveUser(ctx, auth.GetAndSaveUserOp{
+	userID, safeErrMsg, err := auth.GetAndSaveUser(ctx, s.db, auth.GetAndSaveUserOp{
 		UserProps: database.NewUser{
 			Username:        login,
 			Email:           gUser.Email,
@@ -91,7 +94,7 @@ func (s *sessionIssuerHelper) CreateCodeHostConnection(ctx context.Context, toke
 		return "Could not read GitLab user from callback request.", errors.Wrap(err, "could not read user from context")
 	}
 
-	err = database.GlobalExternalServices.Create(ctx, conf.Get,
+	err = database.ExternalServices(s.db).Create(ctx, conf.Get,
 		&types.ExternalService{
 			Kind:        extsvc.KindGitLab,
 			DisplayName: fmt.Sprintf("GitLab (%s)", gUser.Username),

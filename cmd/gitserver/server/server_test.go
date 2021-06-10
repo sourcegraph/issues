@@ -25,7 +25,7 @@ import (
 
 	"github.com/sourcegraph/sourcegraph/internal/api"
 	"github.com/sourcegraph/sourcegraph/internal/database"
-	"github.com/sourcegraph/sourcegraph/internal/database/dbtesting"
+	"github.com/sourcegraph/sourcegraph/internal/database/dbtest"
 	"github.com/sourcegraph/sourcegraph/internal/database/dbutil"
 	"github.com/sourcegraph/sourcegraph/internal/mutablelimiter"
 	"github.com/sourcegraph/sourcegraph/internal/repoupdater/protocol"
@@ -484,7 +484,7 @@ func TestCloneRepo(t *testing.T) {
 	ctx := context.Background()
 	remote := tmpDir(t)
 	repoName := api.RepoName("example.com/foo/bar")
-	db := dbtesting.GetDB(t)
+	db := dbtest.NewDB(t, "")
 
 	dbRepo := &types.Repo{
 		Name:        repoName,
@@ -581,7 +581,7 @@ func TestHandleRepoUpdate(t *testing.T) {
 	ctx := context.Background()
 	remote := tmpDir(t)
 	repoName := api.RepoName("example.com/foo/bar")
-	db := dbtesting.GetDB(t)
+	db := dbtest.NewDB(t, "")
 
 	dbRepo := &types.Repo{
 		Name:        repoName,
@@ -886,7 +886,7 @@ func TestHostnameMatch(t *testing.T) {
 
 func TestSyncRepoState(t *testing.T) {
 	ctx := context.Background()
-	db := dbtesting.GetDB(t)
+	db := dbtest.NewDB(t, "")
 	remoteDir := tmpDir(t)
 
 	cmd := func(name string, arg ...string) string {

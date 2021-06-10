@@ -126,7 +126,7 @@ func (r *GitTreeEntryResolver) URL(ctx context.Context) (string, error) {
 		if strings.HasPrefix(url, "../") {
 			url = path.Join(r.Repository().Name(), url)
 		}
-		repoName, err := cloneURLToRepoName(ctx, url)
+		repoName, err := cloneURLToRepoName(ctx, r.db, url)
 		if err != nil {
 			log15.Error("Failed to resolve submodule repository name from clone URL", "cloneURL", submodule.URL(), "err", err)
 			return "", nil
@@ -182,8 +182,8 @@ func (r *GitTreeEntryResolver) Submodule() *gitSubmoduleResolver {
 	return nil
 }
 
-func cloneURLToRepoName(ctx context.Context, cloneURL string) (string, error) {
-	repoName, err := cloneurls.ReposourceCloneURLToRepoName(ctx, cloneURL)
+func cloneURLToRepoName(ctx context.Context, db dbutil.DB, cloneURL string) (string, error) {
+	repoName, err := cloneurls.ReposourceCloneURLToRepoName(ctx, db, cloneURL)
 	if err != nil {
 		return "", err
 	}

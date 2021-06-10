@@ -10,16 +10,12 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/keegancsmith/sqlf"
 
-	"github.com/sourcegraph/sourcegraph/internal/database/dbtesting"
+	"github.com/sourcegraph/sourcegraph/internal/database/dbtest"
 	"github.com/sourcegraph/sourcegraph/internal/database/dbutil"
 )
 
-func init() {
-	dbtesting.DBNameSuffix = "base-store"
-}
-
 func TestTransaction(t *testing.T) {
-	db := dbtesting.GetDB(t)
+	db := dbtest.NewDB(t, "")
 	setupStoreTest(t, db)
 	store := testStore(db)
 
@@ -66,7 +62,7 @@ func TestTransaction(t *testing.T) {
 }
 
 func TestSavepoints(t *testing.T) {
-	db := dbtesting.GetDB(t)
+	db := dbtest.NewDB(t, "")
 	setupStoreTest(t, db)
 
 	NumSavepointTests := 10

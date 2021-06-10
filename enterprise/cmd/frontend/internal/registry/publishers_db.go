@@ -8,7 +8,6 @@ import (
 	"github.com/keegancsmith/sqlf"
 
 	"github.com/sourcegraph/sourcegraph/internal/database"
-	"github.com/sourcegraph/sourcegraph/internal/database/dbconn"
 )
 
 // dbPublisher is a publisher of extensions to the registry.
@@ -79,7 +78,7 @@ ORDER BY org_id ASC NULLS LAST, user_id ASC NULLS LAST
 		limitOffset.SQL(),
 	)
 
-	rows, err := dbconn.Global.QueryContext(ctx, q.Query(sqlf.PostgresBindVar), q.Args()...)
+	rows, err := s.db.QueryContext(ctx, q.Query(sqlf.PostgresBindVar), q.Args()...)
 	if err != nil {
 		return nil, err
 	}
@@ -105,7 +104,7 @@ ORDER BY org_id ASC NULLS LAST, user_id ASC NULLS LAST
 func (s dbExtensions) CountPublishers(ctx context.Context, opt dbPublishersListOptions) (int, error) {
 	q := sqlf.Sprintf(`%s SELECT COUNT(*) FROM publishers WHERE (%s)`, s.publishersSQLCTE(), sqlf.Join(opt.sqlConditions(), ") AND ("))
 	var count int
-	if err := dbconn.Global.QueryRowContext(ctx, q.Query(sqlf.PostgresBindVar), q.Args()...).Scan(&count); err != nil {
+	if err := s.db.QueryRowContext(ctx, q.Query(sqlf.PostgresBindVar), q.Args()...).Scan(&count); err != nil {
 		return 0, err
 	}
 	return count, nil
@@ -123,7 +122,7 @@ WITH publishers AS (
 )
 SELECT user_id, org_id, non_canonical_name FROM publishers ORDER BY user_id NULLS LAST LIMIT 1
 `, name, name)
-	err := dbconn.Global.QueryRowContext(ctx, q.Query(sqlf.PostgresBindVar), q.Args()...).Scan(&userID, &orgID, &p.NonCanonicalName)
+	err := s.db.QueryRowContext(ctx, q.Query(sqlf.PostgresBindVar), q.Args()...).Scan(&userID, &orgID, &p.NonCanonicalName)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return nil, &publisherNotFoundError{[]interface{}{"name", name}}

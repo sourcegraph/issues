@@ -91,7 +91,7 @@ func AccessTokenAuthMiddleware(db dbutil.DB, next http.Handler) http.Handler {
 
 				// Sudo to the other user if this is a sudo token. We already checked that the token has
 				// the necessary scope in the Lookup call above.
-				user, err := database.GlobalUsers.GetByUsername(r.Context(), sudoUser)
+				user, err := database.Users(db).GetByUsername(r.Context(), sudoUser)
 				if err != nil {
 					log15.Error("Invalid username used with sudo access token.", "sudoUser", sudoUser, "err", err)
 					var message string

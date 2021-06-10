@@ -19,6 +19,7 @@ import (
 	"github.com/sourcegraph/sourcegraph/internal/actor"
 	"github.com/sourcegraph/sourcegraph/internal/api"
 	"github.com/sourcegraph/sourcegraph/internal/conf"
+	"github.com/sourcegraph/sourcegraph/internal/database/dbutil"
 	"github.com/sourcegraph/sourcegraph/internal/errcode"
 	"github.com/sourcegraph/sourcegraph/internal/gitserver"
 	"github.com/sourcegraph/sourcegraph/internal/lazyregexp"
@@ -28,13 +29,15 @@ import (
 )
 
 type UploadHandler struct {
+	db          dbutil.DB
 	dbStore     DBStore
 	uploadStore uploadstore.Store
 	internal    bool
 }
 
-func NewUploadHandler(dbStore DBStore, uploadStore uploadstore.Store, internal bool) http.Handler {
+func NewUploadHandler(db dbutil.DB, dbStore DBStore, uploadStore uploadstore.Store, internal bool) http.Handler {
 	handler := &UploadHandler{
+		db:          db,
 		dbStore:     dbStore,
 		uploadStore: uploadStore,
 		internal:    internal,
@@ -62,7 +65,7 @@ func (h *UploadHandler) handleEnqueue(w http.ResponseWriter, r *http.Request) {
 		// 🚨 SECURITY: Ensure we return before proxying to the precise-code-intel-api-server upload
 		// endpoint. This endpoint is unprotected, so we need to make sure the user provides a valid
 		// token proving contributor access to the repository.
-		if !h.internal && conf.Get().LsifEnforceAuth && !isSiteAdmin(ctx) && !enforceAuth(ctx, w, r, repoName) {
+		if !h.internal && conf.Get().LsifEnforceAuth && !isSiteAdmin(ctx, h.db) && !enforceAuth(ctx, w, r, repoName) {
 			return
 		}
 

@@ -11,6 +11,7 @@ import (
 	"github.com/sourcegraph/sourcegraph/cmd/frontend/auth/providers"
 	"github.com/sourcegraph/sourcegraph/enterprise/cmd/frontend/internal/auth/oauth"
 	"github.com/sourcegraph/sourcegraph/internal/conf"
+	"github.com/sourcegraph/sourcegraph/internal/database/dbtesting"
 	"github.com/sourcegraph/sourcegraph/internal/extsvc"
 	"github.com/sourcegraph/sourcegraph/schema"
 )
@@ -127,7 +128,7 @@ func TestParseConfig(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			gotProviders, gotProblems := parseConfig(tt.args.cfg)
+			gotProviders, gotProblems := parseConfig(&dbtesting.MockDB{}, tt.args.cfg)
 			gotConfigs := make(map[schema.GitLabAuthProvider]oauth2.Config)
 			for k, p := range gotProviders {
 				if p, ok := p.(*oauth.Provider); ok {

@@ -14,13 +14,14 @@ import (
 	"github.com/keegancsmith/sqlf"
 	"github.com/pkg/errors"
 
-	"github.com/sourcegraph/sourcegraph/cmd/frontend/backend"
 	store "github.com/sourcegraph/sourcegraph/enterprise/internal/codeintel/stores/dbstore"
 	"github.com/sourcegraph/sourcegraph/enterprise/internal/codeintel/stores/uploadstore"
 	"github.com/sourcegraph/sourcegraph/internal/api"
+	"github.com/sourcegraph/sourcegraph/internal/database"
 	"github.com/sourcegraph/sourcegraph/internal/honey"
 	"github.com/sourcegraph/sourcegraph/internal/trace"
 	"github.com/sourcegraph/sourcegraph/internal/vcs"
+	"github.com/sourcegraph/sourcegraph/internal/vcs/git"
 	"github.com/sourcegraph/sourcegraph/internal/workerutil"
 	"github.com/sourcegraph/sourcegraph/internal/workerutil/dbworker"
 	dbworkerstore "github.com/sourcegraph/sourcegraph/internal/workerutil/dbworker/store"
@@ -192,12 +193,13 @@ const CloneInProgressDelay = time.Minute
 // If the repo is currently cloning, then we'll requeue the upload to be tried again later. This will not
 // increase the reset count of the record (so this doesn't count against the upload as a legitimate attempt).
 func requeueIfCloning(ctx context.Context, workerStore dbworkerstore.Store, upload store.Upload) (requeued bool, _ error) {
-	repo, err := backend.Repos.Get(ctx, api.RepoID(upload.RepositoryID))
+	rstore := database.ReposWith(workerStore)
+	repo, err := rstore.Get(ctx, api.RepoID(upload.RepositoryID))
 	if err != nil {
 		return false, errors.Wrap(err, "Repos.Get")
 	}
 
-	if _, err := backend.Repos.ResolveRev(ctx, repo, upload.Commit); err != nil {
+	if _, err := git.ResolveRevision(ctx, repo.Name, upload.Commit, git.ResolveRevisionOptions{}); err != nil {
 		if !vcs.IsCloneInProgress(err) {
 			return false, errors.Wrap(err, "Repos.ResolveRev")
 		}

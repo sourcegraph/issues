@@ -6,6 +6,8 @@ import (
 	"reflect"
 	"testing"
 	"time"
+
+	"github.com/sourcegraph/sourcegraph/internal/database/dbtesting"
 )
 
 func TestGetExtensionManifestWithBundleURL(t *testing.T) {
@@ -21,7 +23,7 @@ func TestGetExtensionManifestWithBundleURL(t *testing.T) {
 			}, nil
 		}
 		defer func() { mocks.releases.GetLatest = nil }()
-		release, err := getLatestRelease(ctx, "x", 1, "t")
+		release, err := getLatestRelease(ctx, &dbtesting.MockDB{}, "x", 1, "t")
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -41,7 +43,7 @@ func TestGetExtensionManifestWithBundleURL(t *testing.T) {
 			}, nil
 		}
 		defer func() { mocks.releases.GetLatest = nil }()
-		release, err := getLatestRelease(ctx, "x", 1, "t")
+		release, err := getLatestRelease(ctx, &dbtesting.MockDB{}, "x", 1, "t")
 		if err != nil {
 			t.Fatal(err)
 		}

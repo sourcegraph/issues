@@ -12,6 +12,7 @@ import (
 	"github.com/sourcegraph/sourcegraph/internal/actor"
 	"github.com/sourcegraph/sourcegraph/internal/conf"
 	"github.com/sourcegraph/sourcegraph/internal/database"
+	"github.com/sourcegraph/sourcegraph/internal/database/dbtesting"
 	"github.com/sourcegraph/sourcegraph/internal/extsvc"
 	"github.com/sourcegraph/sourcegraph/internal/extsvc/gitlab"
 	"github.com/sourcegraph/sourcegraph/internal/types"
@@ -19,7 +20,7 @@ import (
 
 func TestSessionIssuerHelper_CreateCodeHostConnection(t *testing.T) {
 	ctx := context.Background()
-	s := &sessionIssuerHelper{}
+	s := &sessionIssuerHelper{db: &dbtesting.MockDB{}}
 	t.Run("Unauthenticated request", func(t *testing.T) {
 		_, err := s.CreateCodeHostConnection(ctx, nil, "")
 		if err == nil {

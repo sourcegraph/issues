@@ -5,16 +5,12 @@ import (
 	"testing"
 
 	"github.com/sourcegraph/sourcegraph/internal/database"
-	"github.com/sourcegraph/sourcegraph/internal/database/dbtesting"
+	"github.com/sourcegraph/sourcegraph/internal/database/dbtest"
 	"github.com/sourcegraph/sourcegraph/internal/errcode"
 )
 
-func init() {
-	dbtesting.DBNameSuffix = "billing"
-}
-
 func TestDBUsersBillingCustomerID(t *testing.T) {
-	db := dbtesting.GetDB(t)
+	db := dbtest.NewDB(t, "")
 	ctx := context.Background()
 
 	t.Run("existing user", func(t *testing.T) {

@@ -14,7 +14,7 @@ import (
 	insightsdbtesting "github.com/sourcegraph/sourcegraph/enterprise/internal/insights/dbtesting"
 	"github.com/sourcegraph/sourcegraph/enterprise/internal/insights/discovery"
 	"github.com/sourcegraph/sourcegraph/enterprise/internal/insights/store"
-	"github.com/sourcegraph/sourcegraph/internal/database/dbtesting"
+	"github.com/sourcegraph/sourcegraph/internal/database/dbtest"
 )
 
 // TestResolver_InsightSeries tests that the InsightSeries GraphQL resolver works.
@@ -30,7 +30,7 @@ func TestResolver_InsightSeries(t *testing.T) {
 		now := time.Now().UTC().Truncate(time.Microsecond)
 		clock := func() time.Time { return now }
 		timescale, cleanup := insightsdbtesting.TimescaleDB(t)
-		postgres := dbtesting.GetDB(t)
+		postgres := dbtest.NewDB(t, "")
 		resolver := newWithClock(timescale, postgres, clock)
 
 		// Create a mock store, delegating any un-mocked methods to the DB store.

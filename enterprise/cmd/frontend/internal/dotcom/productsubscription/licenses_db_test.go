@@ -5,11 +5,11 @@ import (
 	"testing"
 
 	"github.com/sourcegraph/sourcegraph/internal/database"
-	"github.com/sourcegraph/sourcegraph/internal/database/dbtesting"
+	"github.com/sourcegraph/sourcegraph/internal/database/dbtest"
 )
 
 func TestProductLicenses_Create(t *testing.T) {
-	db := dbtesting.GetDB(t)
+	db := dbtest.NewDB(t, "")
 	ctx := context.Background()
 
 	u, err := database.Users(db).Create(ctx, database.NewUser{Username: "u"})
@@ -62,7 +62,7 @@ func TestProductLicenses_List(t *testing.T) {
 	if testing.Short() {
 		t.Skip()
 	}
-	db := dbtesting.GetDB(t)
+	db := dbtest.NewDB(t, "")
 	ctx := context.Background()
 
 	u1, err := database.Users(db).Create(ctx, database.NewUser{Username: "u1"})

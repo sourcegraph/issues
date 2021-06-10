@@ -19,6 +19,7 @@ import (
 	"github.com/sourcegraph/sourcegraph/internal/api"
 	"github.com/sourcegraph/sourcegraph/internal/conf"
 	"github.com/sourcegraph/sourcegraph/internal/database/dbtesting"
+	"github.com/sourcegraph/sourcegraph/internal/database/dbutil"
 	"github.com/sourcegraph/sourcegraph/internal/database/globalstatedb"
 	"github.com/sourcegraph/sourcegraph/internal/gitserver"
 	"github.com/sourcegraph/sourcegraph/internal/repoupdater"
@@ -35,10 +36,11 @@ func TestRedirects(t *testing.T) {
 	}
 	defer func() { assets.MockLoadWebpackManifest = nil }()
 
+	db := new(dbtesting.MockDB)
+	setupTest(t, db)
+
 	check := func(t *testing.T, path string, wantStatusCode int, wantRedirectLocation, userAgent string) {
 		t.Helper()
-
-		db := new(dbtesting.MockDB)
 
 		InitRouter(db)
 		rw := httptest.NewRecorder()
@@ -175,7 +177,7 @@ func TestNewCommon_repo_error(t *testing.T) {
 				code = statusCode
 			}
 
-			_, err = newCommon(httptest.NewRecorder(), req, "test", serveError)
+			_, err = newCommon(httptest.NewRecorder(), req, &dbtesting.MockDB{}, "test", serveError)
 			if err != nil {
 				if got != "" || code != 200 {
 					t.Fatal("serveError called and error returned from newCommon")
@@ -404,7 +406,7 @@ func TestRedirectTreeOrBlob(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			handled, err := redirectTreeOrBlob(test.route, test.path, test.common, w, r)
+			handled, err := redirectTreeOrBlob(test.route, test.path, test.common, w, r, &dbtesting.MockDB{})
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -422,10 +424,11 @@ func TestRedirectTreeOrBlob(t *testing.T) {
 	}
 }
 
-func init() {
+func setupTest(t *testing.T, db dbutil.DB) {
+	t.Helper()
 	globals.ConfigurationServerFrontendOnly = &conf.Server{}
 	globalstatedb.Mock.Get = func(ctx context.Context) (*globalstatedb.State, error) {
 		return &globalstatedb.State{SiteID: "a"}, nil
 	}
-	siteid.Init()
+	siteid.Init(db)
 }

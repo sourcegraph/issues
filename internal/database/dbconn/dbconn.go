@@ -247,10 +247,6 @@ func open(cfg *pgx.ConnConfig) (*sql.DB, error) {
 	return db, nil
 }
 
-// Ping attempts to contact the database and returns a non-nil error upon failure. It is intended to
-// be used by health checks.
-func Ping(ctx context.Context) error { return Global.PingContext(ctx) }
-
 type key int
 
 const bulkInsertionKey key = iota

@@ -19,14 +19,14 @@ import (
 
 	"github.com/sourcegraph/sourcegraph/enterprise/internal/codeintel/commitgraph"
 	"github.com/sourcegraph/sourcegraph/enterprise/internal/codeintel/gitserver"
-	"github.com/sourcegraph/sourcegraph/internal/database/dbtesting"
+	"github.com/sourcegraph/sourcegraph/internal/database/dbtest"
 )
 
 func TestHasRepository(t *testing.T) {
 	if testing.Short() {
 		t.Skip()
 	}
-	db := dbtesting.GetDB(t)
+	db := dbtest.NewDB(t, "")
 	store := testStore(db)
 
 	testCases := []struct {
@@ -60,7 +60,7 @@ func TestHasCommit(t *testing.T) {
 	if testing.Short() {
 		t.Skip()
 	}
-	db := dbtesting.GetDB(t)
+	db := dbtest.NewDB(t, "")
 	store := testStore(db)
 
 	testCases := []struct {
@@ -95,7 +95,7 @@ func TestMarkRepositoryAsDirty(t *testing.T) {
 	if testing.Short() {
 		t.Skip()
 	}
-	db := dbtesting.GetDB(t)
+	db := dbtest.NewDB(t, "")
 	store := testStore(db)
 
 	for _, id := range []int{50, 51, 52} {
@@ -129,7 +129,7 @@ func TestSkipsDeletedRepositories(t *testing.T) {
 		t.Skip()
 	}
 
-	db := dbtesting.GetDB(t)
+	db := dbtest.NewDB(t, "")
 	store := testStore(db)
 
 	insertRepo(t, db, 50, "should not be dirty")
@@ -165,7 +165,7 @@ func TestCommitGraphMetadata(t *testing.T) {
 	if testing.Short() {
 		t.Skip()
 	}
-	db := dbtesting.GetDB(t)
+	db := dbtest.NewDB(t, "")
 	store := testStore(db)
 
 	if err := store.MarkRepositoryAsDirty(context.Background(), 50); err != nil {
@@ -210,7 +210,7 @@ func TestCalculateVisibleUploads(t *testing.T) {
 	if testing.Short() {
 		t.Skip()
 	}
-	db := dbtesting.GetDB(t)
+	db := dbtest.NewDB(t, "")
 	store := testStore(db)
 
 	// This database has the following commit graph:
@@ -264,7 +264,7 @@ func TestCalculateVisibleUploadsAlternateCommitGraph(t *testing.T) {
 	if testing.Short() {
 		t.Skip()
 	}
-	db := dbtesting.GetDB(t)
+	db := dbtest.NewDB(t, "")
 	store := testStore(db)
 
 	// This database has the following commit graph:
@@ -312,7 +312,7 @@ func TestCalculateVisibleUploadsDistinctRoots(t *testing.T) {
 	if testing.Short() {
 		t.Skip()
 	}
-	db := dbtesting.GetDB(t)
+	db := dbtest.NewDB(t, "")
 	store := testStore(db)
 
 	// This database has the following commit graph:
@@ -350,7 +350,7 @@ func TestCalculateVisibleUploadsOverlappingRoots(t *testing.T) {
 	if testing.Short() {
 		t.Skip()
 	}
-	db := dbtesting.GetDB(t)
+	db := dbtest.NewDB(t, "")
 	store := testStore(db)
 
 	// This database has the following commit graph:
@@ -420,7 +420,7 @@ func TestCalculateVisibleUploadsIndexerName(t *testing.T) {
 	if testing.Short() {
 		t.Skip()
 	}
-	db := dbtesting.GetDB(t)
+	db := dbtest.NewDB(t, "")
 	store := testStore(db)
 
 	// This database has the following commit graph:
@@ -471,7 +471,7 @@ func TestCalculateVisibleUploadsResetsDirtyFlag(t *testing.T) {
 	if testing.Short() {
 		t.Skip()
 	}
-	db := dbtesting.GetDB(t)
+	db := dbtest.NewDB(t, "")
 	store := testStore(db)
 
 	uploads := []Upload{
@@ -545,7 +545,7 @@ func keysOf(m map[string][]int) (keys []string) {
 //
 
 func BenchmarkCalculateVisibleUploads(b *testing.B) {
-	db := dbtesting.GetDB(b)
+	db := dbtest.NewDB(b, "")
 	store := testStore(db)
 
 	graph, err := readBenchmarkCommitGraph()

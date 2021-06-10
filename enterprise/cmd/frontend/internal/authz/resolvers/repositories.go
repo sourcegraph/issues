@@ -59,7 +59,7 @@ func (r *repositoryConnectionResolver) compute(ctx context.Context) ([]*types.Re
 
 		// TODO(asdine): GetByIDs now returns the complete repo information rather that only a subset.
 		// Ensure this doesn't have an impact on performance and switch to using ListRepoNames if needed.
-		r.repos, r.err = database.GlobalRepos.GetByIDs(ctx, repoIDs...)
+		r.repos, r.err = database.Repos(r.db).GetByIDs(ctx, repoIDs...)
 		if r.err != nil {
 			return
 		}

@@ -7,14 +7,14 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 
-	"github.com/sourcegraph/sourcegraph/internal/database/dbtesting"
+	"github.com/sourcegraph/sourcegraph/internal/database/dbtest"
 )
 
 func TestIndexableRepositories(t *testing.T) {
 	if testing.Short() {
 		t.Skip()
 	}
-	db := dbtesting.GetDB(t)
+	db := dbtest.NewDB(t, "")
 	store := testStore(db)
 
 	t1 := time.Unix(1587396557, 0).UTC()
@@ -64,7 +64,7 @@ func TestIndexableRepositoriesMinimumTimeSinceLastEnqueue(t *testing.T) {
 	if testing.Short() {
 		t.Skip()
 	}
-	db := dbtesting.GetDB(t)
+	db := dbtest.NewDB(t, "")
 	store := testStore(db)
 
 	t1 := time.Unix(1587396557, 0).UTC()
@@ -109,7 +109,7 @@ func TestIndexableRepositoriesMinimumSearchAndPreciseCount(t *testing.T) {
 	if testing.Short() {
 		t.Skip()
 	}
-	db := dbtesting.GetDB(t)
+	db := dbtest.NewDB(t, "")
 	store := testStore(db)
 
 	updates := []UpdateableIndexableRepository{
@@ -150,7 +150,7 @@ func TestIndexableRepositoriesMinimumSearchRatio(t *testing.T) {
 	if testing.Short() {
 		t.Skip()
 	}
-	db := dbtesting.GetDB(t)
+	db := dbtest.NewDB(t, "")
 	store := testStore(db)
 
 	updates := []UpdateableIndexableRepository{
@@ -189,7 +189,7 @@ func TestIndexableRepositoriesEnabled(t *testing.T) {
 	if testing.Short() {
 		t.Skip()
 	}
-	db := dbtesting.GetDB(t)
+	db := dbtest.NewDB(t, "")
 	store := testStore(db)
 
 	updates := []UpdateableIndexableRepository{
@@ -233,7 +233,7 @@ func TestResetIndexableRepositories(t *testing.T) {
 	if testing.Short() {
 		t.Skip()
 	}
-	db := dbtesting.GetDB(t)
+	db := dbtest.NewDB(t, "")
 	store := testStore(db)
 
 	t1 := time.Unix(1587396557, 0).UTC()

@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"github.com/sourcegraph/sourcegraph/internal/database"
-	"github.com/sourcegraph/sourcegraph/internal/database/dbtesting"
+	"github.com/sourcegraph/sourcegraph/internal/database/dbtest"
 	"github.com/sourcegraph/sourcegraph/internal/errcode"
 )
 
@@ -15,18 +15,18 @@ func TestRegistryExtensionReleases(t *testing.T) {
 	if testing.Short() {
 		t.Skip()
 	}
-	dbtesting.SetupGlobalTestDB(t)
+	db := dbtest.NewDB(t, "")
 	ctx := context.Background()
 
-	user, err := database.GlobalUsers.Create(ctx, database.NewUser{Username: "u"})
+	user, err := database.Users(db).Create(ctx, database.NewUser{Username: "u"})
 	if err != nil {
 		t.Fatal(err)
 	}
-	xExtensionID, err := dbExtensions{}.Create(ctx, user.ID, 0, "x")
+	xExtensionID, err := dbExtensions{db: db}.Create(ctx, user.ID, 0, "x")
 	if err != nil {
 		t.Fatal(err)
 	}
-	yExtensionID, err := dbExtensions{}.Create(ctx, user.ID, 0, "y")
+	yExtensionID, err := dbExtensions{db: db}.Create(ctx, user.ID, 0, "y")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -36,21 +36,21 @@ func TestRegistryExtensionReleases(t *testing.T) {
 	}
 
 	t.Run("GetLatest with no releases", func(t *testing.T) {
-		_, err := dbReleases{}.GetLatest(ctx, xExtensionID, "release", false)
+		_, err := dbReleases{db: db}.GetLatest(ctx, xExtensionID, "release", false)
 		if !errcode.IsNotFound(err) {
 			t.Errorf("got err %v, want errcode.IsNotFound", err)
 		}
 	})
 
 	t.Run("GetLatest with nonexistent registry extension and no releases", func(t *testing.T) {
-		_, err := dbReleases{}.GetLatest(ctx, 9999 /* doesn't exist */, "release", false)
+		_, err := dbReleases{db: db}.GetLatest(ctx, 9999 /* doesn't exist */, "release", false)
 		if !errcode.IsNotFound(err) {
 			t.Errorf("got err %v, want errcode.IsNotFound", err)
 		}
 	})
 
 	t.Run("GetArtifacts with no release", func(t *testing.T) {
-		_, _, err := dbReleases{}.GetArtifacts(ctx, 9999 /* doesn't exist */)
+		_, _, err := dbReleases{db: db}.GetArtifacts(ctx, 9999 /* doesn't exist */)
 		if !errcode.IsNotFound(err) {
 			t.Errorf("got err %v, want errcode.IsNotFound", err)
 		}
@@ -65,14 +65,14 @@ func TestRegistryExtensionReleases(t *testing.T) {
 			Bundle:              strptr("b"),
 			SourceMap:           strptr("sm"),
 		}
-		id, err := dbReleases{}.Create(ctx, &input)
+		id, err := dbReleases{db: db}.Create(ctx, &input)
 		if err != nil {
 			t.Fatal(err)
 		}
 		input.ID = id
 
 		t.Run("GetArtifacts", func(t *testing.T) {
-			bundle, sourcemap, err := dbReleases{}.GetArtifacts(ctx, id)
+			bundle, sourcemap, err := dbReleases{db: db}.GetArtifacts(ctx, id)
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -85,7 +85,7 @@ func TestRegistryExtensionReleases(t *testing.T) {
 		})
 
 		t.Run("GetLatest for 1st release", func(t *testing.T) {
-			r1, err := dbReleases{}.GetLatest(ctx, xExtensionID, "release", true)
+			r1, err := dbReleases{db: db}.GetLatest(ctx, xExtensionID, "release", true)
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -96,7 +96,7 @@ func TestRegistryExtensionReleases(t *testing.T) {
 		})
 
 		t.Run("GetLatest with wrong release tag", func(t *testing.T) {
-			_, err := dbReleases{}.GetLatest(ctx, xExtensionID, "other", true)
+			_, err := dbReleases{db: db}.GetLatest(ctx, xExtensionID, "other", true)
 			if !errcode.IsNotFound(err) {
 				t.Errorf("got err %v, want errcode.IsNotFound", err)
 			}
@@ -113,13 +113,13 @@ func TestRegistryExtensionReleases(t *testing.T) {
 			Bundle:              strptr("b2"),
 			SourceMap:           strptr("sm2"),
 		}
-		id2, err := dbReleases{}.Create(ctx, &input2)
+		id2, err := dbReleases{db: db}.Create(ctx, &input2)
 		if err != nil {
 			t.Fatal(err)
 		}
 		input2.ID = id2
 
-		r2, err := dbReleases{}.GetLatest(ctx, xExtensionID, "release", true)
+		r2, err := dbReleases{db: db}.GetLatest(ctx, xExtensionID, "release", true)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -138,13 +138,13 @@ func TestRegistryExtensionReleases(t *testing.T) {
 			Bundle:              strptr("b2"),
 			SourceMap:           strptr("sm2"),
 		}
-		id3, err := dbReleases{}.Create(ctx, &input3)
+		id3, err := dbReleases{db: db}.Create(ctx, &input3)
 		if err != nil {
 			t.Fatal(err)
 		}
 		input3.ID = id3
 
-		r3, err := dbReleases{}.GetLatestBatch(ctx, []int32{xExtensionID, yExtensionID}, "release", true)
+		r3, err := dbReleases{db: db}.GetLatestBatch(ctx, []int32{xExtensionID, yExtensionID}, "release", true)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -157,7 +157,7 @@ func TestRegistryExtensionReleases(t *testing.T) {
 	})
 
 	t.Run("Create fails on invalid JSON", func(t *testing.T) {
-		_, err := dbReleases{}.Create(ctx, &dbRelease{
+		_, err := dbReleases{db: db}.Create(ctx, &dbRelease{
 			RegistryExtensionID: xExtensionID,
 			CreatorUserID:       user.ID,
 			ReleaseTag:          "release",
@@ -179,12 +179,12 @@ func TestRegistryExtensionReleases(t *testing.T) {
 			Bundle:              nil,
 			SourceMap:           nil,
 		}
-		id, err := dbReleases{}.Create(ctx, &input)
+		id, err := dbReleases{db: db}.Create(ctx, &input)
 		if err != nil {
 			t.Fatal(err)
 		}
 
-		bundle, sourcemap, err := dbReleases{}.GetArtifacts(ctx, id)
+		bundle, sourcemap, err := dbReleases{db: db}.GetArtifacts(ctx, id)
 		if !errcode.IsNotFound(err) {
 			t.Errorf("got err %v, want errcode.IsNotFound", err)
 		}

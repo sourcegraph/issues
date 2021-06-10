@@ -13,6 +13,7 @@ import (
 
 	"github.com/sourcegraph/sourcegraph/internal/conf"
 	"github.com/sourcegraph/sourcegraph/internal/database"
+	"github.com/sourcegraph/sourcegraph/internal/database/dbtesting"
 	srcprometheus "github.com/sourcegraph/sourcegraph/internal/src-prometheus"
 	"github.com/sourcegraph/sourcegraph/internal/types"
 	"github.com/sourcegraph/sourcegraph/schema"
@@ -123,7 +124,7 @@ func TestGrafanaLicensing(t *testing.T) {
 		defer func() { PreMountGrafanaHook = nil }()
 
 		router := mux.NewRouter()
-		addGrafana(router)
+		addGrafana(router, &dbtesting.MockDB{})
 		rec := httptest.NewRecorder()
 		router.ServeHTTP(rec, httptest.NewRequest("GET", "/grafana", nil))
 
@@ -142,7 +143,7 @@ func TestGrafanaLicensing(t *testing.T) {
 		defer func() { PreMountGrafanaHook = nil }()
 
 		router := mux.NewRouter()
-		addGrafana(router)
+		addGrafana(router, &dbtesting.MockDB{})
 		rec := httptest.NewRecorder()
 		router.ServeHTTP(rec, httptest.NewRequest("GET", "/grafana", nil))
 

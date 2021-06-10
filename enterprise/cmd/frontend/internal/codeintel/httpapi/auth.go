@@ -8,11 +8,12 @@ import (
 	"github.com/inconshreveable/log15"
 
 	"github.com/sourcegraph/sourcegraph/internal/database"
+	"github.com/sourcegraph/sourcegraph/internal/database/dbutil"
 	"github.com/sourcegraph/sourcegraph/internal/errcode"
 )
 
-func isSiteAdmin(ctx context.Context) bool {
-	user, err := database.GlobalUsers.GetByCurrentAuthUser(ctx)
+func isSiteAdmin(ctx context.Context, db dbutil.DB) bool {
+	user, err := database.Users(db).GetByCurrentAuthUser(ctx)
 	if err != nil {
 		if errcode.IsNotFound(err) || err == database.ErrNoCurrentUser {
 			return false

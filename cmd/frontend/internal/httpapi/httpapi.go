@@ -60,7 +60,7 @@ func NewHandler(db dbutil.DB, m *mux.Router, schema *graphql.Schema, githubWebho
 		ExternalServices: database.ExternalServices(db),
 	}
 
-	webhookhandlers.Init(&gh)
+	webhookhandlers.Init(db, &gh)
 
 	m.Get(apirouter.GitHubWebhooks).Handler(trace.Route(&gh))
 
@@ -83,7 +83,7 @@ func NewHandler(db dbutil.DB, m *mux.Router, schema *graphql.Schema, githubWebho
 	m.Get(apirouter.SrcCliVersion).Handler(trace.Route(handler(srcCliVersionServe)))
 	m.Get(apirouter.SrcCliDownload).Handler(trace.Route(handler(srcCliDownloadServe)))
 
-	m.Get(apirouter.Registry).Handler(trace.Route(handler(registry.HandleRegistry)))
+	m.Get(apirouter.Registry).Handler(trace.Route(handler(registry.HandleRegistry(db))))
 
 	m.NotFoundHandler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		log.Printf("API no route: %s %s from %s", r.Method, r.URL, r.Referer())
@@ -110,8 +110,8 @@ func NewInternalHandler(m *mux.Router, db dbutil.DB, schema *graphql.Schema, new
 		WriteErrBody: true,
 	})
 
-	m.Get(apirouter.ExternalServiceConfigs).Handler(trace.Route(handler(serveExternalServiceConfigs)))
-	m.Get(apirouter.ExternalServicesList).Handler(trace.Route(handler(serveExternalServicesList)))
+	m.Get(apirouter.ExternalServiceConfigs).Handler(trace.Route(handler(serveExternalServiceConfigs(db))))
+	m.Get(apirouter.ExternalServicesList).Handler(trace.Route(handler(serveExternalServicesList(db))))
 	m.Get(apirouter.PhabricatorRepoCreate).Handler(trace.Route(handler(servePhabricatorRepoCreate(db))))
 	reposList := &reposListServer{
 		SourcegraphDotComMode: envvar.SourcegraphDotComMode(),
@@ -119,7 +119,7 @@ func NewInternalHandler(m *mux.Router, db dbutil.DB, schema *graphql.Schema, new
 		Indexers:              search.Indexers(),
 	}
 	m.Get(apirouter.ReposIndex).Handler(trace.Route(handler(reposList.serveIndex)))
-	m.Get(apirouter.ReposListEnabled).Handler(trace.Route(handler(serveReposListEnabled)))
+	m.Get(apirouter.ReposListEnabled).Handler(trace.Route(handler(serveReposListEnabled(db))))
 	m.Get(apirouter.ReposGetByName).Handler(trace.Route(handler(serveReposGetByName)))
 	m.Get(apirouter.SettingsGetForSubject).Handler(trace.Route(handler(serveSettingsGetForSubject(db))))
 	m.Get(apirouter.SavedQueriesListAll).Handler(trace.Route(handler(serveSavedQueriesListAll(db))))
@@ -128,12 +128,12 @@ func NewInternalHandler(m *mux.Router, db dbutil.DB, schema *graphql.Schema, new
 	m.Get(apirouter.SavedQueriesDeleteInfo).Handler(trace.Route(handler(serveSavedQueriesDeleteInfo(db))))
 	m.Get(apirouter.OrgsListUsers).Handler(trace.Route(handler(serveOrgsListUsers(db))))
 	m.Get(apirouter.OrgsGetByName).Handler(trace.Route(handler(serveOrgsGetByName(db))))
-	m.Get(apirouter.UsersGetByUsername).Handler(trace.Route(handler(serveUsersGetByUsername)))
-	m.Get(apirouter.UserEmailsGetEmail).Handler(trace.Route(handler(serveUserEmailsGetEmail)))
+	m.Get(apirouter.UsersGetByUsername).Handler(trace.Route(handler(serveUsersGetByUsername(db))))
+	m.Get(apirouter.UserEmailsGetEmail).Handler(trace.Route(handler(serveUserEmailsGetEmail(db))))
 	m.Get(apirouter.ExternalURL).Handler(trace.Route(handler(serveExternalURL)))
 	m.Get(apirouter.CanSendEmail).Handler(trace.Route(handler(serveCanSendEmail)))
 	m.Get(apirouter.SendEmail).Handler(trace.Route(handler(serveSendEmail)))
-	m.Get(apirouter.GitExec).Handler(trace.Route(handler(serveGitExec)))
+	m.Get(apirouter.GitExec).Handler(trace.Route(handler(serveGitExec(db))))
 	m.Get(apirouter.GitResolveRevision).Handler(trace.Route(handler(serveGitResolveRevision)))
 	m.Get(apirouter.GitTar).Handler(trace.Route(handler(serveGitTar)))
 	gitService := &gitServiceHandler{
@@ -144,7 +144,7 @@ func NewInternalHandler(m *mux.Router, db dbutil.DB, schema *graphql.Schema, new
 	m.Get(apirouter.Telemetry).Handler(trace.Route(telemetryHandler(db)))
 	m.Get(apirouter.GraphQL).Handler(trace.Route(handler(serveGraphQL(schema, rateLimitWatcher, true))))
 	m.Get(apirouter.Configuration).Handler(trace.Route(handler(serveConfiguration)))
-	m.Get(apirouter.SearchConfiguration).Handler(trace.Route(handler(serveSearchConfiguration)))
+	m.Get(apirouter.SearchConfiguration).Handler(trace.Route(handler(serveSearchConfiguration(db))))
 	m.Path("/ping").Methods("GET").Name("ping").HandlerFunc(handlePing)
 
 	m.Get(apirouter.LSIFUpload).Handler(trace.Route(newCodeIntelUploadHandler(true)))

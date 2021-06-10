@@ -96,14 +96,14 @@ func hasFindRefsOccurred(ctx context.Context) (_ bool, err error) {
 	return usagestats.HasFindRefsOccurred(ctx)
 }
 
-func getTotalUsersCount(ctx context.Context) (_ int, err error) {
+func getTotalUsersCount(ctx context.Context, db dbutil.DB) (_ int, err error) {
 	defer recordOperation("getTotalUsersCount")(&err)
-	return database.GlobalUsers.Count(ctx, &database.UsersListOptions{})
+	return database.Users(db).Count(ctx, &database.UsersListOptions{})
 }
 
-func getTotalReposCount(ctx context.Context) (_ int, err error) {
+func getTotalReposCount(ctx context.Context, db dbutil.DB) (_ int, err error) {
 	defer recordOperation("getTotalReposCount")(&err)
-	return database.GlobalRepos.Count(ctx, database.ReposListOptions{})
+	return database.Repos(db).Count(ctx, database.ReposListOptions{})
 }
 
 func getUsersActiveTodayCount(ctx context.Context) (_ int, err error) {
@@ -111,9 +111,9 @@ func getUsersActiveTodayCount(ctx context.Context) (_ int, err error) {
 	return usagestatsdeprecated.GetUsersActiveTodayCount(ctx)
 }
 
-func getInitialSiteAdminEmail(ctx context.Context) (_ string, err error) {
+func getInitialSiteAdminEmail(ctx context.Context, db dbutil.DB) (_ string, err error) {
 	defer recordOperation("getInitialSiteAdminEmail")(&err)
-	return database.GlobalUserEmails.GetInitialSiteAdminEmail(ctx)
+	return database.UserEmails(db).GetInitialSiteAdminEmail(ctx)
 }
 
 func getAndMarshalBatchChangesUsageJSON(ctx context.Context, db dbutil.DB) (_ json.RawMessage, err error) {
@@ -330,12 +330,12 @@ func updateBody(ctx context.Context, db dbutil.DB) (io.Reader, error) {
 		CodeMonitoringUsage: []byte("{}"),
 	}
 
-	totalUsers, err := getTotalUsersCount(ctx)
+	totalUsers, err := getTotalUsersCount(ctx, db)
 	if err != nil {
 		logFunc("telemetry: database.Users.Count failed", "error", err)
 	}
 	r.TotalUsers = int32(totalUsers)
-	r.InitialAdminEmail, err = getInitialSiteAdminEmail(ctx)
+	r.InitialAdminEmail, err = getInitialSiteAdminEmail(ctx, db)
 	if err != nil {
 		logFunc("telemetry: database.UserEmails.GetInitialSiteAdminEmail failed", "error", err)
 	}
@@ -356,7 +356,7 @@ func updateBody(ctx context.Context, db dbutil.DB) (io.Reader, error) {
 			logFunc("telemetry: updatecheck.getUsersActiveToday failed", "error", err)
 		}
 		r.UniqueUsers = int32(count)
-		totalRepos, err := getTotalReposCount(ctx)
+		totalRepos, err := getTotalReposCount(ctx, db)
 		if err != nil {
 			logFunc("telemetry: updatecheck.getTotalReposCount failed", "error", err)
 		}
@@ -419,7 +419,7 @@ func updateBody(ctx context.Context, db dbutil.DB) (io.Reader, error) {
 			logFunc("telemetry: updatecheck.getAndMarshalCodeMonitoringUsageJSON failed", "error", err)
 		}
 
-		r.ExternalServices, err = externalServiceKinds(ctx)
+		r.ExternalServices, err = externalServiceKinds(ctx, db)
 		if err != nil {
 			logFunc("telemetry: externalServicesKinds failed", "error", err)
 		}
@@ -500,9 +500,9 @@ func authProviderTypes() []string {
 	return types
 }
 
-func externalServiceKinds(ctx context.Context) (kinds []string, err error) {
+func externalServiceKinds(ctx context.Context, db dbutil.DB) (kinds []string, err error) {
 	defer recordOperation("externalServiceKinds")(&err)
-	kinds, err = database.GlobalExternalServices.DistinctKinds(ctx)
+	kinds, err = database.ExternalServices(db).DistinctKinds(ctx)
 	return kinds, err
 }
 

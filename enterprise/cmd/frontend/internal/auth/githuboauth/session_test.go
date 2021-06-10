@@ -19,6 +19,7 @@ import (
 	"github.com/sourcegraph/sourcegraph/cmd/frontend/auth/providers"
 	"github.com/sourcegraph/sourcegraph/internal/actor"
 	"github.com/sourcegraph/sourcegraph/internal/database"
+	"github.com/sourcegraph/sourcegraph/internal/database/dbtesting"
 	"github.com/sourcegraph/sourcegraph/internal/extsvc"
 	githubsvc "github.com/sourcegraph/sourcegraph/internal/extsvc/github"
 	"github.com/sourcegraph/sourcegraph/internal/types"
@@ -285,7 +286,7 @@ func createCodeHostConnectionHelper(t *testing.T, serviceExists bool) {
 
 	var got *types.ExternalService
 	database.Mocks.ExternalServices.Transact = func(ctx context.Context) (*database.ExternalServiceStore, error) {
-		return database.GlobalExternalServices, nil
+		return database.ExternalServices(&dbtesting.MockDB{}), nil
 	}
 	database.Mocks.ExternalServices.Done = func(err error) error {
 		return nil

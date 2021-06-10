@@ -16,7 +16,7 @@ import (
 	"github.com/sourcegraph/sourcegraph/cmd/frontend/backend"
 	"github.com/sourcegraph/sourcegraph/cmd/frontend/internal/app/debugproxies"
 	"github.com/sourcegraph/sourcegraph/internal/conf"
-	"github.com/sourcegraph/sourcegraph/internal/database/dbconn"
+	"github.com/sourcegraph/sourcegraph/internal/database/dbutil"
 	"github.com/sourcegraph/sourcegraph/internal/debugserver"
 	"github.com/sourcegraph/sourcegraph/internal/env"
 	srcprometheus "github.com/sourcegraph/sourcegraph/internal/src-prometheus"
@@ -29,21 +29,21 @@ func init() {
 	conf.ContributeWarning(newPrometheusValidator(srcprometheus.NewClient(srcprometheus.PrometheusURL)))
 }
 
-func addNoK8sClientHandler(r *mux.Router) {
+func addNoK8sClientHandler(r *mux.Router, db dbutil.DB) {
 	noHandler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintf(w, `Cluster information not available`)
 		fmt.Fprintf(w, `<br><br><a href="headers">headers</a><br>`)
 	})
-	r.Handle("/", adminOnly(noHandler))
+	r.Handle("/", adminOnly(noHandler, db))
 }
 
 // addDebugHandlers registers the reverse proxies to each services debug
 // endpoints.
-func addDebugHandlers(r *mux.Router) {
-	addGrafana(r)
-	addJaeger(r)
+func addDebugHandlers(r *mux.Router, db dbutil.DB) {
+	addGrafana(r, db)
+	addJaeger(r, db)
 
-	var rph debugproxies.ReverseProxyHandler
+	rph := debugproxies.ReverseProxyHandler{DB: db}
 
 	if len(debugserver.Services) > 0 {
 		peps := make([]debugproxies.Endpoint, 0, len(debugserver.Services))
@@ -58,11 +58,11 @@ func addDebugHandlers(r *mux.Router) {
 		err := debugproxies.StartClusterScanner(rph.Populate)
 		if err != nil {
 			// we ended up here because cluster is not a k8s cluster
-			addNoK8sClientHandler(r)
+			addNoK8sClientHandler(r, db)
 			return
 		}
 	} else {
-		addNoK8sClientHandler(r)
+		addNoK8sClientHandler(r, db)
 	}
 
 	rph.AddToRouter(r)
@@ -75,25 +75,25 @@ var PreMountGrafanaHook func() error
 // This error is returned if the current license does not support monitoring.
 const errMonitoringNotLicensed = `The feature "monitoring" is not activated in your Sourcegraph license. Upgrade your Sourcegraph subscription to use this feature.`
 
-func addNoGrafanaHandler(r *mux.Router) {
+func addNoGrafanaHandler(r *mux.Router, db dbutil.DB) {
 	noGrafana := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintf(w, `Grafana endpoint proxying: Please set env var GRAFANA_SERVER_URL`)
 	})
-	r.Handle("/grafana", adminOnly(noGrafana))
+	r.Handle("/grafana", adminOnly(noGrafana, db))
 }
 
-func addGrafanaNotLicensedHandler(r *mux.Router) {
+func addGrafanaNotLicensedHandler(r *mux.Router, db dbutil.DB) {
 	notLicensed := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, errMonitoringNotLicensed, http.StatusUnauthorized)
 	})
-	r.Handle("/grafana", adminOnly(notLicensed))
+	r.Handle("/grafana", adminOnly(notLicensed, db))
 }
 
 // addReverseProxyForService registers a reverse proxy for the specified service.
-func addGrafana(r *mux.Router) {
+func addGrafana(r *mux.Router, db dbutil.DB) {
 	if PreMountGrafanaHook != nil {
 		if err := PreMountGrafanaHook(); err != nil {
-			addGrafanaNotLicensedHandler(r)
+			addGrafanaNotLicensedHandler(r, db)
 			return
 		}
 	}
@@ -102,7 +102,7 @@ func addGrafana(r *mux.Router) {
 		if err != nil {
 			log.Printf("failed to parse GRAFANA_SERVER_URL=%s: %v",
 				grafanaURLFromEnv, err)
-			addNoGrafanaHandler(r)
+			addNoGrafanaHandler(r, db)
 		} else {
 			prefix := "/grafana"
 			// 🚨 SECURITY: Only admins have access to Grafana dashboard
@@ -115,27 +115,27 @@ func addGrafana(r *mux.Router) {
 					}
 				},
 				ErrorLog: log.New(env.DebugOut, fmt.Sprintf("%s debug proxy: ", "grafana"), log.LstdFlags),
-			}))
+			}, db))
 		}
 	} else {
-		addNoGrafanaHandler(r)
+		addNoGrafanaHandler(r, db)
 	}
 }
 
-func addNoJaegerHandler(r *mux.Router) {
+func addNoJaegerHandler(r *mux.Router, db dbutil.DB) {
 	noJaeger := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintf(w, `Jaeger endpoint proxying: Please set env var JAEGER_SERVER_URL`)
 	})
-	r.Handle("/jaeger", adminOnly(noJaeger))
+	r.Handle("/jaeger", adminOnly(noJaeger, db))
 }
 
-func addJaeger(r *mux.Router) {
+func addJaeger(r *mux.Router, db dbutil.DB) {
 	if len(jaegerURLFromEnv) > 0 {
 		fmt.Println("Jaeger URL from env ", jaegerURLFromEnv)
 		jaegerURL, err := url.Parse(jaegerURLFromEnv)
 		if err != nil {
 			log.Printf("failed to parse JAEGER_SERVER_URL=%s: %v", jaegerURLFromEnv, err)
-			addNoJaegerHandler(r)
+			addNoJaegerHandler(r, db)
 		} else {
 			prefix := "/jaeger"
 			// 🚨 SECURITY: Only admins have access to Jaeger dashboard
@@ -145,18 +145,18 @@ func addJaeger(r *mux.Router) {
 					req.URL.Host = jaegerURL.Host
 				},
 				ErrorLog: log.New(env.DebugOut, fmt.Sprintf("%s debug proxy: ", "jaeger"), log.LstdFlags),
-			}))
+			}, db))
 		}
 
 	} else {
-		addNoJaegerHandler(r)
+		addNoJaegerHandler(r, db)
 	}
 }
 
 // adminOnly is a HTTP middleware which only allows requests by admins.
-func adminOnly(next http.Handler) http.Handler {
+func adminOnly(next http.Handler, db dbutil.DB) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if err := backend.CheckCurrentUserIsSiteAdmin(r.Context(), dbconn.Global); err != nil {
+		if err := backend.CheckCurrentUserIsSiteAdmin(r.Context(), db); err != nil {
 			http.Error(w, err.Error(), http.StatusUnauthorized)
 			return
 		}

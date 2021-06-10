@@ -12,7 +12,6 @@ import (
 	"github.com/sourcegraph/sourcegraph/enterprise/cmd/frontend/internal/codeintel/resolvers"
 	store "github.com/sourcegraph/sourcegraph/enterprise/internal/codeintel/stores/dbstore"
 	"github.com/sourcegraph/sourcegraph/internal/conf"
-	"github.com/sourcegraph/sourcegraph/internal/database/dbconn"
 	"github.com/sourcegraph/sourcegraph/internal/database/dbutil"
 )
 
@@ -28,6 +27,7 @@ var errAutoIndexingNotEnabled = errors.New("precise code intelligence auto index
 // All code intel-specific behavior is delegated to the underlying resolver instance, which is defined
 // in the parent package.
 type Resolver struct {
+	db               dbutil.DB
 	resolver         resolvers.Resolver
 	locationResolver *CachedLocationResolver
 }
@@ -35,6 +35,7 @@ type Resolver struct {
 // NewResolver creates a new Resolver with the given resolver that defines all code intel-specific behavior.
 func NewResolver(db dbutil.DB, resolver resolvers.Resolver) gql.CodeIntelResolver {
 	return &Resolver{
+		db:               db,
 		resolver:         resolver,
 		locationResolver: NewCachedLocationResolver(db),
 	}
@@ -89,7 +90,7 @@ func (r *Resolver) LSIFUploadsByRepo(ctx context.Context, args *gql.LSIFReposito
 
 func (r *Resolver) DeleteLSIFUpload(ctx context.Context, args *struct{ ID graphql.ID }) (*gql.EmptyResponse, error) {
 	// 🚨 SECURITY: Only site admins may delete LSIF data for now
-	if err := backend.CheckCurrentUserIsSiteAdmin(ctx, dbconn.Global); err != nil {
+	if err := backend.CheckCurrentUserIsSiteAdmin(ctx, r.db); err != nil {
 		return nil, err
 	}
 
@@ -161,7 +162,7 @@ func (r *Resolver) DeleteLSIFIndex(ctx context.Context, args *struct{ ID graphql
 	}
 
 	// 🚨 SECURITY: Only site admins may delete LSIF data for now
-	if err := backend.CheckCurrentUserIsSiteAdmin(ctx, dbconn.Global); err != nil {
+	if err := backend.CheckCurrentUserIsSiteAdmin(ctx, r.db); err != nil {
 		return nil, err
 	}
 
@@ -201,7 +202,7 @@ func (r *Resolver) UpdateRepositoryIndexConfiguration(ctx context.Context, args 
 	}
 
 	// 🚨 SECURITY: Only site admins may configure indexing jobs for now
-	if err := backend.CheckCurrentUserIsSiteAdmin(ctx, dbconn.Global); err != nil {
+	if err := backend.CheckCurrentUserIsSiteAdmin(ctx, r.db); err != nil {
 		return nil, err
 	}
 

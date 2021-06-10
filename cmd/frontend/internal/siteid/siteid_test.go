@@ -9,6 +9,7 @@ import (
 
 	"github.com/sourcegraph/sourcegraph/internal/conf"
 	"github.com/sourcegraph/sourcegraph/internal/database"
+	"github.com/sourcegraph/sourcegraph/internal/database/dbtesting"
 	"github.com/sourcegraph/sourcegraph/internal/database/globalstatedb"
 )
 
@@ -38,7 +39,7 @@ func TestGet(t *testing.T) {
 				err = fmt.Errorf("panic: %v", e)
 			}
 		}()
-		Init()
+		Init(&dbtesting.MockDB{})
 		return nil
 	}
 

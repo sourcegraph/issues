@@ -10,7 +10,7 @@ import (
 	"github.com/jackc/pgconn"
 
 	"github.com/sourcegraph/sourcegraph/internal/database"
-	"github.com/sourcegraph/sourcegraph/internal/database/dbtesting"
+	"github.com/sourcegraph/sourcegraph/internal/database/dbtest"
 	"github.com/sourcegraph/sourcegraph/internal/errcode"
 )
 
@@ -41,10 +41,10 @@ func TestRegistryExtensions_validNames(t *testing.T) {
 	if testing.Short() {
 		t.Skip()
 	}
-	dbtesting.SetupGlobalTestDB(t)
+	db := dbtest.NewDB(t, "")
 	ctx := context.Background()
 
-	user, err := database.GlobalUsers.Create(ctx, database.NewUser{Username: "u"})
+	user, err := database.Users(db).Create(ctx, database.NewUser{Username: "u"})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -52,7 +52,7 @@ func TestRegistryExtensions_validNames(t *testing.T) {
 	for _, test := range registryExtensionNamesForTests {
 		t.Run(test.name, func(t *testing.T) {
 			valid := true
-			if _, err := (dbExtensions{}).Create(ctx, user.ID, 0, test.name); err != nil {
+			if _, err := (dbExtensions{db: db}).Create(ctx, user.ID, 0, test.name); err != nil {
 				if e, ok := err.(*pgconn.PgError); ok && (e.ConstraintName == "registry_extensions_name_valid_chars" || e.ConstraintName == "registry_extensions_name_length") {
 					valid = false
 				} else {
@@ -70,12 +70,12 @@ func TestRegistryExtensions(t *testing.T) {
 	if testing.Short() {
 		t.Skip()
 	}
-	db := dbtesting.GetDB(t)
+	db := dbtest.NewDB(t, "")
 	ctx := context.Background()
 
 	testGetByID := func(t *testing.T, id int32, want *dbExtension, wantPublisherName string) {
 		t.Helper()
-		x, err := dbExtensions{}.GetByID(ctx, id)
+		x, err := dbExtensions{db: db}.GetByID(ctx, id)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -88,7 +88,7 @@ func TestRegistryExtensions(t *testing.T) {
 	}
 	testGetByExtensionID := func(t *testing.T, extensionID string, want *dbExtension) {
 		t.Helper()
-		x, err := dbExtensions{}.GetByExtensionID(ctx, extensionID)
+		x, err := dbExtensions{db: db}.GetByExtensionID(ctx, extensionID)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -101,7 +101,7 @@ func TestRegistryExtensions(t *testing.T) {
 	}
 	testList := func(t *testing.T, opt dbExtensionsListOptions, want []*dbExtension) {
 		t.Helper()
-		if ois, err := (dbExtensions{}).List(ctx, opt); err != nil {
+		if ois, err := (dbExtensions{db: db}).List(ctx, opt); err != nil {
 			t.Fatal(err)
 		} else if !reflect.DeepEqual(ois, want) {
 			t.Errorf("got %s, want %s", asJSON(t, ois), asJSON(t, want))
@@ -110,7 +110,7 @@ func TestRegistryExtensions(t *testing.T) {
 	testListCount := func(t *testing.T, opt dbExtensionsListOptions, want []*dbExtension) {
 		t.Helper()
 		testList(t, opt, want)
-		if n, err := (dbExtensions{}).Count(ctx, opt); err != nil {
+		if n, err := (dbExtensions{db: db}).Count(ctx, opt); err != nil {
 			t.Fatal(err)
 		} else if want := len(want); n != want {
 			t.Errorf("got %d, want %d", n, want)
@@ -128,11 +128,11 @@ func TestRegistryExtensions(t *testing.T) {
 
 	createAndGet := func(t *testing.T, publisherUserID, publisherOrgID int32, name string) *dbExtension {
 		t.Helper()
-		xID, err := dbExtensions{}.Create(ctx, publisherUserID, publisherOrgID, name)
+		xID, err := dbExtensions{db: db}.Create(ctx, publisherUserID, publisherOrgID, name)
 		if err != nil {
 			t.Fatal(err)
 		}
-		x, err := dbExtensions{}.GetByID(ctx, xID)
+		x, err := dbExtensions{db: db}.GetByID(ctx, xID)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -142,7 +142,7 @@ func TestRegistryExtensions(t *testing.T) {
 	xo := createAndGet(t, 0, org.ID, "xo")
 
 	t.Run("List/Count/Get publishers", func(t *testing.T) {
-		publishers, err := dbExtensions{}.ListPublishers(ctx, dbPublishersListOptions{})
+		publishers, err := dbExtensions{db: db}.ListPublishers(ctx, dbPublishersListOptions{})
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -153,14 +153,14 @@ func TestRegistryExtensions(t *testing.T) {
 			t.Errorf("got publishers %+v, want %+v", publishers, want)
 		}
 
-		if n, err := (dbExtensions{}).CountPublishers(ctx, dbPublishersListOptions{}); err != nil {
+		if n, err := (dbExtensions{db: db}).CountPublishers(ctx, dbPublishersListOptions{}); err != nil {
 			t.Fatal(err)
 		} else if want := 2; n != 2 {
 			t.Errorf("got count %d, want %d", n, want)
 		}
 
 		for _, p := range []*dbPublisher{&xo.Publisher, &xu.Publisher} {
-			got, err := dbExtensions{}.GetPublisher(ctx, p.NonCanonicalName)
+			got, err := dbExtensions{db: db}.GetPublisher(ctx, p.NonCanonicalName)
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -168,7 +168,7 @@ func TestRegistryExtensions(t *testing.T) {
 				t.Errorf("got %+v, want %+v", got, p)
 			}
 		}
-		if _, err := (dbExtensions{}).GetPublisher(ctx, "doesntexist"); !errcode.IsNotFound(err) {
+		if _, err := (dbExtensions{db: db}).GetPublisher(ctx, "doesntexist"); !errcode.IsNotFound(err) {
 			t.Errorf("got err %v, want errcode.IsNotFound", err)
 		}
 	})
@@ -186,14 +186,14 @@ func TestRegistryExtensions(t *testing.T) {
 
 			t.Run("GetByID", func(t *testing.T) {
 				testGetByID(t, x.ID, x, c.publisherName)
-				if _, err := (dbExtensions{}).GetByID(ctx, 12345 /* doesn't exist */); !errcode.IsNotFound(err) {
+				if _, err := (dbExtensions{db: db}).GetByID(ctx, 12345 /* doesn't exist */); !errcode.IsNotFound(err) {
 					t.Errorf("got err %v, want errcode.IsNotFound", err)
 				}
 			})
 
 			t.Run("GetByExtensionID", func(t *testing.T) {
 				testGetByExtensionID(t, c.publisherName+"/"+x.Name, x)
-				if _, err := (dbExtensions{}).GetByExtensionID(ctx, "foo.bar"); !errcode.IsNotFound(err) {
+				if _, err := (dbExtensions{db: db}).GetByExtensionID(ctx, "foo.bar"); !errcode.IsNotFound(err) {
 					t.Errorf("got err %v, want errcode.IsNotFound", err)
 				}
 			})
@@ -228,13 +228,13 @@ func TestRegistryExtensions(t *testing.T) {
 				testList(t, dbExtensionsListOptions{PrioritizeExtensionIDs: []string{xo.NonCanonicalExtensionID}, LimitOffset: &database.LimitOffset{Limit: 1}}, []*dbExtension{xo})
 			})
 
-			if err := (dbExtensions{}).Delete(ctx, x.ID); err != nil {
+			if err := (dbExtensions{db: db}).Delete(ctx, x.ID); err != nil {
 				t.Fatal(err)
 			}
-			if err := (dbExtensions{}).Delete(ctx, x.ID); !errcode.IsNotFound(err) {
+			if err := (dbExtensions{db: db}).Delete(ctx, x.ID); !errcode.IsNotFound(err) {
 				t.Errorf("2nd Delete: got err %v, want errcode.IsNotFound", err)
 			}
-			if _, err := (dbExtensions{}).GetByID(ctx, x.ID); !errcode.IsNotFound(err) {
+			if _, err := (dbExtensions{db: db}).GetByID(ctx, x.ID); !errcode.IsNotFound(err) {
 				t.Errorf("GetByID after Delete: got err %v, want errcode.IsNotFound", err)
 			}
 		})
@@ -242,10 +242,10 @@ func TestRegistryExtensions(t *testing.T) {
 
 	t.Run("Update", func(t *testing.T) {
 		x := xu
-		if err := (dbExtensions{}).Update(ctx, x.ID, nil); err != nil {
+		if err := (dbExtensions{db: db}).Update(ctx, x.ID, nil); err != nil {
 			t.Fatal(err)
 		}
-		x1, err := dbExtensions{}.GetByID(ctx, x.ID)
+		x1, err := dbExtensions{db: db}.GetByID(ctx, x.ID)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -258,11 +258,11 @@ func TestRegistryExtensions(t *testing.T) {
 	})
 
 	t.Run("Create with same publisher and name", func(t *testing.T) {
-		_, err := dbExtensions{}.Create(ctx, user.ID, 0, "zzz")
+		_, err := dbExtensions{db: db}.Create(ctx, user.ID, 0, "zzz")
 		if err != nil {
 			t.Fatal(err)
 		}
-		if _, err := (dbExtensions{}).Create(ctx, user.ID, 0, "zzz"); err == nil {
+		if _, err := (dbExtensions{db: db}).Create(ctx, user.ID, 0, "zzz"); err == nil {
 			t.Fatal("err == nil")
 		}
 	})
@@ -270,7 +270,7 @@ func TestRegistryExtensions(t *testing.T) {
 	t.Run("List sort non-WIP first", func(t *testing.T) {
 		// xwip1 is a WIP extension because its title begins with "WIP:".
 		xwip1 := createAndGet(t, user.ID, 0, "wiptest1")
-		_, err := dbReleases{}.Create(ctx, &dbRelease{
+		_, err := dbReleases{db: db}.Create(ctx, &dbRelease{
 			RegistryExtensionID: xwip1.ID,
 			CreatorUserID:       user.ID,
 			ReleaseTag:          "release",
@@ -287,7 +287,7 @@ func TestRegistryExtensions(t *testing.T) {
 
 		// xwip3 is a WIP extension because it has a "wip": true property.
 		xwip3 := createAndGet(t, user.ID, 0, "wiptest3")
-		_, err = dbReleases{}.Create(ctx, &dbRelease{
+		_, err = dbReleases{db: db}.Create(ctx, &dbRelease{
 			RegistryExtensionID: xwip3.ID,
 			CreatorUserID:       user.ID,
 			ReleaseTag:          "release",
@@ -301,7 +301,7 @@ func TestRegistryExtensions(t *testing.T) {
 
 		// xnonwip1 is a non-WIP extension.
 		xnonwip1 := createAndGet(t, user.ID, 0, "wiptest4")
-		_, err = dbReleases{}.Create(ctx, &dbRelease{
+		_, err = dbReleases{db: db}.Create(ctx, &dbRelease{
 			RegistryExtensionID: xnonwip1.ID,
 			CreatorUserID:       user.ID,
 			ReleaseTag:          "release",
@@ -316,7 +316,7 @@ func TestRegistryExtensions(t *testing.T) {
 
 		// xnonwip2 is a non-WIP extension because its wip property is not true.
 		xnonwip2 := createAndGet(t, user.ID, 0, "wiptest5")
-		_, err = dbReleases{}.Create(ctx, &dbRelease{
+		_, err = dbReleases{db: db}.Create(ctx, &dbRelease{
 			RegistryExtensionID: xnonwip2.ID,
 			CreatorUserID:       user.ID,
 			ReleaseTag:          "release",
@@ -338,12 +338,12 @@ func TestRegistryExtensions_ListCount(t *testing.T) {
 	if testing.Short() {
 		t.Skip()
 	}
-	dbtesting.SetupGlobalTestDB(t)
+	db := dbtest.NewDB(t, "")
 	ctx := context.Background()
 
 	testList := func(t *testing.T, opt dbExtensionsListOptions, want []*dbExtension) {
 		t.Helper()
-		if ois, err := (dbExtensions{}).List(ctx, opt); err != nil {
+		if ois, err := (dbExtensions{db: db}).List(ctx, opt); err != nil {
 			t.Fatal(err)
 		} else if !reflect.DeepEqual(ois, want) {
 			t.Errorf("got %s, want %s", asJSON(t, ois), asJSON(t, want))
@@ -352,26 +352,26 @@ func TestRegistryExtensions_ListCount(t *testing.T) {
 	testListCount := func(t *testing.T, opt dbExtensionsListOptions, want []*dbExtension) {
 		t.Helper()
 		testList(t, opt, want)
-		if n, err := (dbExtensions{}).Count(ctx, opt); err != nil {
+		if n, err := (dbExtensions{db: db}).Count(ctx, opt); err != nil {
 			t.Fatal(err)
 		} else if want := len(want); n != want {
 			t.Errorf("got %d, want %d", n, want)
 		}
 	}
 
-	user, err := database.GlobalUsers.Create(ctx, database.NewUser{Username: "u"})
+	user, err := database.Users(db).Create(ctx, database.NewUser{Username: "u"})
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	createAndGet := func(t *testing.T, name, manifest string) *dbExtension {
 		t.Helper()
-		xID, err := dbExtensions{}.Create(ctx, user.ID, 0, name)
+		xID, err := dbExtensions{db: db}.Create(ctx, user.ID, 0, name)
 		if err != nil {
 			t.Fatal(err)
 		}
 		if manifest != "" {
-			_, err = dbReleases{}.Create(ctx, &dbRelease{
+			_, err = dbReleases{db: db}.Create(ctx, &dbRelease{
 				RegistryExtensionID: xID,
 				CreatorUserID:       user.ID,
 				ReleaseTag:          "release",
@@ -383,7 +383,7 @@ func TestRegistryExtensions_ListCount(t *testing.T) {
 				t.Fatal(err)
 			}
 		}
-		x, err := dbExtensions{}.GetByID(ctx, xID)
+		x, err := dbExtensions{db: db}.GetByID(ctx, xID)
 		if err != nil {
 			t.Fatal(err)
 		}

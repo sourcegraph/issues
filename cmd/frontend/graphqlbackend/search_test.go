@@ -21,6 +21,7 @@ import (
 	"github.com/sourcegraph/sourcegraph/internal/api"
 	"github.com/sourcegraph/sourcegraph/internal/conf"
 	"github.com/sourcegraph/sourcegraph/internal/database"
+	"github.com/sourcegraph/sourcegraph/internal/database/dbtest"
 	"github.com/sourcegraph/sourcegraph/internal/database/dbtesting"
 	"github.com/sourcegraph/sourcegraph/internal/extsvc"
 	"github.com/sourcegraph/sourcegraph/internal/search"
@@ -620,7 +621,7 @@ func BenchmarkSearchResults(b *testing.B) {
 }
 
 func BenchmarkIntegrationSearchResults(b *testing.B) {
-	db := dbtesting.GetDB(b)
+	db := dbtest.NewDB(b, "")
 
 	ctx := context.Background()
 

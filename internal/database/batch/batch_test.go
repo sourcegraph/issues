@@ -3,23 +3,18 @@ package batch
 import (
 	"context"
 	"database/sql"
-	"sync"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
 
-	"github.com/sourcegraph/sourcegraph/internal/database/dbtesting"
+	"github.com/sourcegraph/sourcegraph/internal/database/dbtest"
 )
-
-func init() {
-	dbtesting.DBNameSuffix = "batch"
-}
 
 func TestBatchInserter(t *testing.T) {
 	if testing.Short() {
 		t.Skip()
 	}
-	db := dbtesting.GetDB(t)
+	db := dbtest.NewDB(t, "")
 	setupTestTable(t, db)
 
 	expectedValues := makeTestValues(2, 0)
@@ -51,7 +46,7 @@ func TestBatchInserterWithReturn(t *testing.T) {
 	if testing.Short() {
 		t.Skip()
 	}
-	db := dbtesting.GetDB(t)
+	db := dbtest.NewDB(t, "")
 	setupTestTable(t, db)
 
 	tableSizeFactor := 2
@@ -69,7 +64,7 @@ func TestBatchInserterWithReturn(t *testing.T) {
 }
 
 func BenchmarkBatchInserter(b *testing.B) {
-	db := dbtesting.GetDB(b)
+	db := dbtest.NewDB(b, "")
 	setupTestTable(b, db)
 	expectedValues := makeTestValues(10, 0)
 
@@ -82,7 +77,7 @@ func BenchmarkBatchInserter(b *testing.B) {
 }
 
 func BenchmarkBatchInserterLargePayload(b *testing.B) {
-	db := dbtesting.GetDB(b)
+	db := dbtest.NewDB(b, "")
 	setupTestTable(b, db)
 	expectedValues := makeTestValues(10, 4096)
 
@@ -94,11 +89,8 @@ func BenchmarkBatchInserterLargePayload(b *testing.B) {
 	}
 }
 
-var setup sync.Once
-
 func setupTestTable(t testing.TB, db *sql.DB) {
-	setup.Do(func() {
-		createTableQuery := `
+	createTableQuery := `
 			CREATE TABLE batch_inserter_test (
 				id SERIAL,
 				col1 integer NOT NULL,
@@ -108,10 +100,9 @@ func setupTestTable(t testing.TB, db *sql.DB) {
 				col5 text
 			)
 		`
-		if _, err := db.Exec(createTableQuery); err != nil {
-			t.Fatalf("unexpected error creating test table: %s", err)
-		}
-	})
+	if _, err := db.Exec(createTableQuery); err != nil {
+		t.Fatalf("unexpected error creating test table: %s", err)
+	}
 }
 
 func makeTestValues(tableSizeFactor, payloadSize int) [][]interface{} {

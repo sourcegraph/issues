@@ -14,8 +14,10 @@ func TestEnqueueActionEmailsForQueryIDInt64QueryByRecordID(t *testing.T) {
 		t.Skip()
 	}
 
+	t.Parallel()
+
 	ctx, s := newTestStore(t)
-	_, _, _, userCTX := newTestUser(ctx, t)
+	_, _, _, userCTX := newTestUser(ctx, t, s.Handle().DB())
 	_, err := s.insertTestMonitor(userCTX, t)
 	if err != nil {
 		t.Fatal(err)
@@ -58,8 +60,10 @@ func TestGetActionJobMetadata(t *testing.T) {
 		t.Skip()
 	}
 
+	t.Parallel()
+
 	ctx, s := newTestStore(t)
-	_, _, _, userCTX := newTestUser(ctx, t)
+	_, _, _, userCTX := newTestUser(ctx, t, s.Handle().DB())
 	_, err := s.insertTestMonitor(userCTX, t)
 	if err != nil {
 		t.Fatal(err)
@@ -103,6 +107,8 @@ func TestScanActionJobs(t *testing.T) {
 		t.Skip()
 	}
 
+	t.Parallel()
+
 	var (
 		testRecordID             = 1
 		testTriggerEventID       = 1
@@ -110,7 +116,7 @@ func TestScanActionJobs(t *testing.T) {
 	)
 
 	ctx, s := newTestStore(t)
-	_, _, _, userCTX := newTestUser(ctx, t)
+	_, _, _, userCTX := newTestUser(ctx, t, s.Handle().DB())
 	_, err := s.insertTestMonitor(userCTX, t)
 	if err != nil {
 		t.Fatal(err)

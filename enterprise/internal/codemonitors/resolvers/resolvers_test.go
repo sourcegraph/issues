@@ -20,20 +20,18 @@ import (
 	"github.com/sourcegraph/sourcegraph/enterprise/internal/codemonitors/storetest"
 	"github.com/sourcegraph/sourcegraph/internal/actor"
 	"github.com/sourcegraph/sourcegraph/internal/database"
-	"github.com/sourcegraph/sourcegraph/internal/database/dbtesting"
+	"github.com/sourcegraph/sourcegraph/internal/database/dbtest"
 )
-
-func init() {
-	dbtesting.DBNameSuffix = "codemonitorsdb"
-}
 
 func TestCreateCodeMonitor(t *testing.T) {
 	if testing.Short() {
 		t.Skip()
 	}
 
+	t.Parallel()
+
 	ctx := backend.WithAuthzBypass(context.Background())
-	db := dbtesting.GetDB(t)
+	db := dbtest.NewDB(t, "")
 	r := newTestResolver(t, db)
 
 	userID := insertTestUser(t, db, "cm-user1", true)
@@ -89,8 +87,10 @@ func TestListCodeMonitors(t *testing.T) {
 		t.Skip()
 	}
 
+	t.Parallel()
+
 	ctx := backend.WithAuthzBypass(context.Background())
-	db := dbtesting.GetDB(t)
+	db := dbtest.NewDB(t, "")
 	r := newTestResolver(t, db)
 
 	userID := insertTestUser(t, db, "cm-user1", true)
@@ -179,7 +179,9 @@ func TestIsAllowedToEdit(t *testing.T) {
 		t.Skip()
 	}
 
-	db := dbtesting.GetDB(t)
+	t.Parallel()
+
+	db := dbtest.NewDB(t, "")
 
 	// Setup users and org
 	member := insertTestUser(t, db, "cm-user1", false)
@@ -234,7 +236,9 @@ func TestIsAllowedToCreate(t *testing.T) {
 		t.Skip()
 	}
 
-	db := dbtesting.GetDB(t)
+	t.Parallel()
+
+	db := dbtest.NewDB(t, "")
 
 	// Setup users and org
 	member := insertTestUser(t, db, "cm-user1", false)
@@ -312,7 +316,7 @@ func TestQueryMonitor(t *testing.T) {
 	}
 
 	ctx := backend.WithAuthzBypass(context.Background())
-	db := dbtesting.GetDB(t)
+	db := dbtest.NewDB(t, "")
 	r := newTestResolver(t, db)
 
 	// Create 2 test users.
@@ -584,7 +588,7 @@ func TestEditCodeMonitor(t *testing.T) {
 	}
 
 	ctx := backend.WithAuthzBypass(context.Background())
-	db := dbtesting.GetDB(t)
+	db := dbtest.NewDB(t, "")
 	r := newTestResolver(t, db)
 
 	// Create 2 test users.
@@ -1155,6 +1159,8 @@ func TestTriggerTestEmailAction(t *testing.T) {
 	if testing.Short() {
 		t.Skip()
 	}
+
+	t.Parallel()
 
 	got := email.TemplateDataNewSearchResults{}
 	email.MockSendEmailForNewSearchResult = func(ctx context.Context, userID int32, data *email.TemplateDataNewSearchResults) error {

@@ -183,7 +183,7 @@ func (s *PermsSyncer) syncUserPerms(ctx context.Context, userID int32, noPerms b
 	ctx, save := s.observe(ctx, "PermsSyncer.syncUserPerms", "")
 	defer save(requestTypeUser, userID, &err)
 
-	user, err := database.GlobalUsers.GetByID(ctx, userID)
+	user, err := database.Users(s.permsStore.Handle().DB()).GetByID(ctx, userID)
 	if err != nil {
 		return errors.Wrap(err, "get user")
 	}
@@ -198,7 +198,7 @@ func (s *PermsSyncer) syncUserPerms(ctx context.Context, userID int32, noPerms b
 		serviceToAccounts[acct.ServiceType+":"+acct.ServiceID] = acct
 	}
 
-	userEmails, err := database.GlobalUserEmails.ListByUser(ctx,
+	userEmails, err := database.UserEmails(s.permsStore.Handle().DB()).ListByUser(ctx,
 		database.UserEmailsListOptions{
 			UserID:       user.ID,
 			OnlyVerified: true,
@@ -238,7 +238,7 @@ func (s *PermsSyncer) syncUserPerms(ctx context.Context, userID int32, noPerms b
 			continue
 		}
 
-		err = database.GlobalExternalAccounts.AssociateUserAndSave(ctx, user.ID, acct.AccountSpec, acct.AccountData)
+		err = database.ExternalAccountsWith(s.permsStore).AssociateUserAndSave(ctx, user.ID, acct.AccountSpec, acct.AccountData)
 		if err != nil {
 			log15.Error("Could not associate external account to user",
 				"userID", user.ID,
@@ -271,7 +271,7 @@ func (s *PermsSyncer) syncUserPerms(ctx context.Context, userID int32, noPerms b
 			accountSuspended := errcode.IsAccountSuspended(errors.Cause(err))
 
 			if unauthorized || accountSuspended {
-				err = database.GlobalExternalAccounts.TouchExpired(ctx, acct.ID)
+				err = database.ExternalAccountsWith(s.permsStore).TouchExpired(ctx, acct.ID)
 				if err != nil {
 					return errors.Wrapf(err, "set expired for external account %d", acct.ID)
 				}
@@ -289,7 +289,7 @@ func (s *PermsSyncer) syncUserPerms(ctx context.Context, userID int32, noPerms b
 			}
 			log15.Warn("PermsSyncer.syncUserPerms.proceedWithPartialResults", "userID", user.ID, "error", err)
 		} else {
-			err = database.GlobalExternalAccounts.TouchLastValid(ctx, acct.ID)
+			err = database.ExternalAccountsWith(s.permsStore).TouchLastValid(ctx, acct.ID)
 			if err != nil {
 				return errors.Wrapf(err, "set last valid for external account %d", acct.ID)
 			}

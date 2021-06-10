@@ -18,6 +18,7 @@ func NewCodeIntelUploadHandler(ctx context.Context, db dbutil.DB, internal bool)
 	}
 
 	handler := codeintelhttpapi.NewUploadHandler(
+		db,
 		&httpapi.DBStoreShim{services.dbStore},
 		services.uploadStore,
 		internal,

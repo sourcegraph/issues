@@ -5,7 +5,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/sourcegraph/sourcegraph/internal/database/dbtesting"
+	"github.com/sourcegraph/sourcegraph/internal/database/dbtest"
 )
 
 func TestSiteGetLatestDefault(t *testing.T) {
@@ -13,10 +13,10 @@ func TestSiteGetLatestDefault(t *testing.T) {
 		t.Skip()
 	}
 
-	dbtesting.SetupGlobalTestDB(t)
+	db := dbtest.NewDB(t, "")
 	ctx := context.Background()
 
-	latest, err := SiteGetLatest(ctx)
+	latest, err := SiteGetLatest(ctx, db)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -31,12 +31,12 @@ func TestSiteCreate_RejectInvalidJSON(t *testing.T) {
 		t.Skip()
 	}
 
-	dbtesting.SetupGlobalTestDB(t)
+	db := dbtest.NewDB(t, "")
 	ctx := context.Background()
 
 	malformedJSON := "[This is malformed.}"
 
-	_, err := SiteCreateIfUpToDate(ctx, nil, malformedJSON)
+	_, err := SiteCreateIfUpToDate(ctx, db, nil, malformedJSON)
 
 	if err == nil || !strings.Contains(err.Error(), "invalid settings JSON") {
 		t.Fatalf("expected parse error after creating configuration with malformed JSON, got: %+v", err)
@@ -157,10 +157,10 @@ func TestSiteCreateIfUpToDate(t *testing.T) {
 		},
 	} {
 		t.Run(test.name, func(t *testing.T) {
-			dbtesting.SetupGlobalTestDB(t)
+			db := dbtest.NewDB(t, "")
 			ctx := context.Background()
 			for _, p := range test.sequence {
-				output, err := SiteCreateIfUpToDate(ctx, &p.input.lastID, p.input.contents)
+				output, err := SiteCreateIfUpToDate(ctx, db, &p.input.lastID, p.input.contents)
 				if err != nil {
 					if err == p.expected.err {
 						continue
@@ -179,7 +179,7 @@ func TestSiteCreateIfUpToDate(t *testing.T) {
 					t.Fatalf("returned configuration ID after creation - expected: %v, got:%v", p.expected.ID, output.ID)
 				}
 
-				latest, err := SiteGetLatest(ctx)
+				latest, err := SiteGetLatest(ctx, db)
 				if err != nil {
 					t.Fatal(err)
 				}

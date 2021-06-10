@@ -19,9 +19,10 @@ var initDatabaseMemo = NewMemoizedConstructor(func() (interface{}, error) {
 		return serviceConnections.PostgresDSN
 	})
 
-	if err := dbconn.SetupGlobalConnection(postgresDSN); err != nil {
+	db, err := dbconn.New(postgresDSN, "_app")
+	if err != nil {
 		return nil, fmt.Errorf("failed to connect to frontend database: %s", err)
 	}
 
-	return dbconn.Global, nil
+	return db, nil
 })

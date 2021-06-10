@@ -3,7 +3,6 @@ package cli
 import (
 	"context"
 	"database/sql"
-	"errors"
 	"fmt"
 	"log"
 	"net/http"
@@ -93,7 +92,8 @@ func defaultExternalURL(nginxAddr, httpAddr string) *url.URL {
 // InitDB initializes and returns the global database connection and sets the
 // version of the frontend in our versions table.
 func InitDB() (*sql.DB, error) {
-	if err := dbconn.SetupGlobalConnection(""); err != nil {
+	db, err := dbconn.New("", "_app")
+	if err != nil {
 		return nil, fmt.Errorf("failed to connect to frontend database: %s", err)
 	}
 
@@ -105,16 +105,16 @@ func InitDB() (*sql.DB, error) {
 		// which would be added by running the migrations. Once we detect that
 		// it's missing, we run the migrations and try to update the version again.
 
-		err := backend.UpdateServiceVersion(ctx, "frontend", version.Version())
+		err := backend.UpdateServiceVersion(ctx, db, "frontend", version.Version())
 		if err != nil && !dbutil.IsPostgresError(err, "42P01") {
 			return nil, err
 		}
 
 		if !migrate {
-			return dbconn.Global, nil
+			return db, nil
 		}
 
-		if err := dbconn.MigrateDB(dbconn.Global, dbconn.Frontend); err != nil {
+		if err := dbconn.MigrateDB(db, dbconn.Frontend); err != nil {
 			return nil, err
 		}
 
@@ -140,14 +140,15 @@ func Main(enterpriseSetupHook func(db dbutil.DB, outOfBandMigrationRunner *oobmi
 	if err != nil {
 		log.Fatalf("ERROR: %v", err)
 	}
+	backend.InitRepos(db)
 
 	ui.InitRouter(db)
 
 	// override site config first
-	if err := overrideSiteConfig(ctx); err != nil {
+	if err := overrideSiteConfig(ctx, db); err != nil {
 		log.Fatalf("failed to apply site config overrides: %v", err)
 	}
-	globals.ConfigurationServerFrontendOnly = conf.InitConfigurationServerFrontendOnly(&configurationSource{})
+	globals.ConfigurationServerFrontendOnly = conf.InitConfigurationServerFrontendOnly(&configurationSource{db: db})
 	conf.MustValidateDefaults()
 
 	// now we can init the keyring, as it depends on site config
@@ -239,7 +240,7 @@ func Main(enterpriseSetupHook func(db dbutil.DB, outOfBandMigrationRunner *oobmi
 		return err
 	}
 
-	siteid.Init()
+	siteid.Init(db)
 
 	globals.WatchExternalURL(defaultExternalURL(nginxAddr, httpAddr))
 	globals.WatchPermissionsUserMapping()
@@ -248,12 +249,6 @@ func Main(enterpriseSetupHook func(db dbutil.DB, outOfBandMigrationRunner *oobmi
 	goroutine.Go(func() { bg.DeleteOldCacheDataInRedis() })
 	goroutine.Go(func() { bg.DeleteOldEventLogsInPostgres(context.Background(), db) })
 	goroutine.Go(func() { updatecheck.Start(db) })
-
-	// Parse GraphQL schema and set up resolvers that depend on dbconn.Global
-	// being initialized
-	if dbconn.Global == nil {
-		return errors.New("dbconn.Global is nil when trying to parse GraphQL schema")
-	}
 
 	schema, err := graphqlbackend.NewSchema(db, enterprise.BatchChangesResolver, enterprise.CodeIntelResolver, enterprise.InsightsResolver, enterprise.AuthzResolver, enterprise.CodeMonitorsResolver, enterprise.LicenseResolver, enterprise.DotcomResolver)
 	if err != nil {

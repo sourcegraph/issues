@@ -16,6 +16,7 @@ import (
 	"github.com/sourcegraph/sourcegraph/cmd/frontend/external/session"
 	"github.com/sourcegraph/sourcegraph/enterprise/cmd/frontend/internal/auth/oauth"
 	"github.com/sourcegraph/sourcegraph/internal/actor"
+	"github.com/sourcegraph/sourcegraph/internal/database/dbtesting"
 	"github.com/sourcegraph/sourcegraph/internal/extsvc"
 	"github.com/sourcegraph/sourcegraph/schema"
 )
@@ -288,7 +289,7 @@ func newMockProvider(t *testing.T, clientID, clientSecret, baseURL string) *Mock
 		ClientID:     clientID,
 		Type:         extsvc.TypeGitLab,
 	}}
-	mp.Provider, problems = parseProvider("https://sourcegraph.mine.com/.auth/gitlab/callback", cfg.Gitlab, cfg)
+	mp.Provider, problems = parseProvider(&dbtesting.MockDB{}, "https://sourcegraph.mine.com/.auth/gitlab/callback", cfg.Gitlab, cfg)
 	if len(problems) > 0 {
 		t.Fatalf("Expected 0 problems, but got %d: %+v", len(problems), problems)
 	}

@@ -10,6 +10,7 @@ import (
 	"github.com/sourcegraph/sourcegraph/internal/api"
 	"github.com/sourcegraph/sourcegraph/internal/conf/reposource"
 	"github.com/sourcegraph/sourcegraph/internal/database"
+	"github.com/sourcegraph/sourcegraph/internal/database/dbutil"
 	"github.com/sourcegraph/sourcegraph/internal/extsvc"
 	"github.com/sourcegraph/sourcegraph/schema"
 )
@@ -20,7 +21,7 @@ import (
 // configuration for github.com, even if one is not explicitly specified. Returns the empty string and nil
 // error if a matching code host could not be found. This function does not actually check the code
 // host to see if the repository actually exists.
-func ReposourceCloneURLToRepoName(ctx context.Context, cloneURL string) (repoName api.RepoName, err error) {
+func ReposourceCloneURLToRepoName(ctx context.Context, db dbutil.DB, cloneURL string) (repoName api.RepoName, err error) {
 	if repoName := reposource.CustomCloneURLToRepoName(cloneURL); repoName != "" {
 		return repoName, nil
 	}
@@ -40,7 +41,7 @@ func ReposourceCloneURLToRepoName(ctx context.Context, cloneURL string) (repoNam
 		},
 	}
 	for {
-		svcs, err := database.GlobalExternalServices.List(ctx, opt)
+		svcs, err := database.ExternalServices(db).List(ctx, opt)
 		if err != nil {
 			return "", errors.Wrap(err, "list")
 		}

@@ -13,6 +13,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 
 	"github.com/sourcegraph/sourcegraph/cmd/frontend/backend"
+	"github.com/sourcegraph/sourcegraph/internal/database/dbutil"
 	"github.com/sourcegraph/sourcegraph/internal/observation"
 	"github.com/sourcegraph/sourcegraph/internal/oobmigration"
 	"github.com/sourcegraph/sourcegraph/internal/trace"
@@ -29,11 +30,11 @@ func newOutOfBandMigrationRunner(ctx context.Context, db *sql.DB) *oobmigration.
 		Registerer: prometheus.DefaultRegisterer,
 	})
 
-	validateOutOfBandMigrationRunner(ctx, outOfBandMigrationRunner)
+	validateOutOfBandMigrationRunner(ctx, db, outOfBandMigrationRunner)
 	return outOfBandMigrationRunner
 }
 
-func validateOutOfBandMigrationRunner(ctx context.Context, outOfBandMigrationRunner *oobmigration.Runner) {
+func validateOutOfBandMigrationRunner(ctx context.Context, db dbutil.DB, outOfBandMigrationRunner *oobmigration.Runner) {
 	if os.Getenv("SRC_DISABLE_OOBMIGRATION_VALIDATION") != "" {
 		log15.Warn("Skipping out-of-band migrations check")
 		return
@@ -49,7 +50,7 @@ func validateOutOfBandMigrationRunner(ctx context.Context, outOfBandMigrationRun
 		return
 	}
 
-	firstVersion, err := backend.GetFirstServiceVersion(ctx, "frontend")
+	firstVersion, err := backend.GetFirstServiceVersion(ctx, db, "frontend")
 	if err != nil {
 		log.Fatalf("Failed to retrieve first instance version: %v", err)
 	}

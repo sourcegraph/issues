@@ -31,9 +31,19 @@ import (
 var clock = timeutil.Now
 
 func Init(ctx context.Context, db dbutil.DB, outOfBandMigrationRunner *oobmigration.Runner, enterpriseServices *enterprise.Services) error {
+	esStore := database.ExternalServices(db)
 	// TODO(efritz) - de-globalize assignments in this function
-	database.GlobalExternalServices = edb.NewExternalServicesStore(db)
+	edb.InitExternalServicesStoreValidators()
 	database.GlobalAuthz = edb.NewAuthzStore(db, clock)
+
+	// Report any authz provider problems in external configs.
+	conf.ContributeWarning(func(cfg conf.Unified) (problems conf.Problems) {
+		_, _, seriousProblems, warnings :=
+			eauthz.ProvidersFromConfig(context.Background(), &cfg, esStore)
+		problems = append(problems, conf.NewExternalServiceProblems(seriousProblems...)...)
+		problems = append(problems, conf.NewExternalServiceProblems(warnings...)...)
+		return problems
+	})
 
 	// Warn about usage of auth providers that are not enabled by the license.
 	graphqlbackend.AlertFuncs = append(graphqlbackend.AlertFuncs, func(args graphqlbackend.AlertFuncArgs) []*graphqlbackend.Alert {
@@ -47,7 +57,7 @@ func Init(ctx context.Context, db dbutil.DB, outOfBandMigrationRunner *oobmigrat
 		}
 
 		// We can ignore problems returned here because they would have been surfaced in other places.
-		_, providers, _, _ := eauthz.ProvidersFromConfig(context.Background(), conf.Get(), database.GlobalExternalServices)
+		_, providers, _, _ := eauthz.ProvidersFromConfig(context.Background(), conf.Get(), esStore)
 		if len(providers) == 0 {
 			return nil
 		}
@@ -138,22 +148,11 @@ func Init(ctx context.Context, db dbutil.DB, outOfBandMigrationRunner *oobmigrat
 		t := time.NewTicker(5 * time.Second)
 		for range t.C {
 			allowAccessByDefault, authzProviders, _, _ :=
-				eiauthz.ProvidersFromConfig(ctx, conf.Get(), database.GlobalExternalServices)
+				eiauthz.ProvidersFromConfig(ctx, conf.Get(), esStore)
 			authz.SetProviders(allowAccessByDefault, authzProviders)
 		}
 	}()
 
 	enterpriseServices.AuthzResolver = resolvers.NewResolver(db, timeutil.Now)
 	return nil
-}
-
-func init() {
-	// Report any authz provider problems in external configs.
-	conf.ContributeWarning(func(cfg conf.Unified) (problems conf.Problems) {
-		_, _, seriousProblems, warnings :=
-			eauthz.ProvidersFromConfig(context.Background(), &cfg, database.GlobalExternalServices)
-		problems = append(problems, conf.NewExternalServiceProblems(seriousProblems...)...)
-		problems = append(problems, conf.NewExternalServiceProblems(warnings...)...)
-		return problems
-	})
 }

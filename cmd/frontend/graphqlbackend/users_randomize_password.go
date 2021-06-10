@@ -9,10 +9,12 @@ import (
 	"github.com/sourcegraph/sourcegraph/cmd/frontend/globals"
 	"github.com/sourcegraph/sourcegraph/cmd/frontend/internal/auth/userpasswd"
 	"github.com/sourcegraph/sourcegraph/internal/database"
+	"github.com/sourcegraph/sourcegraph/internal/database/dbutil"
 )
 
 type randomizeUserPasswordResult struct {
 	userID int32
+	db     dbutil.DB
 }
 
 func (r *randomizeUserPasswordResult) ResetPasswordURL(ctx context.Context) (*string, error) {
@@ -23,7 +25,7 @@ func (r *randomizeUserPasswordResult) ResetPasswordURL(ctx context.Context) (*st
 	// This method modifies the DB, which is somewhat counterintuitive for a "value" type from an
 	// implementation POV. Its behavior is justified because it is convenient and intuitive from the
 	// POV of the API consumer.
-	resetURL, err := backend.MakePasswordResetURL(ctx, r.userID)
+	resetURL, err := backend.MakePasswordResetURL(ctx, r.db, r.userID)
 	if err != nil {
 		return nil, err
 	}
@@ -48,5 +50,5 @@ func (r *schemaResolver) RandomizeUserPassword(ctx context.Context, args *struct
 		return nil, err
 	}
 
-	return &randomizeUserPasswordResult{userID: userID}, nil
+	return &randomizeUserPasswordResult{db: r.db, userID: userID}, nil
 }

@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/sourcegraph/sourcegraph/internal/database"
+	"github.com/sourcegraph/sourcegraph/internal/database/dbtesting"
 )
 
 func TestCheckEmailAbuse(t *testing.T) {
@@ -63,7 +64,7 @@ func TestCheckEmailAbuse(t *testing.T) {
 				database.Mocks.UserEmails.GetLatestVerificationSentEmail = nil
 			}()
 
-			abused, reason, err := checkEmailAbuse(ctx, "fake@localhost")
+			abused, reason, err := checkEmailAbuse(ctx, &dbtesting.MockDB{}, "fake@localhost")
 			if test.expErr != err {
 				t.Fatalf("err: want %v but got %v", test.expErr, err)
 			} else if test.expAbused != abused {

@@ -22,7 +22,7 @@ func (r *schemaResolver) RepoGroups(ctx context.Context) ([]*repoGroup, error) {
 		return nil, err
 	}
 
-	groupsByName, err := searchrepos.ResolveRepoGroups(ctx, settings)
+	groupsByName, err := searchrepos.ResolveRepoGroups(ctx, r.db, settings)
 	if err != nil {
 		return nil, err
 	}

@@ -14,7 +14,7 @@ import (
 
 	"github.com/sourcegraph/sourcegraph/cmd/frontend/backend"
 	"github.com/sourcegraph/sourcegraph/cmd/frontend/internal/app/errorutil"
-	"github.com/sourcegraph/sourcegraph/internal/database/dbconn"
+	"github.com/sourcegraph/sourcegraph/internal/database/dbutil"
 	"github.com/sourcegraph/sourcegraph/internal/env"
 	"github.com/sourcegraph/sourcegraph/internal/errcode"
 )
@@ -29,6 +29,7 @@ type proxyEndpoint struct {
 // respective reverse proxy. proxyEndpoints come from callers calling ReverseProxyHandler.Populate().
 // zero value is useful and will provide a "no endpoint found" index until some endpoints get populated.
 type ReverseProxyHandler struct {
+	DB dbutil.DB
 	// protects the reverseProxies map
 	sync.RWMutex
 	// keys are the displayNames
@@ -36,8 +37,8 @@ type ReverseProxyHandler struct {
 }
 
 func (rph *ReverseProxyHandler) AddToRouter(r *mux.Router) {
-	r.Handle("/", adminOnly(http.HandlerFunc(rph.serveIndex)))
-	r.PathPrefix("/proxies").Handler(http.StripPrefix("/-/debug/proxies", adminOnly(errorutil.Handler(rph.serveReverseProxy))))
+	r.Handle("/", adminOnly(http.HandlerFunc(rph.serveIndex), rph.DB))
+	r.PathPrefix("/proxies").Handler(http.StripPrefix("/-/debug/proxies", adminOnly(errorutil.Handler(rph.serveReverseProxy), rph.DB)))
 }
 
 // serveIndex composes the simple index page with the endpoints sorted by their name.
@@ -99,7 +100,7 @@ func (rph *ReverseProxyHandler) Populate(peps []Endpoint) {
 	for _, ep := range peps {
 		displayName := displayNameFromEndpoint(ep)
 		rps[displayName] = &proxyEndpoint{
-			reverseProxy: reverseProxyFromHost(ep.Addr, displayName),
+			reverseProxy: reverseProxyFromHost(ep.Addr, displayName, rph.DB),
 			host:         ep.Addr,
 		}
 	}
@@ -129,7 +130,7 @@ func displayNameFromEndpoint(ep Endpoint) string {
 
 // reverseProxyFromHost creates a reverse proxy from specified host with the path prefix that will be stripped from
 // request before it gets sent to the destination endpoint.
-func reverseProxyFromHost(host string, pathPrefix string) http.Handler {
+func reverseProxyFromHost(host string, pathPrefix string, db dbutil.DB) http.Handler {
 	// 🚨 SECURITY: Only admins can create reverse proxies from host
 	return adminOnly(&httputil.ReverseProxy{
 		Director: func(req *http.Request) {
@@ -140,13 +141,13 @@ func reverseProxyFromHost(host string, pathPrefix string) http.Handler {
 			}
 		},
 		ErrorLog: log.New(env.DebugOut, fmt.Sprintf("k8s %s debug proxy: ", host), log.LstdFlags),
-	})
+	}, db)
 }
 
 // adminOnly is a HTTP middleware which only allows requests by admins.
-func adminOnly(next http.Handler) http.Handler {
+func adminOnly(next http.Handler, db dbutil.DB) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if err := backend.CheckCurrentUserIsSiteAdmin(r.Context(), dbconn.Global); err != nil {
+		if err := backend.CheckCurrentUserIsSiteAdmin(r.Context(), db); err != nil {
 			http.Error(w, err.Error(), http.StatusUnauthorized)
 			return
 		}

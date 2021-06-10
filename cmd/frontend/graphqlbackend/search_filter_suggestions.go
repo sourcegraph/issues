@@ -16,7 +16,7 @@ func (r *schemaResolver) SearchFilterSuggestions(ctx context.Context) (*searchFi
 		return nil, err
 	}
 
-	groupsByName, err := searchrepos.ResolveRepoGroups(ctx, settings)
+	groupsByName, err := searchrepos.ResolveRepoGroups(ctx, r.db, settings)
 	if err != nil {
 		return nil, err
 	}

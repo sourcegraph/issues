@@ -72,7 +72,7 @@ func (r *Resolver) Resolve(ctx context.Context, op Options) (Resolved, error) {
 	// groups and the set of repos specified with repo:. (If none are specified
 	// with repo:, then include all from the group.)
 	if groupNames := op.RepoGroupFilters; len(groupNames) > 0 {
-		groups, err := ResolveRepoGroups(ctx, op.UserSettings)
+		groups, err := ResolveRepoGroups(ctx, r.DB, op.UserSettings)
 		if err != nil {
 			return Resolved{}, err
 		}

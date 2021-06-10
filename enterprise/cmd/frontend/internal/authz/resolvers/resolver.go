@@ -82,7 +82,7 @@ func (r *Resolver) SetRepositoryPermissionsForUsers(ctx context.Context, args *g
 		return nil, err
 	}
 	// Make sure the repo ID is valid.
-	if _, err = database.GlobalRepos.Get(ctx, repoID); err != nil {
+	if _, err = database.Repos(r.store.Handle().DB()).Get(ctx, repoID); err != nil {
 		return nil, err
 	}
 
@@ -109,7 +109,7 @@ func (r *Resolver) SetRepositoryPermissionsForUsers(ctx context.Context, args *g
 	cfg := globals.PermissionsUserMapping()
 	switch cfg.BindID {
 	case "email":
-		emails, err := database.GlobalUserEmails.GetVerifiedEmails(ctx, bindIDs...)
+		emails, err := database.UserEmails(r.store.Handle().DB()).GetVerifiedEmails(ctx, bindIDs...)
 		if err != nil {
 			return nil, err
 		}
@@ -120,7 +120,7 @@ func (r *Resolver) SetRepositoryPermissionsForUsers(ctx context.Context, args *g
 		}
 
 	case "username":
-		users, err := database.GlobalUsers.GetByUsernames(ctx, bindIDs...)
+		users, err := database.UsersWith(r.store).GetByUsernames(ctx, bindIDs...)
 		if err != nil {
 			return nil, err
 		}
@@ -226,10 +226,10 @@ func (r *Resolver) AuthorizedUserRepositories(ctx context.Context, args *graphql
 	if args.Email != nil {
 		bindID = *args.Email
 		// 🚨 SECURITY: It is critical to ensure the email is verified.
-		user, err = database.GlobalUsers.GetByVerifiedEmail(ctx, *args.Email)
+		user, err = database.UsersWith(r.store).GetByVerifiedEmail(ctx, *args.Email)
 	} else if args.Username != nil {
 		bindID = *args.Username
-		user, err = database.GlobalUsers.GetByUsername(ctx, *args.Username)
+		user, err = database.UsersWith(r.store).GetByUsername(ctx, *args.Username)
 	} else {
 		return nil, errors.New("neither email nor username is given to identify a user")
 	}
@@ -293,7 +293,7 @@ func (r *Resolver) AuthorizedUsers(ctx context.Context, args *graphqlbackend.Rep
 		return nil, err
 	}
 	// Make sure the repo ID is valid.
-	if _, err = database.GlobalRepos.Get(ctx, repoID); err != nil {
+	if _, err = database.Repos(r.store.Handle().DB()).Get(ctx, repoID); err != nil {
 		return nil, err
 	}
 
@@ -350,7 +350,7 @@ func (r *Resolver) RepositoryPermissionsInfo(ctx context.Context, id graphql.ID)
 		return nil, err
 	}
 	// Make sure the repo ID is valid and not soft-deleted.
-	if _, err = database.GlobalRepos.Get(ctx, repoID); err != nil {
+	if _, err = database.Repos(r.store.Handle().DB()).Get(ctx, repoID); err != nil {
 		return nil, err
 	}
 
@@ -385,7 +385,7 @@ func (r *Resolver) UserPermissionsInfo(ctx context.Context, id graphql.ID) (grap
 		return nil, err
 	}
 	// Make sure the user ID is valid and not soft-deleted.
-	if _, err = database.GlobalUsers.GetByID(ctx, userID); err != nil {
+	if _, err = database.UsersWith(r.store).GetByID(ctx, userID); err != nil {
 		return nil, err
 	}
 

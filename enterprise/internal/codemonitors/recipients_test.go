@@ -11,8 +11,10 @@ func TestAllRecipientsForEmailIDInt64(t *testing.T) {
 		t.Skip()
 	}
 
+	t.Parallel()
+
 	ctx, s := newTestStore(t)
-	_, id, _, userCTX := newTestUser(ctx, t)
+	_, id, _, userCTX := newTestUser(ctx, t, s.Handle().DB())
 	_, err := s.insertTestMonitor(userCTX, t)
 	if err != nil {
 		t.Fatal(err)

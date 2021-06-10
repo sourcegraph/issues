@@ -10,7 +10,7 @@ import (
 	"github.com/keegancsmith/sqlf"
 
 	"github.com/sourcegraph/sourcegraph/internal/database/basestore"
-	"github.com/sourcegraph/sourcegraph/internal/database/dbconn"
+	"github.com/sourcegraph/sourcegraph/internal/database/dbutil"
 )
 
 type State struct {
@@ -18,12 +18,12 @@ type State struct {
 	Initialized bool // whether the initial site admin account has been created
 }
 
-func Get(ctx context.Context) (*State, error) {
+func Get(ctx context.Context, db dbutil.DB) (*State, error) {
 	if Mock.Get != nil {
 		return Mock.Get(ctx)
 	}
 
-	configuration, err := getConfiguration(ctx)
+	configuration, err := getConfiguration(ctx, db)
 	if err == nil {
 		return configuration, nil
 	}
@@ -32,27 +32,21 @@ func Get(ctx context.Context) (*State, error) {
 		return nil, errors.Wrap(err, "getConfiguration")
 	}
 
-	b := basestore.NewWithDB(dbconn.Global, sql.TxOptions{})
-	err = tryInsertNew(ctx, b)
+	err = tryInsertNew(ctx, db)
 	if err != nil {
 		return nil, err
 	}
-	return getConfiguration(ctx)
+	return getConfiguration(ctx, db)
 }
 
-func SiteInitialized(ctx context.Context) (alreadyInitialized bool, err error) {
-	if err := dbconn.Global.QueryRowContext(ctx, `SELECT initialized FROM global_state LIMIT 1`).Scan(&alreadyInitialized); err != nil {
+func SiteInitialized(ctx context.Context, db dbutil.DB) (alreadyInitialized bool, err error) {
+	if err := db.QueryRowContext(ctx, `SELECT initialized FROM global_state LIMIT 1`).Scan(&alreadyInitialized); err != nil {
 		if err == sql.ErrNoRows {
 			return false, nil
 		}
 		return false, err
 	}
 	return alreadyInitialized, err
-}
-
-type queryExecDatabaseHandler interface {
-	QueryRow(ctx context.Context, query *sqlf.Query) *sql.Row
-	Exec(ctx context.Context, query *sqlf.Query) error
 }
 
 // EnsureInitialized ensures the site is marked as having been initialized. If the site was already
@@ -65,38 +59,43 @@ type queryExecDatabaseHandler interface {
 // privileges (even if all other users are deleted). This reduces the risk of (1) a site admin
 // accidentally deleting all user accounts and opening up their site to any attacker becoming a site
 // admin and (2) a bug in user account creation code letting attackers create site admin accounts.
-func EnsureInitialized(ctx context.Context, dbh queryExecDatabaseHandler) (alreadyInitialized bool, err error) {
-	if err := tryInsertNew(ctx, dbh); err != nil {
+func EnsureInitialized(ctx context.Context, db dbutil.DB) (alreadyInitialized bool, err error) {
+	dbh := basestore.NewHandleWithDB(db, sql.TxOptions{})
+	tx, err := dbh.Transact(ctx)
+	if err != nil {
+		return false, err
+	}
+	defer func() {
+		err = tx.Done(err)
+	}()
+	if err := tryInsertNew(ctx, tx.DB()); err != nil {
 		return false, err
 	}
 
 	// The "SELECT ... FOR UPDATE" prevents a race condition where two calls, each in their own transaction,
 	// would see this initialized value as false and then set it to true below.
-	if err := dbh.QueryRow(ctx, sqlf.Sprintf(`SELECT initialized FROM global_state FOR UPDATE LIMIT 1`)).Scan(&alreadyInitialized); err != nil {
+	q := sqlf.Sprintf(`SELECT initialized FROM global_state FOR UPDATE LIMIT 1`)
+	if err := tx.DB().QueryRowContext(ctx, q.Query(sqlf.PostgresBindVar), q.Args()...).Scan(&alreadyInitialized); err != nil {
 		return false, err
 	}
 
 	if !alreadyInitialized {
-		err = dbh.Exec(ctx, sqlf.Sprintf("UPDATE global_state SET initialized=true"))
+		_, err = tx.DB().ExecContext(ctx, sqlf.Sprintf("UPDATE global_state SET initialized=true").Query(sqlf.PostgresBindVar))
 	}
 
 	return alreadyInitialized, err
 }
 
-func getConfiguration(ctx context.Context) (*State, error) {
+func getConfiguration(ctx context.Context, db dbutil.DB) (*State, error) {
 	configuration := &State{}
-	err := dbconn.Global.QueryRowContext(ctx, "SELECT site_id, initialized FROM global_state LIMIT 1").Scan(
+	err := db.QueryRowContext(ctx, "SELECT site_id, initialized FROM global_state LIMIT 1").Scan(
 		&configuration.SiteID,
 		&configuration.Initialized,
 	)
 	return configuration, err
 }
 
-type execDatabaseHandler interface {
-	Exec(ctx context.Context, query *sqlf.Query) error
-}
-
-func tryInsertNew(ctx context.Context, dbh execDatabaseHandler) error {
+func tryInsertNew(ctx context.Context, db dbutil.DB) error {
 	siteID, err := uuid.NewRandom()
 	if err != nil {
 		return err
@@ -110,14 +109,15 @@ func tryInsertNew(ctx context.Context, dbh execDatabaseHandler) error {
 	// because previously global state had a siteID and now we ignore that (or someone ran `DELETE
 	// FROM global_state;` in the PostgreSQL database). In either case, it's safe to generate a new
 	// site ID and set the site as initialized.
-	err = dbh.Exec(ctx, sqlf.Sprintf(`
+	q := sqlf.Sprintf(`
 	INSERT INTO global_state(
 		site_id,
 		initialized
 	) values(
 		%s,
 		EXISTS (SELECT 1 FROM users WHERE deleted_at IS NULL)
-	);`, siteID))
+	);`, siteID)
+	_, err = db.ExecContext(ctx, q.Query(sqlf.PostgresBindVar), q.Args()...)
 	if err != nil {
 		if pgErr, ok := err.(*pgconn.PgError); ok {
 			if pgErr.ConstraintName == "global_state_pkey" {

@@ -156,7 +156,7 @@ func (r *schemaResolver) InvalidateSessionsByID(ctx context.Context, args *struc
 	if err != nil {
 		return nil, err
 	}
-	if err := session.InvalidateSessionsByID(ctx, userID); err != nil {
+	if err := session.InvalidateSessionsByID(ctx, r.db, userID); err != nil {
 		return nil, err
 	}
 	return &EmptyResponse{}, nil

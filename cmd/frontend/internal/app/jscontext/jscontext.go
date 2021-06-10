@@ -20,7 +20,7 @@ import (
 	"github.com/sourcegraph/sourcegraph/cmd/frontend/internal/siteid"
 	"github.com/sourcegraph/sourcegraph/internal/actor"
 	"github.com/sourcegraph/sourcegraph/internal/conf"
-	"github.com/sourcegraph/sourcegraph/internal/database/dbconn"
+	"github.com/sourcegraph/sourcegraph/internal/database/dbutil"
 	"github.com/sourcegraph/sourcegraph/internal/database/globalstatedb"
 	"github.com/sourcegraph/sourcegraph/internal/env"
 	"github.com/sourcegraph/sourcegraph/internal/lazyregexp"
@@ -96,7 +96,7 @@ type JSContext struct {
 
 // NewJSContextFromRequest populates a JSContext struct from the HTTP
 // request.
-func NewJSContextFromRequest(req *http.Request) JSContext {
+func NewJSContextFromRequest(req *http.Request, db dbutil.DB) JSContext {
 	actor := actor.FromContext(req.Context())
 
 	headers := make(map[string]string)
@@ -116,7 +116,7 @@ func NewJSContextFromRequest(req *http.Request) JSContext {
 	siteID := siteid.Get()
 
 	// Show the site init screen?
-	globalState, err := globalstatedb.Get(req.Context())
+	globalState, err := globalstatedb.Get(req.Context(), db)
 	needsSiteInit := err == nil && !globalState.Initialized
 
 	// Auth providers
@@ -141,7 +141,7 @@ func NewJSContextFromRequest(req *http.Request) JSContext {
 
 	// Check if batch changes are enabled for this user.
 	batchChangesEnabled := conf.BatchChangesEnabled()
-	if conf.BatchChangesRestrictedToAdmins() && backend.CheckCurrentUserIsSiteAdmin(req.Context(), dbconn.Global) != nil {
+	if conf.BatchChangesRestrictedToAdmins() && backend.CheckCurrentUserIsSiteAdmin(req.Context(), db) != nil {
 		batchChangesEnabled = false
 	}
 

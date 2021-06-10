@@ -4,7 +4,7 @@ import (
 	"context"
 	"testing"
 
-	"github.com/sourcegraph/sourcegraph/internal/database/dbtesting"
+	"github.com/sourcegraph/sourcegraph/internal/database/dbtest"
 	"github.com/sourcegraph/sourcegraph/internal/observation"
 )
 
@@ -12,8 +12,8 @@ func TestDatabaseExists(t *testing.T) {
 	if testing.Short() {
 		t.Skip()
 	}
-	db := dbtesting.GetDB(t)
-	populateTestStore(t)
+	db := dbtest.NewDB(t, "")
+	populateTestStore(t, db)
 	store := NewStore(db, &observation.TestContext)
 
 	testCases := []struct {

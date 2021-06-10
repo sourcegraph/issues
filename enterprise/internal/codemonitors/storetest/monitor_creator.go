@@ -2,7 +2,6 @@ package storetest
 
 import (
 	"context"
-	"database/sql"
 	"testing"
 	"time"
 
@@ -14,13 +13,8 @@ import (
 	"github.com/sourcegraph/sourcegraph/cmd/frontend/graphqlbackend"
 	"github.com/sourcegraph/sourcegraph/enterprise/internal/codemonitors"
 	"github.com/sourcegraph/sourcegraph/internal/actor"
-	"github.com/sourcegraph/sourcegraph/internal/database/dbconn"
-	"github.com/sourcegraph/sourcegraph/internal/database/dbtesting"
+	"github.com/sourcegraph/sourcegraph/internal/database/dbutil"
 )
-
-func init() {
-	dbtesting.DBNameSuffix = "codemonitorsstoredb"
-}
 
 const (
 	testQuery       = "repo:github\\.com/sourcegraph/sourcegraph func type:diff patternType:literal"
@@ -66,26 +60,25 @@ func (s *TestStore) InsertTestMonitor(ctx context.Context, t *testing.T) (*codem
 
 func NewTestStoreWithStore(t *testing.T, store *codemonitors.Store) (context.Context, *TestStore) {
 	ctx := backend.WithAuthzBypass(context.Background())
-	db := dbtesting.GetDB(t)
 	now := time.Now().Truncate(time.Microsecond)
-	return ctx, &TestStore{codemonitors.NewStoreWithClock(db, func() time.Time { return now })}
+	return ctx, &TestStore{codemonitors.NewStoreWithClock(store.Handle().DB(), func() time.Time { return now })}
 }
 
-func NewTestUser(ctx context.Context, t *testing.T) (name string, id int32, namespace graphql.ID, userContext context.Context) {
+func NewTestUser(ctx context.Context, t *testing.T, db dbutil.DB) (name string, id int32, namespace graphql.ID, userContext context.Context) {
 	t.Helper()
 
 	name = "cm-user1"
-	id = insertTestUser(t, dbconn.Global, name, true)
+	id = insertTestUser(t, db, name, true)
 	namespace = relay.MarshalID("User", id)
 	ctx = actor.WithActor(ctx, actor.FromUser(id))
 	return name, id, namespace, ctx
 }
 
-func insertTestUser(t *testing.T, db *sql.DB, name string, isAdmin bool) (userID int32) {
+func insertTestUser(t *testing.T, db dbutil.DB, name string, isAdmin bool) (userID int32) {
 	t.Helper()
 
 	q := sqlf.Sprintf("INSERT INTO users (username, site_admin) VALUES (%s, %t) RETURNING id", name, isAdmin)
-	err := db.QueryRow(q.Query(sqlf.PostgresBindVar), q.Args()...).Scan(&userID)
+	err := db.QueryRowContext(context.Background(), q.Query(sqlf.PostgresBindVar), q.Args()...).Scan(&userID)
 	if err != nil {
 		t.Fatal(err)
 	}

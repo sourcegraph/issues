@@ -12,13 +12,9 @@ import (
 	"github.com/golang-migrate/migrate/v4"
 
 	"github.com/sourcegraph/sourcegraph/internal/database/dbconn"
-	"github.com/sourcegraph/sourcegraph/internal/database/dbtesting"
+	"github.com/sourcegraph/sourcegraph/internal/database/dbtest"
 	"github.com/sourcegraph/sourcegraph/migrations"
 )
-
-func init() {
-	dbtesting.DBNameSuffix = "migrations"
-}
 
 func TestIDConstraints(t *testing.T) {
 	cases := []struct {
@@ -76,7 +72,7 @@ func TestFrontendMigrations(t *testing.T) {
 	}
 
 	// Setup a global test database
-	db := dbtesting.GetDB(t)
+	db := dbtest.NewDB(t, "")
 	testMigrations(t, db, dbconn.Frontend)
 }
 
@@ -86,7 +82,7 @@ func TestCodeIntelMigrations(t *testing.T) {
 	}
 
 	// Setup a global test database
-	db := dbtesting.GetDB(t)
+	db := dbtest.NewDB(t, "")
 	testMigrations(t, db, dbconn.CodeIntel)
 }
 
@@ -102,7 +98,7 @@ func testMigrations(t *testing.T, db *sql.DB, database *dbconn.Database) {
 		dbconn.Frontend,
 		dbconn.CodeIntel,
 	} {
-		if err := dbconn.MigrateDB(dbconn.Global, database); err != nil {
+		if err := dbconn.MigrateDB(db, database); err != nil {
 			t.Errorf("unexpected error running initial migrations: %s", err)
 		}
 	}

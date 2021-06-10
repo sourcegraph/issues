@@ -13,17 +13,15 @@ import (
 	"github.com/sourcegraph/sourcegraph/enterprise/internal/codemonitors/email"
 	"github.com/sourcegraph/sourcegraph/enterprise/internal/codemonitors/resolvers"
 	"github.com/sourcegraph/sourcegraph/enterprise/internal/codemonitors/storetest"
-	"github.com/sourcegraph/sourcegraph/internal/database/dbtesting"
+	"github.com/sourcegraph/sourcegraph/internal/database/dbtest"
 )
-
-func init() {
-	dbtesting.DBNameSuffix = "codemonitorsbackground"
-}
 
 func TestActionRunner(t *testing.T) {
 	if testing.Short() {
 		t.Skip()
 	}
+
+	t.Parallel()
 
 	externalURL := "https://www.sourcegraph.com"
 	testQuery := "test patternType:literal"
@@ -38,14 +36,6 @@ func TestActionRunner(t *testing.T) {
 		externalURL, _ := url.Parse("https://www.sourcegraph.com")
 		return externalURL
 	}
-
-	// Create a TestStore.
-	var err error
-	db := dbtesting.GetDB(t)
-	now := time.Now()
-	clock := func() time.Time { return now }
-	s := codemonitors.NewStoreWithClock(db, clock)
-	ctx, ts := storetest.NewTestStoreWithStore(t, s)
 
 	tests := []struct {
 		name               string
@@ -78,10 +68,15 @@ func TestActionRunner(t *testing.T) {
 	)
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			//Empty database, preserve schema.
-			dbtesting.SetupGlobalTestDB(t)
+			// Create a TestStore.
+			var err error
+			db := dbtest.NewDB(t, "")
+			now := time.Now()
+			clock := func() time.Time { return now }
+			s := codemonitors.NewStoreWithClock(db, clock)
+			ctx, ts := storetest.NewTestStoreWithStore(t, s)
 
-			_, _, _, userCtx := storetest.NewTestUser(ctx, t)
+			_, _, _, userCtx := storetest.NewTestUser(ctx, t, db)
 
 			// Run a complete pipeline from creation of a code monitor to sending of an email.
 			_, err = ts.InsertTestMonitor(userCtx, t)

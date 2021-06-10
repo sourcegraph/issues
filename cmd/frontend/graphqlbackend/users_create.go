@@ -68,7 +68,7 @@ func (r *createUserResult) ResetPasswordURL(ctx context.Context) (*string, error
 
 	var ru string
 	if conf.CanSendEmail() {
-		ru, err := userpasswd.HandleSetPasswordEmail(ctx, r.user.ID)
+		ru, err := userpasswd.HandleSetPasswordEmail(ctx, r.db, r.user.ID)
 		if err == nil {
 			return &ru, nil
 		}
@@ -78,7 +78,7 @@ func (r *createUserResult) ResetPasswordURL(ctx context.Context) (*string, error
 	// This method modifies the DB, which is somewhat counterintuitive for a "value" type from an
 	// implementation POV. Its behavior is justified because it is convenient and intuitive from the
 	// POV of the API consumer.
-	resetURL, err := backend.MakePasswordResetURL(ctx, r.user.ID)
+	resetURL, err := backend.MakePasswordResetURL(ctx, r.db, r.user.ID)
 	if err != nil {
 		return nil, err
 	}

@@ -35,7 +35,7 @@ func main() {
 // the jobs configured in this service. This also enables repository update operations to fetch
 // permissions from code hosts.
 func setAuthzProviders() {
-	_, err := shared.InitDatabase()
+	db, err := shared.InitDatabase()
 	if err != nil {
 		return
 	}
@@ -43,7 +43,7 @@ func setAuthzProviders() {
 	ctx := context.Background()
 
 	for range time.NewTicker(5 * time.Second).C {
-		allowAccessByDefault, authzProviders, _, _ := eiauthz.ProvidersFromConfig(ctx, conf.Get(), database.GlobalExternalServices)
+		allowAccessByDefault, authzProviders, _, _ := eiauthz.ProvidersFromConfig(ctx, conf.Get(), database.ExternalServices(db))
 		authz.SetProviders(allowAccessByDefault, authzProviders)
 	}
 }

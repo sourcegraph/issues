@@ -13,7 +13,7 @@ import (
 
 	registry "github.com/sourcegraph/sourcegraph/cmd/frontend/registry/api"
 	"github.com/sourcegraph/sourcegraph/internal/database"
-	"github.com/sourcegraph/sourcegraph/internal/database/dbconn"
+	"github.com/sourcegraph/sourcegraph/internal/database/dbutil"
 )
 
 // dbExtension describes an extension in the extension registry.
@@ -53,7 +53,9 @@ type dbExtension struct {
 	NonCanonicalIsWorkInProgress bool
 }
 
-type dbExtensions struct{}
+type dbExtensions struct {
+	db dbutil.DB
+}
 
 // extensionNotFoundError occurs when an extension is not found in the extension registry.
 type extensionNotFoundError struct {
@@ -82,7 +84,7 @@ func (s dbExtensions) Create(ctx context.Context, publisherUserID, publisherOrgI
 		return 0, err
 	}
 
-	if err := dbconn.Global.QueryRowContext(ctx,
+	if err := s.db.QueryRowContext(ctx,
 		// Include users/orgs table query (with "FOR UPDATE") to ensure that the publisher user/org
 		// not been deleted. If it was deleted, the query will return an error.
 		`
@@ -289,7 +291,7 @@ ORDER BY %s,
 		limitOffset.SQL(),
 	)
 
-	rows, err := dbconn.Global.QueryContext(ctx, q.Query(sqlf.PostgresBindVar), q.Args()...)
+	rows, err := s.db.QueryContext(ctx, q.Query(sqlf.PostgresBindVar), q.Args()...)
 	if err != nil {
 		return nil, err
 	}
@@ -315,19 +317,19 @@ ORDER BY %s,
 func (s dbExtensions) Count(ctx context.Context, opt dbExtensionsListOptions) (int, error) {
 	q := sqlf.Sprintf("SELECT COUNT(*) %s", s.listCountSQL(opt.sqlConditions()))
 	var count int
-	if err := dbconn.Global.QueryRowContext(ctx, q.Query(sqlf.PostgresBindVar), q.Args()...).Scan(&count); err != nil {
+	if err := s.db.QueryRowContext(ctx, q.Query(sqlf.PostgresBindVar), q.Args()...).Scan(&count); err != nil {
 		return 0, err
 	}
 	return count, nil
 }
 
 // Update updates information about the registry extension.
-func (dbExtensions) Update(ctx context.Context, id int32, name *string) error {
+func (s dbExtensions) Update(ctx context.Context, id int32, name *string) error {
 	if mocks.extensions.Update != nil {
 		return mocks.extensions.Update(id, name)
 	}
 
-	res, err := dbconn.Global.ExecContext(ctx,
+	res, err := s.db.ExecContext(ctx,
 		"UPDATE registry_extensions SET name=COALESCE($2, name), updated_at=now() WHERE id=$1 AND deleted_at IS NULL",
 		id, name,
 	)
@@ -345,12 +347,12 @@ func (dbExtensions) Update(ctx context.Context, id int32, name *string) error {
 }
 
 // Delete marks an registry extension as deleted.
-func (dbExtensions) Delete(ctx context.Context, id int32) error {
+func (s dbExtensions) Delete(ctx context.Context, id int32) error {
 	if mocks.extensions.Delete != nil {
 		return mocks.extensions.Delete(id)
 	}
 
-	res, err := dbconn.Global.ExecContext(ctx, "UPDATE registry_extensions SET deleted_at=now() WHERE id=$1 AND deleted_at IS NULL", id)
+	res, err := s.db.ExecContext(ctx, "UPDATE registry_extensions SET deleted_at=now() WHERE id=$1 AND deleted_at IS NULL", id)
 	if err != nil {
 		return err
 	}

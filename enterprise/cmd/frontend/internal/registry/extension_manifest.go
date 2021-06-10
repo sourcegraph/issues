@@ -9,6 +9,7 @@ import (
 	"strconv"
 
 	"github.com/sourcegraph/sourcegraph/internal/conf"
+	"github.com/sourcegraph/sourcegraph/internal/database/dbutil"
 	"github.com/sourcegraph/sourcegraph/internal/errcode"
 	"github.com/sourcegraph/sourcegraph/internal/jsonc"
 	"github.com/sourcegraph/sourcegraph/internal/lazyregexp"
@@ -26,8 +27,8 @@ func validateExtensionManifest(text string) error {
 // releases, it returns a nil manifest. If the manifest has no "url" field itself, a "url" field
 // pointing to the extension's bundle is inserted. It also returns the date that the release was
 // published.
-func getLatestRelease(ctx context.Context, extensionID string, registryExtensionID int32, releaseTag string) (*dbRelease, error) {
-	release, err := dbReleases{}.GetLatest(ctx, registryExtensionID, releaseTag, false)
+func getLatestRelease(ctx context.Context, db dbutil.DB, extensionID string, registryExtensionID int32, releaseTag string) (*dbRelease, error) {
+	release, err := dbReleases{db: db}.GetLatest(ctx, registryExtensionID, releaseTag, false)
 	if err != nil && !errcode.IsNotFound(err) {
 		return nil, err
 	}
@@ -47,14 +48,14 @@ func getLatestRelease(ctx context.Context, extensionID string, registryExtension
 // returns a nil manifest. If the manifest has no "url" field itself, a "url" field
 // pointing to the extension's bundle is inserted. It also returns the date that the
 // release was published.
-func getLatestForBatch(ctx context.Context, vs []*dbExtension) (map[int32]*dbRelease, error) {
+func getLatestForBatch(ctx context.Context, db dbutil.DB, vs []*dbExtension) (map[int32]*dbRelease, error) {
 	var extensionIDs []int32
 	extensionIDMap := map[int32]string{}
 	for _, v := range vs {
 		extensionIDs = append(extensionIDs, v.ID)
 		extensionIDMap[v.ID] = v.NonCanonicalExtensionID
 	}
-	releases, err := dbReleases{}.GetLatestBatch(ctx, extensionIDs, "release", false)
+	releases, err := dbReleases{db: db}.GetLatestBatch(ctx, extensionIDs, "release", false)
 	if err != nil {
 		return nil, err
 	}

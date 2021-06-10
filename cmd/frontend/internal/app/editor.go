@@ -15,6 +15,7 @@ import (
 	"github.com/sourcegraph/sourcegraph/cmd/frontend/backend"
 	"github.com/sourcegraph/sourcegraph/cmd/frontend/internal/cloneurls"
 	"github.com/sourcegraph/sourcegraph/internal/api"
+	"github.com/sourcegraph/sourcegraph/internal/database/dbutil"
 )
 
 func editorRev(ctx context.Context, repoName api.RepoName, rev string, beExplicit bool) (string, error) {
@@ -52,6 +53,7 @@ func editorRev(ctx context.Context, repoName api.RepoName, rev string, beExplici
 
 // editorRequest represents the parameters to a Sourcegraph "open file", "search", etc. editor request.
 type editorRequest struct {
+	db dbutil.DB
 	// Fields that are required in all requests.
 	editor  string // editor name, e.g. "Atom", "Sublime", etc.
 	version string // editor extension version
@@ -118,7 +120,7 @@ func (r *editorRequest) searchRedirect(ctx context.Context) (string, error) {
 	var repoFilter string
 	if s.remoteURL != "" {
 		// Search in this repository.
-		repoName, err := cloneurls.ReposourceCloneURLToRepoName(ctx, s.remoteURL)
+		repoName, err := cloneurls.ReposourceCloneURLToRepoName(ctx, r.db, s.remoteURL)
 		if err != nil {
 			return "", err
 		}
@@ -170,7 +172,7 @@ func (r *editorRequest) searchRedirect(ctx context.Context) (string, error) {
 func (r *editorRequest) openFileRedirect(ctx context.Context) (string, error) {
 	of := r.openFileRequest
 	// Determine the repo name and branch.
-	repoName, err := cloneurls.ReposourceCloneURLToRepoName(ctx, of.remoteURL)
+	repoName, err := cloneurls.ReposourceCloneURLToRepoName(ctx, r.db, of.remoteURL)
 	if err != nil {
 		return "", err
 	}
@@ -212,8 +214,9 @@ func (r *editorRequest) redirectURL(ctx context.Context) (string, error) {
 }
 
 // parseEditorRequest parses an editor request from the search query values.
-func parseEditorRequest(q url.Values) (*editorRequest, error) {
+func parseEditorRequest(db dbutil.DB, q url.Values) (*editorRequest, error) {
 	v := &editorRequest{
+		db:                db,
 		editor:            q.Get("editor"),
 		version:           q.Get("version"),
 		utmProductName:    q.Get("utm_product_name"),
@@ -265,19 +268,21 @@ func parseEditorRequest(q url.Values) (*editorRequest, error) {
 	return v, nil
 }
 
-func serveEditor(w http.ResponseWriter, r *http.Request) error {
-	editorRequest, err := parseEditorRequest(r.URL.Query())
-	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		fmt.Fprintf(w, "%s", err.Error())
+func serveEditor(db dbutil.DB) func(w http.ResponseWriter, r *http.Request) error {
+	return func(w http.ResponseWriter, r *http.Request) error {
+		editorRequest, err := parseEditorRequest(db, r.URL.Query())
+		if err != nil {
+			w.WriteHeader(http.StatusBadRequest)
+			fmt.Fprintf(w, "%s", err.Error())
+			return nil
+		}
+		redirectURL, err := editorRequest.redirectURL(r.Context())
+		if err != nil {
+			w.WriteHeader(http.StatusBadRequest)
+			fmt.Fprintf(w, "%s", err.Error())
+			return nil
+		}
+		http.Redirect(w, r, redirectURL, http.StatusSeeOther)
 		return nil
 	}
-	redirectURL, err := editorRequest.redirectURL(r.Context())
-	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		fmt.Fprintf(w, "%s", err.Error())
-		return nil
-	}
-	http.Redirect(w, r, redirectURL, http.StatusSeeOther)
-	return nil
 }

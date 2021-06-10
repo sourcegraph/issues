@@ -11,7 +11,7 @@ import (
 	"github.com/keegancsmith/sqlf"
 
 	"github.com/sourcegraph/sourcegraph/cmd/frontend/globals"
-	"github.com/sourcegraph/sourcegraph/internal/database/dbtesting"
+	"github.com/sourcegraph/sourcegraph/internal/database/dbtest"
 	"github.com/sourcegraph/sourcegraph/internal/workerutil"
 	"github.com/sourcegraph/sourcegraph/schema"
 )
@@ -20,7 +20,7 @@ func TestGetIndexByID(t *testing.T) {
 	if testing.Short() {
 		t.Skip()
 	}
-	db := dbtesting.GetDB(t)
+	db := dbtest.NewDB(t, "")
 	store := testStore(db)
 	ctx := context.Background()
 
@@ -96,7 +96,7 @@ func TestGetQueuedIndexRank(t *testing.T) {
 	if testing.Short() {
 		t.Skip()
 	}
-	db := dbtesting.GetDB(t)
+	db := dbtest.NewDB(t, "")
 	store := testStore(db)
 
 	t1 := time.Unix(1587396557, 0).UTC()
@@ -148,7 +148,7 @@ func TestGetIndexesByIDs(t *testing.T) {
 	if testing.Short() {
 		t.Skip()
 	}
-	db := dbtesting.GetDB(t)
+	db := dbtest.NewDB(t, "")
 	store := testStore(db)
 	ctx := context.Background()
 
@@ -213,7 +213,7 @@ func TestGetIndexes(t *testing.T) {
 	if testing.Short() {
 		t.Skip()
 	}
-	db := dbtesting.GetDB(t)
+	db := dbtest.NewDB(t, "")
 	store := testStore(db)
 	ctx := context.Background()
 
@@ -334,7 +334,7 @@ func TestIsQueued(t *testing.T) {
 	if testing.Short() {
 		t.Skip()
 	}
-	db := dbtesting.GetDB(t)
+	db := dbtest.NewDB(t, "")
 	store := testStore(db)
 
 	insertIndexes(t, db, Index{ID: 1, RepositoryID: 1, Commit: makeCommit(1)})
@@ -374,7 +374,7 @@ func TestInsertIndex(t *testing.T) {
 	if testing.Short() {
 		t.Skip()
 	}
-	db := dbtesting.GetDB(t)
+	db := dbtest.NewDB(t, "")
 	store := testStore(db)
 
 	insertRepo(t, db, 50, "")
@@ -450,7 +450,7 @@ func TestDeleteIndexByID(t *testing.T) {
 	if testing.Short() {
 		t.Skip()
 	}
-	db := dbtesting.GetDB(t)
+	db := dbtest.NewDB(t, "")
 	store := testStore(db)
 
 	insertIndexes(t, db,
@@ -475,7 +475,7 @@ func TestDeleteIndexByIDMissingRow(t *testing.T) {
 	if testing.Short() {
 		t.Skip()
 	}
-	db := dbtesting.GetDB(t)
+	db := dbtest.NewDB(t, "")
 	store := testStore(db)
 
 	if found, err := store.DeleteIndexByID(context.Background(), 1); err != nil {
@@ -489,7 +489,7 @@ func TestDeleteIndexesWithoutRepository(t *testing.T) {
 	if testing.Short() {
 		t.Skip()
 	}
-	db := dbtesting.GetDB(t)
+	db := dbtest.NewDB(t, "")
 	store := testStore(db)
 
 	var indexes []Index
@@ -536,7 +536,7 @@ func TestDeleteOldIndexes(t *testing.T) {
 	if testing.Short() {
 		t.Skip()
 	}
-	db := dbtesting.GetDB(t)
+	db := dbtest.NewDB(t, "")
 	store := testStore(db)
 
 	t1 := time.Unix(1587396557, 0).UTC()

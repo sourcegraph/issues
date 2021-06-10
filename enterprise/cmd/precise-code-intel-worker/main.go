@@ -125,7 +125,8 @@ func mustInitializeDB() *sql.DB {
 		}
 	})
 
-	if err := dbconn.SetupGlobalConnection(postgresDSN); err != nil {
+	db, err := dbconn.New(postgresDSN, "_app")
+	if err != nil {
 		log.Fatalf("Failed to connect to frontend database: %s", err)
 	}
 
@@ -135,7 +136,7 @@ func mustInitializeDB() *sql.DB {
 	ctx := context.Background()
 	go func() {
 		for range time.NewTicker(5 * time.Second).C {
-			allowAccessByDefault, authzProviders, _, _ := eiauthz.ProvidersFromConfig(ctx, conf.Get(), database.GlobalExternalServices)
+			allowAccessByDefault, authzProviders, _, _ := eiauthz.ProvidersFromConfig(ctx, conf.Get(), database.ExternalServices(db))
 			authz.SetProviders(allowAccessByDefault, authzProviders)
 		}
 	}()
@@ -143,7 +144,7 @@ func mustInitializeDB() *sql.DB {
 	// END FLAILING
 	//
 
-	return dbconn.Global
+	return db
 }
 
 func mustInitializeCodeIntelDB() *sql.DB {

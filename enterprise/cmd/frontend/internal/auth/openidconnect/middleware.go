@@ -18,6 +18,8 @@ import (
 	"github.com/sourcegraph/sourcegraph/cmd/frontend/external/session"
 	"github.com/sourcegraph/sourcegraph/internal/actor"
 	"github.com/sourcegraph/sourcegraph/internal/database"
+	"github.com/sourcegraph/sourcegraph/internal/database/dbconn"
+	"github.com/sourcegraph/sourcegraph/internal/database/dbutil"
 
 	"github.com/coreos/go-oidc"
 )
@@ -52,55 +54,59 @@ type userClaims struct {
 var Middleware = &auth.Middleware{
 	API: func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			handleOpenIDConnectAuth(w, r, next, true)
+			handler := handleOpenIDConnectAuth(dbconn.Global, true)
+			handler(w, r, next)
 		})
 	},
 	App: func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			handleOpenIDConnectAuth(w, r, next, false)
+			handler := handleOpenIDConnectAuth(dbconn.Global, false)
+			handler(w, r, next)
 		})
 	},
 }
 
 // handleOpenIDConnectAuth performs OpenID Connect authentication (if configured) for HTTP requests,
 // both API requests and non-API requests.
-func handleOpenIDConnectAuth(w http.ResponseWriter, r *http.Request, next http.Handler, isAPIRequest bool) {
-	// Fixup URL path. We use "/.auth/callback" as the redirect URI for OpenID Connect, but the rest
-	// of this middleware's handlers expect paths of "/.auth/openidconnect/...", so add the
-	// "openidconnect" path component. We can't change the redirect URI because it is hardcoded in
-	// instances' external auth providers.
-	if r.URL.Path == auth.AuthURLPrefix+"/callback" {
-		// Rewrite "/.auth/callback" -> "/.auth/openidconnect/callback".
-		r.URL.Path = authPrefix + "/callback"
-	}
+func handleOpenIDConnectAuth(db dbutil.DB, isAPIRequest bool) func(w http.ResponseWriter, r *http.Request, next http.Handler) {
+	return func(w http.ResponseWriter, r *http.Request, next http.Handler) {
+		// Fixup URL path. We use "/.auth/callback" as the redirect URI for OpenID Connect, but the rest
+		// of this middleware's handlers expect paths of "/.auth/openidconnect/...", so add the
+		// "openidconnect" path component. We can't change the redirect URI because it is hardcoded in
+		// instances' external auth providers.
+		if r.URL.Path == auth.AuthURLPrefix+"/callback" {
+			// Rewrite "/.auth/callback" -> "/.auth/openidconnect/callback".
+			r.URL.Path = authPrefix + "/callback"
+		}
 
-	// Delegate to the OpenID Connect auth handler.
-	if !isAPIRequest && strings.HasPrefix(r.URL.Path, authPrefix+"/") {
-		authHandler(w, r)
-		return
-	}
-
-	// If the actor is authenticated and not performing an OpenID Connect flow, then proceed to
-	// next.
-	if actor.FromContext(r.Context()).IsAuthenticated() {
-		next.ServeHTTP(w, r)
-		return
-	}
-
-	// If there is only one auth provider configured, the single auth provider is OpenID Connect,
-	// and it's an app request, redirect to signin immediately. The user wouldn't be able to do
-	// anything else anyway; there's no point in showing them a signin screen with just a single
-	// signin option.
-	if ps := providers.Providers(); len(ps) == 1 && ps[0].Config().Openidconnect != nil && !isAPIRequest {
-		p, handled := handleGetProvider(r.Context(), w, ps[0].ConfigID().ID)
-		if handled {
+		// Delegate to the OpenID Connect auth handler.
+		if !isAPIRequest && strings.HasPrefix(r.URL.Path, authPrefix+"/") {
+			authHandler(db, w, r)
 			return
 		}
-		redirectToAuthRequest(w, r, p, auth.SafeRedirectURL(r.URL.String()))
-		return
-	}
 
-	next.ServeHTTP(w, r)
+		// If the actor is authenticated and not performing an OpenID Connect flow, then proceed to
+		// next.
+		if actor.FromContext(r.Context()).IsAuthenticated() {
+			next.ServeHTTP(w, r)
+			return
+		}
+
+		// If there is only one auth provider configured, the single auth provider is OpenID Connect,
+		// and it's an app request, redirect to signin immediately. The user wouldn't be able to do
+		// anything else anyway; there's no point in showing them a signin screen with just a single
+		// signin option.
+		if ps := providers.Providers(); len(ps) == 1 && ps[0].Config().Openidconnect != nil && !isAPIRequest {
+			p, handled := handleGetProvider(r.Context(), w, ps[0].ConfigID().ID)
+			if handled {
+				return
+			}
+			redirectToAuthRequest(w, r, p, auth.SafeRedirectURL(r.URL.String()))
+			return
+		}
+
+		next.ServeHTTP(w, r)
+	}
 }
 
 // mockVerifyIDToken mocks the OIDC ID Token verification step. It should only be set in tests.
@@ -110,7 +116,7 @@ var mockVerifyIDToken func(rawIDToken string) *oidc.IDToken
 // (http://openid.net/specs/openid-connect-core-1_0.html#CodeFlowAuth) on the Relying Party's end.
 //
 // 🚨 SECURITY
-func authHandler(w http.ResponseWriter, r *http.Request) {
+func authHandler(db dbutil.DB, w http.ResponseWriter, r *http.Request) {
 	switch strings.TrimPrefix(r.URL.Path, authPrefix) {
 	case "/login":
 		// Endpoint that starts the Authentication Request Code Flow.
@@ -223,14 +229,14 @@ func authHandler(w http.ResponseWriter, r *http.Request) {
 		if err := userInfo.Claims(&claims); err != nil {
 			log15.Warn("OpenID Connect auth: could not parse userInfo claims.", "error", err)
 		}
-		actr, safeErrMsg, err := getOrCreateUser(ctx, p, idToken, userInfo, &claims)
+		actr, safeErrMsg, err := getOrCreateUser(ctx, db, p, idToken, userInfo, &claims)
 		if err != nil {
 			log15.Error("OpenID Connect auth failed: error looking up OpenID-authenticated user.", "error", err, "userErr", safeErrMsg)
 			http.Error(w, safeErrMsg, http.StatusInternalServerError)
 			return
 		}
 
-		user, err := database.GlobalUsers.GetByID(r.Context(), actr.UID)
+		user, err := database.Users(db).GetByID(r.Context(), actr.UID)
 		if err != nil {
 			log15.Error("OpenID Connect auth failed: error retrieving user from database.", "error", err)
 			http.Error(w, "Failed to retrieve user: "+err.Error(), http.StatusInternalServerError)

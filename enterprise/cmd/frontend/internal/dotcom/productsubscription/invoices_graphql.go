@@ -68,7 +68,7 @@ func (r ProductSubscriptionLicensingResolver) PreviewProductSubscriptionInvoice(
 		}
 		tmp := accountUser.DatabaseID()
 		accountUserID = &tmp
-		custID, err = billing.GetOrAssignUserCustomerID(ctx, *accountUserID)
+		custID, err = billing.GetOrAssignUserCustomerID(ctx, r.DB, *accountUserID)
 		if err != nil {
 			return nil, err
 		}

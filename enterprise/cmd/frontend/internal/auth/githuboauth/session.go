@@ -20,6 +20,7 @@ import (
 	"github.com/sourcegraph/sourcegraph/enterprise/cmd/frontend/internal/auth/oauth"
 	"github.com/sourcegraph/sourcegraph/internal/actor"
 	"github.com/sourcegraph/sourcegraph/internal/database"
+	"github.com/sourcegraph/sourcegraph/internal/database/dbutil"
 	"github.com/sourcegraph/sourcegraph/internal/extsvc"
 	esauth "github.com/sourcegraph/sourcegraph/internal/extsvc/auth"
 	githubsvc "github.com/sourcegraph/sourcegraph/internal/extsvc/github"
@@ -29,6 +30,7 @@ import (
 
 type sessionIssuerHelper struct {
 	*extsvc.CodeHost
+	db          dbutil.DB
 	clientID    string
 	allowSignup bool
 	allowOrgs   []string
@@ -71,7 +73,7 @@ func (s *sessionIssuerHelper) GetOrCreateUser(ctx context.Context, token *oauth2
 		firstErr        error
 	)
 	for i, verifiedEmail := range verifiedEmails {
-		userID, safeErrMsg, err := auth.GetAndSaveUser(ctx, auth.GetAndSaveUserOp{
+		userID, safeErrMsg, err := auth.GetAndSaveUser(ctx, s.db, auth.GetAndSaveUserOp{
 			UserProps: database.NewUser{
 				Username:        login,
 				Email:           verifiedEmail,
@@ -130,7 +132,7 @@ func (s *sessionIssuerHelper) CreateCodeHostConnection(ctx context.Context, toke
 	// this point we may already have a code host and we just need to update the
 	// token with the new one.
 
-	tx, err := database.GlobalExternalServices.Transact(ctx)
+	tx, err := database.ExternalServices(s.db).Transact(ctx)
 	if err != nil {
 		return
 	}

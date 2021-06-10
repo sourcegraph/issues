@@ -7,7 +7,6 @@ import (
 	"encoding/base64"
 	"fmt"
 	"strconv"
-	"sync"
 	"unicode/utf8"
 
 	"github.com/google/uuid"
@@ -21,7 +20,6 @@ import (
 	"github.com/sourcegraph/sourcegraph/internal/actor"
 	"github.com/sourcegraph/sourcegraph/internal/conf"
 	"github.com/sourcegraph/sourcegraph/internal/database/basestore"
-	"github.com/sourcegraph/sourcegraph/internal/database/dbconn"
 	"github.com/sourcegraph/sourcegraph/internal/database/dbtesting"
 	"github.com/sourcegraph/sourcegraph/internal/database/dbutil"
 	"github.com/sourcegraph/sourcegraph/internal/database/globalstatedb"
@@ -51,8 +49,6 @@ var (
 // For a detailed overview of the schema, see schema.md.
 type UserStore struct {
 	*basestore.Store
-
-	once sync.Once
 }
 
 // Users instantiates and returns a new RepoStore with prepared statements.
@@ -70,21 +66,8 @@ func (u *UserStore) With(other basestore.ShareableStore) *UserStore {
 }
 
 func (u *UserStore) Transact(ctx context.Context) (*UserStore, error) {
-	u.ensureStore()
-
 	txBase, err := u.Store.Transact(ctx)
 	return &UserStore{Store: txBase}, err
-}
-
-// ensureStore instantiates a basestore.Store if necessary, using the dbconn.Global handle.
-// This function ensures access to dbconn happens after the rest of the code or tests have
-// initialized it.
-func (u *UserStore) ensureStore() {
-	u.once.Do(func() {
-		if u.Store == nil {
-			u.Store = basestore.NewWithDB(dbconn.Global, sql.TxOptions{})
-		}
-	})
 }
 
 // userNotFoundErr is the error that is returned when a user is not found.
@@ -186,7 +169,6 @@ func (u *UserStore) Create(ctx context.Context, info NewUser) (newUser *types.Us
 	if Mocks.Users.Create != nil {
 		return Mocks.Users.Create(ctx, info)
 	}
-	u.ensureStore()
 
 	tx, err := u.Transact(ctx)
 	if err != nil {
@@ -221,7 +203,6 @@ func (u *UserStore) create(ctx context.Context, info NewUser) (newUser *types.Us
 	if Mocks.Users.Create != nil {
 		return Mocks.Users.Create(ctx, info)
 	}
-	u.ensureStore()
 
 	if !u.InTransaction() {
 		return nil, errors.New("must run within a transaction")
@@ -266,7 +247,7 @@ func (u *UserStore) create(ctx context.Context, info NewUser) (newUser *types.Us
 	// creation and site initialization operations occur atomically (to guarantee to the legitimate
 	// site admin that if they successfully initialize the server, then no attacker's account could
 	// have been created as a site admin).
-	alreadyInitialized, err := globalstatedb.EnsureInitialized(ctx, u)
+	alreadyInitialized, err := globalstatedb.EnsureInitialized(ctx, u.Handle().DB())
 	if err != nil {
 		return nil, err
 	}
@@ -395,7 +376,6 @@ func (u *UserStore) Update(ctx context.Context, id int32, update UserUpdate) (er
 	if Mocks.Users.Update != nil {
 		return Mocks.Users.Update(id, update)
 	}
-	u.ensureStore()
 
 	tx, err := u.Transact(ctx)
 	if err != nil {
@@ -452,7 +432,6 @@ func (u *UserStore) Delete(ctx context.Context, id int32) (err error) {
 	if Mocks.Users.Delete != nil {
 		return Mocks.Users.Delete(ctx, id)
 	}
-	u.ensureStore()
 
 	tx, err := u.Transact(ctx)
 	if err != nil {
@@ -500,7 +479,6 @@ func (u *UserStore) HardDelete(ctx context.Context, id int32) (err error) {
 	if Mocks.Users.HardDelete != nil {
 		return Mocks.Users.HardDelete(ctx, id)
 	}
-	u.ensureStore()
 
 	// Wrap in transaction because we delete from multiple tables.
 	tx, err := u.Transact(ctx)
@@ -572,7 +550,6 @@ func (u *UserStore) SetIsSiteAdmin(ctx context.Context, id int32, isSiteAdmin bo
 	if Mocks.Users.SetIsSiteAdmin != nil {
 		return Mocks.Users.SetIsSiteAdmin(id, isSiteAdmin)
 	}
-	u.ensureStore()
 
 	if BeforeSetUserIsSiteAdmin != nil {
 		if err := BeforeSetUserIsSiteAdmin(isSiteAdmin); err != nil {
@@ -593,7 +570,6 @@ func (u *UserStore) CheckAndDecrementInviteQuota(ctx context.Context, userID int
 	if Mocks.Users.CheckAndDecrementInviteQuota != nil {
 		return Mocks.Users.CheckAndDecrementInviteQuota(ctx, userID)
 	}
-	u.ensureStore()
 
 	var quotaRemaining int32
 	q := sqlf.Sprintf(`
@@ -615,7 +591,6 @@ func (u *UserStore) GetByID(ctx context.Context, id int32) (*types.User, error) 
 	if Mocks.Users.GetByID != nil {
 		return Mocks.Users.GetByID(ctx, id)
 	}
-	u.ensureStore()
 
 	return u.getOneBySQL(ctx, sqlf.Sprintf("WHERE id=%s AND deleted_at IS NULL LIMIT 1", id))
 }
@@ -627,7 +602,7 @@ func (u *UserStore) GetByVerifiedEmail(ctx context.Context, email string) (*type
 	if Mocks.Users.GetByVerifiedEmail != nil {
 		return Mocks.Users.GetByVerifiedEmail(ctx, email)
 	}
-	u.ensureStore()
+
 	return u.getOneBySQL(ctx, sqlf.Sprintf("WHERE id=(SELECT user_id FROM user_emails WHERE email=%s AND verified_at IS NOT NULL) AND deleted_at IS NULL LIMIT 1", email))
 }
 
@@ -635,7 +610,7 @@ func (u *UserStore) GetByUsername(ctx context.Context, username string) (*types.
 	if Mocks.Users.GetByUsername != nil {
 		return Mocks.Users.GetByUsername(ctx, username)
 	}
-	u.ensureStore()
+
 	return u.getOneBySQL(ctx, sqlf.Sprintf("WHERE username=%s AND deleted_at IS NULL LIMIT 1", username))
 }
 
@@ -645,7 +620,6 @@ func (u *UserStore) GetByUsernames(ctx context.Context, usernames ...string) ([]
 	if Mocks.Users.GetByUsernames != nil {
 		return Mocks.Users.GetByUsernames(ctx, usernames...)
 	}
-	u.ensureStore()
 
 	if len(usernames) == 0 {
 		return []*types.User{}, nil
@@ -665,7 +639,6 @@ func (u *UserStore) GetByCurrentAuthUser(ctx context.Context) (*types.User, erro
 	if Mocks.Users.GetByCurrentAuthUser != nil {
 		return Mocks.Users.GetByCurrentAuthUser(ctx)
 	}
-	u.ensureStore()
 
 	a := actor.FromContext(ctx)
 	if !a.IsAuthenticated() {
@@ -679,7 +652,6 @@ func (u *UserStore) InvalidateSessionsByID(ctx context.Context, id int32) (err e
 	if Mocks.Users.InvalidateSessionsByID != nil {
 		return Mocks.Users.InvalidateSessionsByID(ctx, id)
 	}
-	u.ensureStore()
 
 	tx, err := u.Transact(ctx)
 	if err != nil {
@@ -712,7 +684,6 @@ func (u *UserStore) Count(ctx context.Context, opt *UsersListOptions) (int, erro
 	if Mocks.Users.Count != nil {
 		return Mocks.Users.Count(ctx, opt)
 	}
-	u.ensureStore()
 
 	if opt == nil {
 		opt = &UsersListOptions{}
@@ -743,7 +714,6 @@ func (u *UserStore) List(ctx context.Context, opt *UsersListOptions) (_ []*types
 	if Mocks.Users.List != nil {
 		return Mocks.Users.List(ctx, opt)
 	}
-	u.ensureStore()
 
 	tr, ctx := trace.New(ctx, "database.Users.List", fmt.Sprintf("%+v", opt))
 	defer func() {
@@ -762,8 +732,6 @@ func (u *UserStore) List(ctx context.Context, opt *UsersListOptions) (_ []*types
 
 // ListDates lists all user's created and deleted dates, used by usage stats.
 func (u *UserStore) ListDates(ctx context.Context) (dates []types.UserDates, _ error) {
-	u.ensureStore()
-
 	rows, err := u.Query(ctx, sqlf.Sprintf(listDatesQuery))
 	if err != nil {
 		return nil, err
@@ -821,8 +789,6 @@ func (*UserStore) listSQL(opt UsersListOptions) (conds []*sqlf.Query) {
 }
 
 func (u *UserStore) getOneBySQL(ctx context.Context, q *sqlf.Query) (*types.User, error) {
-	u.ensureStore()
-
 	users, err := u.getBySQL(ctx, q)
 	if err != nil {
 		return nil, err
@@ -835,8 +801,6 @@ func (u *UserStore) getOneBySQL(ctx context.Context, q *sqlf.Query) (*types.User
 
 // getBySQL returns users matching the SQL query, if any exist.
 func (u *UserStore) getBySQL(ctx context.Context, query *sqlf.Query) ([]*types.User, error) {
-	u.ensureStore()
-
 	q := sqlf.Sprintf("SELECT u.id, u.username, u.display_name, u.avatar_url, u.created_at, u.updated_at, u.site_admin, u.passwd IS NOT NULL, u.tags, u.invalidated_sessions_at FROM users u %s", query)
 	rows, err := u.Query(ctx, q)
 	if err != nil {
@@ -864,8 +828,6 @@ func (u *UserStore) getBySQL(ctx context.Context, query *sqlf.Query) ([]*types.U
 }
 
 func (u *UserStore) IsPassword(ctx context.Context, id int32, password string) (bool, error) {
-	u.ensureStore()
-
 	var passwd sql.NullString
 	if err := u.QueryRow(ctx, sqlf.Sprintf("SELECT passwd FROM users WHERE deleted_at IS NULL AND id=%s", id)).Scan(&passwd); err != nil {
 		return false, err
@@ -882,8 +844,6 @@ var (
 )
 
 func (u *UserStore) RenewPasswordResetCode(ctx context.Context, id int32) (string, error) {
-	u.ensureStore()
-
 	if _, err := u.GetByID(ctx, id); err != nil {
 		return "", err
 	}
@@ -909,8 +869,6 @@ func (u *UserStore) RenewPasswordResetCode(ctx context.Context, id int32) (strin
 
 // SetPassword sets the user's password given a new password and a password reset code
 func (u *UserStore) SetPassword(ctx context.Context, id int32, resetCode, newPassword string) (bool, error) {
-	u.ensureStore()
-
 	// 🚨 SECURITY: Check min and max password length
 	if err := CheckPasswordLength(newPassword); err != nil {
 		return false, err
@@ -944,16 +902,12 @@ func (u *UserStore) SetPassword(ctx context.Context, id int32, resetCode, newPas
 }
 
 func (u *UserStore) DeletePasswordResetCode(ctx context.Context, id int32) error {
-	u.ensureStore()
-
 	err := u.Exec(ctx, sqlf.Sprintf("UPDATE users SET passwd_reset_code=NULL, passwd_reset_time=NULL WHERE id=%s", id))
 	return err
 }
 
 // UpdatePassword updates a user's password given the current password.
 func (u *UserStore) UpdatePassword(ctx context.Context, id int32, oldPassword, newPassword string) error {
-	u.ensureStore()
-
 	// 🚨 SECURITY: Old password cannot be blank
 	if oldPassword == "" {
 		return errors.New("old password was empty")
@@ -984,8 +938,6 @@ func (u *UserStore) UpdatePassword(ctx context.Context, id int32, oldPassword, n
 // CreatePassword creates a user's password iff don't have a password and they
 // don't have any valid login connections.
 func (u *UserStore) CreatePassword(ctx context.Context, id int32, password string) error {
-	u.ensureStore()
-
 	// 🚨 SECURITY: Check min and max password length
 	if err := CheckPasswordLength(password); err != nil {
 		return err
@@ -1039,8 +991,6 @@ WHERE id=%s
 // A randomized password is used (instead of an empty password) to avoid bugs where an empty password
 // is considered to be no password. The random password is expected to be irretrievable.
 func (u *UserStore) RandomizePasswordAndClearPasswordResetRateLimit(ctx context.Context, id int32) error {
-	u.ensureStore()
-
 	passwd, err := hashPassword(randstring.NewLen(36))
 	if err != nil {
 		return err
@@ -1082,8 +1032,6 @@ const (
 // error occurs if the user does not exist. Adding a duplicate tag or removing a nonexistent tag is
 // not an error.
 func (u *UserStore) SetTag(ctx context.Context, userID int32, tag string, present bool) error {
-	u.ensureStore()
-
 	var q *sqlf.Query
 	if present {
 		// Add tag.
@@ -1113,7 +1061,6 @@ func (u *UserStore) HasTag(ctx context.Context, userID int32, tag string) (bool,
 	if Mocks.Users.HasTag != nil {
 		return Mocks.Users.HasTag(ctx, userID, tag)
 	}
-	u.ensureStore()
 
 	var tags []string
 	err := u.QueryRow(ctx, sqlf.Sprintf("SELECT tags FROM users WHERE id = %s", userID)).Scan(pq.Array(&tags))
@@ -1137,7 +1084,6 @@ func (u *UserStore) Tags(ctx context.Context, userID int32) (map[string]bool, er
 	if Mocks.Users.Tags != nil {
 		return Mocks.Users.Tags(ctx, userID)
 	}
-	u.ensureStore()
 
 	var tags []string
 	err := u.QueryRow(ctx, sqlf.Sprintf("SELECT tags FROM users WHERE id = %s", userID)).Scan(pq.Array(&tags))
@@ -1162,8 +1108,6 @@ func (u *UserStore) Tags(ctx context.Context, userID int32) (map[string]bool, er
 // It is added in the database package as putting it in the conf package led to
 // many cyclic imports.
 func (u *UserStore) UserAllowedExternalServices(ctx context.Context, userID int32) (conf.ExternalServiceMode, error) {
-	u.ensureStore()
-
 	siteMode := conf.ExternalServiceUserMode()
 	// If site level already allows all code then no need to check user
 	if userID == 0 || siteMode == conf.ExternalServiceModeAll {
