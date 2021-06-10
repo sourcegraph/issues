@@ -3,15 +3,13 @@ import * as uuid from 'uuid'
 
 import { TelemetryService } from '@sourcegraph/shared/src/telemetry/telemetryService'
 
-import { browserExtensionMessageReceived, handleQueryEvents, pageViewQueryParameters } from './analyticsUtils'
+import { browserExtensionMessageReceived, pageViewQueryParameters } from './analyticsUtils'
 import { serverAdmin } from './services/serverAdminWrapper'
 
 export const ANONYMOUS_USER_ID_KEY = 'sourcegraphAnonymousUid'
 export const FIRST_SOURCE_URL_KEY = 'sourcegraphSourceUrl'
 
 export class EventLogger implements TelemetryService {
-    private hasStrippedQueryParameters = false
-
     private anonymousUserId?: string
     private firstSourceURL?: string
 
@@ -40,12 +38,6 @@ export class EventLogger implements TelemetryService {
         const props = pageViewQueryParameters(window.location.href)
         serverAdmin.trackPageView(pageTitle, logAsActiveUser, eventProperties)
         this.logToConsole(pageTitle, props)
-
-        // Use flag to ensure URL query params are only stripped once
-        if (!this.hasStrippedQueryParameters) {
-            handleQueryEvents(window.location.href)
-            this.hasStrippedQueryParameters = true
-        }
     }
 
     /**

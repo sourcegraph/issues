@@ -99,31 +99,3 @@ export function pageViewQueryParameters(url: string): EventQueryParameters {
         utm_medium: parsedUrl.searchParams.get('utm_medium') || undefined,
     }
 }
-
-/**
- * Log events associated with URL query string parameters, and remove those parameters as necessary
- * Note that this is a destructive operation (it changes the page URL and replaces browser state) by
- * calling stripURLParameters
- */
-export function handleQueryEvents(url: string): void {
-    const parsedUrl = new URL(url)
-    const isBadgeRedirect = !!parsedUrl.searchParams.get('badge')
-    if (isBadgeRedirect) {
-        eventLogger.log('RepoBadgeRedirected')
-    }
-
-    stripURLParameters(url, ['utm_campaign', 'utm_source', 'utm_medium', 'badge'])
-}
-
-/**
- * Strip provided URL parameters and update window history
- */
-export function stripURLParameters(url: string, parametersToRemove: string[] = []): void {
-    const parsedUrl = new URL(url)
-    for (const key of parametersToRemove) {
-        if (parsedUrl.searchParams.has(key)) {
-            parsedUrl.searchParams.delete(key)
-        }
-    }
-    window.history.replaceState(window.history.state, window.document.title, parsedUrl.href)
-}
