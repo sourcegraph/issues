@@ -80,7 +80,7 @@ import { aggregateStreamingSearch } from './search/stream'
 import { listUserRepositories } from './site-admin/backend'
 import { SiteAdminAreaRoute } from './site-admin/SiteAdminArea'
 import { SiteAdminSideBarGroups } from './site-admin/SiteAdminSidebar'
-import { ThemePreference } from './theme'
+import { ThemePreference, ThemePreferenceProps } from './theme'
 import { eventLogger } from './tracking/eventLogger'
 import { withActivation } from './tracking/withActivation'
 import { UserAreaRoute } from './user/area/UserArea'
@@ -586,8 +586,14 @@ class ColdSourcegraphWebApp extends React.Component<SourcegraphWebAppProps, Sour
         )
     }
 
-    private onThemePreferenceChange = (themePreference: ThemePreference): void => {
-        this.setState({ themePreference })
+    private onThemePreferenceChange: ThemePreferenceProps['onThemePreferenceChange'] = (
+        themePreferenceOrFunction
+    ): void => {
+        if (typeof themePreferenceOrFunction === 'function') {
+            this.setState(({ themePreference: previous }) => ({ themePreference: themePreferenceOrFunction(previous) }))
+        } else {
+            this.setState({ themePreference: themePreferenceOrFunction })
+        }
     }
 
     private onNavbarQueryChange = (navbarSearchQueryState: QueryState): void => {
