@@ -8,3 +8,4 @@
 - [How to troubleshoot pod evictions](troubleshoot-pod-eviction.md)
 - [How to monitor your Sourcegraph instance](monitoring-guide.md)
 - [How to troubleshoot a Sourcegraph extension](troubleshoot-sg-extension.md)
+- [How to gather Kubernetes logs](gather-kubernetes-logs.md)
