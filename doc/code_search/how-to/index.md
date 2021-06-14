@@ -7,3 +7,4 @@
 - [Adding repositories to Sourcegraph Cloud](adding_repositories_to_cloud.md)
 - [Searching with search contexts on Sourcegraph Cloud](searching_with_search_contexts.md)
 - [Exhaustive search](exhaustive.md)
+- [Search and find repositories with specific files](repos-with-specific-files.md)
