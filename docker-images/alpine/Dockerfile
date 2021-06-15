@@ -27,3 +27,7 @@ RUN apk add --no-cache bind-tools
 # Install other packages that are desirable in ALL Sourcegraph Docker images.
 # hadolint ignore=DL3018
 RUN apk add --no-cache ca-certificates mailcap tini curl
+
+# Manually upgrade upgrade libxml2 packages due CVE's
+# See https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2021-3517 and https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2021-3518
+RUN apk add --upgrade --no-cache libxml2
