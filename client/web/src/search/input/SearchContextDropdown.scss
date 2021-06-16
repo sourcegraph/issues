@@ -32,7 +32,7 @@
         }
 
         &:focus {
-            border-color: var(--color-border-active);
+            border-color: var(--border-active-color);
             box-shadow: none;
         }
 
@@ -40,7 +40,7 @@
         &--open,
         &--open:hover,
         &--open:focus {
-            background-color: var(--color-bg-4);
+            background-color: var(--color-bg-2);
         }
 
         &:disabled,
@@ -48,18 +48,18 @@
         &:active:disabled,
         &:focus:disabled {
             background-color: var(--color-bg-3);
-            color: var(--color-text-3);
+            color: var(--text-disabled);
             border-color: transparent;
             opacity: 1;
             pointer-events: auto; // Required to show tooltip on hover
 
             .theme-light & {
-                background-color: var(--color-bg-4);
+                background-color: var(--color-bg-2);
             }
 
             .search-filter-keyword,
             .search-keyword {
-                color: var(--color-text-3);
+                color: var(--text-disabled);
             }
         }
 

@@ -1,7 +1,8 @@
 /**
  * Default value for line color in case if we didn't get color for line from content config.
  */
-export const DEFAULT_LINE_STROKE = 'var(--color-bg-5)'
+// TODO: Confirm usage, we want to deprecate this color
+export const DEFAULT_LINE_STROKE = 'var(--color-bg-3)'
 
 /**
  * Visx xy-chart supports data series with missing. To show the

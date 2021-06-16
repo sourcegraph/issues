@@ -64,11 +64,7 @@
         }
 
         &--selected {
-            background-color: var(--color-bg-4);
-
-            .theme-redesign & {
-                background-color: var(--color-bg-3);
-            }
+            background-color: var(--color-bg-3);
         }
 
         &--highlighted {
@@ -112,11 +108,7 @@
         padding: 0.75rem 1rem 0.5rem;
 
         &-button {
-            color: var(--web-content-link-color);
-
-            .theme-redesign & {
-                color: var(--link-color);
-            }
+            color: var(--link-color);
 
             padding: 0;
         }

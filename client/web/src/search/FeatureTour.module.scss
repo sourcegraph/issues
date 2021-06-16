@@ -1,10 +1,10 @@
 .feature-tour {
-    background: var(--tour-bg);
+    background: var(--color-bg-2);
     border: none;
     border-radius: 10px;
 
     :global(.shepherd-arrow::after) {
-        border-bottom-color: var(--tour-bg);
+        border-bottom-color: var(--color-bg-2);
     }
 
     &__step {

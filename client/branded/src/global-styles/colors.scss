@@ -1,167 +1,207 @@
 @import 'open-color/open-color.scss'; // Sass variables
 @import '~open-color/open-color.css'; // CSS variables
 
-// General reusable colors from our custom color palette
-
-// Gray (blueish) palette
+// Global Bootstrap colors
 $white: #ffffff;
-$gray-01: #f2f4f8;
-$gray-02: #e4e9f1;
-$gray-03: #d7ddea;
-$gray-04: #cad2e2;
-$gray-05: #bdc7db;
-$gray-06: #afbcd4;
-$gray-07: #a2b0cd;
-$gray-08: #95a5c6;
-$gray-09: #889abf;
-$gray-10: #7a8fb8;
-$gray-11: #6d84b0;
-$gray-12: #6078a9;
-$gray-13: #566e9f;
-$gray-14: #4f6592;
-$gray-15: #475c85;
-$gray-16: #405377;
-$gray-17: #39496a;
-$gray-18: #32405d;
-$gray-19: #2b3750;
-$gray-20: #242e42;
-$gray-21: #1d2535;
-$gray-22: #151c28;
-$gray-23: #0e121b;
-$black: #07090d;
-
-// Tell Bootstrap to use colors from OpenColor
-$blue: $oc-blue-7;
-$indigo: $oc-indigo-7;
-$purple: $oc-violet-7;
-$pink: $oc-pink-7;
-$red: $oc-red-7;
+$blue: #0b70db;
+$indigo: #0864c6;
+$purple: #a305e1;
+$pink: #d68cf3;
+$red: $oc-red-9;
 $orange: $oc-orange-7;
 $yellow: $oc-yellow-7;
 $green: $oc-green-7;
 $teal: $oc-teal-7;
-$cyan: $oc-cyan-3;
-
-// Globals
-$primary: $blue;
-$secondary: #2b3750;
-$success: $green;
-$info: $cyan;
-$warning: $yellow;
-$danger: $red;
-$secondary-light: darken($gray-01, 5%);
-$merged: $purple;
-
-// Color for the <mark> element and highlighted/hovered tokens
-$mark-bg-dark: rgba(217, 72, 15, 0.5);
-$mark-bg-light: rgba(255, 192, 120, 0.5);
-
-// Added to bg- and text- utilities because it is commonly needed in our app.
-$theme-colors: (
-    'merged': $merged,
-);
-$theme-colors-light: (
-    'secondary': $secondary-light,
-);
-
+$cyan: #72dbe8;
 $body-color: var(--body-color);
 $body-bg: var(--body-bg);
 $text-muted: var(--text-muted);
 
-:root {
-    --primary: #{$primary};
-    --secondary: #{$secondary-light};
-    --success: #{$success};
-    --info: #{$info};
-    --warning: #{$warning};
-    --danger: #{$danger};
-    --merged: #{$merged};
-    --color-border-active: #329af0;
-    // Logo colors
+// Exception that's used as a translucent modal background
+$gray-04: #dbe2f0;
+// Exception that's used in $custom-select-indicator as SVG icon fill color.
+$gray-06: #798baf;
+// Exception that's used as a global Bootstrap color and a variety of translucent box-shadow variants
+$gray-08: #343a4d;
+// Exceptions that are used in the browser extension under different theme rules
+$mark-bg-light: #f8e688;
+$mark-bg-dark: #7a341e;
+
+$primary: $blue;
+$secondary: $gray-08;
+$success: $green;
+$info: $cyan;
+$warning: $yellow;
+$danger: $red;
+
+// Core semantic base colors.
+$theme-colors: (
+    primary: $blue,
+    secondary: $gray-08,
+    success: $green,
+    info: $cyan,
+    warning: $yellow,
+    danger: $red,
+    merged: $purple,
+);
+
+.theme-redesign {
+    // Gray (blueish) root palette.
+    --white: #{$white};
+    --gray-01: #f9fafb;
+    --gray-02: #f0f1f2;
+    --gray-03: #e6ebf2;
+    --gray-04: #{$gray-04};
+    --gray-05: #a6b6d9;
+    --gray-06: #{$gray-06};
+    --gray-07: #5e6e8c;
+    --gray-08: #{$gray-08};
+    --gray-09: #262b38;
+    --gray-10: #1d212f;
+    --gray-11: #181b26;
+    --gray-12: #14171f;
+    --black: #0f111a;
+
+    // Other root palette colors.
+    --blue: #{$blue};
+    --indigo: #{$indigo};
+    --purple: #{$purple};
+    --pink: #{$pink};
+    --red: #{$red};
+    --orange: #{$orange};
+    --yellow: #{$yellow};
+    --green: #{$green};
+    --teal: #{$teal};
+    --cyan: #{$cyan};
+
+    // Logo colors.
     --logo-orange: #f96216;
     --logo-blue: #00b4f2;
-    --logo-purple: #b200f8;
-    // Additional colors
-    --tooltip-bg: #{$gray-19};
-    --box-shadow: 0 0.25rem 0.5rem #{rgba($gray-19, 0.07)};
-    --focus-box-shadow: 0 0 0 0.125rem #{rgba($primary, 0.8)};
-    // Matches Bootstrap colors, using variable to easily change for redesign
-    --btn-link-disabled-color: #6c757d;
+    --logo-purple: var(--purple);
+
+    // Semantic colors.
+    --primary: var(--blue);
+    --primary-3: var(--indigo);
+    --brand-secondary: var(--purple);
+    --brand-secondary-2: var(--pink);
+    --success: var(--green);
+    --success-2: #afe0b8;
+    --info: var(--cyan);
+    --warning: var(--yellow);
+    --warning-2: #fbd999;
+    --danger: var(--red);
+    --danger-2: #e9aaaa;
+    --merged: #7048e8;
+    --merged-2: #c6b6f6;
+    --merged-3: #6b47d6;
+    --light-text: var(--white);
+    --dark-text: var(--gray-08);
+    --line-number-color: var(--gray-06);
+    --header-icon-color: var(--gray-05);
+    --tooltip-bg: var(--gray-08);
+    --box-shadow: 0 0.25rem 0.5rem #{rgba($gray-08, 0.07)};
+    --focus-box-shadow: 0 0 0 0.125rem var(--primary-2);
+    --btn-link-disabled-color: var(--primary-2);
 }
 
 .theme-light {
     // Affects default browser styles
     color-scheme: light;
 
-    --body-color: #{$gray-19};
-    --body-bg: #fbfdff;
-    --color-bg-1: #ffffff;
-    --color-bg-2: #{$gray-01};
-    --color-bg-3: #{$gray-04};
-    --color-bg-4: #{$gray-02};
-    --color-bg-5: #{$gray-13};
-    --color-bg-6: #{$gray-13};
-    --color-text-3: #{rgba($gray-17, 0.5)};
-    --code-bg: #{$gray-01};
-    --focus-outline-color: var(--primary);
+    --primary-2: #a3d0ff;
+    --primary-4: #e1f0ff;
+    --secondary: var(--gray-04);
+    --secondary-2: #eef1f7;
+    --secondary-3: #c6cfe1;
+    --secondary-4: #f1f4f9;
+    --success-3: #319e44;
+    --success-4: #ebfaee;
+    --info-2: #a8dbe2;
+    --info-3: #0bb3ca;
+    --info-4: #eafafc;
+    --warning-3: #e09200;
+    --warning-4: #fff7e1;
+    --danger-3: #b52626;
+    --danger-4: #fbeaea;
+    --body-color: var(--gray-08);
+    --body-bg: var(--gray-01);
+    --color-bg-1: var(--white);
+    --color-bg-2: var(--gray-03);
+    --color-bg-3: var(--gray-04);
     --mark-bg: #{$mark-bg-light};
-    --text-muted: #6d727c;
-    --line-number-color: #{$gray-05};
-    --header-icon-color: #{$gray-13};
-    --link-color: #{$gray-13};
-    --link-active-color: #{$gray-18};
-    --link-hover-color: #{$gray-21};
-    --link-hover-bg-color: #{$gray-02};
-    --link-hover-bg-color-2: #{$gray-03};
-    --border-color: #{$gray-04};
-    --border-color-2: #{$gray-02};
+    --merged-4: #eee9fd;
+    --text-muted: var(--gray-07);
+    --text-disabled: var(--gray-05);
+    --link-color: var(--primary);
+    --link-color-2: #0766cc;
+    --link-active-color: #0c7bf0;
+    --link-hover-color: #0c7bf0;
+    --border-color: var(--gray-03);
+    --border-color-2: var(--gray-04);
+    --border-active-color: var(--primary);
+    --search-query-text-color: var(--gray-12);
+    --search-filter-keyword-color: var(--primary);
+    --search-keyword-color: var(--purple);
+    --infobar-warning-color: var(--oc-red-8);
+    --icon-color: var(--gray-06);
+    --code-bg: var(--white);
+    --intel-bg: var(--white);
+    --subtle-bg: var(--gray-02);
+    --search-input-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+    --code-line-highlight-color: var(--color-bg-2);
+    --diff-add-bg: #eeffec;
+    --diff-remove-bg: #ffecec;
+    --triggerarea-checklist-checkbox-color: var(--gray-05);
     --sourcegraph-logo-text-color: #242427;
-    --search-query-text-color: #2b3750;
-    --search-filter-keyword-color: #268bd2;
-    --search-keyword-color: #{$oc-grape-7};
-    --infobar-warning-color: #{$oc-red-8};
-    --web-content-link-color: #1c7cd6;
-    --disabled-action-bg-color: #{$oc-gray-3};
-    --disabled-action-text-color: #{$oc-gray-5};
-    --tour-bg: #ffffff;
 }
+
 .theme-dark {
     // Affects default browser styles
     color-scheme: dark;
 
-    --secondary: #{$secondary};
-    --border-color: #{$gray-19};
-    --border-color-2: #1b1730;
-    --body-color: #ffffff;
-    --body-bg: #04070e;
-    --color-bg-1: #{$gray-22};
-    --color-bg-2: #{$gray-21};
-    --color-bg-3: #{$gray-19};
-    --color-bg-4: #{$gray-22};
-    --color-bg-5: #{$gray-17};
-    --color-bg-6: #{$gray-06};
-    --color-text-3: #{rgba(#ffffff, 0.5)};
-    --code-bg: #{$gray-21};
-    --focus-outline-color: var(--primary);
+    --primary-2: #0f59aa;
+    --primary-4: #03284f;
+    --secondary: var(--gray-08);
+    --secondary-2: #242936;
+    --secondary-3: #1f232e;
+    --secondary-4: #545967;
+    --success-3: #237332;
+    --success-4: #054410;
+    --info-2: #b8e3e8;
+    --info-3: #005766;
+    --info-4: #025762;
+    --warning-3: #9c6500;
+    --warning-4: #3d2904;
+    --danger-3: #801b1b;
+    --danger-4: #3d0a0a;
+    --body-color: var(--gray-04);
+    --body-bg: var(--gray-12);
+    --color-bg-1: var(--gray-11);
+    --color-bg-2: var(--gray-10);
+    --color-bg-3: var(--gray-08);
     --mark-bg: #{$mark-bg-dark};
-    --text-muted: #{$gray-07};
-    --line-number-color: #{$gray-18};
-    --header-icon-color: #{$gray-11};
-    --link-color: #{$gray-07};
-    --link-active-color: #{$gray-02};
-    --link-hover-color: #ffffff;
-    --link-hover-bg-color: #{$gray-18};
-    --link-hover-bg-color-2: #{$gray-17};
-    --sourcegraph-logo-text-color: #ffffff;
-    --search-query-text-color: #f2f4f8;
-    --search-filter-keyword-color: #569cd6;
-    --search-keyword-color: #{$oc-grape-4};
-    --infobar-warning-color: #{$oc-red-6};
-    --web-content-link-color: #329af0;
-    --disabled-action-bg-color: #{$oc-gray-8};
-    --disabled-action-text-color: #{$oc-gray-9};
-    --tour-bg: #{$gray-19};
+    --merged-4: #1f0a5c;
+    --text-muted: var(--gray-05);
+    --text-disabled: var(--gray-07);
+    --link-color: #4393e7;
+    --link-color-2: #70b0f3;
+    --link-active-color: #489ffa;
+    --link-hover-color: #489ffa;
+    --border-color: var(--gray-09);
+    --border-color-2: var(--gray-08);
+    --border-active-color: #4393e7;
+    --search-query-text-color: var(--gray-04);
+    --search-filter-keyword-color: #4393e7;
+    --search-keyword-color: var(--pink);
+    --infobar-warning-color: #f05151;
+    --icon-color: var(--gray-05);
+    --code-bg: var(--gray-10);
+    --intel-bg: var(--gray-12);
+    --subtle-bg: var(--gray-09);
+    --search-input-shadow: 0 1px 2px rgba(0, 0, 0, 0.35);
+    --code-line-highlight-color: var(--body-bg);
+    --diff-add-bg: #224035;
+    --diff-remove-bg: #3e1d1d;
+    --triggerarea-checklist-checkbox-color: var(--gray-07);
+    --sourcegraph-logo-text-color: var(--white);
 }
-
-// Load redesign styles
-@import './colors-redesign';

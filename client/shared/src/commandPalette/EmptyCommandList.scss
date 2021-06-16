@@ -1,7 +1,7 @@
 .empty-command-list {
     position: relative;
-    color: $gray-17;
     padding: 1rem;
+    background-color: var(--color-bg-1);
 
     &__title {
         font-weight: 600;
@@ -17,14 +17,5 @@
         position: absolute;
         bottom: 1rem;
         right: 1rem;
-    }
-    .theme-redesign & {
-        background-color: var(--color-bg-1);
-    }
-}
-
-.theme-dark {
-    .empty-command-list {
-        color: $gray-06;
     }
 }

@@ -15,7 +15,7 @@
     }
 
     &:not(:first-child) .version-context-dropdown__button {
-        border-left: 1px solid $gray-17 !important;
+        border-left: 1px solid var(--border-color-2) !important;
     }
 
     &__button {

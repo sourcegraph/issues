@@ -55,15 +55,9 @@ legend {
 }
 
 // Make sure text color utilities are theme-aware
-.theme-light {
-    @each $color, $value in $theme-colors-light {
-        @include text-emphasis-variant('.text-#{$color}', $value, true);
-    }
-}
-
 .theme-light.theme-redesign,
 .theme-dark.theme-redesign {
-    @each $color, $value in $theme-colors-redesign {
+    @each $color, $value in $theme-colors {
         @include text-emphasis-variant('.text-#{$color}', $value, true);
     }
 }

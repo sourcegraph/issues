@@ -26,7 +26,7 @@
             &:hover:not(:disabled) {
                 // stylelint-disable-next-line declaration-property-unit-whitelist
                 padding: calc(1rem - 1px);
-                border: 2px solid var(--color-border-active);
+                border: 2px solid var(--border-active-color);
             }
         }
     }
@@ -42,7 +42,7 @@
     &__actions,
     &__triggers {
         &--disabled {
-            color: $gray-17 !important;
+            color: var(--text-disabled) !important;
             opacity: 0.5;
 
             // Avoid applying opacity twice

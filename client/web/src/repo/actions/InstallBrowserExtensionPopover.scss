@@ -10,7 +10,7 @@
     }
 
     &__plus-icon {
-        color: $gray-10;
+        color: var(--icon-color);
         height: 1.25rem;
         width: 1.25rem;
     }

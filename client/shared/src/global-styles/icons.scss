@@ -48,8 +48,8 @@ img.icon-inline,
 
 // @sourcegraph/react-loading-spinner coloring
 .theme-light {
-    --loading-spinner-outer-color: #{rgba($gray-19, 0.3)};
-    --loading-spinner-inner-color: #{rgba($gray-19, 1)};
+    --loading-spinner-outer-color: #{rgba($gray-08, 0.3)};
+    --loading-spinner-inner-color: #{rgba($gray-08, 1)};
 }
 .theme-dark {
     --loading-spinner-outer-color: #{rgba($white, 0.3)};

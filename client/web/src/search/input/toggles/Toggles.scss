@@ -49,22 +49,18 @@
 
         &:active {
             // stylelint-disable-next-line declaration-property-unit-whitelist
-            border: 2px solid var(--color-border-active);
-
-            .theme-redesign & {
-                border-color: var(--primary);
-            }
+            border: 2px solid var(--border-active-color);
         }
 
         &.disabled,
         &.disabled:hover {
             background-color: var(--color-bg-3);
-            color: var(--color-text-3);
+            color: var(--text-disabled);
             cursor: default;
             opacity: 1;
 
             .theme-light & {
-                background-color: var(--color-bg-4);
+                background-color: var(--color-bg-2);
             }
 
             &:active {
@@ -73,19 +69,11 @@
         }
 
         &--active {
-            background-color: var(--color-border-active);
             color: #ffffff !important;
-
-            .theme-redesign & {
-                background-color: var(--primary);
-            }
+            background-color: var(--primary);
 
             &:hover {
-                background-color: var(--color-border-active);
-
-                .theme-redesign & {
-                    background-color: var(--primary);
-                }
+                background-color: var(--primary);
             }
         }
     }

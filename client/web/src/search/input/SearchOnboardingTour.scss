@@ -12,11 +12,7 @@
         padding: 0.25rem 0.5rem;
     }
 
-    box-shadow: 0 1px 4px rgba($gray-07, 0.3);
-
-    .theme-redesign & {
-        box-shadow: 0 1px 4px rgba(var(--gray-07), 0.3);
-    }
+    box-shadow: var(--box-shadow);
 
     .theme-dark & {
         background: var(--oc-blue-9);

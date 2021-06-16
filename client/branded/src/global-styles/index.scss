@@ -71,7 +71,7 @@ $custom-select-bg-size: 16px 16px;
 $custom-select-disabled-bg: var(--input-disabled-bg);
 $custom-select-focus-box-shadow: var(--input-focus-box-shadow);
 // Icon: mdi-react/ChevronDownIcon
-$custom-select-indicator: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' fill='#{$redesign-gray-06}' viewBox='0 0 24 24'><path d='M7.41 8.58L12 13.17l4.59-4.59L18 10l-6 6-6-6 1.41-1.42z'/></svg>");
+$custom-select-indicator: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' fill='#{$gray-06}' viewBox='0 0 24 24'><path d='M7.41 8.58L12 13.17l4.59-4.59L18 10l-6 6-6-6 1.41-1.42z'/></svg>");
 // Hide feedback icon for custom-select
 $custom-select-feedback-icon-size: 0;
 
@@ -108,8 +108,6 @@ $hr-margin-y: 0.25rem;
 $input-transition: none;
 $badge-transition: none; // Avoids setting transitions on badges that aren't links
 
-// Apply static redesign variables. Should be done before Bootstrap imports.
-@import './variables-redesign';
 @import 'bootstrap/scss/functions';
 @import 'bootstrap/scss/variables';
 @import 'bootstrap/scss/mixins';
@@ -137,7 +135,6 @@ $badge-transition: none; // Avoids setting transitions on badges that aren't lin
 @import './alert';
 @import './forms';
 @import './highlight';
-@import './web-content';
 @import './tabs';
 @import './tooltips';
 @import '~@sourcegraph/react-loading-spinner/lib/LoadingSpinner.css';

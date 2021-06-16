@@ -7,18 +7,6 @@ $btn-padding-y-sm: var(--btn-padding-y-sm);
 @import 'bootstrap/scss/buttons';
 @import 'bootstrap/scss/button-group';
 
-// Light theme button variants
-.theme-light {
-    @each $color, $value in $theme-colors-light {
-        .btn-#{$color} {
-            @include button-variant($background: $value, $border: $value);
-        }
-        .btn-outline-#{$color} {
-            @include button-outline-variant($color: $value, $color-hover: $value);
-        }
-    }
-}
-
 // btn-outline-secondary uses a different text color for better contrast.
 // theme classes are necessary because of specifity.
 .theme-dark,

@@ -86,12 +86,8 @@ $toggle-big-height: 2rem;
         opacity: 0.2;
     }
 
-    &__icon {
-        fill: $secondary-light;
-
-        &--on {
-            fill: $white;
-        }
+    &__icon--on {
+        fill: $white;
     }
 
     &__text {

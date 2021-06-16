@@ -1,15 +1,5 @@
 @import 'bootstrap/scss/badge';
 
-// Light theme badge variants
-:where(.theme-light) {
-    @each $color, $value in $theme-colors-light {
-        .badge-#{$color},
-        :where(a).badge-#{$color} {
-            @include badge-variant($value);
-        }
-    }
-}
-
 :root {
     --badge-font-size: 0.75em;
     --badge-font-weight: 600;
