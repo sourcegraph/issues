@@ -9,6 +9,7 @@ import { useLocalStorage } from '@sourcegraph/shared/src/util/useLocalStorage'
 import { CaseInsensitiveFuzzySearch } from '../../fuzzyFinder/CaseInsensitiveFuzzySearch'
 import { FuzzySearch, FuzzySearchResult, SearchIndexing, SearchValue } from '../../fuzzyFinder/FuzzySearch'
 import { WordSensitiveFuzzySearch } from '../../fuzzyFinder/WordSensitiveFuzzySearch'
+import { parseBrowserRepoURL } from '../../util/url'
 
 import { FuzzyFinderProps, Indexing, FuzzyFSM } from './FuzzyFinder'
 import styles from './FuzzyModal.module.scss'
@@ -269,15 +270,17 @@ function renderFiles(
     search: FuzzySearch,
     indexing?: SearchIndexing
 ): RenderedFuzzyResult {
+    const { revision } = parseBrowserRepoURL(location.pathname + location.search + location.hash)
+    const revisionUrlPart = revision ? `@${revision}` : ''
     const indexedFileCount = indexing ? indexing.indexedFileCount : ''
-    const cacheKey = `${state.query}-${state.maxResults}${indexedFileCount}`
+    const cacheKey = `${state.query}-${state.maxResults}${indexedFileCount}-${revisionUrlPart}`
     let fuzzyResult = lastFuzzySearchResult.get(cacheKey)
     if (!fuzzyResult) {
         const start = window.performance.now()
         fuzzyResult = search.search({
             query: state.query,
             maxResults: state.maxResults,
-            createUrl: filename => `/${props.repoName}@${props.commitID}/-/blob/${filename}`,
+            createUrl: filename => `/${props.repoName}${revisionUrlPart}/-/blob/${filename}`,
             onClick: () => props.onClose(),
         })
         fuzzyResult.elapsedMilliseconds = window.performance.now() - start
