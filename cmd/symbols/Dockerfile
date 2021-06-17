@@ -1,19 +1,19 @@
 # NOTE: This layer of the docker image is also used in local development as a wrapper around universal-ctags
-FROM sourcegraph/alpine-3.12:99212_2021-06-14_51f6e1e@sha256:0b98031f67bda9b088421f137a1d7d959b44ad360175cfac59c4d6ccd19a4e57 AS ctags
+FROM sourcegraph/alpine-3.12:99422_2021-06-16_cfa0e09@sha256:ffc2ad13f9d44afe8e20fd9d4f9a23af6851d96ccf2ff3eb149ea93fc0420b65
 # hadolint ignore=DL3002
 USER root
 
 COPY ctags-install-alpine.sh /ctags-install-alpine.sh
 RUN /ctags-install-alpine.sh
 
-FROM sourcegraph/alpine-3.12:99212_2021-06-14_51f6e1e@sha256:0b98031f67bda9b088421f137a1d7d959b44ad360175cfac59c4d6ccd19a4e57 as libsqlite3-pcre
+FROM sourcegraph/alpine-3.12:99422_2021-06-16_cfa0e09@sha256:ffc2ad13f9d44afe8e20fd9d4f9a23af6851d96ccf2ff3eb149ea93fc0420b65
 # hadolint ignore=DL3002
 USER root
 
 COPY libsqlite3-pcre-install-alpine.sh /libsqlite3-pcre-install-alpine.sh
 RUN /libsqlite3-pcre-install-alpine.sh
 
-FROM sourcegraph/alpine-3.12:99212_2021-06-14_51f6e1e@sha256:0b98031f67bda9b088421f137a1d7d959b44ad360175cfac59c4d6ccd19a4e57 AS symbols
+FROM sourcegraph/alpine-3.12:99422_2021-06-16_cfa0e09@sha256:ffc2ad13f9d44afe8e20fd9d4f9a23af6851d96ccf2ff3eb149ea93fc0420b65
 
 # TODO(security): This container should not run as root!
 #

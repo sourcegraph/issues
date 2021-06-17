@@ -8,7 +8,7 @@ RUN go mod download
 COPY *.go ./
 RUN go build -o /bin/progress-bot
 
-FROM sourcegraph/alpine-3.12:99212_2021-06-14_51f6e1e@sha256:0b98031f67bda9b088421f137a1d7d959b44ad360175cfac59c4d6ccd19a4e57
+FROM sourcegraph/alpine-3.12:99422_2021-06-16_cfa0e09@sha256:ffc2ad13f9d44afe8e20fd9d4f9a23af6851d96ccf2ff3eb149ea93fc0420b65
 # TODO(security): This container should not be running as root!
 # hadolint ignore=DL3002
 USER root
