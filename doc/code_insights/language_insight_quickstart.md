@@ -22,7 +22,7 @@ This creates a code insight tracking how many lines of code you have in each lan
 
 If you are more interested tracking the historical or future result count of an arbitrary Sourcegraph search, [follow this tutorial](quickstart.md) instead. 
 
-### 3. Once on the "Set up new language usage insight" form fields page, enter the repository you want to analyze. 
+### 3. Once on the "Create new language usage insight" form fields page, enter the repository you want to analyze. 
 
 Enter repositories in the repository URL format, like `github.com/Sourcegraph/Sourcegraph`. 
 

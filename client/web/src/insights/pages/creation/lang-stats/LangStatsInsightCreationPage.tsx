@@ -112,7 +112,7 @@ export const LangStatsInsightCreationPage: React.FunctionComponent<LangStatsInsi
             <PageTitle title="Create new code insight" />
 
             <div className="mb-5">
-                <h2>Set up new language usage insight</h2>
+                <h2>Create new language usage insight</h2>
 
                 <p className="text-muted">
                     Shows language usage in your repository based on number of lines of code.{' '}

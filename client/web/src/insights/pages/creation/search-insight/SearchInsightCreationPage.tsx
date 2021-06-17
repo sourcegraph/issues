@@ -123,7 +123,7 @@ export const SearchInsightCreationPage: React.FunctionComponent<SearchInsightCre
             <PageTitle title="Create new code insight" />
 
             <div className="mb-5">
-                <h2>Create new code insight</h2>
+                <h2>Create new search-based insight</h2>
 
                 <p className="text-muted">
                     Search-based code insights analyze your code based on any search query.{' '}
