@@ -294,7 +294,7 @@
     "ts-morph": "^8.1.0",
     "ts-node": "^9.1.1",
     "typed-scss-modules": "^4.1.1",
-    "typescript": "^4.1.3",
+    "typescript": "^4.3.4",
     "utc-version": "^2.0.2",
     "web-ext": "^4.2.0",
     "webpack": "^4.44.2",
