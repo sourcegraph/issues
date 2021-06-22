@@ -96,7 +96,7 @@
     "@graphql-codegen/typescript-operations": "1.17.8",
     "@istanbuljs/nyc-config-typescript": "^1.0.1",
     "@mermaid-js/mermaid-cli": "^8.7.0",
-    "@octokit/rest": "^16.36.0",
+    "@octokit/rest": "^18.5.6",
     "@percy/puppeteer": "^1.1.0",
     "@pmmmwh/react-refresh-webpack-plugin": "^0.4.3",
     "@pollyjs/adapter": "^5.0.0",
