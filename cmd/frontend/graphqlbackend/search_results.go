@@ -516,7 +516,7 @@ func (r *searchResolver) evaluateLeaf(ctx context.Context) (_ *SearchResults, er
 		return r.paginatedResults(ctx)
 	}
 
-	return r.resultsWithTimeoutSuggestion(ctx)
+	return r.doResults(ctx, result.TypeEmpty)
 }
 
 // unionMerge performs a merge of file match results, merging line matches when
@@ -602,8 +602,6 @@ func intersect(left, right *SearchResults) *SearchResults {
 // results, and is not exhaustive for every expression, we rerun the search by
 // doubling count again.
 func (r *searchResolver) evaluateAnd(ctx context.Context, q query.Basic) (*SearchResults, error) {
-	start := time.Now()
-
 	// Invariant: this function is only reachable from callers that
 	// guarantee a root node with one or more operands.
 	operands := q.Pattern.(query.Operator).Operands
@@ -625,10 +623,7 @@ func (r *searchResolver) evaluateAnd(ctx context.Context, q query.Basic) (*Searc
 	maxTryCount := 40000
 
 	// Set an overall timeout in addition to the timeouts that are set for leaf-requests.
-	ctx, cancel, err := r.withTimeout(ctx)
-	if err != nil {
-		return nil, err
-	}
+	ctx, cancel := context.WithTimeout(ctx, r.SearchInputs.Timeout())
 	defer cancel()
 
 	if count := q.GetCount(); count != "" {
@@ -659,15 +654,6 @@ func (r *searchResolver) evaluateAnd(ctx context.Context, q query.Basic) (*Searc
 		}
 		exhausted = !result.Stats.IsLimitHit
 		for _, term := range operands[1:] {
-			// check if we exceed the overall time limit before running the next query.
-			select {
-			case <-ctx.Done():
-				usedTime := time.Since(start)
-				suggestTime := longer(2, usedTime)
-				return alertForTimeout(usedTime, suggestTime, r).wrapResults(), nil
-			default:
-			}
-
 			termResult, err = r.evaluatePatternExpression(ctx, q.MapPattern(term))
 			if err != nil {
 				return nil, err
@@ -1022,31 +1008,6 @@ func searchResultsToRepoNodes(matches []result.Match) ([]query.Node, error) {
 	return nodes, nil
 }
 
-// resultsWithTimeoutSuggestion calls doResults, and in case of deadline
-// exceeded returns a search alert with a did-you-mean link for the same
-// query with a longer timeout.
-func (r *searchResolver) resultsWithTimeoutSuggestion(ctx context.Context) (*SearchResults, error) {
-	start := time.Now()
-	rr, err := r.doResults(ctx, result.TypeEmpty)
-
-	// If we encountered a context timeout, it indicates one of the many result
-	// type searchers (file, diff, symbol, etc) completely timed out and could not
-	// produce even partial results. Other searcher types may have produced results.
-	//
-	// In this case, or if we got a partial timeout where ALL repositories timed out,
-	// we do not return partial results and instead display a timeout alert.
-	shouldShowAlert := err == context.DeadlineExceeded
-	if err == nil && rr.Stats.AllReposTimedOut() {
-		shouldShowAlert = true
-	}
-	if shouldShowAlert {
-		usedTime := time.Since(start)
-		suggestTime := longer(2, usedTime)
-		return alertForTimeout(usedTime, suggestTime, r).wrapResults(), nil
-	}
-	return rr, err
-}
-
 // substitutePredicates replaces all the predicates in a query with their expanded form. The predicates
 // are expanded using the doExpand function.
 func substitutePredicates(q query.Basic, evaluate func(query.Predicate) (*SearchResults, error)) (query.Plan, error) {
@@ -1252,31 +1213,8 @@ func (r *searchResolver) Stats(ctx context.Context) (stats *searchResultsStats, 
 	return stats, nil
 }
 
-var (
-	// The default timeout to use for queries.
-	defaultTimeout = 20 * time.Second
-)
-
 func (r *searchResolver) searchTimeoutFieldSet() bool {
-	timeout := r.Query.Timeout()
-	return timeout != nil || r.countIsSet()
-}
-
-func (r *searchResolver) withTimeout(ctx context.Context) (context.Context, context.CancelFunc, error) {
-	d := defaultTimeout
-	maxTimeout := time.Duration(searchrepos.SearchLimits().MaxTimeoutSeconds) * time.Second
-	timeout := r.Query.Timeout()
-	if timeout != nil {
-		d = *timeout
-	} else if r.countIsSet() {
-		// If `count:` is set but `timeout:` is not explicitly set, use the max timeout
-		d = maxTimeout
-	}
-	if d > maxTimeout {
-		d = maxTimeout
-	}
-	ctx, cancel := context.WithTimeout(ctx, d)
-	return ctx, cancel, nil
+	return r.Query.Timeout() != nil || r.Query.Count() != nil
 }
 
 func (r *searchResolver) determineResultTypes(args search.TextParameters, forceTypes result.Types) result.Types {
@@ -1309,7 +1247,7 @@ func (r *searchResolver) determineResultTypes(args search.TextParameters, forceT
 // determineRepos wraps resolveRepositories. It interprets the response and
 // error to see if an alert needs to be returned. Only one of the return
 // values will be non-nil.
-func (r *searchResolver) determineRepos(ctx context.Context, tr *trace.Trace, start time.Time) (*searchrepos.Resolved, error) {
+func (r *searchResolver) determineRepos(ctx context.Context, tr *trace.Trace) (*searchrepos.Resolved, error) {
 	resolved, err := r.resolveRepositories(ctx, resolveRepositoriesOpts{})
 	if err != nil {
 		return nil, err
@@ -1354,10 +1292,7 @@ func (r *searchResolver) doResults(ctx context.Context, forceResultTypes result.
 
 	start := time.Now()
 
-	ctx, cancel, err := r.withTimeout(ctx)
-	if err != nil {
-		return nil, err
-	}
+	ctx, cancel := context.WithTimeout(ctx, r.SearchInputs.Timeout())
 	defer cancel()
 
 	limit := r.MaxResults()
@@ -1461,7 +1396,7 @@ func (r *searchResolver) doResults(ctx context.Context, forceResultTypes result.
 		}
 	}
 
-	resolved, err := r.determineRepos(ctx, tr, start)
+	resolved, err := r.determineRepos(ctx, tr)
 	if err != nil {
 		if alert, err := errorToAlert(err); alert != nil {
 			return alert.wrapResults(), err

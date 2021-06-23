@@ -71,6 +71,7 @@ All notable changes to Sourcegraph are documented in this file.
 
 ### Fixed
 
+- Timing out on some branches but getting results on others will no longer give an alert that all repos timed out. [#20319](https://github.com/sourcegraph/sourcegraph/issues/20319)
 - Stricter validation of structural search queries. The `type:` parameter is not supported for structural searches and returns an appropriate alert. [#21487](https://github.com/sourcegraph/sourcegraph/pull/21487)
 - Batch changeset specs that are not attached to changesets will no longer prematurely expire before the batch specs that they are associated with. [#21678](https://github.com/sourcegraph/sourcegraph/pull/21678)
 - The Y-axis of Code Insights line charts no longer start at a negative value. [#22018](https://github.com/sourcegraph/sourcegraph/pull/22018)

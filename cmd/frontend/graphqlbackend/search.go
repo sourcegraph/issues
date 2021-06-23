@@ -257,11 +257,6 @@ func (r *searchResolver) rawQuery() string {
 	return r.OriginalQuery
 }
 
-func (r *searchResolver) countIsSet() bool {
-	count := r.Query.Count()
-	return count != nil
-}
-
 // protocol returns what type of search we are doing (batch, stream,
 // paginated).
 func (r *searchResolver) protocol() search.Protocol {

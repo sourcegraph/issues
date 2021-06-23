@@ -67,7 +67,6 @@ func (r *SearchResultsResolver) PageInfo() *graphqlutil.PageInfo {
 //    with the absolute ordering we do here for pagination.
 //
 func (r *searchResolver) paginatedResults(ctx context.Context) (result *SearchResults, err error) {
-	start := time.Now()
 	if r.Pagination == nil {
 		panic("never here: this method should never be called in this state")
 	}
@@ -111,7 +110,7 @@ func (r *searchResolver) paginatedResults(ctx context.Context) (result *SearchRe
 	ctx, cancel := context.WithTimeout(ctx, 2*time.Minute)
 	defer cancel()
 
-	resolved, err := r.determineRepos(ctx, tr, start)
+	resolved, err := r.determineRepos(ctx, tr)
 	if err != nil {
 		if alert, err := errorToAlert(err); alert != nil {
 			return alert.wrapResults(), err
