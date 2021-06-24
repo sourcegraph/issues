@@ -29,6 +29,7 @@ import (
 	"github.com/sourcegraph/sourcegraph/internal/actor"
 	"github.com/sourcegraph/sourcegraph/internal/api"
 	"github.com/sourcegraph/sourcegraph/internal/conf"
+	"github.com/sourcegraph/sourcegraph/internal/database/dbconn"
 	"github.com/sourcegraph/sourcegraph/internal/env"
 	"github.com/sourcegraph/sourcegraph/internal/errcode"
 	"github.com/sourcegraph/sourcegraph/internal/gitserver"
@@ -161,7 +162,7 @@ func newCommon(w http.ResponseWriter, r *http.Request, title string, serveError 
 	if _, ok := mux.Vars(r)["Repo"]; ok {
 		// Common repo pages (blob, tree, etc).
 		var err error
-		common.Repo, common.CommitID, err = handlerutil.GetRepoAndRev(r.Context(), mux.Vars(r))
+		common.Repo, common.CommitID, err = handlerutil.GetRepoAndRev(r.Context(), dbconn.Global, mux.Vars(r))
 		isRepoEmptyError := routevar.ToRepoRev(mux.Vars(r)).Rev == "" && gitserver.IsRevisionNotFound(errors.Cause(err)) // should reply with HTTP 200
 		if err != nil && !isRepoEmptyError {
 			if e, ok := err.(*handlerutil.URLMovedError); ok {

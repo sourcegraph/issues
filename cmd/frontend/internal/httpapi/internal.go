@@ -32,19 +32,21 @@ import (
 	"github.com/sourcegraph/sourcegraph/schema"
 )
 
-func serveReposGetByName(w http.ResponseWriter, r *http.Request) error {
-	repoName := api.RepoName(mux.Vars(r)["RepoName"])
-	repo, err := backend.Repos.GetByName(r.Context(), repoName)
-	if err != nil {
-		return err
+func serveReposGetByName(db dbutil.DB) func(w http.ResponseWriter, r *http.Request) error {
+	return func(w http.ResponseWriter, r *http.Request) error {
+		repoName := api.RepoName(mux.Vars(r)["RepoName"])
+		repo, err := backend.NewRepos(db).GetByName(r.Context(), repoName)
+		if err != nil {
+			return err
+		}
+		data, err := json.Marshal(repo)
+		if err != nil {
+			return err
+		}
+		w.WriteHeader(http.StatusOK)
+		_, _ = w.Write(data)
+		return nil
 	}
-	data, err := json.Marshal(repo)
-	if err != nil {
-		return err
-	}
-	w.WriteHeader(http.StatusOK)
-	_, _ = w.Write(data)
-	return nil
 }
 
 func servePhabricatorRepoCreate(db dbutil.DB) func(w http.ResponseWriter, r *http.Request) error {

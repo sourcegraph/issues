@@ -406,7 +406,7 @@ func (r *searchResolver) resolveRepositories(ctx context.Context, opts resolveRe
 	repositoryResolver := &searchrepos.Resolver{
 		DB:               r.db,
 		Zoekt:            r.zoekt,
-		DefaultReposFunc: backend.Repos.ListDefault,
+		DefaultReposFunc: backend.NewRepos(r.db).ListDefault,
 	}
 
 	return repositoryResolver.Resolve(ctx, options)

@@ -4,9 +4,12 @@ import (
 	"context"
 
 	"github.com/sourcegraph/sourcegraph/enterprise/internal/codeintel/stores/dbstore"
+	"github.com/sourcegraph/sourcegraph/internal/database/basestore"
 )
 
 type DBStore interface {
+	basestore.ShareableStore
+
 	Transact(ctx context.Context) (DBStore, error)
 	Done(err error) error
 

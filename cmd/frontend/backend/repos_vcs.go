@@ -19,7 +19,7 @@ import (
 // * Empty repository: git.RevisionNotFoundError
 // * The user does not have permission: errcode.IsNotFound
 // * Other unexpected errors.
-func (s *repos) ResolveRev(ctx context.Context, repo *types.Repo, rev string) (commitID api.CommitID, err error) {
+func (s *Repos) ResolveRev(ctx context.Context, repo *types.Repo, rev string) (commitID api.CommitID, err error) {
 	if Mocks.Repos.ResolveRev != nil {
 		return Mocks.Repos.ResolveRev(ctx, repo, rev)
 	}
@@ -30,7 +30,7 @@ func (s *repos) ResolveRev(ctx context.Context, repo *types.Repo, rev string) (c
 	return git.ResolveRevision(ctx, repo.Name, rev, git.ResolveRevisionOptions{})
 }
 
-func (s *repos) GetCommit(ctx context.Context, repo *types.Repo, commitID api.CommitID) (res *git.Commit, err error) {
+func (s *Repos) GetCommit(ctx context.Context, repo *types.Repo, commitID api.CommitID) (res *git.Commit, err error) {
 	if Mocks.Repos.GetCommit != nil {
 		return Mocks.Repos.GetCommit(ctx, repo, commitID)
 	}

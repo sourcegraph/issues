@@ -17,6 +17,7 @@ import (
 
 	"github.com/sourcegraph/sourcegraph/cmd/frontend/envvar"
 	"github.com/sourcegraph/sourcegraph/internal/api"
+	"github.com/sourcegraph/sourcegraph/internal/database/dbutil"
 	"github.com/sourcegraph/sourcegraph/internal/rcache"
 	"github.com/sourcegraph/sourcegraph/internal/vcs/git"
 )
@@ -33,7 +34,7 @@ var (
 // a special case used only on Sourcegraph.com for repository badges.
 //
 // TODO: The import path is not always the same as the repository name.
-func CountGoImporters(ctx context.Context, repo api.RepoName) (count int, err error) {
+func CountGoImporters(ctx context.Context, db dbutil.DB, repo api.RepoName) (count int, err error) {
 	if MockCountGoImporters != nil {
 		return MockCountGoImporters(ctx, repo)
 	}
@@ -65,7 +66,7 @@ func CountGoImporters(ctx context.Context, repo api.RepoName) (count int, err er
 	defer cancel()
 
 	// Find all (possible) Go packages in the repository.
-	goPackages, err := listGoPackagesInRepoImprecise(ctx, repo)
+	goPackages, err := listGoPackagesInRepoImprecise(ctx, db, repo)
 	if err != nil {
 		return 0, err
 	}
@@ -111,14 +112,14 @@ func CountGoImporters(ctx context.Context, repo api.RepoName) (count int, err er
 // the repository. It computes the list based solely on the repository name (as a prefix) and
 // filenames in the repository; it does not parse or build the Go files to determine the list
 // precisely.
-func listGoPackagesInRepoImprecise(ctx context.Context, repoName api.RepoName) ([]string, error) {
+func listGoPackagesInRepoImprecise(ctx context.Context, db dbutil.DB, repoName api.RepoName) ([]string, error) {
 	if !envvar.SourcegraphDotComMode() {
 		// 🚨 SECURITY: Avoid leaking information about private repositories that the viewer is not
 		// allowed to access.
 		return nil, errors.New("listGoPackagesInRepoImprecise is only supported on Sourcegraph.com for public repositories")
 	}
 
-	repo, err := Repos.GetByName(ctx, repoName)
+	repo, err := NewRepos(db).GetByName(ctx, repoName)
 	if err != nil {
 		return nil, err
 	}

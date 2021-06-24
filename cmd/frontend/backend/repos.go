@@ -18,6 +18,7 @@ import (
 	"github.com/sourcegraph/sourcegraph/internal/conf"
 	"github.com/sourcegraph/sourcegraph/internal/database"
 	"github.com/sourcegraph/sourcegraph/internal/database/dbcache"
+	"github.com/sourcegraph/sourcegraph/internal/database/dbutil"
 	"github.com/sourcegraph/sourcegraph/internal/errcode"
 	"github.com/sourcegraph/sourcegraph/internal/extsvc"
 	"github.com/sourcegraph/sourcegraph/internal/gitserver"
@@ -39,17 +40,20 @@ func (e ErrRepoSeeOther) Error() string {
 	return fmt.Sprintf("repo not found at this location, but might exist at %s", e.RedirectURL)
 }
 
-var Repos = &repos{
-	store: database.GlobalRepos,
-	cache: dbcache.NewDefaultRepoLister(database.GlobalRepos),
+func NewRepos(db dbutil.DB) *Repos {
+	rstore := database.Repos(db)
+	return &Repos{
+		store: rstore,
+		cache: dbcache.NewDefaultRepoLister(rstore),
+	}
 }
 
-type repos struct {
+type Repos struct {
 	store *database.RepoStore
 	cache *dbcache.DefaultRepoLister
 }
 
-func (s *repos) Get(ctx context.Context, repo api.RepoID) (_ *types.Repo, err error) {
+func (s *Repos) Get(ctx context.Context, repo api.RepoID) (_ *types.Repo, err error) {
 	if Mocks.Repos.Get != nil {
 		return Mocks.Repos.Get(ctx, repo)
 	}
@@ -64,7 +68,7 @@ func (s *repos) Get(ctx context.Context, repo api.RepoID) (_ *types.Repo, err er
 // if the name refers to a repository on a github.com or gitlab.com that is not
 // yet present in the database, it will automatically look up the
 // repository externally and add it to the database before returning it.
-func (s *repos) GetByName(ctx context.Context, name api.RepoName) (_ *types.Repo, err error) {
+func (s *Repos) GetByName(ctx context.Context, name api.RepoName) (_ *types.Repo, err error) {
 	if Mocks.Repos.GetByName != nil {
 		return Mocks.Repos.GetByName(ctx, name)
 	}
@@ -109,7 +113,7 @@ var metricIsRepoCloneable = promauto.NewCounterVec(prometheus.CounterOpts{
 // Add adds the repository with the given name to the database by calling
 // repo-updater when in sourcegraph.com mode. It's possible that the repo has
 // been renamed on the code host in which case a different name may be returned.
-func (s *repos) Add(ctx context.Context, name api.RepoName) (addedName api.RepoName, err error) {
+func (s *Repos) Add(ctx context.Context, name api.RepoName) (addedName api.RepoName, err error) {
 	ctx, done := trace(ctx, "Repos", "Add", name, &err)
 	defer done()
 
@@ -142,7 +146,7 @@ func (s *repos) Add(ctx context.Context, name api.RepoName) (addedName api.RepoN
 	return "", err
 }
 
-func (s *repos) List(ctx context.Context, opt database.ReposListOptions) (repos []*types.Repo, err error) {
+func (s *Repos) List(ctx context.Context, opt database.ReposListOptions) (repos []*types.Repo, err error) {
 	if Mocks.Repos.List != nil {
 		return Mocks.Repos.List(ctx, opt)
 	}
@@ -161,7 +165,7 @@ func (s *repos) List(ctx context.Context, opt database.ReposListOptions) (repos 
 
 // ListIndexable calls database.DefaultRepos.List, with tracing. It lists ALL
 // default repos which could include private user added repos.
-func (s *repos) ListIndexable(ctx context.Context) (repos []types.RepoName, err error) {
+func (s *Repos) ListIndexable(ctx context.Context) (repos []types.RepoName, err error) {
 	ctx, done := trace(ctx, "Repos", "ListIndexable", nil, &err)
 	defer func() {
 		if err == nil {
@@ -176,7 +180,7 @@ func (s *repos) ListIndexable(ctx context.Context) (repos []types.RepoName, err 
 // ListDefault calls database.DefaultRepos.ListPublic, with tracing.
 // It lists all public default repos and also any private repos added by the
 // current user.
-func (s *repos) ListDefault(ctx context.Context) (repos []types.RepoName, err error) {
+func (s *Repos) ListDefault(ctx context.Context) (repos []types.RepoName, err error) {
 	ctx, done := trace(ctx, "Repos", "ListDefault", nil, &err)
 	defer func() {
 		if err == nil {
@@ -209,7 +213,7 @@ func (s *repos) ListDefault(ctx context.Context) (repos []types.RepoName, err er
 	return repos, nil
 }
 
-func (s *repos) GetInventory(ctx context.Context, repo *types.Repo, commitID api.CommitID, forceEnhancedLanguageDetection bool) (res *inventory.Inventory, err error) {
+func (s *Repos) GetInventory(ctx context.Context, repo *types.Repo, commitID api.CommitID, forceEnhancedLanguageDetection bool) (res *inventory.Inventory, err error) {
 	if Mocks.Repos.GetInventory != nil {
 		return Mocks.Repos.GetInventory(ctx, repo, commitID)
 	}

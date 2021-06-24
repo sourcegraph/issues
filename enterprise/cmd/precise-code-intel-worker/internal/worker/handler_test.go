@@ -2,6 +2,7 @@ package worker
 
 import (
 	"context"
+	"database/sql"
 	"fmt"
 	"io"
 	"os"
@@ -15,6 +16,8 @@ import (
 	"github.com/sourcegraph/sourcegraph/enterprise/internal/codeintel/stores/dbstore"
 	uploadstoremocks "github.com/sourcegraph/sourcegraph/enterprise/internal/codeintel/stores/uploadstore/mocks"
 	"github.com/sourcegraph/sourcegraph/internal/api"
+	"github.com/sourcegraph/sourcegraph/internal/database/basestore"
+	"github.com/sourcegraph/sourcegraph/internal/database/dbtesting"
 	"github.com/sourcegraph/sourcegraph/internal/types"
 	"github.com/sourcegraph/sourcegraph/internal/vcs"
 	"github.com/sourcegraph/sourcegraph/lib/codeintel/bloomfilter"
@@ -37,6 +40,8 @@ func TestHandle(t *testing.T) {
 	mockLSIFStore := NewMockLSIFStore()
 	mockUploadStore := uploadstoremocks.NewMockStore()
 	gitserverClient := NewMockGitserverClient()
+
+	mockWorkerStore.HandleFunc.SetDefaultReturn(basestore.NewHandleWithDB(&dbtesting.MockDB{}, sql.TxOptions{}))
 
 	// Set default transaction behavior
 	mockDBStore.TransactFunc.SetDefaultReturn(mockDBStore, nil)
@@ -163,6 +168,8 @@ func TestHandleError(t *testing.T) {
 	mockUploadStore := uploadstoremocks.NewMockStore()
 	gitserverClient := NewMockGitserverClient()
 
+	mockWorkerStore.HandleFunc.SetDefaultReturn(basestore.NewHandleWithDB(&dbtesting.MockDB{}, sql.TxOptions{}))
+
 	// Set default transaction behavior
 	mockDBStore.TransactFunc.SetDefaultReturn(mockDBStore, nil)
 	mockDBStore.DoneFunc.SetDefaultHook(func(err error) error { return err })
@@ -230,6 +237,8 @@ func TestHandleCloneInProgress(t *testing.T) {
 	mockDBStore := NewMockDBStore()
 	mockUploadStore := uploadstoremocks.NewMockStore()
 	gitserverClient := NewMockGitserverClient()
+
+	mockWorkerStore.HandleFunc.SetDefaultReturn(basestore.NewHandleWithDB(&dbtesting.MockDB{}, sql.TxOptions{}))
 
 	handler := &handler{
 		uploadStore:     mockUploadStore,

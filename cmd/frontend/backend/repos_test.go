@@ -25,7 +25,7 @@ import (
 )
 
 func TestReposService_Get(t *testing.T) {
-	var s repos
+	var s Repos
 	ctx := testContext()
 
 	wantRepo := &types.Repo{ID: 1, Name: "github.com/u/r"}
@@ -46,7 +46,7 @@ func TestReposService_Get(t *testing.T) {
 }
 
 func TestReposService_List(t *testing.T) {
-	var s repos
+	var s Repos
 	ctx := testContext()
 
 	wantRepos := []*types.Repo{
@@ -69,7 +69,7 @@ func TestReposService_List(t *testing.T) {
 }
 
 func TestRepos_Add(t *testing.T) {
-	var s repos
+	var s Repos
 	ctx := testContext()
 
 	const repoName = "my/repo"
@@ -109,7 +109,7 @@ func (oid gitObjectInfo) OID() git.OID {
 }
 
 func TestReposGetInventory(t *testing.T) {
-	var s repos
+	var s Repos
 	ctx := testContext()
 
 	const (

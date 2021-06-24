@@ -19,6 +19,7 @@ import (
 	"github.com/sourcegraph/sourcegraph/internal/actor"
 	"github.com/sourcegraph/sourcegraph/internal/api"
 	"github.com/sourcegraph/sourcegraph/internal/conf"
+	"github.com/sourcegraph/sourcegraph/internal/database/dbutil"
 	"github.com/sourcegraph/sourcegraph/internal/errcode"
 	"github.com/sourcegraph/sourcegraph/internal/gitserver"
 	"github.com/sourcegraph/sourcegraph/internal/lazyregexp"
@@ -69,7 +70,7 @@ func (h *UploadHandler) handleEnqueue(w http.ResponseWriter, r *http.Request) {
 		// 🚨 SECURITY: It is critical to ensure if repository and commit exists after
 		// the above authz check. Otherwise, it is possible to use this endpoint to
 		// brute-force existence of repositories.
-		repo, ok := ensureRepoAndCommitExist(ctx, w, repoName, commit)
+		repo, ok := ensureRepoAndCommitExist(ctx, h.dbStore.Handle().DB(), w, repoName, commit)
 		if !ok {
 			return
 		}
@@ -383,11 +384,13 @@ func inferIndexer(r *http.Request) (string, error) {
 // 🚨 SECURITY: It is critical to call this function after necessary authz check
 // because this function would bypass authz to for testing if the repository and
 // commit exists in Sourcegraph.
-func ensureRepoAndCommitExist(ctx context.Context, w http.ResponseWriter, repoName, commit string) (*types.Repo, bool) {
+func ensureRepoAndCommitExist(ctx context.Context, db dbutil.DB, w http.ResponseWriter, repoName, commit string) (*types.Repo, bool) {
 	// This function won't be able to see all repositories without bypassing authz.
 	ctx = actor.WithInternalActor(ctx)
 
-	repo, err := backend.Repos.GetByName(ctx, api.RepoName(repoName))
+	repos := backend.NewRepos(db)
+
+	repo, err := repos.GetByName(ctx, api.RepoName(repoName))
 	if err != nil {
 		if errcode.IsNotFound(err) {
 			http.Error(w, fmt.Sprintf("unknown repository %q", repoName), http.StatusNotFound)
@@ -398,7 +401,7 @@ func ensureRepoAndCommitExist(ctx context.Context, w http.ResponseWriter, repoNa
 		return nil, false
 	}
 
-	if _, err := backend.Repos.ResolveRev(ctx, repo, commit); err != nil {
+	if _, err := repos.ResolveRev(ctx, repo, commit); err != nil {
 		if gitserver.IsRevisionNotFound(err) {
 			http.Error(w, fmt.Sprintf("unknown commit %q", commit), http.StatusNotFound)
 			return nil, false

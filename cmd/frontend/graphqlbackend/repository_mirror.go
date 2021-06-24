@@ -223,7 +223,7 @@ func (r *schemaResolver) CheckMirrorRepositoryConnection(ctx context.Context, ar
 		if err != nil {
 			return nil, err
 		}
-		repo, err = backend.Repos.Get(ctx, repoID)
+		repo, err = backend.NewRepos(r.db).Get(ctx, repoID)
 		if err != nil {
 			return nil, err
 		}

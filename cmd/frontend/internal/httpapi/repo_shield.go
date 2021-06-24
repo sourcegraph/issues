@@ -9,11 +9,12 @@ import (
 
 	"github.com/sourcegraph/sourcegraph/cmd/frontend/backend"
 	"github.com/sourcegraph/sourcegraph/cmd/frontend/internal/routevar"
+	"github.com/sourcegraph/sourcegraph/internal/database/dbutil"
 )
 
 // NOTE: Keep in sync with services/backend/httpapi/repo_shield.go
-func badgeValue(r *http.Request) (int, error) {
-	totalRefs, err := backend.CountGoImporters(r.Context(), routevar.ToRepo(mux.Vars(r)))
+func badgeValue(db dbutil.DB, r *http.Request) (int, error) {
+	totalRefs, err := backend.CountGoImporters(r.Context(), db, routevar.ToRepo(mux.Vars(r)))
 	if err != nil {
 		return 0, errors.Wrap(err, "Defs.TotalRefs")
 	}
@@ -34,16 +35,18 @@ func badgeValueFmt(totalRefs int) string {
 	return " " + desc
 }
 
-func serveRepoShield(w http.ResponseWriter, r *http.Request) error {
-	value, err := badgeValue(r)
-	if err != nil {
-		return err
+func serveRepoShield(db dbutil.DB) func(w http.ResponseWriter, r *http.Request) error {
+	return func(w http.ResponseWriter, r *http.Request) error {
+		value, err := badgeValue(db, r)
+		if err != nil {
+			return err
+		}
+		return writeJSON(w, &struct {
+			// Note: Named lowercase because the JSON is consumed by shields.io JS
+			// code.
+			Value string `json:"value"`
+		}{
+			Value: badgeValueFmt(value),
+		})
 	}
-	return writeJSON(w, &struct {
-		// Note: Named lowercase because the JSON is consumed by shields.io JS
-		// code.
-		Value string `json:"value"`
-	}{
-		Value: badgeValueFmt(value),
-	})
 }

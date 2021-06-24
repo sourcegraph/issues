@@ -336,27 +336,29 @@ func (r *searchResolver) Suggestions(ctx context.Context, args *searchSuggestion
 			return nil, nil
 		}
 
+		repos := backend.NewRepos(r.db)
+
 		// Only care about the first found repository.
-		repos, err := backend.Repos.List(ctx, database.ReposListOptions{
+		rs, err := repos.List(ctx, database.ReposListOptions{
 			IncludePatterns: validValues,
 			LimitOffset: &database.LimitOffset{
 				Limit: 1,
 			},
 		})
-		if err != nil || len(repos) == 0 {
+		if err != nil || len(rs) == 0 {
 			return nil, err
 		}
-		repo := repos[0]
+		repo := rs[0]
 
 		ctx, cancel := context.WithTimeout(ctx, 1*time.Second)
 		defer cancel()
 
-		commitID, err := backend.Repos.ResolveRev(ctx, repo, "")
+		commitID, err := repos.ResolveRev(ctx, repo, "")
 		if err != nil {
 			return nil, err
 		}
 
-		inventory, err := backend.Repos.GetInventory(ctx, repo, commitID, false)
+		inventory, err := repos.GetInventory(ctx, repo, commitID, false)
 		if err != nil {
 			return nil, err
 		}

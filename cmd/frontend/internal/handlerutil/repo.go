@@ -9,16 +9,17 @@ import (
 	"github.com/sourcegraph/sourcegraph/cmd/frontend/backend"
 	"github.com/sourcegraph/sourcegraph/cmd/frontend/internal/routevar"
 	"github.com/sourcegraph/sourcegraph/internal/api"
+	"github.com/sourcegraph/sourcegraph/internal/database/dbutil"
 	"github.com/sourcegraph/sourcegraph/internal/types"
 )
 
 // GetRepo gets the repo (from the reposSvc) specified in the URL's
 // Repo route param. Callers should ideally check for a return error of type
 // URLMovedError and handle this scenario by warning or redirecting the user.
-func GetRepo(ctx context.Context, vars map[string]string) (*types.Repo, error) {
+func GetRepo(ctx context.Context, db dbutil.DB, vars map[string]string) (*types.Repo, error) {
 	origRepo := routevar.ToRepo(vars)
 
-	repo, err := backend.Repos.GetByName(ctx, origRepo)
+	repo, err := backend.NewRepos(db).GetByName(ctx, origRepo)
 	if err != nil {
 		return nil, err
 	}
@@ -31,13 +32,15 @@ func GetRepo(ctx context.Context, vars map[string]string) (*types.Repo, error) {
 }
 
 // getRepoRev resolves the repository and commit specified in the route vars.
-func getRepoRev(ctx context.Context, vars map[string]string, repoID api.RepoID) (api.RepoID, api.CommitID, error) {
+func getRepoRev(ctx context.Context, db dbutil.DB, vars map[string]string, repoID api.RepoID) (api.RepoID, api.CommitID, error) {
+	repos := backend.NewRepos(db)
+
 	repoRev := routevar.ToRepoRev(vars)
-	repo, err := backend.Repos.Get(ctx, repoID)
+	repo, err := repos.Get(ctx, repoID)
 	if err != nil {
 		return repoID, "", err
 	}
-	commitID, err := backend.Repos.ResolveRev(ctx, repo, repoRev.Rev)
+	commitID, err := repos.ResolveRev(ctx, repo, repoRev.Rev)
 	if err != nil {
 		return repoID, "", err
 	}
@@ -48,13 +51,13 @@ func getRepoRev(ctx context.Context, vars map[string]string, repoID api.RepoID) 
 // GetRepoAndRev returns the repo object and the commit ID for a repository. It may
 // also return custom error URLMovedError to allow special handling of this case,
 // such as for example redirecting the user.
-func GetRepoAndRev(ctx context.Context, vars map[string]string) (*types.Repo, api.CommitID, error) {
-	repo, err := GetRepo(ctx, vars)
+func GetRepoAndRev(ctx context.Context, db dbutil.DB, vars map[string]string) (*types.Repo, api.CommitID, error) {
+	repo, err := GetRepo(ctx, db, vars)
 	if err != nil {
 		return repo, "", err
 	}
 
-	_, commitID, err := getRepoRev(ctx, vars, repo.ID)
+	_, commitID, err := getRepoRev(ctx, db, vars, repo.ID)
 	return repo, commitID, err
 }
 

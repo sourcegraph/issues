@@ -274,7 +274,7 @@ func initRouter(db dbutil.DB, router *mux.Router) {
 		router.Get(routeLegacyOldRouteDefLanding).Handler(http.HandlerFunc(serveOldRouteDefLanding))
 		router.Get(routeLegacyDefRedirectToDefLanding).Handler(http.HandlerFunc(serveDefRedirectToDefLanding))
 		router.Get(routeLegacyDefLanding).Handler(handler(serveDefLanding))
-		router.Get(routeLegacyRepoLanding).Handler(handler(serveRepoLanding))
+		router.Get(routeLegacyRepoLanding).Handler(handler(serveRepoLanding(db)))
 	}
 
 	// search

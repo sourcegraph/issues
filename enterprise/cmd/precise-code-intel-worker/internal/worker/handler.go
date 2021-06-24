@@ -192,12 +192,14 @@ const CloneInProgressDelay = time.Minute
 // If the repo is currently cloning, then we'll requeue the upload to be tried again later. This will not
 // increase the reset count of the record (so this doesn't count against the upload as a legitimate attempt).
 func requeueIfCloning(ctx context.Context, workerStore dbworkerstore.Store, upload store.Upload) (requeued bool, _ error) {
-	repo, err := backend.Repos.Get(ctx, api.RepoID(upload.RepositoryID))
+	repos := backend.NewRepos(workerStore.Handle().DB())
+
+	repo, err := repos.Get(ctx, api.RepoID(upload.RepositoryID))
 	if err != nil {
 		return false, errors.Wrap(err, "Repos.Get")
 	}
 
-	if _, err := backend.Repos.ResolveRev(ctx, repo, upload.Commit); err != nil {
+	if _, err := repos.ResolveRev(ctx, repo, upload.Commit); err != nil {
 		if !vcs.IsCloneInProgress(err) {
 			return false, errors.Wrap(err, "Repos.ResolveRev")
 		}

@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"compress/gzip"
 	"context"
+	"database/sql"
 	"flag"
 	"io"
 	"net/http"
@@ -20,6 +21,8 @@ import (
 	store "github.com/sourcegraph/sourcegraph/enterprise/internal/codeintel/stores/dbstore"
 	uploadstoremocks "github.com/sourcegraph/sourcegraph/enterprise/internal/codeintel/stores/uploadstore/mocks"
 	"github.com/sourcegraph/sourcegraph/internal/api"
+	"github.com/sourcegraph/sourcegraph/internal/database/basestore"
+	"github.com/sourcegraph/sourcegraph/internal/database/dbtesting"
 	"github.com/sourcegraph/sourcegraph/internal/types"
 )
 
@@ -40,6 +43,7 @@ func TestHandleEnqueueSinglePayload(t *testing.T) {
 	mockUploadStore := uploadstoremocks.NewMockStore()
 
 	mockDBStore.TransactFunc.SetDefaultReturn(mockDBStore, nil)
+	mockDBStore.HandleFunc.SetDefaultReturn(basestore.NewHandleWithDB(&dbtesting.MockDB{}, sql.TxOptions{}))
 	mockDBStore.DoneFunc.SetDefaultHook(func(err error) error { return err })
 	mockDBStore.InsertUploadFunc.SetDefaultReturn(42, nil)
 
@@ -122,6 +126,7 @@ func TestHandleEnqueueSinglePayloadNoIndexerName(t *testing.T) {
 	mockUploadStore := uploadstoremocks.NewMockStore()
 
 	mockDBStore.TransactFunc.SetDefaultReturn(mockDBStore, nil)
+	mockDBStore.HandleFunc.SetDefaultReturn(basestore.NewHandleWithDB(&dbtesting.MockDB{}, sql.TxOptions{}))
 	mockDBStore.DoneFunc.SetDefaultHook(func(err error) error { return err })
 	mockDBStore.InsertUploadFunc.SetDefaultReturn(42, nil)
 
@@ -189,6 +194,7 @@ func TestHandleEnqueueMultipartSetup(t *testing.T) {
 	mockUploadStore := uploadstoremocks.NewMockStore()
 
 	mockDBStore.TransactFunc.SetDefaultReturn(mockDBStore, nil)
+	mockDBStore.HandleFunc.SetDefaultReturn(basestore.NewHandleWithDB(&dbtesting.MockDB{}, sql.TxOptions{}))
 	mockDBStore.DoneFunc.SetDefaultHook(func(err error) error { return err })
 	mockDBStore.InsertUploadFunc.SetDefaultReturn(42, nil)
 
@@ -254,6 +260,7 @@ func TestHandleEnqueueMultipartUpload(t *testing.T) {
 	}
 
 	mockDBStore.TransactFunc.SetDefaultReturn(mockDBStore, nil)
+	mockDBStore.HandleFunc.SetDefaultReturn(basestore.NewHandleWithDB(&dbtesting.MockDB{}, sql.TxOptions{}))
 	mockDBStore.DoneFunc.SetDefaultHook(func(err error) error { return err })
 	mockDBStore.GetUploadByIDFunc.SetDefaultReturn(upload, true, nil)
 
@@ -328,6 +335,7 @@ func TestHandleEnqueueMultipartFinalize(t *testing.T) {
 		UploadedParts: []int{0, 1, 2, 3, 4},
 	}
 	mockDBStore.TransactFunc.SetDefaultReturn(mockDBStore, nil)
+	mockDBStore.HandleFunc.SetDefaultReturn(basestore.NewHandleWithDB(&dbtesting.MockDB{}, sql.TxOptions{}))
 	mockDBStore.DoneFunc.SetDefaultHook(func(err error) error { return err })
 	mockDBStore.GetUploadByIDFunc.SetDefaultReturn(upload, true, nil)
 

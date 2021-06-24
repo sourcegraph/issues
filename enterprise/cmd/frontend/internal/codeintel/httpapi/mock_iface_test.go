@@ -7,6 +7,7 @@ import (
 	"sync"
 
 	dbstore "github.com/sourcegraph/sourcegraph/enterprise/internal/codeintel/stores/dbstore"
+	basestore "github.com/sourcegraph/sourcegraph/internal/database/basestore"
 )
 
 // MockDBStore is a mock implementation of the DBStore interface (from the
@@ -23,6 +24,9 @@ type MockDBStore struct {
 	// GetUploadByIDFunc is an instance of a mock function object
 	// controlling the behavior of the method GetUploadByID.
 	GetUploadByIDFunc *DBStoreGetUploadByIDFunc
+	// HandleFunc is an instance of a mock function object controlling the
+	// behavior of the method Handle.
+	HandleFunc *DBStoreHandleFunc
 	// InsertUploadFunc is an instance of a mock function object controlling
 	// the behavior of the method InsertUpload.
 	InsertUploadFunc *DBStoreInsertUploadFunc
@@ -54,6 +58,11 @@ func NewMockDBStore() *MockDBStore {
 		GetUploadByIDFunc: &DBStoreGetUploadByIDFunc{
 			defaultHook: func(context.Context, int) (dbstore.Upload, bool, error) {
 				return dbstore.Upload{}, false, nil
+			},
+		},
+		HandleFunc: &DBStoreHandleFunc{
+			defaultHook: func() *basestore.TransactableHandle {
+				return nil
 			},
 		},
 		InsertUploadFunc: &DBStoreInsertUploadFunc{
@@ -91,6 +100,9 @@ func NewMockDBStoreFrom(i DBStore) *MockDBStore {
 		},
 		GetUploadByIDFunc: &DBStoreGetUploadByIDFunc{
 			defaultHook: i.GetUploadByID,
+		},
+		HandleFunc: &DBStoreHandleFunc{
+			defaultHook: i.Handle,
 		},
 		InsertUploadFunc: &DBStoreInsertUploadFunc{
 			defaultHook: i.InsertUpload,
@@ -428,6 +440,105 @@ func (c DBStoreGetUploadByIDFuncCall) Args() []interface{} {
 // invocation.
 func (c DBStoreGetUploadByIDFuncCall) Results() []interface{} {
 	return []interface{}{c.Result0, c.Result1, c.Result2}
+}
+
+// DBStoreHandleFunc describes the behavior when the Handle method of the
+// parent MockDBStore instance is invoked.
+type DBStoreHandleFunc struct {
+	defaultHook func() *basestore.TransactableHandle
+	hooks       []func() *basestore.TransactableHandle
+	history     []DBStoreHandleFuncCall
+	mutex       sync.Mutex
+}
+
+// Handle delegates to the next hook function in the queue and stores the
+// parameter and result values of this invocation.
+func (m *MockDBStore) Handle() *basestore.TransactableHandle {
+	r0 := m.HandleFunc.nextHook()()
+	m.HandleFunc.appendCall(DBStoreHandleFuncCall{r0})
+	return r0
+}
+
+// SetDefaultHook sets function that is called when the Handle method of the
+// parent MockDBStore instance is invoked and the hook queue is empty.
+func (f *DBStoreHandleFunc) SetDefaultHook(hook func() *basestore.TransactableHandle) {
+	f.defaultHook = hook
+}
+
+// PushHook adds a function to the end of hook queue. Each invocation of the
+// Handle method of the parent MockDBStore instance invokes the hook at the
+// front of the queue and discards it. After the queue is empty, the default
+// hook function is invoked for any future action.
+func (f *DBStoreHandleFunc) PushHook(hook func() *basestore.TransactableHandle) {
+	f.mutex.Lock()
+	f.hooks = append(f.hooks, hook)
+	f.mutex.Unlock()
+}
+
+// SetDefaultReturn calls SetDefaultDefaultHook with a function that returns
+// the given values.
+func (f *DBStoreHandleFunc) SetDefaultReturn(r0 *basestore.TransactableHandle) {
+	f.SetDefaultHook(func() *basestore.TransactableHandle {
+		return r0
+	})
+}
+
+// PushReturn calls PushDefaultHook with a function that returns the given
+// values.
+func (f *DBStoreHandleFunc) PushReturn(r0 *basestore.TransactableHandle) {
+	f.PushHook(func() *basestore.TransactableHandle {
+		return r0
+	})
+}
+
+func (f *DBStoreHandleFunc) nextHook() func() *basestore.TransactableHandle {
+	f.mutex.Lock()
+	defer f.mutex.Unlock()
+
+	if len(f.hooks) == 0 {
+		return f.defaultHook
+	}
+
+	hook := f.hooks[0]
+	f.hooks = f.hooks[1:]
+	return hook
+}
+
+func (f *DBStoreHandleFunc) appendCall(r0 DBStoreHandleFuncCall) {
+	f.mutex.Lock()
+	f.history = append(f.history, r0)
+	f.mutex.Unlock()
+}
+
+// History returns a sequence of DBStoreHandleFuncCall objects describing
+// the invocations of this function.
+func (f *DBStoreHandleFunc) History() []DBStoreHandleFuncCall {
+	f.mutex.Lock()
+	history := make([]DBStoreHandleFuncCall, len(f.history))
+	copy(history, f.history)
+	f.mutex.Unlock()
+
+	return history
+}
+
+// DBStoreHandleFuncCall is an object that describes an invocation of method
+// Handle on an instance of MockDBStore.
+type DBStoreHandleFuncCall struct {
+	// Result0 is the value of the 1st result returned from this method
+	// invocation.
+	Result0 *basestore.TransactableHandle
+}
+
+// Args returns an interface slice containing the arguments of this
+// invocation.
+func (c DBStoreHandleFuncCall) Args() []interface{} {
+	return []interface{}{}
+}
+
+// Results returns an interface slice containing the results of this
+// invocation.
+func (c DBStoreHandleFuncCall) Results() []interface{} {
+	return []interface{}{c.Result0}
 }
 
 // DBStoreInsertUploadFunc describes the behavior when the InsertUpload

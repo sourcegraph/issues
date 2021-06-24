@@ -9,6 +9,7 @@ import (
 	"github.com/sourcegraph/sourcegraph/cmd/frontend/backend"
 	"github.com/sourcegraph/sourcegraph/internal/api"
 	"github.com/sourcegraph/sourcegraph/internal/database"
+	"github.com/sourcegraph/sourcegraph/internal/database/dbtesting"
 	"github.com/sourcegraph/sourcegraph/internal/extsvc"
 	"github.com/sourcegraph/sourcegraph/internal/types"
 )
@@ -48,7 +49,7 @@ func TestEditorRev(t *testing.T) {
 		{strings.Repeat("d", 40), "@" + strings.Repeat("d", 40), true}, // default revision, explicit
 	}
 	for _, c := range cases {
-		got, err := editorRev(ctx, repoName, c.inputRev, c.beExplicit)
+		got, err := editorRev(ctx, &dbtesting.MockDB{}, repoName, c.inputRev, c.beExplicit)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -314,7 +315,7 @@ func TestEditorRedirect(t *testing.T) {
 	}
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {
-			editorRequest, parseErr := parseEditorRequest(c.q)
+			editorRequest, parseErr := parseEditorRequest(&dbtesting.MockDB{}, c.q)
 			if errStr(parseErr) != c.wantParseErr {
 				t.Fatalf("got parseErr %q want %q", parseErr, c.wantParseErr)
 			}

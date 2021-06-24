@@ -52,9 +52,9 @@ func NewHandler(db dbutil.DB, m *mux.Router, schema *graphql.Schema, githubWebho
 	})
 
 	// Set handlers for the installed routes.
-	m.Get(apirouter.RepoShield).Handler(trace.Route(handler(serveRepoShield)))
+	m.Get(apirouter.RepoShield).Handler(trace.Route(handler(serveRepoShield(db))))
 
-	m.Get(apirouter.RepoRefresh).Handler(trace.Route(handler(serveRepoRefresh)))
+	m.Get(apirouter.RepoRefresh).Handler(trace.Route(handler(serveRepoRefresh(db))))
 
 	gh := webhooks.GitHubWebhook{
 		ExternalServices: database.ExternalServices(db),
@@ -115,12 +115,12 @@ func NewInternalHandler(m *mux.Router, db dbutil.DB, schema *graphql.Schema, new
 	m.Get(apirouter.PhabricatorRepoCreate).Handler(trace.Route(handler(servePhabricatorRepoCreate(db))))
 	reposList := &reposListServer{
 		SourcegraphDotComMode: envvar.SourcegraphDotComMode(),
-		Repos:                 backend.Repos,
+		Repos:                 backend.NewRepos(db),
 		Indexers:              search.Indexers(),
 	}
 	m.Get(apirouter.ReposIndex).Handler(trace.Route(handler(reposList.serveIndex)))
 	m.Get(apirouter.ReposListEnabled).Handler(trace.Route(handler(serveReposListEnabled)))
-	m.Get(apirouter.ReposGetByName).Handler(trace.Route(handler(serveReposGetByName)))
+	m.Get(apirouter.ReposGetByName).Handler(trace.Route(handler(serveReposGetByName(db))))
 	m.Get(apirouter.SettingsGetForSubject).Handler(trace.Route(handler(serveSettingsGetForSubject(db))))
 	m.Get(apirouter.SavedQueriesListAll).Handler(trace.Route(handler(serveSavedQueriesListAll(db))))
 	m.Get(apirouter.SavedQueriesGetInfo).Handler(trace.Route(handler(serveSavedQueriesGetInfo(db))))

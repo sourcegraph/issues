@@ -10,6 +10,7 @@ import (
 
 	"github.com/sourcegraph/sourcegraph/cmd/frontend/backend"
 	"github.com/sourcegraph/sourcegraph/internal/api"
+	"github.com/sourcegraph/sourcegraph/internal/database/dbutil"
 	"github.com/sourcegraph/sourcegraph/internal/goroutine"
 	"github.com/sourcegraph/sourcegraph/internal/inventory"
 	"github.com/sourcegraph/sourcegraph/internal/search/result"
@@ -23,7 +24,7 @@ func (srs *searchResultsStats) Languages(ctx context.Context) ([]*languageStatis
 		return nil, err
 	}
 
-	langs, err := searchResultsStatsLanguages(ctx, srr.Matches)
+	langs, err := searchResultsStatsLanguages(ctx, srs.srs.db, srr.Matches)
 	if err != nil {
 		return nil, err
 	}
@@ -47,7 +48,7 @@ func (srs *searchResultsStats) getResults(ctx context.Context) (*SearchResultsRe
 	return srs.srs, srs.srsErr
 }
 
-func searchResultsStatsLanguages(ctx context.Context, matches []result.Match) ([]inventory.Lang, error) {
+func searchResultsStatsLanguages(ctx context.Context, db dbutil.DB, matches []result.Match) ([]inventory.Lang, error) {
 	// Batch our operations by repo-commit.
 	type repoCommit struct {
 		repo     api.RepoID
@@ -126,7 +127,7 @@ func searchResultsStatsLanguages(ctx context.Context, matches []result.Match) ([
 					run.Error(err)
 					return
 				}
-				inv, err := backend.Repos.GetInventory(ctx, repoName.ToRepo(), api.CommitID(oid.String()), true)
+				inv, err := backend.NewRepos(db).GetInventory(ctx, repoName.ToRepo(), api.CommitID(oid.String()), true)
 				if err != nil {
 					run.Error(err)
 					return

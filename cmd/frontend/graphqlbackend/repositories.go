@@ -158,7 +158,7 @@ func (r *repositoryConnectionResolver) compute(ctx context.Context) ([]*types.Re
 			if opt2.LimitOffset != nil {
 				opt2.LimitOffset.Limit++
 			}
-			repos, err := backend.Repos.List(ctx, opt2)
+			repos, err := backend.NewRepos(r.db).List(ctx, opt2)
 			if err != nil {
 				r.err = err
 				return

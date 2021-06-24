@@ -12,6 +12,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 
 	"github.com/sourcegraph/sourcegraph/cmd/frontend/internal/handlerutil"
+	"github.com/sourcegraph/sourcegraph/internal/database/dbutil"
 	"github.com/sourcegraph/sourcegraph/internal/errcode"
 	"github.com/sourcegraph/sourcegraph/internal/lazyregexp"
 	"github.com/sourcegraph/sourcegraph/internal/trace/ot"
@@ -21,18 +22,20 @@ var goSymbolReg = lazyregexp.New("/info/GoPackage/(.+)$")
 
 // serveRepoLanding simply redirects the old (sourcegraph.com/<repo>/-/info) repo landing page
 // URLs directly to the repo itself (sourcegraph.com/<repo>).
-func serveRepoLanding(w http.ResponseWriter, r *http.Request) error {
-	legacyRepoLandingCounter.Inc()
+func serveRepoLanding(db dbutil.DB) func(w http.ResponseWriter, r *http.Request) error {
+	return func(w http.ResponseWriter, r *http.Request) error {
+		legacyRepoLandingCounter.Inc()
 
-	repo, commitID, err := handlerutil.GetRepoAndRev(r.Context(), mux.Vars(r))
-	if err != nil {
-		if errcode.IsHTTPErrorCode(err, http.StatusNotFound) {
-			return &errcode.HTTPErr{Status: http.StatusNotFound, Err: err}
+		repo, commitID, err := handlerutil.GetRepoAndRev(r.Context(), db, mux.Vars(r))
+		if err != nil {
+			if errcode.IsHTTPErrorCode(err, http.StatusNotFound) {
+				return &errcode.HTTPErr{Status: http.StatusNotFound, Err: err}
+			}
+			return errors.Wrap(err, "GetRepoAndRev")
 		}
-		return errors.Wrap(err, "GetRepoAndRev")
+		http.Redirect(w, r, "/"+string(repo.Name)+"@"+string(commitID), http.StatusMovedPermanently)
+		return nil
 	}
-	http.Redirect(w, r, "/"+string(repo.Name)+"@"+string(commitID), http.StatusMovedPermanently)
-	return nil
 }
 
 func serveDefLanding(w http.ResponseWriter, r *http.Request) (err error) {
