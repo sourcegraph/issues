@@ -1,11 +1,15 @@
 import { castArray } from 'lodash'
 
+function isDocument(element: any): element is Document {
+    return element?.documentElement !== undefined
+}
+
 /**
  * An IntersectionObserver implementation that will immediately signal all
  * observed elements as intersecting.
  */
 export class MockIntersectionObserver implements IntersectionObserver {
-    public readonly root: Element | null
+    public readonly root: Element | Document | null
     public readonly rootMargin: string
     public readonly thresholds: readonly number[]
 
@@ -23,7 +27,10 @@ export class MockIntersectionObserver implements IntersectionObserver {
                     isIntersecting: true,
                     boundingClientRect: target.getBoundingClientRect(),
                     intersectionRect: target.getBoundingClientRect(),
-                    rootBounds: (this.root ?? document.documentElement).getBoundingClientRect(),
+                    rootBounds: isDocument(this.root)
+                        ? document.documentElement.getBoundingClientRect()
+                        : // Fallback on documentElement in case if root equals to null
+                          (this.root ?? document.documentElement).getBoundingClientRect(),
                     intersectionRatio: 1,
                     time: 0,
                 },

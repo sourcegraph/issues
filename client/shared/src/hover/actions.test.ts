@@ -357,7 +357,7 @@ describe('getDefinitionURL', () => {
 
     describe('if there is exactly 1 location result', () => {
         it('resolves the raw repo name and passes it to urlToFile()', async () => {
-            const requestGraphQL = <R>({ variables }: { variables: any }): Observable<SuccessGraphQLResult<R>> =>
+            const requestGraphQL = ({ variables }: { variables: any }): Observable<SuccessGraphQLResult<any>> =>
                 // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
                 of({
                     data: {
