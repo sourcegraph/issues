@@ -175,7 +175,7 @@
     "@types/pollyjs__core": "4.3.1",
     "@types/pollyjs__persister-fs": "2.0.1",
     "@types/puppeteer": "5.4.2",
-    "@types/react": "17.0.11",
+    "@types/react": "17.0.0",
     "@types/react-circular-progressbar": "1.0.2",
     "@types/react-dom": "16.9.8",
     "@types/react-grid-layout": "0.17.2",
