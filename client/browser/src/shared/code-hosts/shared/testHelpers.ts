@@ -89,13 +89,13 @@ export const DEFAULT_GRAPHQL_RESPONSES: GraphQLResponseMap = {
  */
 export const mockRequestGraphQL = (
     responseMap: GraphQLResponseMap = DEFAULT_GRAPHQL_RESPONSES
-): PlatformContext['requestGraphQL'] => <R, V = object>({
+): PlatformContext['requestGraphQL'] => ({
     request,
     variables,
     mightContainPrivateInfo,
 }: {
     request: string
-    variables: V
+    variables: any
     mightContainPrivateInfo?: boolean
 }) => {
     const nameMatch = request.match(/^\s*(?:query|mutation)\s+(\w+)/)
@@ -103,5 +103,5 @@ export const mockRequestGraphQL = (
     if (!requestName || !responseMap[requestName]) {
         return throwError(new Error(`No mock for GraphQL request ${String(requestName)}`))
     }
-    return responseMap[requestName](variables, mightContainPrivateInfo) as Observable<SuccessGraphQLResult<R>>
+    return responseMap[requestName](variables, mightContainPrivateInfo) as Observable<SuccessGraphQLResult<any>>
 }

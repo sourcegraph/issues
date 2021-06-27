@@ -1018,7 +1018,7 @@ export function handleCodeHost({
                 } else if (diffOrFileInfoWithEditor.base) {
                     scopeEditor = diffOrFileInfoWithEditor.base.editor
                 } else {
-                    scopeEditor = diffOrFileInfoWithEditor.head.editor
+                    scopeEditor = diffOrFileInfoWithEditor.head!.editor
                 }
 
                 if (wasRemoved) {
