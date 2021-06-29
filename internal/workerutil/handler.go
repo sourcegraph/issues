@@ -40,4 +40,6 @@ type WithHooks interface {
 	// PostHandle both operate on shared data, that they will be operating on the data from different
 	// goroutines and it is up to the caller to properly synchronize access to it.
 	PostHandle(ctx context.Context, record Record)
+
+	PreStore(ctx context.Context, store Store, record Record, handleErr error) error
 }

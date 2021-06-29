@@ -98,6 +98,7 @@ var changesetInsertColumns = []*sqlf.Query{
 	// the business logic for determining it is in one place and the field is
 	// indexable for searching.
 	sqlf.Sprintf("external_title"),
+	sqlf.Sprintf("changeset_state"),
 }
 
 func (s *Store) changesetWriteQuery(q string, includeID bool, c *btypes.Changeset) (*sqlf.Query, error) {
@@ -123,6 +124,11 @@ func (s *Store) changesetWriteQuery(q string, includeID bool, c *btypes.Changese
 
 	// Not being able to find a title is fine, we just have a NULL in the database then.
 	title, _ := c.Title()
+
+	changesetState, err := c.State()
+	if err != nil {
+		return nil, err
+	}
 
 	vars := []interface{}{
 		sqlf.Join(changesetInsertColumns, ", "),
@@ -157,6 +163,7 @@ func (s *Store) changesetWriteQuery(q string, includeID bool, c *btypes.Changese
 		c.Closing,
 		c.SyncErrorMessage,
 		nullStringColumn(title),
+		changesetState,
 	}
 
 	if includeID {
@@ -197,7 +204,7 @@ func (s *Store) CreateChangeset(ctx context.Context, c *btypes.Changeset) error 
 var createChangesetQueryFmtstr = `
 -- source: enterprise/internal/batches/store.go:CreateChangeset
 INSERT INTO changesets (%s)
-VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
 RETURNING %s
 `
 
@@ -472,6 +479,7 @@ type ListChangesetsOpts struct {
 	ExternalState        *btypes.ChangesetExternalState
 	ExternalReviewState  *btypes.ChangesetReviewState
 	ExternalCheckState   *btypes.ChangesetCheckState
+	ChangesetState       *btypes.ChangesetState
 	OwnedByBatchChangeID int64
 	TextSearch           []search.TextSearchTerm
 	EnforceAuthz         bool
@@ -558,6 +566,9 @@ func listChangesetsQuery(opts *ListChangesetsOpts, authzConds *sqlf.Query) *sqlf
 	if opts.ExternalCheckState != nil {
 		preds = append(preds, sqlf.Sprintf("changesets.external_check_state = %s", *opts.ExternalCheckState))
 	}
+	if opts.ChangesetState != nil {
+		preds = append(preds, sqlf.Sprintf("changesets.changeset_state = %s", *opts.ChangesetState))
+	}
 	if opts.OwnedByBatchChangeID != 0 {
 		preds = append(preds, sqlf.Sprintf("changesets.owned_by_batch_change_id = %s", opts.OwnedByBatchChangeID))
 	}
@@ -607,7 +618,7 @@ func (s *Store) UpdateChangeset(ctx context.Context, cs *btypes.Changeset) error
 var updateChangesetQueryFmtstr = `
 -- source: enterprise/internal/batches/store_changesets.go:UpdateChangeset
 UPDATE changesets
-SET (%s) = (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+SET (%s) = (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
 WHERE id = %s
 RETURNING
   %s
@@ -901,16 +912,16 @@ const getChangesetStatsFmtstr = `
 -- source: enterprise/internal/batches/store_changesets.go:GetChangesetsStats
 SELECT
 	COUNT(*) AS total,
-	COUNT(*) FILTER (WHERE changesets.reconciler_state = 'errored') AS retrying,
-	COUNT(*) FILTER (WHERE changesets.reconciler_state = 'failed') AS failed,
-	COUNT(*) FILTER (WHERE changesets.reconciler_state = 'scheduled') AS scheduled,
-	COUNT(*) FILTER (WHERE changesets.reconciler_state NOT IN ('failed', 'errored', 'completed', 'scheduled')) AS processing,
-	COUNT(*) FILTER (WHERE changesets.publication_state = 'UNPUBLISHED' AND changesets.reconciler_state = 'completed') AS unpublished,
-	COUNT(*) FILTER (WHERE %s AND changesets.external_state = 'CLOSED'  AND NOT %s) AS closed,
-	COUNT(*) FILTER (WHERE %s AND changesets.external_state = 'DRAFT'   AND NOT %s) AS draft,
-	COUNT(*) FILTER (WHERE %s AND changesets.external_state = 'MERGED'  AND NOT %s) AS merged,
-	COUNT(*) FILTER (WHERE %s AND changesets.external_state = 'OPEN'    AND NOT %s) AS open,
-	COUNT(*) FILTER (WHERE %s AND changesets.external_state = 'DELETED' AND NOT %s) AS deleted,
+	COUNT(*) FILTER (WHERE changesets.changeset_state = 'RETRYING') AS retrying,
+	COUNT(*) FILTER (WHERE changesets.changeset_state = 'FAILED') AS failed,
+	COUNT(*) FILTER (WHERE changesets.changeset_state = 'SCHEDULED') AS scheduled,
+	COUNT(*) FILTER (WHERE changesets.changeset_state = 'PROCESSING') AS processing,
+	COUNT(*) FILTER (WHERE changesets.changeset_state = 'UNPUBLISHED') AS unpublished,
+	COUNT(*) FILTER (WHERE %s AND changesets.changeset_state = 'CLOSED'  AND NOT %s) AS closed,
+	COUNT(*) FILTER (WHERE %s AND changesets.changeset_state = 'DRAFT'   AND NOT %s) AS draft,
+	COUNT(*) FILTER (WHERE %s AND changesets.changeset_state = 'MERGED'  AND NOT %s) AS merged,
+	COUNT(*) FILTER (WHERE %s AND changesets.changeset_state = 'OPEN'    AND NOT %s) AS open,
+	COUNT(*) FILTER (WHERE %s AND changesets.changeset_state = 'DELETED' AND NOT %s) AS deleted,
 	COUNT(*) FILTER (WHERE %s)                                                      AS archived
 FROM changesets
 INNER JOIN repo on repo.id = changesets.repo_id

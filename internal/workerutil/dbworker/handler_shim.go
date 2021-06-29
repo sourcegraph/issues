@@ -47,3 +47,11 @@ func (s *handlerShim) PostHandle(ctx context.Context, record workerutil.Record) 
 		h.PostHandle(ctx, record)
 	}
 }
+
+// PreStore calls into the inner handler if it implements the HandlerWithHooks interface.
+func (s *handlerShim) PreStore(ctx context.Context, store workerutil.Store, record workerutil.Record, handleErr error) error {
+	if h, ok := s.Handler.(workerutil.WithHooks); ok {
+		return h.PreStore(ctx, store, record, handleErr)
+	}
+	return nil
+}

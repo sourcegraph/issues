@@ -2,7 +2,6 @@ package resolvers
 
 import (
 	"context"
-	"fmt"
 	"sort"
 	"strconv"
 	"sync"
@@ -310,40 +309,8 @@ func (r *changesetResolver) ExternalState() *string {
 }
 
 func (r *changesetResolver) State() (string, error) {
-	// Note that there's an inverse version of this function in
-	// getRewirerMappingCurrentState(): if one changes, so should the other.
-
-	switch r.changeset.ReconcilerState {
-	case btypes.ReconcilerStateErrored:
-		return string(btypes.ChangesetStateRetrying), nil
-	case btypes.ReconcilerStateFailed:
-		return string(btypes.ChangesetStateFailed), nil
-	case btypes.ReconcilerStateScheduled:
-		return string(btypes.ChangesetStateScheduled), nil
-	default:
-		if r.changeset.ReconcilerState != btypes.ReconcilerStateCompleted {
-			return string(btypes.ChangesetStateProcessing), nil
-		}
-	}
-
-	if r.changeset.PublicationState == btypes.ChangesetPublicationStateUnpublished {
-		return string(btypes.ChangesetStateUnpublished), nil
-	}
-
-	switch r.changeset.ExternalState {
-	case btypes.ChangesetExternalStateDraft:
-		return string(btypes.ChangesetStateDraft), nil
-	case btypes.ChangesetExternalStateOpen:
-		return string(btypes.ChangesetStateOpen), nil
-	case btypes.ChangesetExternalStateClosed:
-		return string(btypes.ChangesetStateClosed), nil
-	case btypes.ChangesetExternalStateMerged:
-		return string(btypes.ChangesetStateMerged), nil
-	case btypes.ChangesetExternalStateDeleted:
-		return string(btypes.ChangesetStateDeleted), nil
-	default:
-		return "", fmt.Errorf("invalid ExternalState %q for state calculation", r.changeset.ExternalState)
-	}
+	state, err := r.changeset.State()
+	return string(state), err
 }
 
 func (r *changesetResolver) ExternalURL() (*externallink.Resolver, error) {

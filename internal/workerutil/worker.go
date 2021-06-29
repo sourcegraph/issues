@@ -7,6 +7,7 @@ import (
 
 	"github.com/cockroachdb/errors"
 	"github.com/derision-test/glock"
+	"github.com/hashicorp/go-multierror"
 	"github.com/inconshreveable/log15"
 
 	"github.com/sourcegraph/sourcegraph/internal/errcode"
@@ -209,6 +210,16 @@ func (w *Worker) handle(tx Store, record Record) (err error) {
 	}()
 
 	handleErr := w.handler.Handle(ctx, tx, record)
+	if hook, ok := w.handler.(WithHooks); ok {
+		var multiErr *multierror.Error
+		if handleErr != nil {
+			multiErr = multierror.Append(multiErr, handleErr)
+		}
+		if hookErr := hook.PreStore(w.ctx, tx, record, handleErr); hookErr != nil {
+			multiErr = multierror.Append(multiErr, hookErr)
+		}
+		handleErr = multiErr
+	}
 	if errcode.IsNonRetryable(handleErr) {
 		if marked, markErr := tx.MarkFailed(ctx, record.RecordID(), handleErr.Error()); markErr != nil {
 			return errors.Wrap(markErr, "store.MarkFailed")

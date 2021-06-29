@@ -1,6 +1,7 @@
 package types
 
 import (
+	"fmt"
 	"strconv"
 	"strings"
 	"time"
@@ -1022,4 +1023,38 @@ func NewChangesetEventMetadata(k ChangesetEventKind) (interface{}, error) {
 		}
 	}
 	return nil, errors.Errorf("unknown changeset event kind %q", k)
+}
+
+func (c *Changeset) State() (ChangesetState, error) {
+	switch c.ReconcilerState {
+	case ReconcilerStateErrored:
+		return ChangesetStateRetrying, nil
+	case ReconcilerStateFailed:
+		return ChangesetStateFailed, nil
+	case ReconcilerStateScheduled:
+		return ChangesetStateScheduled, nil
+	default:
+		if c.ReconcilerState != ReconcilerStateCompleted {
+			return ChangesetStateProcessing, nil
+		}
+	}
+
+	if c.PublicationState == ChangesetPublicationStateUnpublished {
+		return ChangesetStateUnpublished, nil
+	}
+
+	switch c.ExternalState {
+	case ChangesetExternalStateDraft:
+		return ChangesetStateDraft, nil
+	case ChangesetExternalStateOpen:
+		return ChangesetStateOpen, nil
+	case ChangesetExternalStateClosed:
+		return ChangesetStateClosed, nil
+	case ChangesetExternalStateMerged:
+		return ChangesetStateMerged, nil
+	case ChangesetExternalStateDeleted:
+		return ChangesetStateDeleted, nil
+	default:
+		return "", fmt.Errorf("invalid ExternalState %q for state calculation", c.ExternalState)
+	}
 }

@@ -31,6 +31,9 @@ type Reconciler struct {
 	noSleepBeforeSync bool
 }
 
+var _ dbworker.Handler = &Reconciler{}
+var _ workerutil.WithHooks = &Reconciler{}
+
 func New(gitClient GitserverClient, sourcer sources.Sourcer, store *store.Store) *Reconciler {
 	return &Reconciler{
 		gitserverClient: gitClient,
@@ -41,10 +44,21 @@ func New(gitClient GitserverClient, sourcer sources.Sourcer, store *store.Store)
 
 // HandlerFunc returns a dbworker.HandlerFunc that can be passed to a
 // workerutil.Worker to process queued changesets.
-func (r *Reconciler) HandlerFunc() dbworker.HandlerFunc {
-	return func(ctx context.Context, tx dbworkerstore.Store, record workerutil.Record) error {
-		return r.process(ctx, r.store.With(tx), record.(*btypes.Changeset))
-	}
+func (r *Reconciler) Handle(ctx context.Context, tx dbworkerstore.Store, record workerutil.Record) error {
+	return r.process(ctx, r.store.With(tx), record.(*btypes.Changeset))
+}
+
+func (r *Reconciler) PreHandle(ctx context.Context, record workerutil.Record) {
+	// Nothing to do.
+}
+
+func (r *Reconciler) PostHandle(ctx context.Context, record workerutil.Record) {
+	// Nothing to do.
+}
+
+func (r *Reconciler) PreStore(ctx context.Context, store *workerutil.Store, record workerutil.Record, handleErr error) error {
+	ch := record.(*btypes.Changeset)
+	r.store.UpdateChangeset(ctx)
 }
 
 // process is the main entry point of the reconciler and processes changesets

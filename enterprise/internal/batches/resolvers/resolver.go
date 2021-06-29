@@ -746,53 +746,7 @@ func listChangesetOptsFromArgs(args *graphqlbackend.ListChangesetsArgs, batchCha
 		if !state.Valid() {
 			return opts, false, errors.New("changeset state not valid")
 		}
-
-		switch state {
-		case btypes.ChangesetStateOpen:
-			externalState := btypes.ChangesetExternalStateOpen
-			publicationState := btypes.ChangesetPublicationStatePublished
-			opts.ExternalState = &externalState
-			opts.ReconcilerStates = []btypes.ReconcilerState{btypes.ReconcilerStateCompleted}
-			opts.PublicationState = &publicationState
-		case btypes.ChangesetStateDraft:
-			externalState := btypes.ChangesetExternalStateDraft
-			publicationState := btypes.ChangesetPublicationStatePublished
-			opts.ExternalState = &externalState
-			opts.ReconcilerStates = []btypes.ReconcilerState{btypes.ReconcilerStateCompleted}
-			opts.PublicationState = &publicationState
-		case btypes.ChangesetStateClosed:
-			externalState := btypes.ChangesetExternalStateClosed
-			publicationState := btypes.ChangesetPublicationStatePublished
-			opts.ExternalState = &externalState
-			opts.ReconcilerStates = []btypes.ReconcilerState{btypes.ReconcilerStateCompleted}
-			opts.PublicationState = &publicationState
-		case btypes.ChangesetStateMerged:
-			externalState := btypes.ChangesetExternalStateMerged
-			publicationState := btypes.ChangesetPublicationStatePublished
-			opts.ExternalState = &externalState
-			opts.ReconcilerStates = []btypes.ReconcilerState{btypes.ReconcilerStateCompleted}
-			opts.PublicationState = &publicationState
-		case btypes.ChangesetStateDeleted:
-			externalState := btypes.ChangesetExternalStateDeleted
-			publicationState := btypes.ChangesetPublicationStatePublished
-			opts.ExternalState = &externalState
-			opts.ReconcilerStates = []btypes.ReconcilerState{btypes.ReconcilerStateCompleted}
-			opts.PublicationState = &publicationState
-		case btypes.ChangesetStateUnpublished:
-			publicationState := btypes.ChangesetPublicationStateUnpublished
-			opts.ReconcilerStates = []btypes.ReconcilerState{btypes.ReconcilerStateCompleted}
-			opts.PublicationState = &publicationState
-		case btypes.ChangesetStateProcessing:
-			opts.ReconcilerStates = []btypes.ReconcilerState{btypes.ReconcilerStateQueued, btypes.ReconcilerStateProcessing}
-		case btypes.ChangesetStateRetrying:
-			opts.ReconcilerStates = []btypes.ReconcilerState{btypes.ReconcilerStateErrored}
-		case btypes.ChangesetStateFailed:
-			opts.ReconcilerStates = []btypes.ReconcilerState{btypes.ReconcilerStateFailed}
-		case btypes.ChangesetStateScheduled:
-			opts.ReconcilerStates = []btypes.ReconcilerState{btypes.ReconcilerStateScheduled}
-		default:
-			return opts, false, errors.Errorf("changeset state %q not supported in filtering", state)
-		}
+		opts.ChangesetState = &state
 	}
 
 	if args.ReviewState != nil {
