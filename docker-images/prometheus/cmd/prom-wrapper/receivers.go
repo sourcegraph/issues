@@ -47,7 +47,7 @@ func alertSolutionsURL() string {
 // for alerts provided by the Sourcegraph generator.
 //
 // When changing this, make sure to update the webhook body documentation in /doc/admin/observability/alerting.md
-var commonLabels = []string{"alertname", "level", "service_name", "name", "owner", "description"}
+var commonLabels = []string{"alertname", "level", "service_name", "name", "owner", "description", "priority"}
 
 // Static alertmanager templates. Templating reference: https://prometheus.io/docs/alerting/latest/notifications
 //
@@ -61,6 +61,7 @@ var (
 	firingTitleTemplate       = "[{{ .CommonLabels.level | toUpper }}] {{ .CommonLabels.description }}"
 	resolvedTitleTemplate     = "[RESOLVED] {{ .CommonLabels.description }}"
 	notificationTitleTemplate = fmt.Sprintf(`{{ if eq .Status "firing" }}%s{{ else }}%s{{ end }}`, firingTitleTemplate, resolvedTitleTemplate)
+	priority                  = `{{ .CommonLabels.priority | toUpper }}`
 )
 
 // newRoutesAndReceivers converts the given alerts from Sourcegraph site configuration into Alertmanager receivers
@@ -226,17 +227,12 @@ For more details, please refer to the service dashboard: %s`, firingBodyTemplate
 				}
 			}
 
-			priority := notifier.Opsgenie.Priority
-			tags := notifier.Opsgenie.Tags
-
 			receiver.OpsGenieConfigs = append(receiver.OpsGenieConfigs, &amconfig.OpsGenieConfig{
-				APIKey: apiKEY,
-				APIURL: apiURL,
-
+				APIKey:      apiKEY,
+				APIURL:      apiURL,
 				Message:     notificationTitleTemplate,
 				Description: notificationBodyTemplateWithoutLinks,
 				Priority:    priority,
-				Tags:        tags,
 				Responders:  responders,
 				Source:      dashboardURLTemplate,
 				Details: map[string]string{

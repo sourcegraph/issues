@@ -1440,12 +1440,6 @@
         },
         "apiKey": { "type": "string" },
         "apiUrl": { "type": "string" },
-        "tags": {
-          "type": "string"
-        },
-        "priority": {
-          "type": "string"
-        },
         "responders": {
           "type": "array",
           "description": "List of responders responsible for notifications.",
