@@ -9,6 +9,7 @@ import { extensionsController } from '@sourcegraph/shared/src/util/searchTestHel
 
 import { AuthenticatedUser } from '../auth'
 import { WebStory } from '../components/WebStory'
+import { EMPTY_FEATURE_FLAGS } from '../featureFlags/featureFlags'
 import { SearchPatternType } from '../graphql-operations'
 import { SourcegraphContext } from '../jscontext'
 import {
@@ -72,6 +73,7 @@ const defaultProps = (
     hasUserAddedRepositories: false,
     hasUserAddedExternalServices: false,
     getUserSearchContextNamespaces: mockGetUserSearchContextNamespaces,
+    featureFlags: EMPTY_FEATURE_FLAGS,
 })
 
 const { add } = storiesOf('web/nav/GlobalNav', module)

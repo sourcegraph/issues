@@ -27,6 +27,7 @@ import (
 	"github.com/sourcegraph/sourcegraph/cmd/frontend/internal/search"
 	"github.com/sourcegraph/sourcegraph/internal/database/dbutil"
 	"github.com/sourcegraph/sourcegraph/internal/env"
+	"github.com/sourcegraph/sourcegraph/internal/featureflag"
 	"github.com/sourcegraph/sourcegraph/internal/randstring"
 	"github.com/sourcegraph/sourcegraph/internal/trace"
 )
@@ -226,11 +227,18 @@ func initRouter(db dbutil.DB, router *mux.Router) {
 		// Temporary redirect so at some point we can reuse the /campaigns path, if needed.
 		http.Redirect(w, r, auth.SafeRedirectURL(r.URL.String()), http.StatusTemporaryRedirect)
 	}))
-	if envvar.SourcegraphDotComMode() {
-		router.Get(routeBatchChanges).Handler(staticRedirectHandler("https://about.sourcegraph.com/batch-changes", http.StatusTemporaryRedirect))
-	} else {
-		router.Get(routeBatchChanges).Handler(handler(serveBrandedPageString("Batch Changes", nil)))
-	}
+
+	router.Get(routeBatchChanges).Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		featureFlags := featureflag.FromContext(r.Context())
+		if envvar.SourcegraphDotComMode() && !featureFlags.GetBoolOr("w1-signup-optimisation", false) {
+			h := staticRedirectHandler("https://about.sourcegraph.com/batch-changes", http.StatusTemporaryRedirect)
+			h.ServeHTTP(w, r)
+			return
+		}
+		h := handler(serveBrandedPageString("Batch Changes", nil))
+		h.ServeHTTP(w, r)
+	}))
+
 	router.Get(routeCodeMonitoring).Handler(handler(serveBrandedPageString("Code Monitoring", nil)))
 	router.Get(routeContexts).Handler(handler(serveBrandedPageString("Search Contexts", nil)))
 	router.Get(uirouter.RouteSignIn).Handler(handler(serveSignIn))

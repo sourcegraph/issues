@@ -4,6 +4,7 @@ import React from 'react'
 import { BatchChangesNavItem } from '../batches/BatchChangesNavItem'
 import { CodeMonitoringNavItem } from '../code-monitoring/CodeMonitoringNavItem'
 import { WebStory } from '../components/WebStory'
+import { EMPTY_FEATURE_FLAGS } from '../featureFlags/featureFlags'
 import { InsightsNavItem } from '../insights/components/InsightsNavLink/InsightsNavLink'
 
 import { MenuNavItem } from './MenuNavItem'
@@ -16,7 +17,7 @@ add(
         <WebStory>
             {() => (
                 <MenuNavItem openByDefault={true}>
-                    <BatchChangesNavItem isSourcegraphDotCom={false} />
+                    <BatchChangesNavItem featureFlags={EMPTY_FEATURE_FLAGS} isSourcegraphDotCom={false} />
                     <InsightsNavItem />
                     <CodeMonitoringNavItem />
                 </MenuNavItem>

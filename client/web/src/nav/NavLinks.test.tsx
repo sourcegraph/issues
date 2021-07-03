@@ -11,6 +11,7 @@ import { ExtensionsControllerProps } from '@sourcegraph/shared/src/extensions/co
 import { SettingsCascadeProps } from '@sourcegraph/shared/src/settings/settings'
 
 import { AuthenticatedUser } from '../auth'
+import { EMPTY_FEATURE_FLAGS } from '../featureFlags/featureFlags'
 import { KeyboardShortcutsProps } from '../keyboardShortcuts/keyboardShortcuts'
 import { ThemePreference } from '../theme'
 import { eventLogger } from '../tracking/eventLogger'
@@ -98,6 +99,7 @@ describe('NavLinks', () => {
                                     showDotComMarketing={showDotComMarketing}
                                     location={H.createLocation(path, history.location)}
                                     isExtensionAlertAnimating={false}
+                                    featureFlags={EMPTY_FEATURE_FLAGS}
                                     routes={[]}
                                 />
                             </MemoryRouter>

@@ -12,6 +12,7 @@ import { AuthenticatedUser } from '../../../auth'
 import { withAuthenticatedUser } from '../../../auth/withAuthenticatedUser'
 import { HeroPage } from '../../../components/HeroPage'
 import { Page } from '../../../components/Page'
+import { FeatureFlagProps } from '../../../featureFlags/featureFlags'
 import { lazyComponent } from '../../../util/lazyComponent'
 import { BatchChangeClosePageProps } from '../close/BatchChangeClosePage'
 import { CreateBatchChangePageProps } from '../create/CreateBatchChangePage'
@@ -54,7 +55,8 @@ interface Props
         ThemeProps,
         ExtensionsControllerProps,
         TelemetryProps,
-        PlatformContextProps {
+        PlatformContextProps,
+        FeatureFlagProps {
     authenticatedUser: AuthenticatedUser | null
     isSourcegraphDotCom: boolean
 }
@@ -64,8 +66,12 @@ interface Props
  */
 export const GlobalBatchChangesArea: React.FunctionComponent<Props> = props => {
     if (props.isSourcegraphDotCom) {
+        if (props.featureFlags.has('w1-signup-optimisation')) {
+            return <AuthenticatedBatchChangesArea {...props} />
+        }
         return <RedirectToMarketing />
     }
+
     return <AuthenticatedBatchChangesArea {...props} />
 }
 
@@ -93,7 +99,7 @@ export const AuthenticatedBatchChangesArea = withAuthenticatedUser<Authenticated
     </Page>
 ))
 
-export interface NamespaceBatchChangesAreaProps extends Props {
+export interface NamespaceBatchChangesAreaProps extends Omit<Props, 'featureFlags'> {
     namespaceID: Scalars['ID']
 }
 

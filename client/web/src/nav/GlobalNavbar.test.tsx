@@ -6,6 +6,7 @@ import { MemoryRouter } from 'react-router'
 import { setLinkComponent } from '@sourcegraph/shared/src/components/Link'
 import { extensionsController, NOOP_SETTINGS_CASCADE } from '@sourcegraph/shared/src/util/searchTestHelpers'
 
+import { EMPTY_FEATURE_FLAGS } from '../featureFlags/featureFlags'
 import { SearchPatternType } from '../graphql-operations'
 import {
     mockFetchAutoDefinedSearchContexts,
@@ -63,6 +64,7 @@ const PROPS: React.ComponentProps<typeof GlobalNavbar> = {
     hasUserAddedRepositories: false,
     hasUserAddedExternalServices: false,
     getUserSearchContextNamespaces: mockGetUserSearchContextNamespaces,
+    featureFlags: EMPTY_FEATURE_FLAGS,
 }
 
 describe('GlobalNavbar', () => {

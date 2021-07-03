@@ -32,6 +32,7 @@ import { BatchChangesListEmpty } from './BatchChangesListEmpty'
 import { BatchChangesListIntro } from './BatchChangesListIntro'
 
 export interface BatchChangeListPageProps extends TelemetryProps, Pick<RouteComponentProps, 'location'> {
+    isSourcegraphDotCom: boolean
     headingElement: 'h1' | 'h2'
     displayNamespace?: boolean
     /** For testing only. */
@@ -78,6 +79,7 @@ type SelectedTab = 'batchChanges' | 'gettingStarted'
 export const BatchChangeListPage: React.FunctionComponent<BatchChangeListPageProps> = ({
     queryBatchChanges = _queryBatchChanges,
     areBatchChangesLicensed = _areBatchChangesLicensed,
+    isSourcegraphDotCom,
     displayNamespace = true,
     headingElement,
     location,
@@ -95,7 +97,9 @@ export const BatchChangeListPage: React.FunctionComponent<BatchChangeListPagePro
         subject.next(true)
         return subject
     }, [])
-    const [selectedTab, setSelectedTab] = useState<SelectedTab>(openTab ?? 'batchChanges')
+    const [selectedTab, setSelectedTab] = useState<SelectedTab>(
+        openTab ?? (isSourcegraphDotCom ? 'gettingStarted' : 'batchChanges')
+    )
     const query = useCallback<(args: Partial<BatchChangesVariables>) => Observable<BatchChangesResult['batchChanges']>>(
         args =>
             queryBatchChanges(args).pipe(
@@ -132,7 +136,11 @@ export const BatchChangeListPage: React.FunctionComponent<BatchChangeListPagePro
                 description="Run custom code over hundreds of repositories and manage the resulting changesets."
             />
             <BatchChangesListIntro licensed={licensed} />
-            <BatchChangeListTabHeader selectedTab={selectedTab} setSelectedTab={setSelectedTab} />
+            <BatchChangeListTabHeader
+                isSourcegraphDotCom={isSourcegraphDotCom}
+                selectedTab={selectedTab}
+                setSelectedTab={setSelectedTab}
+            />
             {selectedTab === 'gettingStarted' && <BatchChangesListEmpty />}
             {selectedTab === 'batchChanges' && (
                 <Container className="mb-4">
@@ -206,9 +214,10 @@ const NewBatchChangeButton: React.FunctionComponent<NewBatchChangeButtonProps> =
 )
 
 const BatchChangeListTabHeader: React.FunctionComponent<{
+    isSourcegraphDotCom: boolean
     selectedTab: SelectedTab
     setSelectedTab: (selectedTab: SelectedTab) => void
-}> = ({ selectedTab, setSelectedTab }) => {
+}> = ({ isSourcegraphDotCom, selectedTab, setSelectedTab }) => {
     const onSelectBatchChanges = useCallback<React.MouseEventHandler>(
         event => {
             event.preventDefault()
@@ -231,7 +240,11 @@ const BatchChangeListTabHeader: React.FunctionComponent<{
                     <a
                         href=""
                         onClick={onSelectBatchChanges}
-                        className={classNames('nav-link', selectedTab === 'batchChanges' && 'active')}
+                        className={classNames(
+                            'nav-link',
+                            selectedTab === 'batchChanges' && 'active',
+                            isSourcegraphDotCom && 'disabled'
+                        )}
                         role="button"
                     >
                         <span className="text-content" data-tab-content="All batch changes">

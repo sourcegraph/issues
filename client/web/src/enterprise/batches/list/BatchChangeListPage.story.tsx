@@ -35,6 +35,21 @@ add('List of batch changes', () => (
         {props => (
             <BatchChangeListPage
                 {...props}
+                isSourcegraphDotCom={false}
+                headingElement="h1"
+                queryBatchChanges={queryBatchChanges}
+                areBatchChangesLicensed={batchChangesLicensed}
+            />
+        )}
+    </EnterpriseWebStory>
+))
+
+add('Dotcom page', () => (
+    <EnterpriseWebStory>
+        {props => (
+            <BatchChangeListPage
+                {...props}
+                isSourcegraphDotCom={true}
                 headingElement="h1"
                 queryBatchChanges={queryBatchChanges}
                 areBatchChangesLicensed={batchChangesLicensed}
@@ -48,6 +63,7 @@ add('Licensing not enforced', () => (
         {props => (
             <BatchChangeListPage
                 {...props}
+                isSourcegraphDotCom={false}
                 headingElement="h1"
                 queryBatchChanges={queryBatchChanges}
                 areBatchChangesLicensed={batchChangesNotLicensed}
@@ -77,6 +93,7 @@ add('No batch changes', () => {
             {props => (
                 <BatchChangeListPage
                     {...props}
+                    isSourcegraphDotCom={false}
                     headingElement="h1"
                     queryBatchChanges={queryBatchChanges}
                     areBatchChangesLicensed={batchChangesLicensed}
@@ -107,6 +124,7 @@ add('All batch changes tab empty', () => {
             {props => (
                 <BatchChangeListPage
                     {...props}
+                    isSourcegraphDotCom={false}
                     headingElement="h1"
                     queryBatchChanges={queryBatchChanges}
                     areBatchChangesLicensed={batchChangesLicensed}

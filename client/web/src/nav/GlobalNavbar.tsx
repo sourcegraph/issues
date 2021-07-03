@@ -31,6 +31,7 @@ import { BatchChangesNavItem } from '../batches/BatchChangesNavItem'
 import { CodeMonitoringProps } from '../code-monitoring'
 import { CodeMonitoringLogo } from '../code-monitoring/CodeMonitoringLogo'
 import { BrandLogo } from '../components/branding/BrandLogo'
+import { FeatureFlagProps } from '../featureFlags/featureFlags'
 import {
     KeyboardShortcutsProps,
     KEYBOARD_SHORTCUT_SHOW_COMMAND_PALETTE,
@@ -74,7 +75,8 @@ interface Props
         VersionContextProps,
         SearchContextInputProps,
         CodeMonitoringProps,
-        OnboardingTourProps {
+        OnboardingTourProps,
+        FeatureFlagProps {
     history: H.History
     location: H.Location<{ query: string }>
     authenticatedUser: AuthenticatedUser | null
@@ -128,6 +130,7 @@ export const GlobalNavbar: React.FunctionComponent<Props> = ({
     history,
     minimalNavLinks,
     isSourcegraphDotCom,
+    featureFlags,
     ...props
 }) => {
     // Workaround: can't put this in optional parameter value because of https://github.com/babel/babel/issues/11166
@@ -212,6 +215,7 @@ export const GlobalNavbar: React.FunctionComponent<Props> = ({
             history={history}
             isLightTheme={isLightTheme}
             isSourcegraphDotCom={isSourcegraphDotCom}
+            featureFlags={featureFlags}
             {...props}
         />
     )
@@ -252,7 +256,12 @@ export const GlobalNavbar: React.FunctionComponent<Props> = ({
                                 <NavLink to="/code-monitoring">Monitoring</NavLink>
                             </NavItem>
                         )}
-                        {props.showBatchChanges && <BatchChangesNavItem isSourcegraphDotCom={isSourcegraphDotCom} />}
+                        {props.showBatchChanges && (
+                            <BatchChangesNavItem
+                                featureFlags={featureFlags}
+                                isSourcegraphDotCom={isSourcegraphDotCom}
+                            />
+                        )}
                         {codeInsights && (
                             <NavItem icon={BarChartIcon}>
                                 <NavLink to="/insights">Insights</NavLink>

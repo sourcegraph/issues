@@ -18,6 +18,7 @@ import { CodeMonitoringProps } from '../code-monitoring'
 import { CodeMonitoringNavItem } from '../code-monitoring/CodeMonitoringNavItem'
 import { LinkWithIcon } from '../components/LinkWithIcon'
 import { WebActionsNavItems, WebCommandListPopoverButton } from '../components/shared'
+import { FeatureFlagProps } from '../featureFlags/featureFlags'
 import { InsightsNavItem } from '../insights/components/InsightsNavLink/InsightsNavLink'
 import {
     KeyboardShortcutsProps,
@@ -47,7 +48,8 @@ interface Props
         TelemetryProps,
         CodeMonitoringProps,
         ActivationProps,
-        Pick<SearchContextProps, 'showSearchContext' | 'showSearchContextManagement'> {
+        Pick<SearchContextProps, 'showSearchContext' | 'showSearchContextManagement'>,
+        FeatureFlagProps {
     location: H.Location
     history: H.History
     authenticatedUser: AuthenticatedUser | null
@@ -101,7 +103,9 @@ const getMinimizableNavItems = (props: Props): JSX.Element[] => {
     return getReactElements([
         codeInsights && <InsightsNavItem />,
         enableCodeMonitoring && <CodeMonitoringNavItem />,
-        showBatchChanges && <BatchChangesNavItem isSourcegraphDotCom={props.isSourcegraphDotCom} />,
+        showBatchChanges && (
+            <BatchChangesNavItem featureFlags={props.featureFlags} isSourcegraphDotCom={props.isSourcegraphDotCom} />
+        ),
     ])
 }
 

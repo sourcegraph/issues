@@ -8,6 +8,7 @@ import { BatchChangesIcon } from '../../../batches/icons'
 import { PageTitle } from '../../../components/PageTitle'
 import { SidebarGroup, SidebarGroupHeader, SidebarGroupItems } from '../../../components/Sidebar'
 
+import styles from './CreateBatchChangePage.module.scss'
 import combySample from './samples/comby.batch.yaml'
 import helloWorldSample from './samples/empty.batch.yaml'
 import goImportsSample from './samples/go-imports.batch.yaml'
@@ -63,7 +64,8 @@ export const CreateBatchChangePage: React.FunctionComponent<CreateBatchChangePag
         <>
             <PageTitle title="Create batch change" />
             <PageHeader
-                path={[{ icon: BatchChangesIcon, text: 'Create batch change' }]}
+                // TODO: correct to URL for namespaced create pages.
+                path={[{ icon: BatchChangesIcon, to: '/batch-changes' }, { text: 'Create batch change' }]}
                 headingElement={headingElement}
                 description={
                     <>
@@ -106,8 +108,12 @@ export const CreateBatchChangePage: React.FunctionComponent<CreateBatchChangePag
                         </SidebarGroupItems>
                     </SidebarGroup>
                 </div>
-                <Container className="ml-3 flex-grow-1">
-                    <CodeSnippet code={selectedSample.file} language="yaml" className="mb-0" />
+                <Container className={classNames(styles.codeContainer, 'ml-3 flex-grow-1')}>
+                    <CodeSnippet
+                        code={selectedSample.file}
+                        language="yaml"
+                        className={classNames(styles.codeSnippet, 'mb-0')}
+                    />
                 </Container>
             </div>
             <h2>2. Preview the batch change with Sourcegraph CLI</h2>
