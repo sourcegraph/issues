@@ -1,6 +1,6 @@
 import { Observable, of, throwError } from 'rxjs'
 
-import { SuccessGraphQLResult } from '@sourcegraph/shared/src/graphql/graphql'
+import { GraphQLResult, SuccessGraphQLResult } from '@sourcegraph/shared/src/graphql/graphql'
 import { IQuery } from '@sourcegraph/shared/src/graphql/schema'
 import { PlatformContext } from '@sourcegraph/shared/src/platform/context'
 
@@ -89,13 +89,13 @@ export const DEFAULT_GRAPHQL_RESPONSES: GraphQLResponseMap = {
  */
 export const mockRequestGraphQL = (
     responseMap: GraphQLResponseMap = DEFAULT_GRAPHQL_RESPONSES
-): PlatformContext['requestGraphQL'] => ({
+): PlatformContext['requestGraphQL'] => <R, V = object>({
     request,
     variables,
     mightContainPrivateInfo,
 }: {
     request: string
-    variables: any
+    variables: V
     mightContainPrivateInfo?: boolean
 }) => {
     const nameMatch = request.match(/^\s*(?:query|mutation)\s+(\w+)/)
@@ -103,5 +103,5 @@ export const mockRequestGraphQL = (
     if (!requestName || !responseMap[requestName]) {
         return throwError(new Error(`No mock for GraphQL request ${String(requestName)}`))
     }
-    return responseMap[requestName](variables, mightContainPrivateInfo) as Observable<SuccessGraphQLResult<any>>
+    return responseMap[requestName](variables, mightContainPrivateInfo) as Observable<GraphQLResult<R>>
 }
