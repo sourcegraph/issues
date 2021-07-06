@@ -1,3 +1,4 @@
+import { MockedProvider } from '@apollo/client/testing'
 import { render } from 'enzyme'
 import * as H from 'history'
 import { noop } from 'lodash'
@@ -91,16 +92,18 @@ describe('NavLinks', () => {
                 test(name, () => {
                     expect(
                         render(
-                            <MemoryRouter>
-                                <NavLinks
-                                    {...commonProps}
-                                    authenticatedUser={authenticatedUser}
-                                    showDotComMarketing={showDotComMarketing}
-                                    location={H.createLocation(path, history.location)}
-                                    isExtensionAlertAnimating={false}
-                                    routes={[]}
-                                />
-                            </MemoryRouter>
+                            <MockedProvider>
+                                <MemoryRouter>
+                                    <NavLinks
+                                        {...commonProps}
+                                        authenticatedUser={authenticatedUser}
+                                        showDotComMarketing={showDotComMarketing}
+                                        location={H.createLocation(path, history.location)}
+                                        isExtensionAlertAnimating={false}
+                                        routes={[]}
+                                    />
+                                </MemoryRouter>
+                            </MockedProvider>
                         )
                     ).toMatchSnapshot()
                 })
