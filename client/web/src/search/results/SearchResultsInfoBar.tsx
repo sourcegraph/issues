@@ -14,6 +14,9 @@ import { ContributableMenu } from '@sourcegraph/shared/src/api/protocol'
 import { ButtonLink } from '@sourcegraph/shared/src/components/LinkOrButton'
 import { ExtensionsControllerProps } from '@sourcegraph/shared/src/extensions/controller'
 import { PlatformContextProps } from '@sourcegraph/shared/src/platform/context'
+import { decorate } from '@sourcegraph/shared/src/search/query/decoratedToken'
+import { scanSearchQuery } from '@sourcegraph/shared/src/search/query/scanner'
+import { Pattern } from '@sourcegraph/shared/src/search/query/token'
 import { FilterKind, findFilter } from '@sourcegraph/shared/src/search/query/validate'
 import { TelemetryProps } from '@sourcegraph/shared/src/telemetry/telemetryService'
 import { useLocalStorage } from '@sourcegraph/shared/src/util/useLocalStorage'
@@ -130,18 +133,30 @@ const ExperimentalActionButton: React.FunctionComponent<ExperimentalActionButton
  * will be searching literally for `foobar` (without quotes). This notice
  * informs them that this may be the case to avoid confusion.
  */
-const QuotesInterpretedLiterallyNotice: React.FunctionComponent<SearchResultsInfoBarProps> = props =>
-    props.patternType === SearchPatternType.literal && props.query && props.query.includes('"') ? (
-        <small
-            className="search-results-info-bar__notice"
-            data-tooltip="Your search query is interpreted literally, including the quotes. Use the .* toggle to switch between literal and regular expression search."
-        >
-            <span>
-                <FormatQuoteOpenIcon className="icon-inline" />
-                Searching literally <strong>(including quotes)</strong>
-            </span>
-        </small>
-    ) : null
+const QuotesInterpretedLiterallyNotice: React.FunctionComponent<SearchResultsInfoBarProps> = props => {
+    if (props.patternType !== SearchPatternType.literal || !props.query) {
+        return null
+    }
+    const result = scanSearchQuery(props.query)
+    if (result.type === 'error') {
+        return null
+    }
+    console.log('result ' + JSON.stringify(result.term.flatMap(decorate)))
+    if (result.term.some(token => token.type === 'pattern' && token.value.startsWith('"'))) {
+        return (
+            <small
+                className="search-results-info-bar__notice"
+                data-tooltip="A pattern in your search query starts with a quote, which is interpreted literally. Use the .* toggle to switch between literal and regular expression search."
+            >
+                <span>
+                    <FormatQuoteOpenIcon className="icon-inline" />
+                    Searching literally <strong>(including quotes)</strong>
+                </span>
+            </small>
+        )
+    }
+    return null
+}
 
 /**
  * The info bar shown over the search results list that displays metadata
