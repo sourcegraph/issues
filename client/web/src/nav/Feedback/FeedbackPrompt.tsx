@@ -83,13 +83,16 @@ export const FeedbackPromptContent: React.FunctionComponent<ContentProps> = ({
     const handleSubmit = useCallback<React.FormEventHandler>(
         event => {
             event.preventDefault()
-            if (rating) {
-                return submitFeedback({
-                    variables: {
-                        input: { score: rating, feedback: `${textPrefix}${text}`, currentPath: routeMatch },
-                    },
-                })
+
+            if (!rating) {
+                return
             }
+
+            return submitFeedback({
+                variables: {
+                    input: { score: rating, feedback: `${textPrefix}${text}`, currentPath: routeMatch },
+                },
+            })
         },
         [rating, submitFeedback, text, routeMatch, textPrefix]
     )
