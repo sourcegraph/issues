@@ -2,6 +2,7 @@ import classnames from 'classnames'
 import React, { useCallback, useContext, useEffect } from 'react'
 import { useHistory } from 'react-router-dom'
 
+import { Container } from '@sourcegraph/wildcard'
 import { LoadingSpinner } from '@sourcegraph/react-loading-spinner'
 import { PlatformContextProps } from '@sourcegraph/shared/src/platform/context'
 import { SettingsCascadeProps } from '@sourcegraph/shared/src/settings/settings'
@@ -121,8 +122,8 @@ export const SearchInsightCreationPage: React.FunctionComponent<SearchInsightCre
                 // from URL query based insight. If we don't have query in URl we can render
                 // page without resolving URL query based insight values.
                 !loading && (
-                    <>
-                        <div className="mb-5">
+                    <div className='pb-5'>
+                        <header>
                             <h2>Create new code insight</h2>
 
                             <p className="text-muted">
@@ -131,19 +132,20 @@ export const SearchInsightCreationPage: React.FunctionComponent<SearchInsightCre
                                     Learn more.
                                 </a>
                             </p>
-                        </div>
+                        </header>
 
-                        <SearchInsightCreationContent
-                            className="pb-5"
-                            dataTestId="search-insight-create-page-content"
-                            settings={settingsCascade.final}
-                            initialValue={initialValues}
-                            organizations={orgs}
-                            onSubmit={handleSubmit}
-                            onCancel={handleCancel}
-                            onChange={handleChange}
-                        />
-                    </>
+                        <Container>
+                            <SearchInsightCreationContent
+                                dataTestId="search-insight-create-page-content"
+                                settings={settingsCascade.final}
+                                initialValue={initialValues}
+                                organizations={orgs}
+                                onSubmit={handleSubmit}
+                                onCancel={handleCancel}
+                                onChange={handleChange}
+                            />
+                        </Container>
+                    </div>
                 )
             }
         </Page>

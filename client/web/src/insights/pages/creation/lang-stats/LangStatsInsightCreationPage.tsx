@@ -2,6 +2,7 @@ import classnames from 'classnames'
 import React, { useCallback, useContext, useEffect } from 'react'
 import { useHistory } from 'react-router-dom'
 
+import { Container } from '@sourcegraph/wildcard'
 import { PlatformContextProps } from '@sourcegraph/shared/src/platform/context'
 import { SettingsCascadeProps } from '@sourcegraph/shared/src/settings/settings'
 import { TelemetryProps } from '@sourcegraph/shared/src/telemetry/telemetryService'
@@ -111,26 +112,30 @@ export const LangStatsInsightCreationPage: React.FunctionComponent<LangStatsInsi
         <Page className={classnames(styles.creationPage, 'col-10')}>
             <PageTitle title="Create new code insight" />
 
-            <div className="mb-5">
-                <h2>Set up new language usage insight</h2>
+            <div className='pb-5'>
 
-                <p className="text-muted">
-                    Shows language usage in your repository based on number of lines of code.{' '}
-                    <a href="https://docs.sourcegraph.com/code_insights" target="_blank" rel="noopener">
-                        Learn more.
-                    </a>
-                </p>
+                <header className="mb-4">
+                    <h2>Set up new language usage insight</h2>
+
+                    <p className="text-muted">
+                        Shows language usage in your repository based on number of lines of code.{' '}
+                        <a href="https://docs.sourcegraph.com/code_insights" target="_blank" rel="noopener">
+                            Learn more.
+                        </a>
+                    </p>
+                </header>
+
+                <Container>
+                    <LangStatsInsightCreationContent
+                        settings={settingsCascade.final ?? DEFAULT_FINAL_SETTINGS}
+                        initialValues={initialFormValues}
+                        organizations={orgs}
+                        onSubmit={handleSubmit}
+                        onCancel={handleCancel}
+                        onChange={handleChange}
+                    />
+                </Container>
             </div>
-
-            <LangStatsInsightCreationContent
-                className="pb-5"
-                settings={settingsCascade.final ?? DEFAULT_FINAL_SETTINGS}
-                initialValues={initialFormValues}
-                organizations={orgs}
-                onSubmit={handleSubmit}
-                onCancel={handleCancel}
-                onChange={handleChange}
-            />
         </Page>
     )
 }
