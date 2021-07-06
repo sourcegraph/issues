@@ -353,7 +353,7 @@
       }
     },
     "codeIntelAutoIndexing.enabled": {
-      "description": "Enables/disables the code intel auto indexing feature.",
+      "description": "Enables/disables the code intel auto indexing feature. Currently only available to sourcegraph.com.",
       "type": "boolean",
       "!go": { "pointer": true },
       "group": "Code intelligence",
