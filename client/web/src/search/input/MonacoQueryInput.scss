@@ -15,12 +15,28 @@
             border: none;
         }
 
-        .monaco-editor-hover-content {
+        /*
+        .monaco-hover-content {
             padding: 0.25rem;
             .status-bar {
                 display: none;
             }
         }
+        */
+
+        .monaco-hover-content .action-container {
+            margin: unset;
+            padding: unset;
+            border: unset;
+            border-radius: unset;
+        }
+
+        /*
+        .monaco-hover-content .hover-row .status-bar {
+            display: none;
+        }
+        */
+
         .minimap {
             // Minimap is disabled but will still be rendered and affect eg. visual tests, force hide to prevent this.
             display: none;
