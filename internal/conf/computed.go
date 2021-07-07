@@ -398,6 +398,17 @@ func GitMaxCodehostRequestsPerSecond() int {
 	return *val
 }
 
+// GitMaxFlowRateMbps returns the maximum transfer rate in megabits per second
+// that a gitserver instance can consume. The default value is 1000, or 1 Gbps,
+// which will be used in the event that a negative value is provided.
+func GitMaxFlowRateMbps() int {
+	val := Get().GitMaxFlowRateMbps
+	if val < 1 {
+		return 1000
+	}
+	return val
+}
+
 func UserReposMaxPerUser() int {
 	v := Get().UserReposMaxPerUser
 	if v == 0 {

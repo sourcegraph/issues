@@ -465,6 +465,12 @@
       "default": -1,
       "group": "External services"
     },
+    "gitMaxFlowRateMbps": {
+      "description": "Maximum transfer rate in megabits per second that a gitserver instance can consume. Default is 1000, which is 1 Gbps.",
+      "type": "integer",
+      "default": 1000,
+      "group": "Internal"
+    },
     "repoListUpdateInterval": {
       "description": "Interval (in minutes) for checking code hosts (such as GitHub, Gitolite, etc.) for new repositories.",
       "type": "integer",

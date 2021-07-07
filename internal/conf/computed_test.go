@@ -151,6 +151,38 @@ func TestGitMaxCodehostRequestsPerSecond(t *testing.T) {
 	}
 }
 
+func TestGitMaxFlowRateMbps(t *testing.T) {
+	tests := []struct {
+		name string
+		sc   *Unified
+		want int
+	}{
+		{
+			name: "a negative value returns the default",
+			sc:   &Unified{SiteConfiguration: schema.SiteConfiguration{GitMaxFlowRateMbps: -1}},
+			want: 1000,
+		},
+		{
+			name: "a zero value returns the default",
+			sc:   &Unified{SiteConfiguration: schema.SiteConfiguration{GitMaxFlowRateMbps: 0}},
+			want: 1000,
+		},
+		{
+			name: "a positive value is respected",
+			sc:   &Unified{SiteConfiguration: schema.SiteConfiguration{GitMaxFlowRateMbps: 1}},
+			want: 1,
+		},
+	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			Mock(test.sc)
+			if got, want := GitMaxFlowRateMbps(), test.want; got != want {
+				t.Fatalf("GitMaxFlowRateMbps() = %v, want %v", got, want)
+			}
+		})
+	}
+}
+
 func setenv(t *testing.T, keyval string) func() {
 	t.Helper()
 
