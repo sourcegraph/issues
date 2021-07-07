@@ -1,13 +1,16 @@
+import { MockedResponse } from '@apollo/client/testing'
 import { select } from '@storybook/addon-knobs'
-import { useCallback } from '@storybook/addons'
 import { storiesOf } from '@storybook/react'
 import { noop } from 'lodash'
 import React from 'react'
 
-import { BatchChangesCredentialFields, ExternalServiceKind } from '../../../graphql-operations'
+import { getDocumentNode } from '@sourcegraph/shared/src/graphql/utils'
+
+import { ExternalServiceKind } from '../../../graphql-operations'
 import { EnterpriseWebStory } from '../../components/EnterpriseWebStory'
 
 import { AddCredentialModal } from './AddCredentialModal'
+import { CREATE_BATCH_CHANGES_CREDENTIAL } from './backend'
 
 const { add } = storiesOf('web/batches/settings/AddCredentialModal', module)
     .addDecorator(story => <div className="p-3 container">{story()}</div>)
@@ -18,38 +21,50 @@ const { add } = storiesOf('web/batches/settings/AddCredentialModal', module)
         },
     })
 
-add('Requires SSH - step 1', () => {
-    const createBatchChangesCredential = useCallback(
-        (): Promise<BatchChangesCredentialFields> =>
-            Promise.resolve({
+const mockCreateBatchChangesCredential = (
+    externalServiceKind: ExternalServiceKind,
+    externalServiceURL: string
+): MockedResponse => ({
+    request: {
+        query: getDocumentNode(CREATE_BATCH_CHANGES_CREDENTIAL),
+        variables: {
+            user: 'user-id-1',
+            credential: '123',
+            externalServiceKind,
+            externalServiceURL,
+        },
+    },
+    result: {
+        data: {
+            createBatchChangesCredential: {
                 id: '123',
                 isSiteCredential: false,
                 sshPublicKey:
                     'ssh-rsa randorandorandorandorandorandorandorandorandorandorandorandorandorandorandorandorandorandorandorandorandorandorandorandorandorando',
-            }),
-        []
-    )
-    return (
-        <EnterpriseWebStory>
-            {props => (
-                <AddCredentialModal
-                    {...props}
-                    userID="user-id-1"
-                    externalServiceKind={select(
-                        'External service kind',
-                        Object.values(ExternalServiceKind),
-                        ExternalServiceKind.GITHUB
-                    )}
-                    externalServiceURL="https://github.com/"
-                    requiresSSH={true}
-                    afterCreate={noop}
-                    onCancel={noop}
-                    createBatchChangesCredential={createBatchChangesCredential}
-                />
-            )}
-        </EnterpriseWebStory>
-    )
+            },
+        },
+    },
 })
+
+add('Requires SSH - step 1', () => (
+    <EnterpriseWebStory mocks={[mockCreateBatchChangesCredential(ExternalServiceKind.GITHUB, 'https://github.com/')]}>
+        {props => (
+            <AddCredentialModal
+                {...props}
+                userID="user-id-1"
+                externalServiceKind={select(
+                    'External service kind',
+                    Object.values(ExternalServiceKind),
+                    ExternalServiceKind.GITHUB
+                )}
+                externalServiceURL="https://github.com/"
+                requiresSSH={true}
+                afterCreate={noop}
+                onCancel={noop}
+            />
+        )}
+    </EnterpriseWebStory>
+))
 add('Requires SSH - step 2', () => (
     <EnterpriseWebStory>
         {props => (
@@ -72,7 +87,7 @@ add('Requires SSH - step 2', () => (
 ))
 
 add('GitHub', () => (
-    <EnterpriseWebStory>
+    <EnterpriseWebStory mocks={[mockCreateBatchChangesCredential(ExternalServiceKind.GITHUB, 'https://github.com/')]}>
         {props => (
             <AddCredentialModal
                 {...props}
@@ -88,7 +103,7 @@ add('GitHub', () => (
 ))
 
 add('GitLab', () => (
-    <EnterpriseWebStory>
+    <EnterpriseWebStory mocks={[mockCreateBatchChangesCredential(ExternalServiceKind.GITLAB, 'https://gitlab.com/')]}>
         {props => (
             <AddCredentialModal
                 {...props}
@@ -104,7 +119,9 @@ add('GitLab', () => (
 ))
 
 add('Bitbucket Server', () => (
-    <EnterpriseWebStory>
+    <EnterpriseWebStory
+        mocks={[mockCreateBatchChangesCredential(ExternalServiceKind.BITBUCKETSERVER, 'https://bitbucket.sgdev.org/')]}
+    >
         {props => (
             <AddCredentialModal
                 {...props}

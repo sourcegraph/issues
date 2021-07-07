@@ -1,11 +1,14 @@
+import { MockedResponse } from '@apollo/client/testing'
 import { storiesOf } from '@storybook/react'
 import { noop } from 'lodash'
 import React from 'react'
 
 import { ExternalServiceKind } from '@sourcegraph/shared/src/graphql-operations'
+import { getDocumentNode } from '@sourcegraph/shared/src/graphql/utils'
 
 import { EnterpriseWebStory } from '../../components/EnterpriseWebStory'
 
+import { DELETE_BATCH_CHANGES_CREDENTIAL } from './backend'
 import { RemoveCredentialModal } from './RemoveCredentialModal'
 
 const { add } = storiesOf('web/batches/settings/RemoveCredentialModal', module)
@@ -24,8 +27,22 @@ const credential = {
         'ssh-rsa randorandorandorandorandorandorandorandorandorandorandorandorandorandorandorandorandorandorandorandorandorandorandorandorandorandorandorandorandorando',
 }
 
+const mocks: MockedResponse[] = [
+    {
+        request: {
+            query: getDocumentNode(DELETE_BATCH_CHANGES_CREDENTIAL),
+            variables: {},
+        },
+        result: {
+            data: {
+                alwaysNill: null,
+            },
+        },
+    },
+]
+
 add('No ssh', () => (
-    <EnterpriseWebStory>
+    <EnterpriseWebStory mocks={mocks}>
         {props => (
             <RemoveCredentialModal
                 {...props}
@@ -44,7 +61,7 @@ add('No ssh', () => (
 ))
 
 add('Requires ssh', () => (
-    <EnterpriseWebStory>
+    <EnterpriseWebStory mocks={mocks}>
         {props => (
             <RemoveCredentialModal
                 {...props}

@@ -1,5 +1,5 @@
 import { Observable } from 'rxjs'
-import { map, mapTo } from 'rxjs/operators'
+import { map } from 'rxjs/operators'
 
 import { dataOrThrowErrors, gql } from '@sourcegraph/shared/src/graphql/graphql'
 

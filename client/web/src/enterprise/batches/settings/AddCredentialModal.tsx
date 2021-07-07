@@ -15,10 +15,7 @@ import {
 } from '../../../graphql-operations'
 
 import styles from './AddCredentialModal.module.scss'
-import {
-    createBatchChangesCredential as _createBatchChangesCredential,
-    CREATE_BATCH_CHANGES_CREDENTIAL,
-} from './backend'
+import { CREATE_BATCH_CHANGES_CREDENTIAL } from './backend'
 import { CodeHostSshPublicKey } from './CodeHostSshPublicKey'
 import { ModalHeader } from './ModalHeader'
 
@@ -199,13 +196,13 @@ export const AddCredentialModal: React.FunctionComponent<AddCredentialModalProps
                         </Form>
                     </>
                 )}
-                {step === 'get-ssh-key' && sshPublicKey && (
+                {step === 'get-ssh-key' && (
                     <>
                         <p>
                             An SSH key has been generated for your batch changes code host connection. Copy the public
                             key below and enter it on your code host.
                         </p>
-                        <CodeHostSshPublicKey externalServiceKind={externalServiceKind} sshPublicKey={sshPublicKey} />
+                        <CodeHostSshPublicKey externalServiceKind={externalServiceKind} sshPublicKey={sshPublicKey!} />
                         <div className="d-flex justify-content-end">
                             <button type="button" className="btn btn-outline-secondary mr-2" onClick={afterCreate}>
                                 Close
