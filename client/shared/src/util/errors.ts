@@ -43,7 +43,7 @@ export const isAggregateError = (value: unknown): value is AggregateError =>
  *
  * @param errors The errors or ErrorLikes to aggregate
  */
-export const createAggregateError = (errors: ErrorLike[] = []): Error =>
+export const createAggregateError = (errors: readonly ErrorLike[] = []): Error =>
     errors.length === 1
         ? asError(errors[0])
         : Object.assign(new Error(errors.map(error => error.message).join('\n')), {

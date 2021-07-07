@@ -99,6 +99,7 @@
     "@gql2ts/types": "^1.9.0",
     "@graphql-codegen/cli": "^1.19.4",
     "@graphql-codegen/typescript": "1.17.9",
+    "@graphql-codegen/typescript-apollo-client-helpers": "^1.1.9",
     "@graphql-codegen/typescript-operations": "1.17.8",
     "@istanbuljs/nyc-config-typescript": "^1.0.1",
     "@mermaid-js/mermaid-cli": "^8.7.0",

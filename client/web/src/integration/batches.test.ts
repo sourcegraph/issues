@@ -763,6 +763,7 @@ describe('Batches', () => {
                 UserBatchChangesCodeHosts: () => ({
                     node: {
                         __typename: 'User',
+                        id: 'user123',
                         batchChangesCodeHosts: {
                             totalCount: 1,
                             pageInfo: {

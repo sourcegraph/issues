@@ -4,13 +4,18 @@ import React, { useCallback, useState } from 'react'
 
 import { Form } from '@sourcegraph/branded/src/components/Form'
 import { LoadingSpinner } from '@sourcegraph/react-loading-spinner'
-import { asError, isErrorLike } from '@sourcegraph/shared/src/util/errors'
+import { useMutation } from '@sourcegraph/shared/src/graphql/graphql'
 
 import { ErrorAlert } from '../../../components/alerts'
-import { ExternalServiceKind, Scalars } from '../../../graphql-operations'
+import {
+    CreateBatchChangesCredentialResult,
+    CreateBatchChangesCredentialVariables,
+    ExternalServiceKind,
+    Scalars,
+} from '../../../graphql-operations'
 
 import styles from './AddCredentialModal.module.scss'
-import { createBatchChangesCredential as _createBatchChangesCredential } from './backend'
+import { CREATE_BATCH_CHANGES_CREDENTIAL } from './backend'
 import { CodeHostSshPublicKey } from './CodeHostSshPublicKey'
 import { ModalHeader } from './ModalHeader'
 
@@ -22,8 +27,6 @@ export interface AddCredentialModalProps {
     externalServiceURL: string
     requiresSSH: boolean
 
-    /** For testing only. */
-    createBatchChangesCredential?: typeof _createBatchChangesCredential
     /** For testing only. */
     initialStep?: Step
 }
@@ -75,50 +78,44 @@ export const AddCredentialModal: React.FunctionComponent<AddCredentialModalProps
     externalServiceKind,
     externalServiceURL,
     requiresSSH,
-    createBatchChangesCredential = _createBatchChangesCredential,
     initialStep = 'add-token',
 }) => {
     const labelId = 'addCredential'
-    const [isLoading, setIsLoading] = useState<boolean | Error>(false)
     const [credential, setCredential] = useState<string>('')
-    const [sshPublicKey, setSSHPublicKey] = useState<string>()
     const [step, setStep] = useState<Step>(initialStep)
+    const [createBatchChangesCredential, { data, error, loading }] = useMutation<
+        CreateBatchChangesCredentialResult,
+        CreateBatchChangesCredentialVariables
+    >(CREATE_BATCH_CHANGES_CREDENTIAL, {
+        onCompleted: ({ createBatchChangesCredential: createdCredential }) => {
+            if (requiresSSH && createdCredential.sshPublicKey) {
+                setStep('get-ssh-key')
+            } else {
+                afterCreate()
+            }
+        },
+    })
 
     const onChangeCredential = useCallback<React.ChangeEventHandler<HTMLInputElement>>(event => {
         setCredential(event.target.value)
     }, [])
 
     const onSubmit = useCallback<React.FormEventHandler>(
-        async event => {
+        event => {
             event.preventDefault()
-            setIsLoading(true)
-            try {
-                const createdCredential = await createBatchChangesCredential({
+            return createBatchChangesCredential({
+                variables: {
                     user: userID,
                     credential,
                     externalServiceKind,
                     externalServiceURL,
-                })
-                if (requiresSSH && createdCredential.sshPublicKey) {
-                    setSSHPublicKey(createdCredential.sshPublicKey)
-                    setStep('get-ssh-key')
-                } else {
-                    afterCreate()
-                }
-            } catch (error) {
-                setIsLoading(asError(error))
-            }
+                },
+            })
         },
-        [
-            afterCreate,
-            userID,
-            credential,
-            externalServiceKind,
-            externalServiceURL,
-            requiresSSH,
-            createBatchChangesCredential,
-        ]
+        [userID, credential, externalServiceKind, externalServiceURL, createBatchChangesCredential]
     )
+
+    const sshPublicKey = data?.createBatchChangesCredential.sshPublicKey
 
     return (
         <Dialog
@@ -161,7 +158,7 @@ export const AddCredentialModal: React.FunctionComponent<AddCredentialModalProps
                 )}
                 {step === 'add-token' && (
                     <>
-                        {isErrorLike(isLoading) && <ErrorAlert error={isLoading} />}
+                        {error && <ErrorAlert error={error} />}
                         <Form onSubmit={onSubmit}>
                             <div className="form-group">
                                 <label htmlFor="token">Personal access token</label>
@@ -181,7 +178,7 @@ export const AddCredentialModal: React.FunctionComponent<AddCredentialModalProps
                             <div className="d-flex justify-content-end">
                                 <button
                                     type="button"
-                                    disabled={isLoading === true}
+                                    disabled={loading}
                                     className="btn btn-outline-secondary mr-2"
                                     onClick={onCancel}
                                 >
@@ -189,10 +186,10 @@ export const AddCredentialModal: React.FunctionComponent<AddCredentialModalProps
                                 </button>
                                 <button
                                     type="submit"
-                                    disabled={isLoading === true || credential.length === 0}
+                                    disabled={loading || credential.length === 0}
                                     className="btn btn-primary test-add-credential-modal-submit"
                                 >
-                                    {isLoading === true && <LoadingSpinner className="icon-inline" />}
+                                    {loading && <LoadingSpinner className="icon-inline" />}
                                     {requiresSSH ? 'Next' : 'Add credential'}
                                 </button>
                             </div>

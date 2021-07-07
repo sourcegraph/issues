@@ -9,7 +9,7 @@ import { dataOrThrowErrors, gql } from '@sourcegraph/shared/src/graphql/graphql'
 import { TelemetryProps } from '@sourcegraph/shared/src/telemetry/telemetryService'
 import { Container, PageHeader } from '@sourcegraph/wildcard'
 
-import { requestGraphQL } from '../../../backend/graphql'
+import { watchQuery } from '../../../backend/graphql'
 import { FilteredConnection } from '../../../components/FilteredConnection'
 import { PageTitle } from '../../../components/PageTitle'
 import {
@@ -115,12 +115,13 @@ export const UserSettingsTokensPage: React.FunctionComponent<Props> = ({
 }
 
 const queryAccessTokens = (variables: AccessTokensVariables): Observable<AccessTokensConnectionFields> =>
-    requestGraphQL<AccessTokensResult, AccessTokensVariables>(
+    watchQuery<AccessTokensResult, AccessTokensVariables>(
         gql`
             query AccessTokens($user: ID!, $first: Int) {
                 node(id: $user) {
                     __typename
                     ... on User {
+                        id
                         accessTokens(first: $first) {
                             ...AccessTokensConnectionFields
                         }

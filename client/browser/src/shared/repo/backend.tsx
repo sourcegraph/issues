@@ -148,7 +148,7 @@ export const fetchBlobContentLines = memoizeObservable(
                 if (errors) {
                     if (errors.length === 1) {
                         const error = errors[0]
-                        const errorPath = error.path.join('.')
+                        const errorPath = error.path?.join('.')
 
                         // Originally this checked only for 'repository.commit.file.content'.
                         // But if a file doesn't exist, the error path is 'repository.commit.file'

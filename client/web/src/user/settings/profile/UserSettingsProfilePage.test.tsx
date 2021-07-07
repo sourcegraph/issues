@@ -3,7 +3,7 @@ import { fireEvent, render, RenderResult, act } from '@testing-library/react'
 import React from 'react'
 import { MemoryRouter } from 'react-router'
 
-import { getDocumentNode } from '@sourcegraph/shared/src/graphql/graphql'
+import { getDocumentNode } from '@sourcegraph/shared/src/graphql/utils'
 
 import { UPDATE_USER } from './EditUserProfileForm'
 import { UserSettingsProfilePage } from './UserSettingsProfilePage'

@@ -1,6 +1,11 @@
 import { Observable } from 'rxjs'
 
-import { graphQLClient, GraphQLResult, requestGraphQLCommon } from '@sourcegraph/shared/src/graphql/graphql'
+import {
+    graphQLClient,
+    GraphQLResult,
+    requestGraphQLCommon,
+    watchQueryCommon,
+} from '@sourcegraph/shared/src/graphql/graphql'
 import * as GQL from '@sourcegraph/shared/src/graphql/schema'
 
 const getHeaders = (): { [header: string]: string } => ({
@@ -27,6 +32,16 @@ export const requestGraphQL = <TResult, TVariables = object>(
         request,
         variables,
         headers: getHeaders(),
+    })
+
+export const watchQuery = <TResult, TVariables = object>(
+    request: string,
+    variables?: TVariables
+): Observable<GraphQLResult<TResult>> =>
+    watchQueryCommon({
+        request,
+        variables,
+        client,
     })
 
 /**

@@ -1,13 +1,18 @@
 import Dialog from '@reach/dialog'
-import React, { useCallback, useState } from 'react'
+import React, { useCallback } from 'react'
 
 import { LoadingSpinner } from '@sourcegraph/react-loading-spinner'
-import { asError, isErrorLike } from '@sourcegraph/shared/src/util/errors'
+import { useMutation } from '@sourcegraph/shared/src/graphql/graphql'
 
 import { ErrorAlert } from '../../../components/alerts'
-import { BatchChangesCodeHostFields, BatchChangesCredentialFields } from '../../../graphql-operations'
+import {
+    BatchChangesCodeHostFields,
+    BatchChangesCredentialFields,
+    DeleteBatchChangesCredentialResult,
+    DeleteBatchChangesCredentialVariables,
+} from '../../../graphql-operations'
 
-import { deleteBatchChangesCredential } from './backend'
+import { DELETE_BATCH_CHANGES_CREDENTIAL } from './backend'
 import { CodeHostSshPublicKey } from './CodeHostSshPublicKey'
 import { ModalHeader } from './ModalHeader'
 
@@ -26,16 +31,29 @@ export const RemoveCredentialModal: React.FunctionComponent<RemoveCredentialModa
     afterDelete,
 }) => {
     const labelId = 'removeCredential'
-    const [isLoading, setIsLoading] = useState<boolean | Error>(false)
-    const onDelete = useCallback<React.MouseEventHandler>(async () => {
-        setIsLoading(true)
-        try {
-            await deleteBatchChangesCredential(credential.id)
-            afterDelete()
-        } catch (error) {
-            setIsLoading(asError(error))
-        }
-    }, [afterDelete, credential.id])
+    const [deleteBatchChangesCredential, { loading, error }] = useMutation<
+        DeleteBatchChangesCredentialResult,
+        DeleteBatchChangesCredentialVariables
+    >(DELETE_BATCH_CHANGES_CREDENTIAL, {
+        variables: {
+            id: credential.id,
+        },
+        onCompleted: () => afterDelete(),
+        update: cache => {
+            cache.evict({
+                id: cache.identify({
+                    __typename: 'BatchChangesCredential',
+                    id: credential.id,
+                }),
+            })
+            cache.gc()
+        },
+    })
+
+    const onDelete = useCallback<React.MouseEventHandler>(() => deleteBatchChangesCredential(), [
+        deleteBatchChangesCredential,
+    ])
+
     return (
         <Dialog
             className="modal-body modal-body--top-third p-4 rounded border"
@@ -51,7 +69,7 @@ export const RemoveCredentialModal: React.FunctionComponent<RemoveCredentialModa
 
                 <h3 className="text-danger mb-4">Removing credentials is irreversible</h3>
 
-                {isErrorLike(isLoading) && <ErrorAlert error={isLoading} />}
+                {error && <ErrorAlert error={error} />}
 
                 <p>
                     To create changesets on this code host after removing credentials, you will need to repeat the 'Add
@@ -71,7 +89,7 @@ export const RemoveCredentialModal: React.FunctionComponent<RemoveCredentialModa
                 <div className="d-flex justify-content-end pt-1">
                     <button
                         type="button"
-                        disabled={isLoading === true}
+                        disabled={loading}
                         className="btn btn-outline-secondary mr-2"
                         onClick={onCancel}
                     >
@@ -79,11 +97,11 @@ export const RemoveCredentialModal: React.FunctionComponent<RemoveCredentialModa
                     </button>
                     <button
                         type="button"
-                        disabled={isLoading === true}
+                        disabled={loading}
                         className="btn btn-danger test-remove-credential-modal-submit"
                         onClick={onDelete}
                     >
-                        {isLoading === true && <LoadingSpinner className="icon-inline" />}
+                        {loading && <LoadingSpinner className="icon-inline" />}
                         Remove credentials
                     </button>
                 </div>

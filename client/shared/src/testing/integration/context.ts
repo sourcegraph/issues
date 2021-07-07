@@ -3,6 +3,7 @@ import * as util from 'util'
 
 import { Polly, PollyServer } from '@pollyjs/core'
 import FSPersister from '@pollyjs/persister-fs'
+import { GraphQLError } from 'graphql'
 import { snakeCase } from 'lodash'
 import * as mime from 'mime-types'
 import { Test } from 'mocha'
@@ -13,7 +14,6 @@ import { Subject, Subscription, throwError } from 'rxjs'
 import { first, timeoutWith } from 'rxjs/operators'
 
 import { ErrorGraphQLResult, SuccessGraphQLResult } from '../../graphql/graphql'
-import { IGraphQLResponseError } from '../../graphql/schema'
 import { asError } from '../../util/errors'
 import { keyExistsIn } from '../../util/types'
 import { recordCoverage } from '../coverage'
@@ -34,7 +34,7 @@ const ASSETS_DIRECTORY = path.resolve(__dirname, '../../../../../ui/assets')
 const record = readEnvironmentBoolean({ variable: 'RECORD', defaultValue: false })
 
 export class IntegrationTestGraphQlError extends Error {
-    constructor(public errors: IGraphQLResponseError[]) {
+    constructor(public errors: GraphQLError[]) {
         super('graphql error for integration tests')
     }
 }

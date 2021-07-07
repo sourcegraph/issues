@@ -1,10 +1,8 @@
 import {
-    gql as apolloGql,
     useQuery as useApolloQuery,
     useMutation as useApolloMutation,
     DocumentNode,
     ApolloClient,
-    InMemoryCache,
     createHttpLink,
     NormalizedCacheObject,
     OperationVariables,
@@ -13,15 +11,17 @@ import {
     MutationHookOptions,
     MutationTuple,
 } from '@apollo/client'
+import { GraphQLError } from 'graphql'
 import { useMemo } from 'react'
-import { Observable } from 'rxjs'
+import { Observable, from } from 'rxjs'
 import { fromFetch } from 'rxjs/fetch'
 import { Omit } from 'utility-types'
 
 import { checkOk } from '../backend/fetch'
 import { createAggregateError } from '../util/errors'
 
-import * as GQL from './schema'
+import { cache } from './cache'
+import { fixApolloObservable, getDocumentNode } from './utils'
 
 /**
  * Use this template string tag for all GraphQL queries.
@@ -33,12 +33,15 @@ export interface SuccessGraphQLResult<T> {
     data: T
     errors: undefined
 }
+
 export interface ErrorGraphQLResult {
     data: undefined
-    errors: GQL.IGraphQLResponseError[]
+    errors: readonly GraphQLError[]
 }
 
 export type GraphQLResult<T> = SuccessGraphQLResult<T> | ErrorGraphQLResult
+
+export type GraphQLRequestDocument = string | DocumentNode
 
 /**
  * Guarantees that the GraphQL query resulted in an error.
@@ -54,17 +57,11 @@ export function dataOrThrowErrors<T>(result: GraphQLResult<T>): T {
     return result.data
 }
 
-export interface GraphQLError extends Error {
-    queryName: string
-}
 export const createInvalidGraphQLQueryResponseError = (queryName: string): GraphQLError =>
-    Object.assign(new Error(`Invalid GraphQL response: query ${queryName}`), {
-        queryName,
-    })
+    new GraphQLError(`Invalid GraphQL response: query ${queryName}`)
+
 export const createInvalidGraphQLMutationResponseError = (queryName: string): GraphQLError =>
-    Object.assign(new Error(`Invalid GraphQL response: mutation ${queryName}`), {
-        queryName,
-    })
+    new GraphQLError(`Invalid GraphQL response: mutation ${queryName}`)
 
 export interface GraphQLRequestOptions extends Omit<RequestInit, 'method' | 'body'> {
     baseUrl?: string
@@ -96,32 +93,32 @@ export function requestGraphQLCommon<T, V = object>({
     })
 }
 
+export function watchQueryCommon<T, V = object>({
+    request,
+    variables,
+    client,
+}: {
+    request: string
+    variables?: V
+    client: ApolloClient<NormalizedCacheObject>
+}): Observable<GraphQLResult<T>> {
+    const document = getDocumentNode(request)
+    return from(
+        fixApolloObservable(client.watchQuery({ query: document, variables, fetchPolicy: 'cache-and-network' }))
+    )
+}
+
 export const graphQLClient = ({ headers }: { headers: RequestInit['headers'] }): ApolloClient<NormalizedCacheObject> =>
     new ApolloClient({
         uri: GRAPHQL_URI,
-        cache: new InMemoryCache(),
+        cache,
         link: createHttpLink({
             uri: ({ operationName }) => `${GRAPHQL_URI}?${operationName}`,
             headers,
         }),
     })
 
-type RequestDocument = string | DocumentNode
-
-/**
- * Returns a `DocumentNode` value to support integrations with GraphQL clients that require this.
- *
- * @param document The GraphQL operation payload
- * @returns The created `DocumentNode`
- */
-export const getDocumentNode = (document: RequestDocument): DocumentNode => {
-    if (typeof document === 'string') {
-        return apolloGql(document)
-    }
-    return document
-}
-
-const useDocumentNode = (document: RequestDocument): DocumentNode =>
+const useDocumentNode = (document: GraphQLRequestDocument): DocumentNode =>
     useMemo(() => getDocumentNode(document), [document])
 
 /**
@@ -133,7 +130,7 @@ const useDocumentNode = (document: RequestDocument): DocumentNode =>
  * @returns GraphQL response
  */
 export function useQuery<TData = any, TVariables = OperationVariables>(
-    query: RequestDocument,
+    query: GraphQLRequestDocument,
     options: QueryHookOptions<TData, TVariables>
 ): QueryResult<TData, TVariables> {
     const documentNode = useDocumentNode(query)
@@ -149,7 +146,7 @@ export function useQuery<TData = any, TVariables = OperationVariables>(
  * @returns GraphQL response
  */
 export function useMutation<TData = any, TVariables = OperationVariables>(
-    mutation: RequestDocument,
+    mutation: GraphQLRequestDocument,
     options?: MutationHookOptions<TData, TVariables>
 ): MutationTuple<TData, TVariables> {
     const documentNode = useDocumentNode(mutation)

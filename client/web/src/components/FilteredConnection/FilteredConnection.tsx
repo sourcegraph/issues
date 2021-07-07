@@ -323,17 +323,23 @@ export class FilteredConnection<
                     }),
                     scan<PartialStateUpdate & { shouldRefresh: boolean }, PartialStateUpdate & { previousPage: N[] }>(
                         ({ previousPage }, { shouldRefresh, connectionOrError, ...rest }) => {
-                            let nodes: N[] = previousPage
-                            let after: string | undefined
+                            if (!connectionOrError || isErrorLike(connectionOrError)) {
+                                return {
+                                    connectionOrError,
+                                    previousPage,
+                                    ...rest,
+                                }
+                            }
 
-                            if (this.props.cursorPaging && connectionOrError && !isErrorLike(connectionOrError)) {
+                            let after: string | undefined
+                            let { nodes } = connectionOrError
+
+                            if (this.props.cursorPaging) {
                                 if (!shouldRefresh) {
-                                    connectionOrError.nodes = previousPage.concat(connectionOrError.nodes)
+                                    nodes = previousPage.concat(nodes)
                                 }
 
-                                const pageInfo = connectionOrError.pageInfo
-                                nodes = connectionOrError.nodes
-                                after = pageInfo?.endCursor || undefined
+                                after = connectionOrError.pageInfo?.endCursor || undefined
                             }
 
                             return {
