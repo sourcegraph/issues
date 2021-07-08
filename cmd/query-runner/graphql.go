@@ -10,6 +10,7 @@ import (
 	"runtime"
 	"time"
 
+	"github.com/sourcegraph/sourcegraph/cmd/frontend/graphqlbackend"
 	"github.com/sourcegraph/sourcegraph/internal/api"
 
 	"golang.org/x/net/context/ctxhttp"
@@ -22,86 +23,89 @@ type graphQLQuery struct {
 	Variables interface{} `json:"variables"`
 }
 
-const gqlSearchQuery = `query Search(
-	$query: String!,
-) {
-	search(query: $query) {
-		results {
-			approximateResultCount
-			limitHit
-			cloning { name }
-			timedout { name }
+var gqlSearchQuery = graphqlbackend.ValidatedQueryWithVariables(`
+	query Search(
+		$query: String!,
+	) {
+		search(query: $query) {
 			results {
-				__typename
-				... on FileMatch {
-					limitHit
-					lineMatches {
-						preview
-						lineNumber
-						offsetAndLengths
+				approximateResultCount
+				limitHit
+				cloning { name }
+				timedout { name }
+				results {
+					__typename
+					... on FileMatch {
+						limitHit
+						lineMatches {
+							preview
+							lineNumber
+							offsetAndLengths
+						}
 					}
-				}
-				... on CommitSearchResult {
-					refs {
-						name
-						displayName
-						prefix
-						repository {
+					... on CommitSearchResult {
+						refs {
 							name
-						}
-					}
-					sourceRefs {
-						name
-						displayName
-						prefix
-						repository {
-							name
-						}
-					}
-					messagePreview {
-						value
-						highlights {
-							line
-							character
-							length
-						}
-					}
-					diffPreview {
-						value
-						highlights {
-							line
-							character
-							length
-						}
-					}
-					commit {
-						repository {
-							name
-						}
-						oid
-						abbreviatedOID
-						author {
-							person {
-								displayName
-								avatarURL
+							displayName
+							prefix
+							repository {
+								name
 							}
-							date
 						}
-						message
+						sourceRefs {
+							name
+							displayName
+							prefix
+							repository {
+								name
+							}
+						}
+						messagePreview {
+							value
+							highlights {
+								line
+								character
+								length
+							}
+						}
+						diffPreview {
+							value
+							highlights {
+								line
+								character
+								length
+							}
+						}
+						commit {
+							repository {
+								name
+							}
+							oid
+							abbreviatedOID
+							author {
+								person {
+									displayName
+									avatarURL
+								}
+								date
+							}
+							message
+						}
 					}
 				}
-			}
-			alert {
-				title
-				description
-				proposedQueries {
+				alert {
+					title
 					description
-					query
+					proposedQueries {
+						description
+						query
+					}
 				}
 			}
 		}
-	}
-}`
+	}`,
+	map[string]interface{}{"query": "test"},
+)
 
 type gqlSearchVars struct {
 	Query string `json:"query"`

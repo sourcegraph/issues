@@ -2,6 +2,9 @@ package graphqlbackend
 
 import (
 	_ "embed"
+	"strings"
+
+	"github.com/graph-gophers/graphql-go"
 )
 
 // mainSchema is the main raw graqhql schema.
@@ -35,3 +38,17 @@ var insightsSchema string
 // authzSchema is the Authz raw graqhql schema.
 //go:embed authz.graphql
 var authzSchema string
+
+var allSchemasParsed = func() *graphql.Schema {
+	schemas := []string{
+		mainSchema,
+		batchesSchema,
+		codeIntelSchema,
+		insightsSchema,
+		authzSchema,
+		codeMonitorsSchema,
+		licenseSchema,
+		dotcomSchema,
+	}
+	return graphql.MustParseSchema(strings.Join(schemas, "\n"), nil)
+}()
