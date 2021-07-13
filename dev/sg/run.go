@@ -14,6 +14,8 @@ import (
 	"strings"
 	"sync"
 
+	"golang.org/x/sync/errgroup"
+
 	"github.com/cockroachdb/errors"
 	"github.com/rjeczalik/notify"
 
@@ -536,6 +538,53 @@ func runChecks(ctx context.Context, checks map[string]Check) error {
 	}
 
 	return nil
+}
+
+func runGenerate(ctx context.Context, gen string) error {
+	if gen == "all" {
+		g, ctx := errgroup.WithContext(ctx)
+		for k, _ := range conf.Generators {
+			k := k
+			g.Go(func() error {
+				err := runGenerate(ctx, k)
+				if err == nil {
+					return nil
+				}
+				return err
+			})
+		}
+		if err := g.Wait(); err != nil {
+			return err
+		}
+		return nil
+	}
+
+	cmd := conf.Generators[gen]
+	out.WriteLine(output.Linef("", output.StylePending, "Starting generator %q.", cmd.Name))
+
+	//commandCtx, cancel := context.WithCancel(ctx)
+	//cmdArgs := []string{cmd.Cmd}
+	//if len(args) != 0 {
+	//	cmdArgs = append(cmdArgs, args...)
+	//} else {
+	//	cmdArgs = append(cmdArgs, cmd.DefaultArgs)
+	//}
+
+	root, err := root.RepositoryRoot()
+	if err != nil {
+		return err
+	}
+	dir := root
+	if cmd.Directory != "" {
+		dir = dir + cmd.Directory
+	}
+
+	c := exec.CommandContext(ctx, "bash", "-c", cmd.Cmd)
+	c.Dir = dir
+	c.Env = makeEnv(conf.Env, cmd.Env)
+	c.Stdout = os.Stdout
+	c.Stderr = os.Stderr
+	return c.Run()
 }
 
 // prefixSuffixSaver is an io.Writer which retains the first N bytes

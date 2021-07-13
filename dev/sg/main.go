@@ -68,6 +68,16 @@ var (
 		UsageFunc:  printDoctorUsage,
 	}
 
+	generateFlagSet = flag.NewFlagSet("sg generate", flag.ExitOnError)
+	generateCommand = &ffcli.Command{
+		Name:       "generate",
+		ShortUsage: "sg generate <all/standard/monitoring>",
+		ShortHelp:  "Generate various parts of the sg codebase",
+		FlagSet:    generateFlagSet,
+		Exec:       generateExec,
+		UsageFunc:  printGenerateUsage,
+	}
+
 	liveFlagSet = flag.NewFlagSet("sg live", flag.ExitOnError)
 	liveCommand = &ffcli.Command{
 		Name:       "live",
@@ -196,6 +206,7 @@ var (
 			startCommand,
 			testCommand,
 			doctorCommand,
+			generateCommand,
 			liveCommand,
 			migrationCommand,
 		},
@@ -337,6 +348,40 @@ func runExec(ctx context.Context, args []string) error {
 
 func doctorExec(ctx context.Context, args []string) error {
 	return runChecks(ctx, conf.Checks)
+}
+
+//type generator int
+//
+//const (
+//	all = iota
+//	standard
+//	monitoring
+//)
+//
+//func (g generator) String() string {
+//	return [...]string{"all", "standard", "monitoring"}[g]
+//}
+
+func generateExec(ctx context.Context, args []string) error {
+	if len(args) == 0 {
+		out.WriteLine(output.Linef("", output.StyleWarning, "Running all generate commands"))
+		return runGenerate(ctx, "all")
+	}
+
+	if len(args) > 1 {
+		out.WriteLine(output.Linef("", output.StyleWarning, "ERROR: too many arguments\n"))
+		return flag.ErrHelp
+	}
+	fmt.Printf("Config: %+v", conf)
+
+	_, ok := conf.Generators[args[0]]
+	if !ok {
+		out.WriteLine(output.Linef("", output.StyleWarning, "ERROR: generator %q not found :(\n", args[0]))
+		return flag.ErrHelp
+	}
+
+	return runGenerate(ctx, args[0])
+
 }
 
 func liveExec(ctx context.Context, args []string) error {
@@ -624,6 +669,26 @@ func printDoctorUsage(c *ffcli.Command) string {
 
 	fmt.Fprintf(&out, "USAGE\n")
 	fmt.Fprintf(&out, "  sg doctor\n")
+
+	return out.String()
+}
+
+func printGenerateUsage(c *ffcli.Command) string {
+	var out strings.Builder
+
+	fmt.Fprintf(&out, "USAGE\n")
+	fmt.Fprintf(&out, "sg generate <generator>")
+
+	_, _ = parseConf(*configFlag, *overwriteConfigFlag)
+
+	if conf != nil {
+		fmt.Fprintf(&out, "\n")
+		fmt.Fprintf(&out, "AVAILABLE GENERATORS IN %s%s%s\n", output.StyleBold, *configFlag, output.StyleReset)
+
+		for name := range conf.Generators {
+			fmt.Fprintf(&out, "  %s\n", name)
+		}
+	}
 
 	return out.String()
 }

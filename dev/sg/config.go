@@ -9,6 +9,7 @@ import (
 )
 
 func ParseConfigFile(name string) (*Config, error) {
+	name = "/Users/dax/work/sourcegraph/dev/sg/sg.config.example.yaml"
 	file, err := os.Open(name)
 	if err != nil {
 		return nil, errors.Wrapf(err, "cannot open file %q", name)
@@ -40,6 +41,11 @@ func ParseConfigFile(name string) (*Config, error) {
 		conf.Checks[name] = check
 	}
 
+	for name, cmd := range conf.Generators {
+		cmd.Name = name
+		conf.Generators[name] = cmd
+	}
+
 	return &conf, nil
 }
 
@@ -55,6 +61,7 @@ type Command struct {
 	IgnoreStdout     bool              `yaml:"ignoreStdout"`
 	IgnoreStderr     bool              `yaml:"ignoreStderr"`
 	DefaultArgs      string            `yaml:"defaultArgs"`
+	Directory        string            `yaml:"dir"`
 
 	// ATTENTION: If you add a new field here, be sure to also handle that
 	// field in `Merge` (below).
@@ -86,6 +93,10 @@ func (c Command) Merge(other Command) Command {
 	}
 	if other.DefaultArgs != merged.DefaultArgs && other.DefaultArgs != "" {
 		merged.DefaultArgs = other.DefaultArgs
+	}
+
+	if other.Directory != merged.Directory && other.Directory != "" {
+		merged.Directory = other.Directory
 	}
 
 	for k, v := range other.Env {
@@ -124,6 +135,7 @@ type Config struct {
 	Commands    map[string]Command  `yaml:"commands"`
 	Commandsets map[string][]string `yaml:"commandsets"`
 	Tests       map[string]Command  `yaml:"tests"`
+	Generators  map[string]Command  `yaml:"generators"`
 	Checks      map[string]Check    `yaml:"checks"`
 }
 
@@ -151,6 +163,13 @@ func (c *Config) Merge(other *Config) {
 			c.Tests[k] = original.Merge(v)
 		} else {
 			c.Tests[k] = v
+		}
+	}
+	for k, v := range other.Generators {
+		if original, ok := c.Generators[k]; ok {
+			c.Generators[k] = original.Merge(v)
+		} else {
+			c.Generators[k] = v
 		}
 	}
 }

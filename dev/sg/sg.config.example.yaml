@@ -115,3 +115,12 @@ tests:
       BASE_URL: "http://localhost:3080"
       EMAIL: "joe@sourcegraph.com"
       PASSWORD: "12345"
+
+generators:
+    # These can be run with `sg generate [name]`
+    # Commands are run from dir originating from repo root
+    monitoring:
+        cmd: go generate ./...
+        dir: /monitoring
+    standard:
+        cmd: go list ./... | grep -v 'doc/cli/references' | xargs go generate -x
