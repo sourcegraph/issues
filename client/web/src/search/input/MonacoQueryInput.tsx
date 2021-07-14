@@ -5,7 +5,9 @@ import React, { useCallback, useEffect, useLayoutEffect, useMemo, useState } fro
 import { Subscription, Observable, Unsubscribable, ReplaySubject } from 'rxjs'
 
 import { KeyboardShortcut } from '@sourcegraph/shared/src/keyboardShortcuts'
+import { toMonacoRange } from '@sourcegraph/shared/src/search/query/decoratedToken'
 import { getProviders } from '@sourcegraph/shared/src/search/query/providers'
+import { scanSearchQuery } from '@sourcegraph/shared/src/search/query/scanner'
 import { appendContextFilter } from '@sourcegraph/shared/src/search/query/transformer'
 import { SearchSuggestion } from '@sourcegraph/shared/src/search/suggestions'
 import { VersionContextProps } from '@sourcegraph/shared/src/search/util'
@@ -21,6 +23,8 @@ import { KEYBOARD_SHORTCUT_FOCUS_SEARCHBAR } from '../../keyboardShortcuts/keybo
 import { observeResize } from '../../util/dom'
 import { fetchSuggestions } from '../backend'
 import { QueryChangeSource, QueryState } from '../helpers'
+
+import styles from './MonacoQueryInput.module.scss'
 
 export interface MonacoQueryInputProps
     extends ThemeProps,
@@ -386,6 +390,42 @@ export const MonacoQueryInput: React.FunctionComponent<MonacoQueryInputProps> = 
             }
         }
     }, [editor, onSubmit, acceptSearchSuggestionOnEnter])
+
+    useEffect(() => {
+        if (!editor) {
+            return
+        }
+
+        const disposable = editor.onDidChangeModelContent(() => {
+            const model = editor.getModel()
+            if (!model) {
+                return
+            }
+
+            const existingDecorations = model
+                .getAllDecorations()
+                .filter(decoration => decoration.options.className === styles.filterDecoration)
+
+            const scanResult = scanSearchQuery(model.getValue(), interpretComments, patternType)
+            const filters =
+                scanResult.type === 'success' ? scanResult.term.filter(token => token.type === 'filter') : []
+
+            model.deltaDecorations(
+                existingDecorations.map(decoration => decoration.id),
+                []
+            )
+
+            model.deltaDecorations(
+                [],
+                filters.map(filter => ({
+                    range: toMonacoRange(filter.range),
+                    options: { className: styles.filterDecoration },
+                }))
+            )
+        })
+
+        return () => disposable.dispose()
+    }, [editor, interpretComments, patternType])
 
     const options: Monaco.editor.IStandaloneEditorConstructionOptions = {
         readOnly: false,
