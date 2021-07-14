@@ -24,103 +24,89 @@ import (
 	"github.com/sourcegraph/sourcegraph/internal/extsvc/gitlab"
 )
 
-// ChangesetColumns are used by by the changeset related Store methods and by
-// workerutil.Worker to load changesets from the database for processing by
-// the reconciler.
-var ChangesetColumns = []*sqlf.Query{
-	sqlf.Sprintf("changesets.id"),
-	sqlf.Sprintf("changesets.repo_id"),
-	sqlf.Sprintf("changesets.created_at"),
-	sqlf.Sprintf("changesets.updated_at"),
-	sqlf.Sprintf("changesets.metadata"),
-	sqlf.Sprintf("changesets.batch_change_ids"),
-	sqlf.Sprintf("changesets.external_id"),
-	sqlf.Sprintf("changesets.external_service_type"),
-	sqlf.Sprintf("changesets.external_branch"),
-	sqlf.Sprintf("changesets.external_deleted_at"),
-	sqlf.Sprintf("changesets.external_updated_at"),
-	sqlf.Sprintf("changesets.external_state"),
-	sqlf.Sprintf("changesets.external_review_state"),
-	sqlf.Sprintf("changesets.external_check_state"),
-	sqlf.Sprintf("changesets.diff_stat_added"),
-	sqlf.Sprintf("changesets.diff_stat_changed"),
-	sqlf.Sprintf("changesets.diff_stat_deleted"),
-	sqlf.Sprintf("changesets.sync_state"),
-	sqlf.Sprintf("changesets.owned_by_batch_change_id"),
-	sqlf.Sprintf("changesets.current_spec_id"),
-	sqlf.Sprintf("changesets.previous_spec_id"),
-	sqlf.Sprintf("changesets.publication_state"),
-	sqlf.Sprintf("changesets.ui_publication_state"),
-	sqlf.Sprintf("changesets.reconciler_state"),
-	sqlf.Sprintf("changesets.failure_message"),
-	sqlf.Sprintf("changesets.started_at"),
-	sqlf.Sprintf("changesets.finished_at"),
-	sqlf.Sprintf("changesets.process_after"),
-	sqlf.Sprintf("changesets.num_resets"),
-	sqlf.Sprintf("changesets.num_failures"),
-	sqlf.Sprintf("changesets.closing"),
-	sqlf.Sprintf("changesets.syncer_error"),
+type column struct {
+	name string
+
+	insert    bool
+	onlyWrite bool
+
+	codeHostState bool
 }
 
-// changesetInsertColumns is the list of changeset columns that are modified in
-// CreateChangeset and UpdateChangeset.
-var changesetInsertColumns = []*sqlf.Query{
-	sqlf.Sprintf("repo_id"),
-	sqlf.Sprintf("created_at"),
-	sqlf.Sprintf("updated_at"),
-	sqlf.Sprintf("metadata"),
-	sqlf.Sprintf("batch_change_ids"),
-	sqlf.Sprintf("external_id"),
-	sqlf.Sprintf("external_service_type"),
-	sqlf.Sprintf("external_branch"),
-	sqlf.Sprintf("external_deleted_at"),
-	sqlf.Sprintf("external_updated_at"),
-	sqlf.Sprintf("external_state"),
-	sqlf.Sprintf("external_review_state"),
-	sqlf.Sprintf("external_check_state"),
-	sqlf.Sprintf("diff_stat_added"),
-	sqlf.Sprintf("diff_stat_changed"),
-	sqlf.Sprintf("diff_stat_deleted"),
-	sqlf.Sprintf("sync_state"),
-	sqlf.Sprintf("owned_by_batch_change_id"),
-	sqlf.Sprintf("current_spec_id"),
-	sqlf.Sprintf("previous_spec_id"),
-	sqlf.Sprintf("publication_state"),
-	sqlf.Sprintf("ui_publication_state"),
-	sqlf.Sprintf("reconciler_state"),
-	sqlf.Sprintf("failure_message"),
-	sqlf.Sprintf("started_at"),
-	sqlf.Sprintf("finished_at"),
-	sqlf.Sprintf("process_after"),
-	sqlf.Sprintf("num_resets"),
-	sqlf.Sprintf("num_failures"),
-	sqlf.Sprintf("closing"),
-	sqlf.Sprintf("syncer_error"),
+type changesetColumns []column
+
+func (cs changesetColumns) ReadColumns() (out []*sqlf.Query) {
+	for _, c := range cs {
+		if !c.onlyWrite {
+			out = append(out, sqlf.Sprintf("changesets."+c.name))
+		}
+	}
+	return out
+}
+
+func (cs changesetColumns) InsertColumns() (out []*sqlf.Query) {
+	for _, c := range cs {
+		if c.insert {
+			out = append(out, sqlf.Sprintf(c.name))
+		}
+	}
+	return out
+}
+
+func (cs changesetColumns) CodeHostStateColumns() (out []*sqlf.Query) {
+	for _, c := range cs {
+		if c.codeHostState {
+			out = append(out, sqlf.Sprintf(c.name))
+		}
+	}
+	return out
+}
+
+// allColumns are used by the changeset related Store methods.
+var allColumns = changesetColumns{
+	{name: "id", insert: false},
+	{name: "repo_id", insert: true},
+	{name: "created_at", insert: true},
+	{name: "updated_at", insert: true, codeHostState: true},
+	{name: "metadata", insert: true, codeHostState: true},
+	{name: "batch_change_ids", insert: true},
+	{name: "external_id", insert: true},
+	{name: "external_service_type", insert: true},
+	{name: "external_branch", insert: true, codeHostState: true},
+	{name: "external_deleted_at", insert: true, codeHostState: true},
+	{name: "external_updated_at", insert: true, codeHostState: true},
+	{name: "external_state", insert: true, codeHostState: true},
+	{name: "external_review_state", insert: true, codeHostState: true},
+	{name: "external_check_state", insert: true, codeHostState: true},
+	{name: "diff_stat_added", insert: true, codeHostState: true},
+	{name: "diff_stat_changed", insert: true, codeHostState: true},
+	{name: "diff_stat_deleted", insert: true, codeHostState: true},
+	{name: "sync_state", insert: true, codeHostState: true},
+	{name: "owned_by_batch_change_id", insert: true},
+	{name: "current_spec_id", insert: true},
+	{name: "previous_spec_id", insert: true},
+	{name: "publication_state", insert: true},
+	{name: "ui_publication_state", insert: true},
+	{name: "reconciler_state", insert: true},
+	{name: "failure_message", insert: true},
+	{name: "started_at", insert: true},
+	{name: "finished_at", insert: true},
+	{name: "process_after", insert: true},
+	{name: "num_resets", insert: true},
+	{name: "num_failures", insert: true},
+	{name: "closing", insert: true},
+	{name: "syncer_error", insert: true, codeHostState: true},
+
 	// We additionally store the result of changeset.Title() in a column, so
 	// the business logic for determining it is in one place and the field is
 	// indexable for searching.
-	sqlf.Sprintf("external_title"),
+	{name: "external_title", onlyWrite: true, insert: true, codeHostState: true},
 }
 
-// changesetCodeHostStateInsertColumns XX
-var changesetCodeHostStateInsertColumns = []*sqlf.Query{
-	sqlf.Sprintf("updated_at"),
-	sqlf.Sprintf("metadata"),
-	sqlf.Sprintf("external_branch"),
-	sqlf.Sprintf("external_deleted_at"),
-	sqlf.Sprintf("external_updated_at"),
-	sqlf.Sprintf("external_state"),
-	sqlf.Sprintf("external_review_state"),
-	sqlf.Sprintf("external_check_state"),
-	sqlf.Sprintf("diff_stat_added"),
-	sqlf.Sprintf("diff_stat_changed"),
-	sqlf.Sprintf("diff_stat_deleted"),
-	sqlf.Sprintf("sync_state"),
-	sqlf.Sprintf("syncer_error"),
-	// We additionally store the result of changeset.Title() in a column, so
-	// the business logic for determining it is in one place and the field is
-	// indexable for searching.
-	sqlf.Sprintf("external_title"),
+// ChangesetReadColumns are used by workerutil.Worker to load changesets from
+// the database for processing by the reconciler.
+func ChangesetReadColumns() []*sqlf.Query {
+	return allColumns.ReadColumns()
 }
 
 func (s *Store) changesetWriteQuery(q string, includeID bool, c *btypes.Changeset) (*sqlf.Query, error) {
@@ -153,7 +139,7 @@ func (s *Store) changesetWriteQuery(q string, includeID bool, c *btypes.Changese
 	}
 
 	vars := []interface{}{
-		sqlf.Join(changesetInsertColumns, ", "),
+		sqlf.Join(allColumns.InsertColumns(), ", "),
 		c.RepoID,
 		c.CreatedAt,
 		c.UpdatedAt,
@@ -192,7 +178,7 @@ func (s *Store) changesetWriteQuery(q string, includeID bool, c *btypes.Changese
 		vars = append(vars, c.ID)
 	}
 
-	vars = append(vars, sqlf.Join(ChangesetColumns, ", "))
+	vars = append(vars, sqlf.Join(allColumns.ReadColumns(), ", "))
 
 	return sqlf.Sprintf(q, vars...), nil
 }
@@ -408,7 +394,7 @@ func getChangesetQuery(opts *GetChangesetOpts) *sqlf.Query {
 
 	return sqlf.Sprintf(
 		getChangesetsQueryFmtstr,
-		sqlf.Join(ChangesetColumns, ", "),
+		sqlf.Join(allColumns.ReadColumns(), ", "),
 		sqlf.Join(preds, "\n AND "),
 	)
 }
@@ -621,7 +607,7 @@ func listChangesetsQuery(opts *ListChangesetsOpts, authzConds *sqlf.Query) *sqlf
 
 	return sqlf.Sprintf(
 		listChangesetsQueryFmtstr+opts.LimitOpts.ToDB(),
-		sqlf.Join(ChangesetColumns, ", "),
+		sqlf.Join(allColumns.ReadColumns(), ", "),
 		join,
 		sqlf.Join(preds, "\n AND "),
 	)
@@ -733,7 +719,7 @@ func updateChangesetCodeHostStateQuery(c *btypes.Changeset) (*sqlf.Query, error)
 	title, _ := c.Title()
 
 	vars := []interface{}{
-		sqlf.Join(changesetCodeHostStateInsertColumns, ", "),
+		sqlf.Join(allColumns.CodeHostStateColumns(), ", "),
 		c.UpdatedAt,
 		metadata,
 		nullStringColumn(c.ExternalBranch),
@@ -749,7 +735,7 @@ func updateChangesetCodeHostStateQuery(c *btypes.Changeset) (*sqlf.Query, error)
 		c.SyncErrorMessage,
 		nullStringColumn(title),
 		c.ID,
-		sqlf.Join(ChangesetColumns, ", "),
+		sqlf.Join(allColumns.ReadColumns(), ", "),
 	}
 
 	return sqlf.Sprintf(updateChangesetCodeHostStateQueryFmtstr, vars...), nil
@@ -1139,7 +1125,7 @@ func (s *Store) EnqueueNextScheduledChangeset(ctx context.Context) (*btypes.Chan
 		enqueueNextScheduledChangesetFmtstr,
 		btypes.ReconcilerStateScheduled.ToDB(),
 		btypes.ReconcilerStateQueued.ToDB(),
-		sqlf.Join(ChangesetColumns, ","),
+		sqlf.Join(allColumns.ReadColumns(), ","),
 	)
 
 	var c btypes.Changeset

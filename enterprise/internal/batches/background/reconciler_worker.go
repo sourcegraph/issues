@@ -71,7 +71,7 @@ func createReconcilerDBWorkerStore(s *store.Store) dbworkerstore.Store {
 		TableName:            "changesets",
 		ViewName:             "reconciler_changesets changesets",
 		AlternateColumnNames: map[string]string{"state": "reconciler_state"},
-		ColumnExpressions:    store.ChangesetColumns,
+		ColumnExpressions:    store.ChangesetReadColumns(),
 		Scan:                 scanFirstChangesetRecord,
 
 		// Order changesets by state, so that freshly enqueued changesets have
