@@ -170,7 +170,7 @@ func setupFirecracker(ctx context.Context, runner commandRunner, logger *Logger,
 func teardownFirecracker(ctx context.Context, runner commandRunner, logger *Logger, name string, options Options, operations *Operations) error {
 	stopCommand := command{
 		Key:       "teardown.firecracker.stop",
-		Command:   flatten("ignite", "stop", commonFirecrackerFlags, name),
+		Command:   flatten("ignite", "stop", name),
 		Operation: operations.TeardownFirecrackerStop,
 	}
 	if err := runner.RunCommand(ctx, stopCommand, logger); err != nil {
@@ -179,7 +179,7 @@ func teardownFirecracker(ctx context.Context, runner commandRunner, logger *Logg
 
 	removeCommand := command{
 		Key:       "teardown.firecracker.remove",
-		Command:   flatten("ignite", "rm", "-f", commonFirecrackerFlags, name),
+		Command:   flatten("ignite", "rm", "-f", name),
 		Operation: operations.TeardownFirecrackerRemove,
 	}
 	if err := runner.RunCommand(ctx, removeCommand, logger); err != nil {
@@ -215,6 +215,7 @@ func firecrackerCopyfileFlags(dir string, imageKeys []string, options Options) [
 	return intersperse("--copy-files", copyfiles)
 }
 
+// NOTE: The options.FirecreackerOptions.ImageArchivesPath needs to exist on the host
 func tarfilePathOnHost(key string, options Options) string {
 	return filepath.Join(options.FirecrackerOptions.ImageArchivesPath, fmt.Sprintf("%s.tar", key))
 }

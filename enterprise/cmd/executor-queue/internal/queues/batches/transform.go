@@ -71,12 +71,7 @@ func transformRecord(ctx context.Context, db dbutil.DB, exec *btypes.BatchSpecEx
 	return apiclient.Job{
 		ID:                  int(exec.ID),
 		VirtualMachineFiles: map[string]string{"spec.yml": exec.BatchSpec},
-		DockerSteps: []apiclient.DockerStep{
-			{
-				Image:    "node:14",
-				Commands: []string{"yarn add lodash"},
-			},
-		},
+		DockerSteps: []apiclient.DockerStep{ },
 		CliSteps: []apiclient.CliStep{
 			{
 				Commands: []string{

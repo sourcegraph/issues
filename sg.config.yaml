@@ -409,7 +409,8 @@ commands:
     cmd: |
       env TMPDIR="$HOME/.sourcegraph/executor-temp" .bin/executor
     install: |
-      go build -o .bin/executor github.com/sourcegraph/sourcegraph/enterprise/cmd/executor
+      go build -o .bin/executor github.com/sourcegraph/sourcegraph/enterprise/cmd/executor &&
+      mkdir -p $EXECUTOR_IMAGE_ARCHIVE_PATH
     checkBinary: .bin/executor
     env:
       EXECUTOR_QUEUE_NAME: TEMPLATE
@@ -431,7 +432,9 @@ commands:
   batches-executor:
     <<: *executor_template
     cmd: |
-      env TMPDIR="$HOME/.sourcegraph/batches-executor-temp" .bin/executor
+      env TMPDIR="$HOME/.sourcegraph/batches-executor-temp" \
+        sudo --preserve-env=TMPDIR,EXECUTOR_QUEUE_NAME,EXECUTOR_HEALTH_SERVER_PORT,SRC_PROF_HTTP,EXECUTOR_FRONTEND_URL,EXECUTOR_FRONTEND_USERNAME,EXECUTOR_FRONTEND_PASSWORD,EXECUTOR_QUEUE_URL,EXECUTOR_USE_FIRECRACKER,EXECUTOR_IMAGE_ARCHIVE_PATH \
+          .bin/executor
     env:
       EXECUTOR_QUEUE_NAME: batches
       EXECUTOR_HEALTH_SERVER_PORT: "3193"
