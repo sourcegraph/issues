@@ -197,10 +197,10 @@ export function useForm<FormValues extends object>(props: UseFormProps<FormValue
         setFields(fields => ({ ...fields, [name]: state }))
     }
 
-    const values = useMemo(() => getFormValues(fields), [fields])
+    const values = useMemo(() => getFormValues<FormValues>(fields), [fields])
 
     const changeEvent = useDistinctValue(
-        useMemo(
+        useMemo<{ values: FormValues; valid: boolean }>(
             () => ({
                 values: getFormValues(fields),
                 valid: Object.values<Pick<FieldState<unknown>, 'validState'>>(fields).every(

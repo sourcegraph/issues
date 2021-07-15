@@ -295,7 +295,7 @@
     "ts-morph": "^8.1.0",
     "ts-node": "^9.1.1",
     "typed-scss-modules": "^4.1.1",
-    "typescript": "^4.1.3",
+    "typescript": "^4.3.4",
     "utc-version": "^2.0.2",
     "web-ext": "^4.2.0",
     "webpack": "^4.44.2",
@@ -401,6 +401,8 @@
   },
   "resolutions": {
     "history": "4.5.1",
-    "cssnano": "4.1.10"
+    "cssnano": "4.1.10",
+    "@typescript-eslint/eslint-plugin": "^4.28.1",
+    "@typescript-eslint/parser": "^4.28.1"
   }
 }
