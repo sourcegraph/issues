@@ -70,9 +70,12 @@ func (h *handler) Handle(ctx context.Context, record workerutil.Record) (err err
 	logger := command.NewLogger(union(h.options.RedactedValues, job.RedactedValues))
 
 	defer func() {
-		log15.Info("Writing log entries", "jobID", job.ID, "repositoryName", job.RepositoryName, "commit", job.Commit)
+		close(logger.EntryC)
+	}()
 
-		for _, entry := range logger.Entries() {
+	go func() {
+		for entry := range logger.EntryC {
+			log15.Info("Writing log entry", "jobID", job.ID, "repositoryName", job.RepositoryName, "commit", job.Commit)
 			// Perform this outside of the task execution context. If there is a timeout or
 			// cancellation error we don't want to skip uploading these logs as users will
 			// often want to see how far something progressed prior to a timeout.

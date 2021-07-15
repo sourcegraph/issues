@@ -9,6 +9,7 @@ import (
 // Logger tracks command invocations and stores the command's output and
 // error stream values.
 type Logger struct {
+	EntryC   chan workerutil.ExecutionLogEntry
 	replacer *strings.Replacer
 	entries  []workerutil.ExecutionLogEntry
 }
@@ -24,12 +25,15 @@ func NewLogger(replacements map[string]string) *Logger {
 
 	return &Logger{
 		replacer: strings.NewReplacer(oldnew...),
+		EntryC:   make(chan workerutil.ExecutionLogEntry),
 	}
 }
 
 // Log redacts secrets from the given log entry and stores it.
 func (l *Logger) Log(entry workerutil.ExecutionLogEntry) {
-	l.entries = append(l.entries, redact(entry, l.replacer))
+	redactedEntry := redact(entry, l.replacer)
+	l.entries = append(l.entries, redactedEntry)
+	l.EntryC <- redactedEntry
 }
 
 // Entries returns a copy of the stored log entries.
