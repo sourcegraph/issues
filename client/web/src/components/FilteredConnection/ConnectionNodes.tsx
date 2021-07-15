@@ -1,11 +1,8 @@
-import classNames from 'classnames'
 import * as H from 'history'
 import * as React from 'react'
 
-import { useRedesignToggle } from '@sourcegraph/shared/src/util/useRedesignToggle'
-
-import { ConnectionNodesSummary } from './ConnectionNodesSummary'
 import { Connection } from './ConnectionType'
+import { ConnectionList, ShowMoreButton, SummaryContainer, ConnectionSummary } from './generic-ui'
 import { hasID, hasNextPage } from './utils'
 
 /**
@@ -30,9 +27,6 @@ export interface ConnectionProps<N, NP = {}, HP = {}> extends ConnectionNodesDis
 
     /** Props to pass to each nodeComponent in addition to `{ node: N }`. */
     nodeComponentProps?: NP
-
-    /** An element rendered as a sibling of the filters. */
-    additionalFilterElement?: React.ReactElement
 }
 
 /** State related to the ConnectionNodes component. */
@@ -118,7 +112,7 @@ export const getTotalCount = <N,>({ totalCount, nodes, pageInfo }: Connection<N>
 export const ConnectionNodes = <C extends Connection<N>, N, NP = {}, HP = {}>({
     nodeComponent: NodeComponent,
     nodeComponentProps,
-    listComponent: ListComponent = 'ul',
+    listComponent = 'ul',
     listClassName,
     summaryClassName,
     headComponent: HeadComponent,
@@ -138,11 +132,10 @@ export const ConnectionNodes = <C extends Connection<N>, N, NP = {}, HP = {}>({
     showMoreClassName,
 }: ConnectionNodesProps<C, N, NP, HP>): JSX.Element => {
     const nextPage = hasNextPage(connection)
-    const [isRedesignEnabled] = useRedesignToggle()
 
     const totalCount = getTotalCount(connection, first)
     const summary = (
-        <ConnectionNodesSummary
+        <ConnectionSummary
             noSummaryIfAllNodesVisible={noSummaryIfAllNodesVisible}
             totalCount={totalCount}
             totalCountSummaryComponent={totalCountSummaryComponent}
@@ -159,13 +152,11 @@ export const ConnectionNodes = <C extends Connection<N>, N, NP = {}, HP = {}>({
         <NodeComponent key={hasID(node) ? node.id : index} node={node} {...nodeComponentProps!} />
     ))
 
-    const summaryContainerClassName = classNames(summaryClassName, 'filtered-connection__summary-container')
-
     return (
         <>
-            <div className={summaryContainerClassName}>{connectionQuery && summary}</div>
+            <SummaryContainer className={summaryClassName}>{connectionQuery && summary}</SummaryContainer>
             {connection.nodes.length > 0 && (
-                <ListComponent className={classNames('filtered-connection__nodes', listClassName)} data-testid="nodes">
+                <ConnectionList as={listComponent} className={listClassName}>
                     {HeadComponent && (
                         <HeadComponent
                             nodes={connection.nodes}
@@ -173,27 +164,15 @@ export const ConnectionNodes = <C extends Connection<N>, N, NP = {}, HP = {}>({
                             {...headComponentProps!}
                         />
                     )}
-                    {ListComponent === 'table' ? <tbody>{nodes}</tbody> : nodes}
+                    {listComponent === 'table' ? <tbody>{nodes}</tbody> : nodes}
                     {FootComponent && <FootComponent nodes={connection.nodes} />}
-                </ListComponent>
+                </ConnectionList>
             )}
             {!loading && (
-                <div className={summaryContainerClassName}>
+                <SummaryContainer className={summaryClassName}>
                     {!connectionQuery && summary}
-                    {!noShowMore && nextPage && (
-                        <button
-                            type="button"
-                            className={classNames(
-                                'btn btn-sm filtered-connection__show-more',
-                                isRedesignEnabled ? 'btn-link' : 'btn-secondary',
-                                showMoreClassName
-                            )}
-                            onClick={onShowMore}
-                        >
-                            Show more
-                        </button>
-                    )}
-                </div>
+                    {!noShowMore && nextPage && <ShowMoreButton onClick={onShowMore} className={showMoreClassName} />}
+                </SummaryContainer>
             )}
         </>
     )
