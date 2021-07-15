@@ -69,8 +69,11 @@ func (h *handler) Handle(ctx context.Context, record workerutil.Record) (err err
 	// run in a clean VM.
 	logger := command.NewLogger(union(h.options.RedactedValues, job.RedactedValues))
 
+	done := make(chan struct{})
 	defer func() {
 		close(logger.EntryC)
+
+		<-done
 	}()
 
 	go func() {
@@ -83,6 +86,7 @@ func (h *handler) Handle(ctx context.Context, record workerutil.Record) (err err
 				log15.Warn("Failed to upload executor log entry for job", "id", record.RecordID(), "repositoryName", job.RepositoryName, "commit", job.Commit, "error", err)
 			}
 		}
+		close(done)
 	}()
 
 	// Create a working directory for this job which will be removed once the job completes.
