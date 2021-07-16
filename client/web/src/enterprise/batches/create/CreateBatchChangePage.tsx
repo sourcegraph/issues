@@ -3,7 +3,12 @@ import React, { useCallback, useState } from 'react'
 
 import { CodeSnippet } from '@sourcegraph/branded/src/components/CodeSnippet'
 import { Link } from '@sourcegraph/shared/src/components/Link'
-import { SettingsCascadeProps } from '@sourcegraph/shared/src/settings/settings'
+import {
+    SettingsCascadeProps,
+    SettingsOrgSubject,
+    SettingsSubject,
+    SettingsUserSubject,
+} from '@sourcegraph/shared/src/settings/settings'
 import { ThemeProps } from '@sourcegraph/shared/src/theme'
 import { isErrorLike } from '@sourcegraph/shared/src/util/errors'
 import { Container, PageHeader } from '@sourcegraph/wildcard'
@@ -18,6 +23,7 @@ import { Settings } from '../../../schema/settings.schema'
 import { MonacoSettingsEditor } from '../../../settings/MonacoSettingsEditor'
 
 import { createBatchSpecExecution } from './backend'
+import styles from './CreateBatchChangePage.module.scss'
 import combySample from './samples/comby.batch.yaml'
 import helloWorldSample from './samples/empty.batch.yaml'
 import goImportsSample from './samples/go-imports.batch.yaml'
@@ -78,20 +84,6 @@ export const CreateBatchChangePage: React.FunctionComponent<CreateBatchChangePag
             settingsCascade.final?.experimentalFeatures?.batchChangesExecution
     )
     const [selectedSample, setSelectedSample] = useState<Sample>(samples[0])
-    const [content, setContent] = useState<string>(selectedSample.file)
-    const [batchSpecExecution, setBatchSpecExecution] = useState<BatchSpecExecutionCreateFields>()
-    const [isLoading, setIsLoading] = useState<boolean | Error>(false)
-    const submitBatchSpec = useCallback<React.MouseEventHandler>(async () => {
-        setBatchSpecExecution(undefined)
-        setIsLoading(true)
-        try {
-            const exec = await createBatchSpecExecution(content)
-            setBatchSpecExecution(exec)
-            setIsLoading(false)
-        } catch (error) {
-            setIsLoading(error)
-        }
-    }, [content])
 
     return (
         <>
@@ -160,42 +152,115 @@ export const CreateBatchChangePage: React.FunctionComponent<CreateBatchChangePag
                 </p>
             </Container>
             {isBatchChangesExecutionEnabled && (
-                <>
-                    <h2>
-                        <span className="badge badge-info text-uppercase">Experimental</span> Or run your batch spec
-                        server side
-                    </h2>
-                    <Container>
-                        <MonacoSettingsEditor
-                            isLightTheme={isLightTheme}
-                            language="yaml"
-                            value={content}
-                            jsonSchema={batchSpecSchemaJSON}
-                            className="mb-3"
-                            onChange={setContent}
-                        />
-                        <button
-                            type="button"
-                            className="btn btn-primary"
-                            onClick={submitBatchSpec}
-                            disabled={isLoading === true}
-                        >
-                            Run batch spec
-                        </button>
-                        {batchSpecExecution && (
-                            <div className="mt-3 mb-0 alert alert-success">
-                                Running batch spec.{' '}
-                                <Link
-                                    to={`${batchSpecExecution.namespace.url}/batch-changes/executions/${batchSpecExecution.id}`}
-                                >
-                                    Check it out here.
-                                </Link>
-                            </div>
-                        )}
-                        {isErrorLike(isLoading) && <ErrorAlert error={isLoading} />}
-                    </Container>
-                </>
+                <CreateBatchSpecExecutionForm
+                    settingsCascade={settingsCascade}
+                    isLightTheme={isLightTheme}
+                    initialContent={selectedSample.file}
+                />
             )}
         </>
     )
 }
+
+interface CreateBatchSpecExecutionFormProps extends ThemeProps, SettingsCascadeProps<Settings> {
+    initialContent: string
+}
+
+const CreateBatchSpecExecutionForm: React.FunctionComponent<CreateBatchSpecExecutionFormProps> = ({
+    initialContent,
+    isLightTheme,
+    settingsCascade,
+}) => {
+    const namespaces: SettingsSubject[] =
+        (settingsCascade !== null &&
+            !isErrorLike(settingsCascade) &&
+            settingsCascade.subjects !== null &&
+            settingsCascade.subjects.map(({ subject }) => subject).filter(subject => !isErrorLike(subject))) ||
+        []
+    const userNamespace = namespaces.find(
+        (namespace): namespace is SettingsUserSubject => namespace.__typename === 'User'
+    )
+    const organizationNamespaces = namespaces.filter(
+        (namespace): namespace is SettingsOrgSubject => namespace.__typename === 'Org'
+    )
+
+    if (!userNamespace) {
+        throw new Error('Bye')
+    }
+
+    const [content, setContent] = useState<string>(initialContent)
+    const [batchSpecExecution, setBatchSpecExecution] = useState<BatchSpecExecutionCreateFields>()
+    const [isLoading, setIsLoading] = useState<boolean | Error>(false)
+    const [selectedNamespace, setSelectedNamespace] = useState<string>(userNamespace.id)
+    const onSelectNamespace = useCallback<React.ChangeEventHandler<HTMLSelectElement>>(event => {
+        setSelectedNamespace(event.target.value)
+    }, [])
+    const submitBatchSpec = useCallback<React.MouseEventHandler>(async () => {
+        setBatchSpecExecution(undefined)
+        setIsLoading(true)
+        try {
+            const exec = await createBatchSpecExecution(content, selectedNamespace)
+            setBatchSpecExecution(exec)
+            setIsLoading(false)
+        } catch (error) {
+            setIsLoading(error)
+        }
+    }, [content, selectedNamespace])
+
+    return (
+        <>
+            <h2>
+                <span className="badge badge-info text-uppercase">Experimental</span> Or run your batch spec server side
+            </h2>
+            <Container>
+                <div className="form-group d-flex align-items-center justify-content-end">
+                    <label className="text-nowrap mr-2 mb-0" htmlFor={NAMESPACE_SELECTOR_ID}>
+                        <strong>Select namespace:</strong>
+                    </label>
+                    <select
+                        className={classNames(styles.namespaceSelector, 'form-control')}
+                        id={NAMESPACE_SELECTOR_ID}
+                        value={selectedNamespace}
+                        onChange={onSelectNamespace}
+                    >
+                        <option value={userNamespace.id}>{userNamespace.displayName ?? userNamespace.username}</option>
+                        {organizationNamespaces.map(namespace => (
+                            <option key={namespace.id} value={namespace.id}>
+                                {namespace.displayName ?? namespace.name}
+                            </option>
+                        ))}
+                    </select>
+                </div>
+                <MonacoSettingsEditor
+                    isLightTheme={isLightTheme}
+                    language="yaml"
+                    value={content}
+                    jsonSchema={batchSpecSchemaJSON}
+                    className="mb-3"
+                    onChange={setContent}
+                />
+                <button
+                    type="button"
+                    className="btn btn-primary"
+                    onClick={submitBatchSpec}
+                    disabled={isLoading === true}
+                >
+                    Run batch spec
+                </button>
+                {batchSpecExecution && (
+                    <div className="mt-3 mb-0 alert alert-success">
+                        Running batch spec.{' '}
+                        <Link
+                            to={`${batchSpecExecution.namespace.url}/batch-changes/executions/${batchSpecExecution.id}`}
+                        >
+                            Check it out here.
+                        </Link>
+                    </div>
+                )}
+                {isErrorLike(isLoading) && <ErrorAlert error={isLoading} />}
+            </Container>
+        </>
+    )
+}
+
+const NAMESPACE_SELECTOR_ID = 'batch-spec-execution-namespace-selector'

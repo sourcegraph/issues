@@ -237,7 +237,8 @@ type MergeChangesetsArgs struct {
 }
 
 type CreateBatchSpecExecutionArgs struct {
-	Spec string
+	Spec      string
+	Namespace *graphql.ID
 }
 
 type CloseChangesetsArgs struct {
