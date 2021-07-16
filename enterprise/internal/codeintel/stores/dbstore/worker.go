@@ -87,3 +87,29 @@ var dependencyIndexingJobWorkerStoreOptions = dbworkerstore.Options{
 func WorkerutilDependencyIndexingJobStore(s basestore.ShareableStore, observationContext *observation.Context) dbworkerstore.Store {
 	return dbworkerstore.NewWithMetrics(s.Handle(), dependencyIndexingJobWorkerStoreOptions, observationContext)
 }
+
+// StalledDependencyRepoAddingJobMaxAge is the maximum allowable duration between updating
+// the state of a dependency repo adding job as "processing" and locking the job row during
+// processing. An unlocked row that is marked as processing likely indicates that the worker
+// that dequeued the job has died. There should be a nearly-zero delay between these states
+// during normal operation.
+const StalledDependencyRepoAddingJobMaxAge = time.Second * 5
+
+// DependencyRepoAddingJobMaxNumResets is the maximum number of times a dependency repo adding
+// job can be reset. If an job's failed attempts counter reaches this threshold, it will be
+// moved into "errored" rather than "queued" on its next reset.
+const DependencyRepoAddingJobMaxNumResets = 3
+
+var dependencyRepoAddingJobWorkerStoreOptions = dbworkerstore.Options{
+	Name:              "dependency_repo_adding_scheduler_worker_store",
+	TableName:         "codeintel_dependency_repo_adding_jobs j",
+	ColumnExpressions: dependencyRepoAddingJobColumns,
+	Scan:              scanFirstDependencyRepoAddingJobRecord,
+	OrderByExpression: sqlf.Sprintf("j.upload_id"),
+	StalledMaxAge:     StalledDependencyRepoAddingJobMaxAge,
+	MaxNumResets:      DependencyRepoAddingJobMaxNumResets,
+}
+
+func WorkerutilDependencyRepoAddingJobStore(s basestore.ShareableStore, observationContext *observation.Context) dbworkerstore.Store {
+	return dbworkerstore.NewWithMetrics(s.Handle(), dependencyRepoAddingJobWorkerStoreOptions, observationContext)
+}

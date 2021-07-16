@@ -7,6 +7,7 @@ import (
 	"sync"
 	"time"
 
+	dbstore "github.com/sourcegraph/sourcegraph/enterprise/internal/codeintel/stores/dbstore"
 	api "github.com/sourcegraph/sourcegraph/internal/api"
 	basestore "github.com/sourcegraph/sourcegraph/internal/database/basestore"
 	semantic "github.com/sourcegraph/sourcegraph/lib/codeintel/semantic"
@@ -26,10 +27,18 @@ type MockDBStore struct {
 	// HandleFunc is an instance of a mock function object controlling the
 	// behavior of the method Handle.
 	HandleFunc *DBStoreHandleFunc
+	// InsertCloneableDependencyReposFunc is an instance of a mock function
+	// object controlling the behavior of the method
+	// InsertCloneableDependencyRepos.
+	InsertCloneableDependencyReposFunc *DBStoreInsertCloneableDependencyReposFunc
 	// InsertDependencyIndexingJobFunc is an instance of a mock function
 	// object controlling the behavior of the method
 	// InsertDependencyIndexingJob.
 	InsertDependencyIndexingJobFunc *DBStoreInsertDependencyIndexingJobFunc
+	// InsertDependencyRepoAddingJobFunc is an instance of a mock function
+	// object controlling the behavior of the method
+	// InsertDependencyRepoAddingJob.
+	InsertDependencyRepoAddingJobFunc *DBStoreInsertDependencyRepoAddingJobFunc
 	// MarkRepositoryAsDirtyFunc is an instance of a mock function object
 	// controlling the behavior of the method MarkRepositoryAsDirty.
 	MarkRepositoryAsDirtyFunc *DBStoreMarkRepositoryAsDirtyFunc
@@ -72,7 +81,17 @@ func NewMockDBStore() *MockDBStore {
 				return nil
 			},
 		},
+		InsertCloneableDependencyReposFunc: &DBStoreInsertCloneableDependencyReposFunc{
+			defaultHook: func(context.Context, []dbstore.DependencyRepoInfo) error {
+				return nil
+			},
+		},
 		InsertDependencyIndexingJobFunc: &DBStoreInsertDependencyIndexingJobFunc{
+			defaultHook: func(context.Context, int) (int, error) {
+				return 0, nil
+			},
+		},
+		InsertDependencyRepoAddingJobFunc: &DBStoreInsertDependencyRepoAddingJobFunc{
 			defaultHook: func(context.Context, int) (int, error) {
 				return 0, nil
 			},
@@ -128,8 +147,14 @@ func NewMockDBStoreFrom(i DBStore) *MockDBStore {
 		HandleFunc: &DBStoreHandleFunc{
 			defaultHook: i.Handle,
 		},
+		InsertCloneableDependencyReposFunc: &DBStoreInsertCloneableDependencyReposFunc{
+			defaultHook: i.InsertCloneableDependencyRepos,
+		},
 		InsertDependencyIndexingJobFunc: &DBStoreInsertDependencyIndexingJobFunc{
 			defaultHook: i.InsertDependencyIndexingJob,
+		},
+		InsertDependencyRepoAddingJobFunc: &DBStoreInsertDependencyRepoAddingJobFunc{
+			defaultHook: i.InsertDependencyRepoAddingJob,
 		},
 		MarkRepositoryAsDirtyFunc: &DBStoreMarkRepositoryAsDirtyFunc{
 			defaultHook: i.MarkRepositoryAsDirty,
@@ -473,6 +498,116 @@ func (c DBStoreHandleFuncCall) Results() []interface{} {
 	return []interface{}{c.Result0}
 }
 
+// DBStoreInsertCloneableDependencyReposFunc describes the behavior when the
+// InsertCloneableDependencyRepos method of the parent MockDBStore instance
+// is invoked.
+type DBStoreInsertCloneableDependencyReposFunc struct {
+	defaultHook func(context.Context, []dbstore.DependencyRepoInfo) error
+	hooks       []func(context.Context, []dbstore.DependencyRepoInfo) error
+	history     []DBStoreInsertCloneableDependencyReposFuncCall
+	mutex       sync.Mutex
+}
+
+// InsertCloneableDependencyRepos delegates to the next hook function in the
+// queue and stores the parameter and result values of this invocation.
+func (m *MockDBStore) InsertCloneableDependencyRepos(v0 context.Context, v1 []dbstore.DependencyRepoInfo) error {
+	r0 := m.InsertCloneableDependencyReposFunc.nextHook()(v0, v1)
+	m.InsertCloneableDependencyReposFunc.appendCall(DBStoreInsertCloneableDependencyReposFuncCall{v0, v1, r0})
+	return r0
+}
+
+// SetDefaultHook sets function that is called when the
+// InsertCloneableDependencyRepos method of the parent MockDBStore instance
+// is invoked and the hook queue is empty.
+func (f *DBStoreInsertCloneableDependencyReposFunc) SetDefaultHook(hook func(context.Context, []dbstore.DependencyRepoInfo) error) {
+	f.defaultHook = hook
+}
+
+// PushHook adds a function to the end of hook queue. Each invocation of the
+// InsertCloneableDependencyRepos method of the parent MockDBStore instance
+// invokes the hook at the front of the queue and discards it. After the
+// queue is empty, the default hook function is invoked for any future
+// action.
+func (f *DBStoreInsertCloneableDependencyReposFunc) PushHook(hook func(context.Context, []dbstore.DependencyRepoInfo) error) {
+	f.mutex.Lock()
+	f.hooks = append(f.hooks, hook)
+	f.mutex.Unlock()
+}
+
+// SetDefaultReturn calls SetDefaultDefaultHook with a function that returns
+// the given values.
+func (f *DBStoreInsertCloneableDependencyReposFunc) SetDefaultReturn(r0 error) {
+	f.SetDefaultHook(func(context.Context, []dbstore.DependencyRepoInfo) error {
+		return r0
+	})
+}
+
+// PushReturn calls PushDefaultHook with a function that returns the given
+// values.
+func (f *DBStoreInsertCloneableDependencyReposFunc) PushReturn(r0 error) {
+	f.PushHook(func(context.Context, []dbstore.DependencyRepoInfo) error {
+		return r0
+	})
+}
+
+func (f *DBStoreInsertCloneableDependencyReposFunc) nextHook() func(context.Context, []dbstore.DependencyRepoInfo) error {
+	f.mutex.Lock()
+	defer f.mutex.Unlock()
+
+	if len(f.hooks) == 0 {
+		return f.defaultHook
+	}
+
+	hook := f.hooks[0]
+	f.hooks = f.hooks[1:]
+	return hook
+}
+
+func (f *DBStoreInsertCloneableDependencyReposFunc) appendCall(r0 DBStoreInsertCloneableDependencyReposFuncCall) {
+	f.mutex.Lock()
+	f.history = append(f.history, r0)
+	f.mutex.Unlock()
+}
+
+// History returns a sequence of
+// DBStoreInsertCloneableDependencyReposFuncCall objects describing the
+// invocations of this function.
+func (f *DBStoreInsertCloneableDependencyReposFunc) History() []DBStoreInsertCloneableDependencyReposFuncCall {
+	f.mutex.Lock()
+	history := make([]DBStoreInsertCloneableDependencyReposFuncCall, len(f.history))
+	copy(history, f.history)
+	f.mutex.Unlock()
+
+	return history
+}
+
+// DBStoreInsertCloneableDependencyReposFuncCall is an object that describes
+// an invocation of method InsertCloneableDependencyRepos on an instance of
+// MockDBStore.
+type DBStoreInsertCloneableDependencyReposFuncCall struct {
+	// Arg0 is the value of the 1st argument passed to this method
+	// invocation.
+	Arg0 context.Context
+	// Arg1 is the value of the 2nd argument passed to this method
+	// invocation.
+	Arg1 []dbstore.DependencyRepoInfo
+	// Result0 is the value of the 1st result returned from this method
+	// invocation.
+	Result0 error
+}
+
+// Args returns an interface slice containing the arguments of this
+// invocation.
+func (c DBStoreInsertCloneableDependencyReposFuncCall) Args() []interface{} {
+	return []interface{}{c.Arg0, c.Arg1}
+}
+
+// Results returns an interface slice containing the results of this
+// invocation.
+func (c DBStoreInsertCloneableDependencyReposFuncCall) Results() []interface{} {
+	return []interface{}{c.Result0}
+}
+
 // DBStoreInsertDependencyIndexingJobFunc describes the behavior when the
 // InsertDependencyIndexingJob method of the parent MockDBStore instance is
 // invoked.
@@ -582,6 +717,119 @@ func (c DBStoreInsertDependencyIndexingJobFuncCall) Args() []interface{} {
 // Results returns an interface slice containing the results of this
 // invocation.
 func (c DBStoreInsertDependencyIndexingJobFuncCall) Results() []interface{} {
+	return []interface{}{c.Result0, c.Result1}
+}
+
+// DBStoreInsertDependencyRepoAddingJobFunc describes the behavior when the
+// InsertDependencyRepoAddingJob method of the parent MockDBStore instance
+// is invoked.
+type DBStoreInsertDependencyRepoAddingJobFunc struct {
+	defaultHook func(context.Context, int) (int, error)
+	hooks       []func(context.Context, int) (int, error)
+	history     []DBStoreInsertDependencyRepoAddingJobFuncCall
+	mutex       sync.Mutex
+}
+
+// InsertDependencyRepoAddingJob delegates to the next hook function in the
+// queue and stores the parameter and result values of this invocation.
+func (m *MockDBStore) InsertDependencyRepoAddingJob(v0 context.Context, v1 int) (int, error) {
+	r0, r1 := m.InsertDependencyRepoAddingJobFunc.nextHook()(v0, v1)
+	m.InsertDependencyRepoAddingJobFunc.appendCall(DBStoreInsertDependencyRepoAddingJobFuncCall{v0, v1, r0, r1})
+	return r0, r1
+}
+
+// SetDefaultHook sets function that is called when the
+// InsertDependencyRepoAddingJob method of the parent MockDBStore instance
+// is invoked and the hook queue is empty.
+func (f *DBStoreInsertDependencyRepoAddingJobFunc) SetDefaultHook(hook func(context.Context, int) (int, error)) {
+	f.defaultHook = hook
+}
+
+// PushHook adds a function to the end of hook queue. Each invocation of the
+// InsertDependencyRepoAddingJob method of the parent MockDBStore instance
+// invokes the hook at the front of the queue and discards it. After the
+// queue is empty, the default hook function is invoked for any future
+// action.
+func (f *DBStoreInsertDependencyRepoAddingJobFunc) PushHook(hook func(context.Context, int) (int, error)) {
+	f.mutex.Lock()
+	f.hooks = append(f.hooks, hook)
+	f.mutex.Unlock()
+}
+
+// SetDefaultReturn calls SetDefaultDefaultHook with a function that returns
+// the given values.
+func (f *DBStoreInsertDependencyRepoAddingJobFunc) SetDefaultReturn(r0 int, r1 error) {
+	f.SetDefaultHook(func(context.Context, int) (int, error) {
+		return r0, r1
+	})
+}
+
+// PushReturn calls PushDefaultHook with a function that returns the given
+// values.
+func (f *DBStoreInsertDependencyRepoAddingJobFunc) PushReturn(r0 int, r1 error) {
+	f.PushHook(func(context.Context, int) (int, error) {
+		return r0, r1
+	})
+}
+
+func (f *DBStoreInsertDependencyRepoAddingJobFunc) nextHook() func(context.Context, int) (int, error) {
+	f.mutex.Lock()
+	defer f.mutex.Unlock()
+
+	if len(f.hooks) == 0 {
+		return f.defaultHook
+	}
+
+	hook := f.hooks[0]
+	f.hooks = f.hooks[1:]
+	return hook
+}
+
+func (f *DBStoreInsertDependencyRepoAddingJobFunc) appendCall(r0 DBStoreInsertDependencyRepoAddingJobFuncCall) {
+	f.mutex.Lock()
+	f.history = append(f.history, r0)
+	f.mutex.Unlock()
+}
+
+// History returns a sequence of
+// DBStoreInsertDependencyRepoAddingJobFuncCall objects describing the
+// invocations of this function.
+func (f *DBStoreInsertDependencyRepoAddingJobFunc) History() []DBStoreInsertDependencyRepoAddingJobFuncCall {
+	f.mutex.Lock()
+	history := make([]DBStoreInsertDependencyRepoAddingJobFuncCall, len(f.history))
+	copy(history, f.history)
+	f.mutex.Unlock()
+
+	return history
+}
+
+// DBStoreInsertDependencyRepoAddingJobFuncCall is an object that describes
+// an invocation of method InsertDependencyRepoAddingJob on an instance of
+// MockDBStore.
+type DBStoreInsertDependencyRepoAddingJobFuncCall struct {
+	// Arg0 is the value of the 1st argument passed to this method
+	// invocation.
+	Arg0 context.Context
+	// Arg1 is the value of the 2nd argument passed to this method
+	// invocation.
+	Arg1 int
+	// Result0 is the value of the 1st result returned from this method
+	// invocation.
+	Result0 int
+	// Result1 is the value of the 2nd result returned from this method
+	// invocation.
+	Result1 error
+}
+
+// Args returns an interface slice containing the arguments of this
+// invocation.
+func (c DBStoreInsertDependencyRepoAddingJobFuncCall) Args() []interface{} {
+	return []interface{}{c.Arg0, c.Arg1}
+}
+
+// Results returns an interface slice containing the results of this
+// invocation.
+func (c DBStoreInsertDependencyRepoAddingJobFuncCall) Results() []interface{} {
 	return []interface{}{c.Result0, c.Result1}
 }
 
