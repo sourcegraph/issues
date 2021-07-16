@@ -163,7 +163,7 @@ func Main(enterpriseInit EnterpriseInit) {
 		m := repos.NewSourceMetrics()
 		m.MustRegister(prometheus.DefaultRegisterer)
 
-		src = repos.NewSourcer(cf, repos.ObservedSource(log15.Root(), m))
+		src = repos.NewSourcer(cf, store, repos.ObservedSource(log15.Root(), m))
 	}
 
 	scheduler := repos.NewUpdateScheduler()
@@ -222,7 +222,7 @@ func Main(enterpriseInit EnterpriseInit) {
 					server.GitLabDotComSource, err = repos.NewGitLabSource(e, cf)
 				}
 			case *schema.JVMPackagesConnection:
-				server.JVMPackagesSource, err = repos.NewJVMPackagesSource(e)
+				server.JVMPackagesSource, err = repos.NewJVMPackagesSource(e, store)
 			}
 
 			if err != nil {

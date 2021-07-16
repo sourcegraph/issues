@@ -26,7 +26,7 @@ type Sourcer func(...*types.ExternalService) (Sources, error)
 // Deleted external services are ignored.
 //
 // The provided decorator functions will be applied to each Source.
-func NewSourcer(cf *httpcli.Factory, decs ...func(Source) Source) Sourcer {
+func NewSourcer(cf *httpcli.Factory, db *Store, decs ...func(Source) Source) Sourcer {
 	return func(svcs ...*types.ExternalService) (Sources, error) {
 		srcs := make([]Source, 0, len(svcs))
 		var errs *multierror.Error
@@ -36,7 +36,7 @@ func NewSourcer(cf *httpcli.Factory, decs ...func(Source) Source) Sourcer {
 				continue
 			}
 
-			src, err := NewSource(svc, cf)
+			src, err := NewSource(svc, cf, db)
 			if err != nil {
 				errs = multierror.Append(errs, &SourceError{Err: err, ExtSvc: svc})
 				continue
@@ -54,7 +54,7 @@ func NewSourcer(cf *httpcli.Factory, decs ...func(Source) Source) Sourcer {
 }
 
 // NewSource returns a repository yielding Source from the given ExternalService configuration.
-func NewSource(svc *types.ExternalService, cf *httpcli.Factory) (Source, error) {
+func NewSource(svc *types.ExternalService, cf *httpcli.Factory, db *Store) (Source, error) {
 	switch strings.ToUpper(svc.Kind) {
 	case extsvc.KindGitHub:
 		return NewGithubSource(svc, cf)
@@ -73,7 +73,7 @@ func NewSource(svc *types.ExternalService, cf *httpcli.Factory) (Source, error) 
 	case extsvc.KindPerforce:
 		return NewPerforceSource(svc)
 	case extsvc.KindJVMPackages:
-		return NewJVMPackagesSource(svc)
+		return NewJVMPackagesSource(svc, db)
 	case extsvc.KindOther:
 		return NewOtherSource(svc, cf)
 	default:

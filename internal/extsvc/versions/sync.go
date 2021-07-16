@@ -20,11 +20,13 @@ import (
 
 const syncInterval = 24 * time.Hour
 
-func NewSyncingJob() shared.Job {
+func NewSyncingJob(db *repos.Store) shared.Job {
 	return &syncingJob{}
 }
 
-type syncingJob struct{}
+type syncingJob struct {
+	db *repos.Store
+}
 
 func (j *syncingJob) Config() []env.Config {
 	return []env.Config{}
@@ -42,7 +44,7 @@ func (j *syncingJob) Routines(_ context.Context) ([]goroutine.BackgroundRoutine,
 	}
 
 	cf := httpcli.NewExternalHTTPClientFactory()
-	sourcer := repos.NewSourcer(cf)
+	sourcer := repos.NewSourcer(cf, j.db)
 
 	handler := goroutine.NewHandlerWithErrorMessage("sync versions of external services", func(ctx context.Context) error {
 		versions, err := loadVersions(ctx, db, sourcer)

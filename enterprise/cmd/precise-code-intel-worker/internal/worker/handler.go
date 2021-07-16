@@ -37,9 +37,11 @@ type handler struct {
 	budgetRemaining int64
 }
 
-var _ workerutil.Handler = &handler{}
-var _ workerutil.WithPreDequeue = &handler{}
-var _ workerutil.WithHooks = &handler{}
+var (
+	_ dbworker.Handler          = &handler{}
+	_ workerutil.WithPreDequeue = &handler{}
+	_ workerutil.WithHooks      = &handler{}
+)
 
 func (h *handler) Handle(ctx context.Context, record workerutil.Record) error {
 	_, err := h.handle(ctx, record.(store.Upload))
@@ -146,6 +148,13 @@ func (h *handler) handle(ctx context.Context, upload store.Upload) (requeued boo
 			// will fail as these values form a unique constraint.
 			if err := tx.DeleteOverlappingDumps(ctx, upload.RepositoryID, upload.Commit, upload.Root, upload.Indexer); err != nil {
 				return errors.Wrap(err, "store.DeleteOverlappingDumps")
+			}
+
+			// Insert a companion record to this upload that will asynchronously trigger another worker to
+			// insert new external service repos based on the monikers written into the lsif_references table
+			// attached by this index processing job.
+			if _, err := tx.InsertDependencyRepoAddingJob(ctx, upload.ID); err != nil {
+				return errors.Wrap(err, "store.InsertDependencyRepoAddingJob")
 			}
 
 			// Insert a companion record to this upload that will asynchronously trigger another worker to

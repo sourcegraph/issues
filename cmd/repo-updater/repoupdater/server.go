@@ -211,7 +211,7 @@ func (s *Server) handleExternalServiceSync(w http.ResponseWriter, r *http.Reques
 		Kind:        req.ExternalService.Kind,
 		DisplayName: req.ExternalService.DisplayName,
 		Config:      req.ExternalService.Config,
-	}, httpcli.NewExternalHTTPClientFactory())
+	}, httpcli.NewExternalHTTPClientFactory(), s.Store)
 	if err != nil {
 		log15.Error("server.external-service-sync", "kind", req.ExternalService.Kind, "error", err)
 		return

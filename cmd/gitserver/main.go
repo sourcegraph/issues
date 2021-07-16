@@ -3,6 +3,7 @@ package main // import "github.com/sourcegraph/sourcegraph/cmd/gitserver"
 
 import (
 	"context"
+	"database/sql"
 	"log"
 	"net"
 	"net/http"
@@ -14,6 +15,7 @@ import (
 	"github.com/cockroachdb/errors"
 	"github.com/inconshreveable/log15"
 	jsoniter "github.com/json-iterator/go"
+	"github.com/prometheus/client_golang/prometheus"
 
 	"github.com/sourcegraph/sourcegraph/cmd/gitserver/server"
 	"github.com/sourcegraph/sourcegraph/internal/api"
@@ -77,6 +79,12 @@ func main() {
 		log.Fatalf("failed to initialize database stores: %v", err)
 	}
 	repoStore := database.Repos(db)
+	store := repos.NewStore(db, sql.TxOptions{Isolation: sql.LevelDefault})
+	{
+		m := repos.NewStoreMetrics()
+		m.MustRegister(prometheus.DefaultRegisterer)
+		store.Metrics = m
+	}
 	externalServiceStore := database.ExternalServices(db)
 
 	err = keyring.Init(ctx)
@@ -154,7 +162,7 @@ func main() {
 					break
 				}
 
-				return &server.JVMPackagesSyncer{Config: &c}, nil
+				return &server.JVMPackagesSyncer{Config: &c, DBStore: store}, nil
 			}
 			return &server.GitRepoSyncer{}, nil
 		},

@@ -55,7 +55,7 @@ func TestNewSourcer(t *testing.T) {
 		t.Helper()
 
 		for _, e := range es {
-			src, err := NewSource(e, nil)
+			src, err := NewSource(e, nil, nil)
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -81,7 +81,7 @@ func TestNewSourcer(t *testing.T) {
 		tc := tc
 
 		t.Run(tc.name, func(t *testing.T) {
-			srcs, err := NewSourcer(nil)(tc.svcs...)
+			srcs, err := NewSourcer(nil, nil)(tc.svcs...)
 			if have, want := fmt.Sprint(err), tc.err; have != want {
 				t.Errorf("error:\nhave: %q\nwant: %q", have, want)
 			}
@@ -686,7 +686,7 @@ func TestSources_ListRepos(t *testing.T) {
 				lg.SetHandler(log15.DiscardHandler())
 
 				obs := ObservedSource(lg, NewSourceMetrics())
-				srcs, err := NewSourcer(cf, obs)(svc)
+				srcs, err := NewSourcer(cf, nil, obs)(svc)
 				if err != nil {
 					t.Fatal(err)
 				}
