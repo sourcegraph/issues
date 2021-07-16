@@ -586,9 +586,6 @@ func (r *searchResolver) toTextParameters(q query.Q) (*search.TextParameters, er
 		SearcherURLs: r.searcherURLs,
 		RepoPromise:  &search.RepoPromise{},
 	}
-	if err := args.PatternInfo.Validate(); err != nil {
-		return nil, &badRequestError{err}
-	}
 	args = withResultTypes(args, forceResultTypes)
 	args = withMode(args, r.PatternType, r.VersionContext)
 	return &args, nil

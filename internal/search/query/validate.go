@@ -209,6 +209,9 @@ func validateField(field, value string, negated bool, seen map[string]struct{}) 
 		if _, err := regexp.Compile(value); err != nil {
 			return err
 		}
+		if _, err := syntax.Parse(value, syntax.Perl); err != nil {
+			return err
+		}
 		return nil
 	}
 

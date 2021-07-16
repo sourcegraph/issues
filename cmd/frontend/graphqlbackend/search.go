@@ -319,9 +319,6 @@ func (r *searchResolver) suggestFilePaths(ctx context.Context, limit int) ([]Sea
 		Zoekt:           r.zoekt,
 		SearcherURLs:    r.searcherURLs,
 	}
-	if err := args.PatternInfo.Validate(); err != nil {
-		return nil, err
-	}
 
 	repoOptions := r.toRepoOptions(args.Query, resolveRepositoriesOpts{})
 	resolved, err := r.resolveRepositories(ctx, repoOptions)
