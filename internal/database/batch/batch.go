@@ -23,6 +23,7 @@ type Inserter struct {
 	batch            []interface{}
 	queryPrefix      string
 	querySuffix      string
+	queryOnConflict  string
 	returningSuffix  string
 	returningScanner ReturningScanner
 }
@@ -138,6 +139,36 @@ func NewInserterWithReturn(
 	}
 }
 
+// NewInserterWithReturn creates a new batch inserter using the given database handle, table
+// name, insert column names, and column names to scan on each inserted row. The given scanner
+// will be called once for each row inserted into the target table. Beware that this function
+// may not be called immediately after a call to Insert as rows are only flushed once the
+// current batch is full (or on explicit flush). For performance and atomicity, handle should
+// be a transaction.
+func NewInserterWithOnConflict(
+	ctx context.Context,
+	db dbutil.DB,
+	tableName string,
+	columnNames []string,
+	onConflictAction string,
+) *Inserter {
+	numColumns := len(columnNames)
+	maxBatchSize := getMaxBatchSize(numColumns)
+	queryPrefix := makeQueryPrefix(tableName, columnNames)
+	queryOnConflict := makeOnConflict(onConflictAction)
+	querySuffix := makeQuerySuffix(numColumns)
+
+	return &Inserter{
+		db:              db,
+		numColumns:      numColumns,
+		maxBatchSize:    maxBatchSize,
+		batch:           make([]interface{}, 0, maxBatchSize),
+		queryPrefix:     queryPrefix,
+		querySuffix:     querySuffix,
+		queryOnConflict: queryOnConflict,
+	}
+}
+
 // Insert submits a single row of values to be inserted on the next flush.
 func (i *Inserter) Insert(ctx context.Context, values ...interface{}) error {
 	if len(values) != i.numColumns {
@@ -207,7 +238,7 @@ func (i *Inserter) makeQuery(numValues int) string {
 	suffixLength := numTuples*sizeOfTuple + numTuples - 1
 
 	// Construct the query
-	return i.queryPrefix + i.querySuffix[:suffixLength] + i.returningSuffix
+	return i.queryPrefix + i.querySuffix[:suffixLength] + i.queryOnConflict + i.returningSuffix
 }
 
 // maxNumPostgresParameters is the maximum number of placeholder variables allowed by Postgres
@@ -231,8 +262,10 @@ func makeQueryPrefix(tableName string, columnNames []string) string {
 	return fmt.Sprintf(`INSERT INTO "%s" (%s) VALUES `, tableName, strings.Join(quotedColumnNames, ","))
 }
 
-var querySuffixCache = map[int]string{}
-var querySuffixCacheMutex sync.Mutex
+var (
+	querySuffixCache      = map[int]string{}
+	querySuffixCacheMutex sync.Mutex
+)
 
 // makeQuerySuffix creates the suffix of the batch insert statement containing the placeholder
 // variables, e.g. `($1,$2,$3),($4,$5,$6),...`. The number of rows will be the maximum number of
@@ -270,6 +303,14 @@ func makeQuerySuffix(numColumns int) string {
 	querySuffix := string(qs[2:])
 	querySuffixCache[numColumns] = querySuffix
 	return querySuffix
+}
+
+func makeOnConflict(action string) string {
+	if action == "" {
+		return ""
+	}
+
+	return "ON CONFLICT " + action
 }
 
 // makeReturningSuffix creates a RETURNING ... clause of the batch insert statement, if any
