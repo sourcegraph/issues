@@ -2,6 +2,7 @@ package query
 
 import (
 	"regexp"
+	"regexp/syntax"
 	"strconv"
 	"strings"
 	"time"
@@ -505,7 +506,12 @@ func validatePattern(nodes []Node) error {
 			return
 		}
 		if annotation.Labels.IsSet(Regexp) {
-			_, err = regexp.Compile(value)
+			if _, compileErr := regexp.Compile(value); compileErr != nil {
+				err = compileErr
+			}
+			if _, parseErr := syntax.Parse(value, syntax.Perl); parseErr != nil {
+				err = parseErr
+			}
 		}
 		if annotation.Labels.IsSet(Structural) && negated {
 			err = errors.New("the query contains a negated search pattern. Structural search does not support negated search patterns at the moment")

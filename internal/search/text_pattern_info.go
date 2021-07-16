@@ -10,12 +10,6 @@ func (p *TextPatternInfo) IsEmpty() bool {
 }
 
 func (p *TextPatternInfo) Validate() error {
-	if p.IsRegExp {
-		if _, err := syntax.Parse(p.Pattern, syntax.Perl); err != nil {
-			return err
-		}
-	}
-
 	if p.ExcludePattern != "" {
 		if _, err := syntax.Parse(p.ExcludePattern, syntax.Perl); err != nil {
 			return err
