@@ -25,6 +25,8 @@ type DBStore interface {
 	MarkRepositoryAsDirty(ctx context.Context, repositoryID int) error
 	DeleteOverlappingDumps(ctx context.Context, repositoryID int, commit, root, indexer string) error
 	InsertDependencyIndexingJob(ctx context.Context, uploadID int) (int, error)
+	InsertDependencyRepoAddingJob(ctx context.Context, uploadID int) (int, error)
+	InsertCloneableDependencyRepos(ctx context.Context, dependencies []dbstore.DependencyRepoInfo) error
 	UpdateCommitedAt(ctx context.Context, dumpID int, committedAt time.Time) error
 }
 

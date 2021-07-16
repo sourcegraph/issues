@@ -118,7 +118,7 @@ func GrantedScopes(ctx context.Context, cache ScopeCache, svc *types.ExternalSer
 	if svc.NamespaceUserID == 0 || (svc.Kind != extsvc.KindGitHub && svc.Kind != extsvc.KindGitLab) {
 		return nil, nil
 	}
-	src, err := NewSource(svc, nil)
+	src, err := NewSource(svc, nil, nil)
 	if err != nil {
 		return nil, errors.Wrap(err, "creating source")
 	}
