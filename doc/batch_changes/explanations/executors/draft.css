@@ -1,0 +1,49 @@
+body {
+    background-image: url(grid.png);
+}
+
+#draft {
+    position: fixed;
+    top: 0;
+    right: 0;
+    width: 15em;
+    height: 15em;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+body.theme-light #draft span {
+    background: #FF5543;
+    box-shadow: 0 0.2em 0.1em rgba(0, 0, 0, 0.1), 0 -0.1em 0.1em rgba(0, 0, 0, 0.1);
+}
+
+body.theme-dark #draft span {
+    background: #A112FF;
+    box-shadow: 0 0.2em 0.1em rgba(255, 255, 255, 0.1), 0 -0.1em 0.1em rgba(255, 255, 255, 0.1);
+}
+
+#draft span {
+    display: block;
+    text-align: center;
+    padding: 0.5em 0;
+    /* 3.873em is sqrt(15em), but calc() doesn't support sqrt() widely enough yet. */
+    transform: translate(3.873em, -3.873em) rotate(45deg);
+}
+
+body.theme-light > #sidebar {
+    background: #f1f6fe;
+}
+
+body.theme-light #index, body.theme-light main img {
+    background: #fcfcff;
+}
+
+body.theme-dark > #sidebar {
+    background: #112239;
+}
+
+body.theme-dark #index, body.theme-dark main img {
+    background: #000018;
+}

@@ -17,3 +17,109 @@
         }
     }
 }
+
+.batch-change-job-list {
+    display: grid;
+    grid-template-columns: [chevron] min-content [state] min-content [details] minmax(auto, 1fr) [progress] min-content [end];
+    row-gap: 1rem;
+    column-gap: 1.5rem;
+    align-items: center;
+}
+
+.batch-change-job {
+    &__chevron {
+        grid-column: chevron / state;
+    }
+
+    &__state {
+        grid-column: state / details;
+        text-align: center;
+    }
+
+    &__details {
+        grid-column: details / progress;
+    }
+
+    &__progress {
+        grid-column: progress / end;
+
+        &__label {
+            float: right;
+        }
+
+        &__bar {
+            display: flex;
+            background-color: silver;
+            height: 0.5em;
+            width: 10em;
+
+            &__complete {
+                background-color: #a112ff;
+            }
+
+            &__failed {
+                background-color: #ff5543;
+            }
+
+            &__executing {
+                background-color: #00cbec;
+            }
+
+            &__pending {
+                background-color: transparent;
+            }
+        }
+    }
+
+    &__failed {
+        grid-column: chevron / end;
+        background-color: var(--body-bg);
+
+        display: grid;
+        grid-template-columns: [workspace] minmax(auto, 1fr) [progress] min-content [actions] max-content [end];
+        row-gap: 1rem;
+        column-gap: 1.5rem;
+        align-items: center;
+
+        &__workspace {
+            grid-column: workspace / progress;
+        }
+
+        &__progress {
+            grid-column: progress / actions;
+
+            &__label {
+                float: right;
+            }
+
+            &__bar {
+                display: flex;
+                background-color: silver;
+                height: 0.5em;
+                width: 10em;
+
+                &__complete {
+                    background-color: #a112ff;
+                }
+
+                &__incomplete {
+                    background-color: transparent;
+                }
+            }
+        }
+
+        &__actions {
+            grid-column: actions / end;
+        }
+    }
+
+    &__separator {
+        // Make it full width in the current row.
+        grid-column: chevron / end;
+        border-top: 1px solid var(--border-color-2);
+        @media (--xs-breakpoint-down) {
+            margin-top: 1rem;
+            padding-bottom: 1rem;
+        }
+    }
+}

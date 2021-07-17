@@ -1,4 +1,6 @@
 import classNames from 'classnames'
+import ChevronDownIcon from 'mdi-react/ChevronDownIcon'
+import ChevronRightIcon from 'mdi-react/ChevronRightIcon'
 import PlusIcon from 'mdi-react/PlusIcon'
 import React, { useEffect, useCallback, useState, useMemo } from 'react'
 import { RouteComponentProps } from 'react-router'
@@ -7,6 +9,7 @@ import { filter, map, tap, withLatestFrom } from 'rxjs/operators'
 
 import { Link } from '@sourcegraph/shared/src/components/Link'
 import { TelemetryProps } from '@sourcegraph/shared/src/telemetry/telemetryService'
+import { pluralize } from '@sourcegraph/shared/src/util/strings'
 import { useObservable } from '@sourcegraph/shared/src/util/useObservable'
 import { Container, PageHeader } from '@sourcegraph/wildcard'
 
@@ -70,7 +73,7 @@ const FILTERS: FilteredConnectionFilter[] = [
     },
 ]
 
-type SelectedTab = 'batchChanges' | 'gettingStarted'
+type SelectedTab = 'batchChanges' | 'pendingSpecs' | 'gettingStarted'
 
 /**
  * A list of all batch changes on the Sourcegraph instance.
@@ -134,6 +137,7 @@ export const BatchChangeListPage: React.FunctionComponent<BatchChangeListPagePro
             <BatchChangesListIntro licensed={licensed} />
             <BatchChangeListTabHeader selectedTab={selectedTab} setSelectedTab={setSelectedTab} />
             {selectedTab === 'gettingStarted' && <BatchChangesListEmpty />}
+            {selectedTab === 'pendingSpecs' && <BatchChangesPending />}
             {selectedTab === 'batchChanges' && (
                 <Container className="mb-4">
                     <FilteredConnection<ListBatchChange, Omit<BatchChangeNodeProps, 'node'>>
@@ -216,6 +220,13 @@ const BatchChangeListTabHeader: React.FunctionComponent<{
         },
         [setSelectedTab]
     )
+    const onSelectPendingSpecs = useCallback<React.MouseEventHandler>(
+        event => {
+            event.preventDefault()
+            setSelectedTab('pendingSpecs')
+        },
+        [setSelectedTab]
+    )
     const onSelectGettingStarted = useCallback<React.MouseEventHandler>(
         event => {
             event.preventDefault()
@@ -243,6 +254,19 @@ const BatchChangeListTabHeader: React.FunctionComponent<{
                     {/* eslint-disable-next-line jsx-a11y/anchor-is-valid */}
                     <a
                         href=""
+                        onClick={onSelectPendingSpecs}
+                        className={classNames('nav-link', selectedTab === 'pendingSpecs' && 'active')}
+                        role="button"
+                    >
+                        <span className="text-content" data-tab-content="Executed batch specs">
+                            Executed batch specs
+                        </span>
+                    </a>
+                </li>
+                <li className="nav-item">
+                    {/* eslint-disable-next-line jsx-a11y/anchor-is-valid */}
+                    <a
+                        href=""
                         onClick={onSelectGettingStarted}
                         className={classNames('nav-link', selectedTab === 'gettingStarted' && 'active')}
                         role="button"
@@ -254,5 +278,167 @@ const BatchChangeListTabHeader: React.FunctionComponent<{
                 </li>
             </ul>
         </div>
+    )
+}
+
+const BatchChangesPending: React.FunctionComponent = () => (
+    <Container className="mb-4">
+        <div className={styles.batchChangeJobList}>
+            <BatchChangesJob
+                state="complete"
+                title="old-batch-change"
+                when="1 day ago"
+                progress={{ complete: 20, failed: 0, executing: 0, queued: 0 }}
+            />
+            <BatchChangesJob
+                state="failed"
+                title="errored-batch-change"
+                when="1 hour ago"
+                progress={{ complete: 12, failed: 3, executing: 0, queued: 0 }}
+                failed={[
+                    { workspace: 'github.com/sourcegraph/sourcegraph (client/web)', steps: { complete: 3, total: 5 } },
+                    {
+                        workspace: 'github.com/sourcegraph/sourcegraph (enterprise/batches)',
+                        steps: { complete: 3, total: 5 },
+                    },
+                    { workspace: 'github.com/sourcegraph/src-cli', steps: { complete: 2, total: 5 } },
+                ]}
+            />{' '}
+            <BatchChangesJob
+                state="active"
+                title="active-batch-change"
+                when="10 minutes ago"
+                progress={{ complete: 10, failed: 0, executing: 5, queued: 5 }}
+            />{' '}
+            <BatchChangesJob
+                state="active"
+                title="pending-batch-change"
+                when="1 minute ago"
+                progress={{ complete: 0, failed: 0, executing: 0, queued: 10 }}
+            />
+        </div>
+    </Container>
+)
+
+interface BatchChangesJobProps {
+    state: 'complete' | 'active' | 'failed'
+    title: string
+    when: string
+    progress: {
+        complete: number
+        failed: number
+        executing: number
+        queued: number
+    }
+    failed?: {
+        workspace: string
+        steps: {
+            complete: number
+            total: number
+        }
+    }[]
+}
+
+const BatchChangesJob: React.FunctionComponent<BatchChangesJobProps> = ({ state, title, when, progress, failed }) => {
+    const total = progress.complete + progress.failed + progress.executing + progress.queued
+    const [isExpanded, setIsExpanded] = useState<boolean>(false)
+    const toggleIsExpanded = useCallback<React.MouseEventHandler<HTMLButtonElement>>(
+        event => {
+            event.preventDefault()
+            setIsExpanded(!isExpanded)
+        },
+        [isExpanded]
+    )
+
+    return (
+        <>
+            <div className={styles.batchChangeJobSeparator} />
+            <button
+                type="button"
+                className={classNames(styles.batchChangeJobChevron, 'btn btn-icon d-none d-sm-block')}
+                aria-label={isExpanded ? 'Collapse section' : 'Expand section'}
+                onClick={toggleIsExpanded}
+            >
+                {isExpanded ? (
+                    <ChevronDownIcon className="icon-inline" aria-label="Close section" />
+                ) : (
+                    <ChevronRightIcon className="icon-inline" aria-label="Expand section" />
+                )}
+            </button>{' '}
+            <div className={styles.batchChangeJobState}>
+                {state === 'complete' && (
+                    <span className={classNames('badge badge-success text-uppercase')}>Complete</span>
+                )}
+                {state === 'active' && <span className={classNames('badge badge-warning text-uppercase')}>Active</span>}
+                {state === 'failed' && (
+                    <span className={classNames('badge badge-danger text-uppercase')}>Failed</span>
+                )}{' '}
+            </div>
+            <div className={styles.batchChangeJobDetails}>
+                <a href="#">
+                    <h3 className="m-0">{title}</h3>
+                </a>
+                <small className="text-muted d-sm-block">submitted {when}</small>
+            </div>
+            <div className={styles.batchChangeJobProgress}>
+                <small
+                    className={classNames(styles.batchChangeJobProgressLabel, 'text-muted')}
+                >{`${progress.complete}/${total} complete`}</small>
+                <div className={styles.batchChangeJobProgressBar}>
+                    <div
+                        data-tooltip={`${progress.complete} complete`}
+                        className={styles.batchChangeJobProgressBarComplete}
+                        style={{ flex: progress.complete }}
+                    />
+                    <div
+                        data-tooltip={`${progress.complete} failed`}
+                        className={styles.batchChangeJobProgressBarFailed}
+                        style={{ flex: progress.failed }}
+                    />
+                    <div
+                        data-tooltip={`${progress.complete} executing`}
+                        className={styles.batchChangeJobProgressBarExecuting}
+                        style={{ flex: progress.executing }}
+                    />
+                    <div
+                        data-tooltip={`${progress.complete} queued`}
+                        className={styles.batchChangeJobProgressBarPending}
+                        style={{ flex: progress.pending }}
+                    />
+                </div>
+            </div>
+            {isExpanded && failed && failed.length > 0 && (
+                <div className={classNames(styles.batchChangeJobFailed, 'p-2')}>
+                    <h3>Failed jobs</h3>
+                    {failed.map(({ workspace, steps }) => (
+                        <>
+                            <div className={styles.batchChangeJobFailedWorkspace}>{workspace}</div>
+                            <div className={styles.batchChangeJobFailedProgress}>
+                                <small
+                                    className={classNames(styles.batchChangeJobFailedProgressLabel, 'text-muted')}
+                                >{`${steps.complete}/${steps.total} ${pluralize('step', steps.total)}`}</small>
+                                <div className={styles.batchChangeJobFailedProgressBar}>
+                                    <div
+                                        data-tooltip={`${steps.complete} complete`}
+                                        className={styles.batchChangeJobFailedProgressBarComplete}
+                                        style={{ flex: steps.complete }}
+                                    />
+                                    <div
+                                        data-tooltip={`${steps.total - steps.complete} incomplete`}
+                                        className={styles.batchChangeJobFailedProgressBarIncomplete}
+                                        style={{ flex: steps.total - steps.complete }}
+                                    />
+                                </div>
+                            </div>
+                            <div className={styles.batchChangeJobFailedActions}>
+                                <button type="button" className="btn btn-outline-info">
+                                    View log
+                                </button>
+                            </div>
+                        </>
+                    ))}
+                </div>
+            )}
+        </>
     )
 }
