@@ -1,8 +1,10 @@
 // @ts-check
 
+const { exec } = require('child_process')
 const path = require('path')
 
 const { generate } = require('@graphql-codegen/cli')
+const globby = require('globby')
 
 const ROOT_FOLDER = path.resolve(__dirname, '../../../')
 
@@ -73,7 +75,7 @@ async function generateGraphQlOperations() {
       },
       generates: {
         [path.join(BROWSER_FOLDER, './src/graphql-operations.ts')]: {
-          documents: BROWSER_DOCUMENTS_GLOB,
+          documents: await globToFiles(BROWSER_DOCUMENTS_GLOB),
           config: {
             onlyOperationTypes: true,
             noExport: false,
@@ -84,7 +86,7 @@ async function generateGraphQlOperations() {
         },
 
         [path.join(WEB_FOLDER, './src/graphql-operations.ts')]: {
-          documents: WEB_DOCUMENTS_GLOB,
+          documents: await globToFiles(WEB_DOCUMENTS_GLOB),
           config: {
             onlyOperationTypes: true,
             noExport: false,
@@ -95,7 +97,7 @@ async function generateGraphQlOperations() {
         },
 
         [path.join(SHARED_FOLDER, './src/graphql-operations.ts')]: {
-          documents: SHARED_DOCUMENTS_GLOB,
+          documents: await globToFiles(SHARED_DOCUMENTS_GLOB),
           config: {
             onlyOperationTypes: true,
             noExport: false,
@@ -106,6 +108,26 @@ async function generateGraphQlOperations() {
       },
     },
     true
+  )
+}
+
+/**
+ * Shells out to grep to find files that contain the gql tag. Other files are irrelevant and the
+ * built-in more precise AST parsing is very slow, so we make this simplification here.
+ *
+ * @param {string[]} globs the globs to use.
+ *
+ * @returns {Promise<string[]>} List of files that may need to be included in the type generation.
+ */
+async function globToFiles(globs) {
+  const schemaFiles = await globby(globs)
+  return new Promise((resolve, reject) =>
+    exec(`grep "gql\\\`" ${schemaFiles.join(' ')} -Rl`, (error, stdout) => {
+      if (error) {
+        reject(error)
+      }
+      resolve(stdout.split('\n'))
+    })
   )
 }
 
