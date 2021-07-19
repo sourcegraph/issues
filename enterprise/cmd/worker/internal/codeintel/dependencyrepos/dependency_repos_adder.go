@@ -40,17 +40,16 @@ type dependencyRepoAddingHandler struct {
 	dbStore DBStore
 }
 
-var _ dbworker.Handler = &dependencyRepoAddingHandler{}
+var _ workerutil.Handler = &dependencyRepoAddingHandler{}
 
 type DependencyRepoInfo struct {
 	Identifier, Version, Scheme string
 }
 
-func (h *dependencyRepoAddingHandler) Handle(ctx context.Context, tx dbworkerstore.Store, record workerutil.Record) error {
+func (h *dependencyRepoAddingHandler) Handle(ctx context.Context, record workerutil.Record) error {
 	job := record.(dbstore.DependencyRepoAddingJob)
-	store := h.dbStore.With(tx)
 
-	scanner, err := store.ReferencesForUpload(ctx, job.UploadID)
+	scanner, err := h.dbStore.ReferencesForUpload(ctx, job.UploadID)
 	if err != nil {
 		return errors.Wrap(err, "dbstore.ReferencesForUpload")
 	}

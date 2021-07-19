@@ -30,7 +30,7 @@ func TestDependencyReposAddingHandlerJVM(t *testing.T) {
 		UploadID: 5,
 	}
 
-	if err := handler.Handle(context.Background(), nil, job); err != nil {
+	if err := handler.Handle(context.Background(), job); err != nil {
 		t.Fatalf("unexpected error adding dependency repo: %s", err)
 	}
 }

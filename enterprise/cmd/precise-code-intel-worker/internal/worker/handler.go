@@ -38,7 +38,7 @@ type handler struct {
 }
 
 var (
-	_ dbworker.Handler          = &handler{}
+	_ workerutil.Handler        = &handler{}
 	_ workerutil.WithPreDequeue = &handler{}
 	_ workerutil.WithHooks      = &handler{}
 )
