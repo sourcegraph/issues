@@ -2170,7 +2170,7 @@ extend type Mutation {
     for work, they will pick this up eventually.
 
 
-    If namespace is not specified, the current users personal namespace is used.
+    If namespace is not specified, the current user's personal namespace is used.
     """
     createBatchSpecExecution(spec: String!, namespace: ID): BatchSpecExecution!
 }
