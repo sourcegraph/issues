@@ -279,7 +279,7 @@
     "signale": "^1.4.0",
     "simmerjs": "^0.5.6",
     "sinon": "^9.0.2",
-    "socket.io": "^2.3.0",
+    "socket.io": "^2.4.0",
     "socket.io-client": "^2.3.0",
     "speed-measure-webpack-plugin": "^1.5.0",
     "storybook-addon-designs": "^6.0.0",
