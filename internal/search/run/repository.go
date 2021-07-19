@@ -220,6 +220,11 @@ func reposToAdd(ctx context.Context, args *search.TextParameters, repos []*searc
 			newArgs.RepoPromise = (&search.RepoPromise{}).Resolve(repos)
 			newArgs.Query = q
 			newArgs.UseFullDeadline = true
+
+			if newArgs.PatternInfo.IsEmpty() {
+				// Empty query isn't an error, but it has no results.
+				return nil, nil
+			}
 			matches, _, err := unindexed.SearchFilesInReposBatch(ctx, &newArgs)
 			if err != nil {
 				return nil, err
@@ -256,6 +261,11 @@ func reposToAdd(ctx context.Context, args *search.TextParameters, repos []*searc
 			newArgs.RepoPromise = rp
 			newArgs.Query = q
 			newArgs.UseFullDeadline = true
+			if newArgs.PatternInfo.IsEmpty() {
+				// Empty query isn't an error, but it has no results.
+				return nil, nil
+			}
+
 			matches, _, err := unindexed.SearchFilesInReposBatch(ctx, &newArgs)
 			if err != nil {
 				return nil, err

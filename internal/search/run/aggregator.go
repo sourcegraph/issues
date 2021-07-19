@@ -92,6 +92,11 @@ func (a *Aggregator) DoSymbolSearch(ctx context.Context, args *search.TextParame
 }
 
 func (a *Aggregator) DoStructuralSearch(ctx context.Context, args *search.TextParameters) (err error) {
+	if args.PatternInfo.IsEmpty() {
+		// Empty query isn't an error, but it has no results.
+		return nil
+	}
+
 	// For structural search with default limits we retry if we get no results.
 	fileMatches, stats, err := unindexed.SearchFilesInReposBatch(ctx, args)
 

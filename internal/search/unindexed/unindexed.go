@@ -107,10 +107,6 @@ func SearchFilesInRepos(ctx context.Context, args *search.TextParameters, stream
 // SearchFilesInRepoBatch is a convenience function around searchFilesInRepos
 // which collects the results from the stream.
 func SearchFilesInReposBatch(ctx context.Context, args *search.TextParameters) ([]*result.FileMatch, streaming.Stats, error) {
-	if args.PatternInfo.IsEmpty() {
-		// Empty query isn't an error, but it has no results.
-		return nil, streaming.Stats{}, nil
-	}
 	matches, stats, err := streaming.CollectStream(func(stream streaming.Sender) error {
 		return SearchFilesInRepos(ctx, args, stream)
 	})
