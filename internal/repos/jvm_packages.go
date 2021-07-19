@@ -72,6 +72,12 @@ func (s *JVMPackagesSource) listDependentRepos(ctx context.Context, results chan
 		return
 	}
 
+	dbDeps, err := s.dbStore.GetJVMDependencyRepos(ctx)
+	if err != nil {
+		results <- SourceResult{Err: err}
+		return
+	}
+
 	for _, dep := range dbDeps {
 		parsed, err := reposource.ParseMavenDependency(dep.Identifier)
 		if err != nil {
@@ -85,6 +91,7 @@ func (s *JVMPackagesSource) listDependentRepos(ctx context.Context, results chan
 	}
 }
 
+func (s *JVMPackagesSource) GetRepo(ctx context.Context, artifactPath string) (*types.Repo, error) {
 	module, err := reposource.ParseMavenModule(artifactPath)
 	if err != nil {
 		return nil, err
