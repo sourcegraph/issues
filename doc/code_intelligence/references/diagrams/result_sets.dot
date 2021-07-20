@@ -1,0 +1,18 @@
+digraph {
+    r1[label="range"];
+    r2[label="range"];
+    r3[label="range"];
+    r4[label="range"];
+    r5[label="range"];
+
+    rs1[label="resultSet"];
+    rs2[label="resultSet"];
+    rs3[label="resultSet"];
+
+    r1  -> rs1[label="next"];
+    r2  -> rs1[label="next"];
+    r3  -> rs1[label="next"];
+    r4  -> rs2[label="next"];
+    r5  -> rs2[label="next"];
+    rs2 -> rs3[label="next"];
+}
