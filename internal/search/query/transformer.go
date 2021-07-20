@@ -771,3 +771,43 @@ func PatternToFile(b Basic) Basic {
 	}
 	return b
 }
+
+func remove(s []Parameter, i int) []Parameter {
+	s[i] = s[len(s)-1]
+	// We do not need to put s[i] at the end, as it will be discarded anyway
+	return s[:len(s)-1]
+}
+
+// typeRepoToFilter transforms a search query of the form `type:repo <pattern>`
+// to repo:<pattern>. It is a normalization to handle repo searches consistently
+// in the backend.
+func typeRepoToFilter(b Basic) Basic {
+	seen := false
+	for i, p := range b.Parameters {
+		if p.Field == FieldType {
+			seen = true
+			remove(b.Parameters, i)
+		}
+	}
+
+	if !seen {
+		return b
+	}
+
+	if IsPatternAtom(b) {
+		p := b.Pattern.(Pattern)
+		ann := p.Annotation
+		value := p.Value
+		if ann.Labels.IsSet(Quoted) || ann.Labels.IsSet(Literal) || ann.Labels.IsSet(Structural) {
+			// Respect search type: If the pattern is literal, then
+			// interpet the value literally for the repo filter.
+			value = regexp.QuoteMeta(p.Value)
+		}
+		return b.MapPattern(nil).MapParameters(append(b.Parameters, Parameter{
+			Field:   FieldRepo,
+			Value:   value,
+			Negated: false,
+		}))
+	}
+	return b // unhandled case
+}

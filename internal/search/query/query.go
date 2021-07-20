@@ -103,14 +103,15 @@ func Validate(disjuncts [][]Node) error {
 // A BasicPass is a transformation on Basic queries.
 type BasicPass func(Basic) Basic
 
-// MapPlan applies a conversion to all Basic queries in a plan. It expects a
-// valid plan. guarantee transformation succeeds.
-func MapPlan(plan Plan, pass BasicPass) Plan {
-	updated := make([]Basic, 0, len(plan))
-	for _, query := range plan {
-		updated = append(updated, pass(query))
+// MapPlan runs passes on all Basic queries in a plan. It expects a valid plan.
+// It guarantees transformation succeeds.
+func MapPlan(plan Plan, passes ...BasicPass) Plan {
+	for _, pass := range passes {
+		for i, query := range plan {
+			plan[i] = pass(query)
+		}
 	}
-	return Plan(updated)
+	return plan
 }
 
 func ToPlan(disjuncts [][]Node) (Plan, error) {
@@ -142,6 +143,6 @@ func Pipeline(steps ...step) (Plan, error) {
 	if err != nil {
 		return nil, err
 	}
-	plan = MapPlan(plan, ConcatRevFilters)
+	plan = MapPlan(plan, ConcatRevFilters, typeRepoToFilter)
 	return plan, nil
 }
