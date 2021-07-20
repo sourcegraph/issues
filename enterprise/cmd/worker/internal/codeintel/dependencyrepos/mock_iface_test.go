@@ -7,7 +7,10 @@ import (
 	"sync"
 
 	dbstore "github.com/sourcegraph/sourcegraph/enterprise/internal/codeintel/stores/dbstore"
-	basestore "github.com/sourcegraph/sourcegraph/internal/database/basestore"
+	api "github.com/sourcegraph/sourcegraph/internal/api"
+	database "github.com/sourcegraph/sourcegraph/internal/database"
+	protocol "github.com/sourcegraph/sourcegraph/internal/repoupdater/protocol"
+	types "github.com/sourcegraph/sourcegraph/internal/types"
 )
 
 // MockDBStore is a mock implementation of the DBStore interface (from the
@@ -19,12 +22,12 @@ type MockDBStore struct {
 	// object controlling the behavior of the method
 	// InsertCloneableDependencyRepos.
 	InsertCloneableDependencyReposFunc *DBStoreInsertCloneableDependencyReposFunc
+	// ListExternalServicesFunc is an instance of a mock function object
+	// controlling the behavior of the method ListExternalServices.
+	ListExternalServicesFunc *DBStoreListExternalServicesFunc
 	// ReferencesForUploadFunc is an instance of a mock function object
 	// controlling the behavior of the method ReferencesForUpload.
 	ReferencesForUploadFunc *DBStoreReferencesForUploadFunc
-	// WithFunc is an instance of a mock function object controlling the
-	// behavior of the method With.
-	WithFunc *DBStoreWithFunc
 }
 
 // NewMockDBStore creates a new mock of the DBStore interface. All methods
@@ -36,14 +39,14 @@ func NewMockDBStore() *MockDBStore {
 				return nil
 			},
 		},
-		ReferencesForUploadFunc: &DBStoreReferencesForUploadFunc{
-			defaultHook: func(context.Context, int) (dbstore.PackageReferenceScanner, error) {
+		ListExternalServicesFunc: &DBStoreListExternalServicesFunc{
+			defaultHook: func(context.Context, database.ExternalServicesListOptions) ([]*types.ExternalService, error) {
 				return nil, nil
 			},
 		},
-		WithFunc: &DBStoreWithFunc{
-			defaultHook: func(basestore.ShareableStore) DBStore {
-				return nil
+		ReferencesForUploadFunc: &DBStoreReferencesForUploadFunc{
+			defaultHook: func(context.Context, int) (dbstore.PackageReferenceScanner, error) {
+				return nil, nil
 			},
 		},
 	}
@@ -56,11 +59,11 @@ func NewMockDBStoreFrom(i DBStore) *MockDBStore {
 		InsertCloneableDependencyReposFunc: &DBStoreInsertCloneableDependencyReposFunc{
 			defaultHook: i.InsertCloneableDependencyRepos,
 		},
+		ListExternalServicesFunc: &DBStoreListExternalServicesFunc{
+			defaultHook: i.ListExternalServices,
+		},
 		ReferencesForUploadFunc: &DBStoreReferencesForUploadFunc{
 			defaultHook: i.ReferencesForUpload,
-		},
-		WithFunc: &DBStoreWithFunc{
-			defaultHook: i.With,
 		},
 	}
 }
@@ -175,6 +178,116 @@ func (c DBStoreInsertCloneableDependencyReposFuncCall) Results() []interface{} {
 	return []interface{}{c.Result0}
 }
 
+// DBStoreListExternalServicesFunc describes the behavior when the
+// ListExternalServices method of the parent MockDBStore instance is
+// invoked.
+type DBStoreListExternalServicesFunc struct {
+	defaultHook func(context.Context, database.ExternalServicesListOptions) ([]*types.ExternalService, error)
+	hooks       []func(context.Context, database.ExternalServicesListOptions) ([]*types.ExternalService, error)
+	history     []DBStoreListExternalServicesFuncCall
+	mutex       sync.Mutex
+}
+
+// ListExternalServices delegates to the next hook function in the queue and
+// stores the parameter and result values of this invocation.
+func (m *MockDBStore) ListExternalServices(v0 context.Context, v1 database.ExternalServicesListOptions) ([]*types.ExternalService, error) {
+	r0, r1 := m.ListExternalServicesFunc.nextHook()(v0, v1)
+	m.ListExternalServicesFunc.appendCall(DBStoreListExternalServicesFuncCall{v0, v1, r0, r1})
+	return r0, r1
+}
+
+// SetDefaultHook sets function that is called when the ListExternalServices
+// method of the parent MockDBStore instance is invoked and the hook queue
+// is empty.
+func (f *DBStoreListExternalServicesFunc) SetDefaultHook(hook func(context.Context, database.ExternalServicesListOptions) ([]*types.ExternalService, error)) {
+	f.defaultHook = hook
+}
+
+// PushHook adds a function to the end of hook queue. Each invocation of the
+// ListExternalServices method of the parent MockDBStore instance invokes
+// the hook at the front of the queue and discards it. After the queue is
+// empty, the default hook function is invoked for any future action.
+func (f *DBStoreListExternalServicesFunc) PushHook(hook func(context.Context, database.ExternalServicesListOptions) ([]*types.ExternalService, error)) {
+	f.mutex.Lock()
+	f.hooks = append(f.hooks, hook)
+	f.mutex.Unlock()
+}
+
+// SetDefaultReturn calls SetDefaultDefaultHook with a function that returns
+// the given values.
+func (f *DBStoreListExternalServicesFunc) SetDefaultReturn(r0 []*types.ExternalService, r1 error) {
+	f.SetDefaultHook(func(context.Context, database.ExternalServicesListOptions) ([]*types.ExternalService, error) {
+		return r0, r1
+	})
+}
+
+// PushReturn calls PushDefaultHook with a function that returns the given
+// values.
+func (f *DBStoreListExternalServicesFunc) PushReturn(r0 []*types.ExternalService, r1 error) {
+	f.PushHook(func(context.Context, database.ExternalServicesListOptions) ([]*types.ExternalService, error) {
+		return r0, r1
+	})
+}
+
+func (f *DBStoreListExternalServicesFunc) nextHook() func(context.Context, database.ExternalServicesListOptions) ([]*types.ExternalService, error) {
+	f.mutex.Lock()
+	defer f.mutex.Unlock()
+
+	if len(f.hooks) == 0 {
+		return f.defaultHook
+	}
+
+	hook := f.hooks[0]
+	f.hooks = f.hooks[1:]
+	return hook
+}
+
+func (f *DBStoreListExternalServicesFunc) appendCall(r0 DBStoreListExternalServicesFuncCall) {
+	f.mutex.Lock()
+	f.history = append(f.history, r0)
+	f.mutex.Unlock()
+}
+
+// History returns a sequence of DBStoreListExternalServicesFuncCall objects
+// describing the invocations of this function.
+func (f *DBStoreListExternalServicesFunc) History() []DBStoreListExternalServicesFuncCall {
+	f.mutex.Lock()
+	history := make([]DBStoreListExternalServicesFuncCall, len(f.history))
+	copy(history, f.history)
+	f.mutex.Unlock()
+
+	return history
+}
+
+// DBStoreListExternalServicesFuncCall is an object that describes an
+// invocation of method ListExternalServices on an instance of MockDBStore.
+type DBStoreListExternalServicesFuncCall struct {
+	// Arg0 is the value of the 1st argument passed to this method
+	// invocation.
+	Arg0 context.Context
+	// Arg1 is the value of the 2nd argument passed to this method
+	// invocation.
+	Arg1 database.ExternalServicesListOptions
+	// Result0 is the value of the 1st result returned from this method
+	// invocation.
+	Result0 []*types.ExternalService
+	// Result1 is the value of the 2nd result returned from this method
+	// invocation.
+	Result1 error
+}
+
+// Args returns an interface slice containing the arguments of this
+// invocation.
+func (c DBStoreListExternalServicesFuncCall) Args() []interface{} {
+	return []interface{}{c.Arg0, c.Arg1}
+}
+
+// Results returns an interface slice containing the results of this
+// invocation.
+func (c DBStoreListExternalServicesFuncCall) Results() []interface{} {
+	return []interface{}{c.Result0, c.Result1}
+}
+
 // DBStoreReferencesForUploadFunc describes the behavior when the
 // ReferencesForUpload method of the parent MockDBStore instance is invoked.
 type DBStoreReferencesForUploadFunc struct {
@@ -284,34 +397,71 @@ func (c DBStoreReferencesForUploadFuncCall) Results() []interface{} {
 	return []interface{}{c.Result0, c.Result1}
 }
 
-// DBStoreWithFunc describes the behavior when the With method of the parent
-// MockDBStore instance is invoked.
-type DBStoreWithFunc struct {
-	defaultHook func(basestore.ShareableStore) DBStore
-	hooks       []func(basestore.ShareableStore) DBStore
-	history     []DBStoreWithFuncCall
+// MockRepoUpdaterClient is a mock implementation of the RepoUpdaterClient
+// interface (from the package
+// github.com/sourcegraph/sourcegraph/enterprise/cmd/worker/internal/codeintel/dependencyrepos)
+// used for unit testing.
+type MockRepoUpdaterClient struct {
+	// SyncExternalServiceFunc is an instance of a mock function object
+	// controlling the behavior of the method SyncExternalService.
+	SyncExternalServiceFunc *RepoUpdaterClientSyncExternalServiceFunc
+}
+
+// NewMockRepoUpdaterClient creates a new mock of the RepoUpdaterClient
+// interface. All methods return zero values for all results, unless
+// overwritten.
+func NewMockRepoUpdaterClient() *MockRepoUpdaterClient {
+	return &MockRepoUpdaterClient{
+		SyncExternalServiceFunc: &RepoUpdaterClientSyncExternalServiceFunc{
+			defaultHook: func(context.Context, api.ExternalService) (*protocol.ExternalServiceSyncResult, error) {
+				return nil, nil
+			},
+		},
+	}
+}
+
+// NewMockRepoUpdaterClientFrom creates a new mock of the
+// MockRepoUpdaterClient interface. All methods delegate to the given
+// implementation, unless overwritten.
+func NewMockRepoUpdaterClientFrom(i RepoUpdaterClient) *MockRepoUpdaterClient {
+	return &MockRepoUpdaterClient{
+		SyncExternalServiceFunc: &RepoUpdaterClientSyncExternalServiceFunc{
+			defaultHook: i.SyncExternalService,
+		},
+	}
+}
+
+// RepoUpdaterClientSyncExternalServiceFunc describes the behavior when the
+// SyncExternalService method of the parent MockRepoUpdaterClient instance
+// is invoked.
+type RepoUpdaterClientSyncExternalServiceFunc struct {
+	defaultHook func(context.Context, api.ExternalService) (*protocol.ExternalServiceSyncResult, error)
+	hooks       []func(context.Context, api.ExternalService) (*protocol.ExternalServiceSyncResult, error)
+	history     []RepoUpdaterClientSyncExternalServiceFuncCall
 	mutex       sync.Mutex
 }
 
-// With delegates to the next hook function in the queue and stores the
-// parameter and result values of this invocation.
-func (m *MockDBStore) With(v0 basestore.ShareableStore) DBStore {
-	r0 := m.WithFunc.nextHook()(v0)
-	m.WithFunc.appendCall(DBStoreWithFuncCall{v0, r0})
-	return r0
+// SyncExternalService delegates to the next hook function in the queue and
+// stores the parameter and result values of this invocation.
+func (m *MockRepoUpdaterClient) SyncExternalService(v0 context.Context, v1 api.ExternalService) (*protocol.ExternalServiceSyncResult, error) {
+	r0, r1 := m.SyncExternalServiceFunc.nextHook()(v0, v1)
+	m.SyncExternalServiceFunc.appendCall(RepoUpdaterClientSyncExternalServiceFuncCall{v0, v1, r0, r1})
+	return r0, r1
 }
 
-// SetDefaultHook sets function that is called when the With method of the
-// parent MockDBStore instance is invoked and the hook queue is empty.
-func (f *DBStoreWithFunc) SetDefaultHook(hook func(basestore.ShareableStore) DBStore) {
+// SetDefaultHook sets function that is called when the SyncExternalService
+// method of the parent MockRepoUpdaterClient instance is invoked and the
+// hook queue is empty.
+func (f *RepoUpdaterClientSyncExternalServiceFunc) SetDefaultHook(hook func(context.Context, api.ExternalService) (*protocol.ExternalServiceSyncResult, error)) {
 	f.defaultHook = hook
 }
 
 // PushHook adds a function to the end of hook queue. Each invocation of the
-// With method of the parent MockDBStore instance invokes the hook at the
-// front of the queue and discards it. After the queue is empty, the default
-// hook function is invoked for any future action.
-func (f *DBStoreWithFunc) PushHook(hook func(basestore.ShareableStore) DBStore) {
+// SyncExternalService method of the parent MockRepoUpdaterClient instance
+// invokes the hook at the front of the queue and discards it. After the
+// queue is empty, the default hook function is invoked for any future
+// action.
+func (f *RepoUpdaterClientSyncExternalServiceFunc) PushHook(hook func(context.Context, api.ExternalService) (*protocol.ExternalServiceSyncResult, error)) {
 	f.mutex.Lock()
 	f.hooks = append(f.hooks, hook)
 	f.mutex.Unlock()
@@ -319,21 +469,21 @@ func (f *DBStoreWithFunc) PushHook(hook func(basestore.ShareableStore) DBStore) 
 
 // SetDefaultReturn calls SetDefaultDefaultHook with a function that returns
 // the given values.
-func (f *DBStoreWithFunc) SetDefaultReturn(r0 DBStore) {
-	f.SetDefaultHook(func(basestore.ShareableStore) DBStore {
-		return r0
+func (f *RepoUpdaterClientSyncExternalServiceFunc) SetDefaultReturn(r0 *protocol.ExternalServiceSyncResult, r1 error) {
+	f.SetDefaultHook(func(context.Context, api.ExternalService) (*protocol.ExternalServiceSyncResult, error) {
+		return r0, r1
 	})
 }
 
 // PushReturn calls PushDefaultHook with a function that returns the given
 // values.
-func (f *DBStoreWithFunc) PushReturn(r0 DBStore) {
-	f.PushHook(func(basestore.ShareableStore) DBStore {
-		return r0
+func (f *RepoUpdaterClientSyncExternalServiceFunc) PushReturn(r0 *protocol.ExternalServiceSyncResult, r1 error) {
+	f.PushHook(func(context.Context, api.ExternalService) (*protocol.ExternalServiceSyncResult, error) {
+		return r0, r1
 	})
 }
 
-func (f *DBStoreWithFunc) nextHook() func(basestore.ShareableStore) DBStore {
+func (f *RepoUpdaterClientSyncExternalServiceFunc) nextHook() func(context.Context, api.ExternalService) (*protocol.ExternalServiceSyncResult, error) {
 	f.mutex.Lock()
 	defer f.mutex.Unlock()
 
@@ -346,42 +496,50 @@ func (f *DBStoreWithFunc) nextHook() func(basestore.ShareableStore) DBStore {
 	return hook
 }
 
-func (f *DBStoreWithFunc) appendCall(r0 DBStoreWithFuncCall) {
+func (f *RepoUpdaterClientSyncExternalServiceFunc) appendCall(r0 RepoUpdaterClientSyncExternalServiceFuncCall) {
 	f.mutex.Lock()
 	f.history = append(f.history, r0)
 	f.mutex.Unlock()
 }
 
-// History returns a sequence of DBStoreWithFuncCall objects describing the
+// History returns a sequence of
+// RepoUpdaterClientSyncExternalServiceFuncCall objects describing the
 // invocations of this function.
-func (f *DBStoreWithFunc) History() []DBStoreWithFuncCall {
+func (f *RepoUpdaterClientSyncExternalServiceFunc) History() []RepoUpdaterClientSyncExternalServiceFuncCall {
 	f.mutex.Lock()
-	history := make([]DBStoreWithFuncCall, len(f.history))
+	history := make([]RepoUpdaterClientSyncExternalServiceFuncCall, len(f.history))
 	copy(history, f.history)
 	f.mutex.Unlock()
 
 	return history
 }
 
-// DBStoreWithFuncCall is an object that describes an invocation of method
-// With on an instance of MockDBStore.
-type DBStoreWithFuncCall struct {
+// RepoUpdaterClientSyncExternalServiceFuncCall is an object that describes
+// an invocation of method SyncExternalService on an instance of
+// MockRepoUpdaterClient.
+type RepoUpdaterClientSyncExternalServiceFuncCall struct {
 	// Arg0 is the value of the 1st argument passed to this method
 	// invocation.
-	Arg0 basestore.ShareableStore
+	Arg0 context.Context
+	// Arg1 is the value of the 2nd argument passed to this method
+	// invocation.
+	Arg1 api.ExternalService
 	// Result0 is the value of the 1st result returned from this method
 	// invocation.
-	Result0 DBStore
+	Result0 *protocol.ExternalServiceSyncResult
+	// Result1 is the value of the 2nd result returned from this method
+	// invocation.
+	Result1 error
 }
 
 // Args returns an interface slice containing the arguments of this
 // invocation.
-func (c DBStoreWithFuncCall) Args() []interface{} {
-	return []interface{}{c.Arg0}
+func (c RepoUpdaterClientSyncExternalServiceFuncCall) Args() []interface{} {
+	return []interface{}{c.Arg0, c.Arg1}
 }
 
 // Results returns an interface slice containing the results of this
 // invocation.
-func (c DBStoreWithFuncCall) Results() []interface{} {
-	return []interface{}{c.Result0}
+func (c RepoUpdaterClientSyncExternalServiceFuncCall) Results() []interface{} {
+	return []interface{}{c.Result0, c.Result1}
 }

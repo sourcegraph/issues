@@ -11,7 +11,6 @@ import (
 func TestDependencyReposAddingHandlerJVM(t *testing.T) {
 	mockDBStore := NewMockDBStore()
 	mockScanner := NewMockPackageReferenceScanner()
-	mockDBStore.WithFunc.SetDefaultReturn(mockDBStore)
 	mockDBStore.ReferencesForUploadFunc.SetDefaultReturn(mockScanner, nil)
 	mockScanner.NextFunc.PushReturn(lsifstore.PackageReference{
 		Package: lsifstore.Package{
