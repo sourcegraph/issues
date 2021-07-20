@@ -395,7 +395,7 @@
     "uuid": "^8.3.0",
     "webext-domain-permission-toggle": "^1.0.1",
     "webext-patterns": "^0.9.0",
-    "webextension-polyfill": "^0.6.0"
+    "webextension-polyfill": "^0.8.0"
   },
   "resolutions": {
     "history": "4.5.1",
