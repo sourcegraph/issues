@@ -11,9 +11,11 @@ import (
 	"github.com/sourcegraph/sourcegraph/cmd/worker/shared"
 	"github.com/sourcegraph/sourcegraph/enterprise/cmd/worker/internal/codeintel/dependencyrepos"
 	"github.com/sourcegraph/sourcegraph/enterprise/internal/codeintel/stores/dbstore"
+	"github.com/sourcegraph/sourcegraph/enterprise/internal/database"
 	"github.com/sourcegraph/sourcegraph/internal/env"
 	"github.com/sourcegraph/sourcegraph/internal/goroutine"
 	"github.com/sourcegraph/sourcegraph/internal/observation"
+	"github.com/sourcegraph/sourcegraph/internal/repoupdater"
 	"github.com/sourcegraph/sourcegraph/internal/trace"
 	"github.com/sourcegraph/sourcegraph/internal/workerutil"
 )
@@ -40,13 +42,19 @@ func (j *dependencyRepoAddingJob) Routines(ctx context.Context) ([]goroutine.Bac
 		return nil, err
 	}
 
-	dbStoreShim := &dependencyrepos.DBStoreShim{Store: dbStore}
+	extSvcStore := database.NewExternalServicesStore(dbStore.Handle().DB())
+
+	dbStoreShim := &dependencyrepos.DBStoreShim{
+		Store:                dbStore,
+		ExternalServiceStore: extSvcStore,
+	}
 	metrics := workerutil.NewMetrics(observationContext, "codeintel_dependency_repo_adder", nil)
 
 	return []goroutine.BackgroundRoutine{
 		dependencyrepos.NewDependencyRepoAdder(
 			dbStoreShim,
 			dbstore.WorkerutilDependencyRepoAddingJobStore(dbStore, observationContext),
+			repoupdater.DefaultClient,
 			time.Minute*1,
 			1,
 			metrics),

@@ -10,6 +10,9 @@ import (
 
 	"github.com/sourcegraph/sourcegraph/enterprise/internal/codeintel/stores/dbstore"
 	"github.com/sourcegraph/sourcegraph/internal/actor"
+	"github.com/sourcegraph/sourcegraph/internal/api"
+	"github.com/sourcegraph/sourcegraph/internal/database"
+	"github.com/sourcegraph/sourcegraph/internal/extsvc"
 	"github.com/sourcegraph/sourcegraph/internal/workerutil"
 	"github.com/sourcegraph/sourcegraph/internal/workerutil/dbworker"
 	dbworkerstore "github.com/sourcegraph/sourcegraph/internal/workerutil/dbworker/store"
@@ -18,6 +21,7 @@ import (
 func NewDependencyRepoAdder(
 	dbStore DBStore,
 	workerStore dbworkerstore.Store,
+	repoUpdaterClient RepoUpdaterClient,
 	pollInterval time.Duration,
 	numProcessorRoutines int,
 	workerMetrics workerutil.WorkerMetrics,
@@ -25,7 +29,8 @@ func NewDependencyRepoAdder(
 	rootContext := actor.WithActor(context.Background(), &actor.Actor{Internal: true})
 
 	handler := &dependencyRepoAddingHandler{
-		dbStore: dbStore,
+		dbStore:           dbStore,
+		repoUpdaterClient: repoUpdaterClient,
 	}
 
 	return dbworker.NewWorker(rootContext, workerStore, handler, workerutil.WorkerOptions{
@@ -37,7 +42,8 @@ func NewDependencyRepoAdder(
 }
 
 type dependencyRepoAddingHandler struct {
-	dbStore DBStore
+	dbStore           DBStore
+	repoUpdaterClient RepoUpdaterClient
 }
 
 var _ workerutil.Handler = &dependencyRepoAddingHandler{}
@@ -64,7 +70,6 @@ func (h *dependencyRepoAddingHandler) Handle(ctx context.Context, record workeru
 	var errs []error
 	for {
 		packageReference, exists, err := scanner.Next()
-		fmt.Println("ONCE")
 		if err != nil {
 			return errors.Wrap(err, "dbstore.ReferencesForUpload.Next")
 		}
@@ -90,14 +95,38 @@ func (h *dependencyRepoAddingHandler) Handle(ctx context.Context, record workeru
 		})
 	}
 
-	fmt.Printf("ERRORS %d DEPS %d %v\n", len(errs), len(dependencies), dependencies)
-
 	if len(errs) == 1 {
 		return errs[0]
 	}
 
 	if err = h.dbStore.InsertCloneableDependencyRepos(ctx, dependencies); err != nil {
 		return errors.Wrap(err, "dbstore.InsertCloneableDependencyRepos")
+	}
+
+	externalServices, err := h.dbStore.ListExternalServices(ctx, database.ExternalServicesListOptions{
+		Kinds: []string{extsvc.KindJVMPackages},
+	})
+	if err != nil {
+		return errors.Wrap(err, "dbstore.List")
+	}
+
+	for _, externalService := range externalServices {
+		if _, err := h.repoUpdaterClient.SyncExternalService(ctx, api.ExternalService{
+			ID:              externalService.ID,
+			Kind:            extsvc.KindJVMPackages,
+			DisplayName:     externalService.DisplayName,
+			Config:          externalService.Config,
+			CreatedAt:       externalService.CreatedAt,
+			UpdatedAt:       externalService.UpdatedAt,
+			DeletedAt:       externalService.DeletedAt,
+			LastSyncAt:      externalService.LastSyncAt,
+			NextSyncAt:      externalService.NextSyncAt,
+			NamespaceUserID: externalService.NamespaceUserID,
+			Unrestricted:    externalService.Unrestricted,
+			CloudDefault:    externalService.CloudDefault,
+		}); err != nil {
+			return errors.Wrap(err, "repoupdaterclient.SyncExternalService")
+		}
 	}
 
 	return err
