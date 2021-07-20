@@ -168,11 +168,13 @@ func (s *JVMPackagesSyncer) packageDependencies(repoUrlPath string) (dependencie
 	}
 
 	for _, dep := range dbDeps {
-		dependency, err := reposource.ParseMavenDependency(dep.Identifier)
-		if err != nil {
-			continue
+		if module.MatchesDependencyString(dep.Identifier) {
+			dependency, err := reposource.ParseMavenDependency(dep.Identifier + ":" + dep.Version)
+			if err != nil {
+				continue
+			}
+			dependencies = append(dependencies, dependency)
 		}
-		dependencies = append(dependencies, dependency)
 	}
 
 	if len(dependencies) == 0 {
