@@ -55,7 +55,7 @@ _See also [git strategies when using overlays](overlays.md#git-strategies-with-o
 Configuration steps in this file depend on [jq](https://stedolan.github.io/jq/),
 [yj](https://github.com/sourcegraph/yj) and [jy](https://github.com/sourcegraph/jy).
 
-Install the [kustomize](https://kustomize.io/) tool if you choose to use [overlays](overlays.md),.
+Install the [kustomize](https://kustomize.io/) tool if you choose to use [overlays](overlays.md).
 
 
 
