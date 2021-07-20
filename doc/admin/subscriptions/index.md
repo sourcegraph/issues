@@ -12,7 +12,7 @@ You can [contact Sourcegraph](https://about.sourcegraph.com/contact/sales) to pu
 
 ## Pricing model
 
-[Sourcegraph's pricing](https://about.sourcegraph.com/pricing) is based on a combination of the [number of lines of code indexed](#how-lines-of-code-are-counted) and [total active user accounts](#how-user-accounts-are-counted). 
+[Sourcegraph's pricing](https://about.sourcegraph.com/pricing) is based on a combination of the [number of lines of code indexed](#how-lines-of-code-are-counted) and [number of user accounts](#how-user-accounts-are-counted). 
 
 ## How lines of code are counted
 
@@ -26,7 +26,6 @@ Sourcegraph administrators can view the lines of code count for each repository 
 
 This count is maintained on your Sourcegraph instance, viewable and auditable on the **Site admin > Users** page, and is reported back in aggregate to Sourcegraph.com via [pings](https://docs.sourcegraph.com/admin/pings).
 
-A Sourcegraph user account is created when a user signs up or signs in for the first time. Sourcegraph user accounts can be deleted by administrators via the **Site admin > Users** page, or using the [GraphQL API](../../api/graphql/index.md) or the [Sourcegraph CLI](https://github.com/sourcegraph/src-cli).
 
 ## Updating your license key
 
