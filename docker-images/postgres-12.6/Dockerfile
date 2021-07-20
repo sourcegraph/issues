@@ -1,4 +1,4 @@
-FROM postgres:12.6@sha256:b42afb080d93c01961e2026e5dd3919d532b14210b4cff147d80b0039b231392
+FROM postgres:12.6@sha256:26ce5e265fbbf120b4a89a9b26770bad757a7dfa4f329038d93770edbe5aae00
 
 # Install our previous version of Postgres so we can perform a data upgrade on
 # container startup.
