@@ -210,7 +210,7 @@
     "babel-loader": "^8.2.2",
     "babel-plugin-lodash": "^3.3.4",
     "babel-preset-react-app": "^10.0.0",
-    "browserslist": "^4.12.0",
+    "browserslist": "^4.16.6",
     "chai": "^4.2.0",
     "chai-as-promised": "^7.1.1",
     "chalk": "^4.1.0",
