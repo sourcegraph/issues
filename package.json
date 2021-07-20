@@ -368,7 +368,7 @@
     "react-circular-progressbar": "^2.0.3",
     "react-dom": "^16.14.0",
     "react-dom-confetti": "^0.1.4",
-    "react-focus-lock": "^2.4.1",
+    "react-focus-lock": "^2.5.1",
     "react-grid-layout": "^0.18.3",
     "react-router": "^5.2.0",
     "react-router-dom": "^5.2.0",
