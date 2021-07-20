@@ -126,4 +126,15 @@ To set up webhooks:
 1. Click **Add webhook**.
 1. Confirm that the new webhook is listed below **Project Hooks**.
 
-Done! Sourcegraph will now receive webhook events from GitLab and use them to sync merge request events, used by [batch changes](../../batch_changes/index.md), faster and more efficiently.
+Done! Sourcegraph will now receive webhook events from GitLab and use them to sync merge request events, used by [campaigns](../../user/campaigns/index.md), faster and more efficiently.
+
+## GitLab integration FAQ
+
+### Why is one of my projects failing to clone?
+
+If a project fails to clone in Sourcegraph, you may need to change its `repository_access_level` property in GitLab. To change this property in the GitLab UI:
+
+- Go to the Project > **Settings** > **General**
+- Expand **Visibility, project features, permissions**
+- Change **Repository Access** from "Only Project Members" to “Everyone with Access”
+
