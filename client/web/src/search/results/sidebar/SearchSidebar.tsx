@@ -83,12 +83,6 @@ export const SearchSidebar: React.FunctionComponent<SearchSidebarProps> = props 
         [onFilterClicked, props.telemetryService]
     )
 
-    const onSearchSnippetsCtaLinkClick = useCallback(() => {
-        props.telemetryService.log('SignUpPLGSnippet_1_Search')
-    }, [props.telemetryService])
-
-    const showSnippetsCtaLink = !props.authenticatedUser && props.featureFlags.get('w0-signup-optimisation')
-
     const persistToggleState = useCallback(
         (id: SectionID, open: boolean) => {
             setOpenSections(openSections => ({ ...openSections, [id]: open }))
@@ -147,13 +141,6 @@ export const SearchSidebar: React.FunctionComponent<SearchSidebarProps> = props 
                 <SearchSidebarSection
                     className={styles.searchSidebarItem}
                     header="Search snippets"
-                    ctaLinkText={showSnippetsCtaLink ? 'Sign up to create code snippets' : undefined}
-                    ctaLinkTo={
-                        showSnippetsCtaLink
-                            ? `/sign-up?src=Snippet&returnTo=${encodeURIComponent('/user/settings')}`
-                            : undefined
-                    }
-                    onCtaLinkClick={onSearchSnippetsCtaLinkClick}
                     open={openSections[SectionID.REPOSITORIES] ?? true}
                     onToggle={open => persistToggleState(SectionID.REPOSITORIES, open)}
                 >

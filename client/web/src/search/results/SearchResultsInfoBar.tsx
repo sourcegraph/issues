@@ -23,7 +23,6 @@ import { AuthenticatedUser } from '../../auth'
 import { CodeMonitoringProps } from '../../code-monitoring'
 import { CodeMonitoringLogo } from '../../code-monitoring/CodeMonitoringLogo'
 import { WebActionsNavItems as ActionsNavItems } from '../../components/shared'
-import { FeatureFlagProps } from '../../featureFlags/featureFlags'
 import { SearchPatternType } from '../../graphql-operations'
 import { BookmarkRadialGradientIcon, CodeMonitorRadialGradientIcon, ExtensionRadialGradientIcon } from '../CtaIcons'
 import styles from '../FeatureTour.module.scss'
@@ -69,8 +68,7 @@ export interface SearchResultsInfoBarProps
         TelemetryProps,
         Pick<PatternTypeProps, 'patternType'>,
         Pick<CaseSensitivityProps, 'caseSensitive'>,
-        CodeMonitoringProps,
-        FeatureFlagProps {
+        CodeMonitoringProps {
     history: H.History
     /** The currently authenticated user or null */
     authenticatedUser: Pick<AuthenticatedUser, 'id'> | null
@@ -157,10 +155,7 @@ export const SearchResultsInfoBar: React.FunctionComponent<SearchResultsInfoBarP
         return globalTypeFilterValue === 'diff' || globalTypeFilterValue === 'commit'
     }, [props.query])
 
-    const showCreateCodeMonitoringButton =
-        props.enableCodeMonitoring &&
-        !!props.query &&
-        (!!props.authenticatedUser || !!props.featureFlags.get('w0-signup-optimisation'))
+    const showCreateCodeMonitoringButton = props.enableCodeMonitoring && !!props.query
 
     const [hasSeenSearchContextsFeatureTour] = useLocalStorage(HAS_SEEN_SEARCH_CONTEXTS_FEATURE_TOUR_KEY, false)
     const tour = useFeatureTour(
@@ -189,8 +184,7 @@ export const SearchResultsInfoBar: React.FunctionComponent<SearchResultsInfoBarP
         tour.cancel()
     }, [props.telemetryService, tour])
 
-    const showActionButtonExperimentalVersion =
-        !props.authenticatedUser && !!props.featureFlags.get('w0-signup-optimisation')
+    const showActionButtonExperimentalVersion = !props.authenticatedUser
 
     const codeInsightsButton = useMemo(
         () => (
@@ -254,13 +248,8 @@ export const SearchResultsInfoBar: React.FunctionComponent<SearchResultsInfoBarP
         onCreateCodeMonitorButtonSelect,
     ])
 
-    const saveSearchButton = useMemo(() => {
-        // We do not want to show the save search button to unaunthenticated users without the `w0-signup-optimisation` flag enabled
-        // because unauthenticated users cannot save a search.
-        if (!props.authenticatedUser && !props.featureFlags.get('w0-signup-optimisation')) {
-            return null
-        }
-        return (
+    const saveSearchButton = useMemo(
+        () => (
             <li className="mr-2">
                 <ExperimentalActionButton
                     showExperimentalVersion={showActionButtonExperimentalVersion}
@@ -280,15 +269,9 @@ export const SearchResultsInfoBar: React.FunctionComponent<SearchResultsInfoBarP
                     telemetryService={props.telemetryService}
                 />
             </li>
-        )
-    }, [
-        props.location,
-        props.authenticatedUser,
-        props.featureFlags,
-        showActionButtonExperimentalVersion,
-        props.onSaveQueryClick,
-        props.telemetryService,
-    ])
+        ),
+        [props.location, showActionButtonExperimentalVersion, props.onSaveQueryClick, props.telemetryService]
+    )
 
     const extendButton = useMemo(
         () =>

@@ -6,7 +6,7 @@ import { dataOrThrowErrors, gql } from '@sourcegraph/shared/src/graphql/graphql'
 import { requestGraphQL } from '../backend/graphql'
 import { FetchFeatureFlagsResult } from '../graphql-operations'
 
-export type FeatureFlagName = 'w0-signup-optimisation' | 'w1-signup-optimisation' | 'search-reference'
+export type FeatureFlagName = 'w1-signup-optimisation' | 'search-reference'
 
 export type FlagSet = Map<FeatureFlagName, boolean>
 

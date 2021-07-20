@@ -327,15 +327,5 @@ add('results with signup CTA', () => {
         },
     }
 
-    return (
-        <WebStory>
-            {() => (
-                <StreamingSearchResults
-                    {...defaultProps}
-                    featureFlags={new Map([['w0-signup-optimisation', true]])}
-                    streamSearch={() => of(result)}
-                />
-            )}
-        </WebStory>
-    )
+    return <WebStory>{() => <StreamingSearchResults {...defaultProps} streamSearch={() => of(result)} />}</WebStory>
 })

@@ -285,9 +285,328 @@ exports[`SearchResultsInfoBar code monitoring feature flag enabled, can create m
       className="nav align-items-center"
     >
       <li
+        className="mr-2"
+      >
+        <div
+          className="menu-nav-item btn-group"
+          onKeyDown={[Function]}
+        >
+          <a
+            aria-expanded={false}
+            aria-haspopup={true}
+            className="btn btn-sm btn-outline-secondary text-decoration-none toggle nav-link"
+            href="#"
+            onClick={[Function]}
+          >
+            <svg
+              className="mdi-icon icon-inline mr-1"
+              fill="currentColor"
+              height={24}
+              viewBox="0 0 24 24"
+              width={24}
+            >
+              <path
+                d="M22,13.5C22,15.26 20.7,16.72 19,16.96V20A2,2 0 0,1 17,22H13.2V21.7A2.7,2.7 0 0,0 10.5,19C9,19 7.8,20.21 7.8,21.7V22H4A2,2 0 0,1 2,20V16.2H2.3C3.79,16.2 5,15 5,13.5C5,12 3.79,10.8 2.3,10.8H2V7A2,2 0 0,1 4,5H7.04C7.28,3.3 8.74,2 10.5,2C12.26,2 13.72,3.3 13.96,5H17A2,2 0 0,1 19,7V10.04C20.7,10.28 22,11.74 22,13.5M17,15H18.5A1.5,1.5 0 0,0 20,13.5A1.5,1.5 0 0,0 18.5,12H17V7H12V5.5A1.5,1.5 0 0,0 10.5,4A1.5,1.5 0 0,0 9,5.5V7H4V9.12C5.76,9.8 7,11.5 7,13.5C7,15.5 5.75,17.2 4,17.88V20H6.12C6.8,18.25 8.5,17 10.5,17C12.5,17 14.2,18.25 14.88,20H17V15Z"
+              />
+            </svg>
+            Extend
+          </a>
+          <div
+            aria-hidden={true}
+            className="container dropdown-menu dropdown-menu-right"
+            role="menu"
+            tabIndex="-1"
+          >
+            <div
+              className="d-flex mb-3"
+            >
+              <div
+                className="d-flex align-items-center mr-3"
+              >
+                <div
+                  className="icon"
+                >
+                  <svg
+                    fill="none"
+                    height="26"
+                    width="26"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path
+                      d="M26 14.95a4.541 4.541 0 01-3.9 4.498V23.4a2.6 2.6 0 01-2.6 2.6h-4.94v-.39a3.51 3.51 0 00-3.51-3.51 3.504 3.504 0 00-3.51 3.51V26H2.6A2.6 2.6 0 010 23.4v-4.94h.39c1.937 0 3.51-1.56 3.51-3.51 0-1.95-1.573-3.51-3.51-3.51H0V6.5a2.6 2.6 0 012.6-2.6h3.952A4.541 4.541 0 0111.05 0a4.541 4.541 0 014.498 3.9H19.5a2.6 2.6 0 012.6 2.6v3.952c2.21.312 3.9 2.21 3.9 4.498zm-6.5 1.95h1.95a1.95 1.95 0 100-3.9H19.5V6.5H13V4.55a1.95 1.95 0 10-3.9 0V6.5H2.6v2.756a6.092 6.092 0 013.9 5.694 6.11 6.11 0 01-3.9 5.694V23.4h2.756a6.11 6.11 0 015.694-3.9 6.11 6.11 0 015.694 3.9H19.5v-6.5z"
+                      fill="#6B47D6"
+                    />
+                    <path
+                      d="M26 14.95a4.541 4.541 0 01-3.9 4.498V23.4a2.6 2.6 0 01-2.6 2.6h-4.94v-.39a3.51 3.51 0 00-3.51-3.51 3.504 3.504 0 00-3.51 3.51V26H2.6A2.6 2.6 0 010 23.4v-4.94h.39c1.937 0 3.51-1.56 3.51-3.51 0-1.95-1.573-3.51-3.51-3.51H0V6.5a2.6 2.6 0 012.6-2.6h3.952A4.541 4.541 0 0111.05 0a4.541 4.541 0 014.498 3.9H19.5a2.6 2.6 0 012.6 2.6v3.952c2.21.312 3.9 2.21 3.9 4.498zm-6.5 1.95h1.95a1.95 1.95 0 100-3.9H19.5V6.5H13V4.55a1.95 1.95 0 10-3.9 0V6.5H2.6v2.756a6.092 6.092 0 013.9 5.694 6.11 6.11 0 01-3.9 5.694V23.4h2.756a6.11 6.11 0 015.694-3.9 6.11 6.11 0 015.694 3.9H19.5v-6.5z"
+                      fill="url(#paint0_radial)"
+                      fillOpacity=".59"
+                    />
+                    <defs>
+                      <radialGradient
+                        cx="0"
+                        cy="0"
+                        gradientTransform="matrix(20.49999 -6.49999 7.077 22.3198 9 16)"
+                        gradientUnits="userSpaceOnUse"
+                        id="paint0_radial"
+                        r="1"
+                      >
+                        <stop
+                          stopColor="#E105CB"
+                        />
+                        <stop
+                          offset="1"
+                          stopColor="#fff"
+                          stopOpacity="0"
+                        />
+                      </radialGradient>
+                    </defs>
+                  </svg>
+                </div>
+              </div>
+              <div>
+                <div
+                  className="title"
+                >
+                  <strong>
+                    Extend your search experience
+                  </strong>
+                </div>
+                <div
+                  className="text-muted copyText"
+                >
+                  Customize workflows, display data alongside your code, and extend the UI via Sourcegraph extensions.
+                </div>
+              </div>
+            </div>
+            <a
+              className="btn btn-primary"
+              href="/sign-up?src=Extend&returnTo=%2Fextensions"
+              onClick={[Function]}
+            >
+              Sign up for Sourcegraph
+            </a>
+          </div>
+        </div>
+      </li>
+      <li
         aria-hidden="true"
         className="search-results-info-bar__divider"
       />
+      <li
+        className="mr-2"
+      >
+        <div
+          className="menu-nav-item btn-group"
+          onKeyDown={[Function]}
+        >
+          <a
+            aria-expanded={false}
+            aria-haspopup={true}
+            className="btn btn-sm btn-outline-secondary text-decoration-none create-code-monitor-button toggle nav-link"
+            href="#"
+            onClick={[Function]}
+          >
+            <svg
+              className="icon-inline mr-1"
+              fill="currentColor"
+              height="20"
+              viewBox="0 0 20 20"
+              width="20"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                clipRule="evenodd"
+                d="M18.01 8.01C18.01 8.29 18.23 8.51 18.51 8.51C18.79 8.51 19.01 8.29 19.01 8.01C19.01 4.15 15.87 1 12 1C11.72 1 11.5 1.22 11.5 1.5C11.5 1.78 11.72 2 12 2C15.31 2 18.01 4.7 18.01 8.01ZM16.1801 7.96002C15.9001 7.96002 15.6801 7.74002 15.6801 7.46002C15.6801 5.81002 14.3301 4.46002 12.6801 4.46002C12.4001 4.46002 12.1801 4.24002 12.1801 3.96002C12.1801 3.68002 12.4001 3.46002 12.6801 3.46002C14.8901 3.46002 16.6801 5.25002 16.6801 7.46002C16.6801 7.74002 16.4601 7.96002 16.1801 7.96002ZM4.83996 6.79999L13.34 15.3C12.39 15.88 11.29 16.18 10.15 16.18C8.49996 16.18 6.93996 15.54 5.76996 14.37C4.59996 13.2 3.94996 11.65 3.94996 9.98999C3.94996 8.84999 4.25996 7.74999 4.83996 6.79999ZM4.70996 4.54999C1.70996 7.54999 1.70996 12.43 4.70996 15.43C6.20996 16.93 8.17996 17.68 10.15 17.68C12.12 17.68 14.09 16.93 15.59 15.43L4.70996 4.54999ZM4 16.14C3.7 15.84 3.43 15.52 3.18 15.18L2.89 15.69L1 18.97H4.79H8.59L8.31 18.49C6.69 18.14 5.2 17.34 4 16.14ZM13.85 8.04999C13.85 9.01999 13.07 9.79999 12.1 9.79999C11.13 9.79999 10.35 9.01999 10.35 8.04999C10.35 7.07999 11.13 6.29999 12.1 6.29999C13.07 6.29999 13.85 7.07999 13.85 8.04999Z"
+                fillRule="evenodd"
+              />
+            </svg>
+            Monitor
+          </a>
+          <div
+            aria-hidden={true}
+            className="container dropdown-menu dropdown-menu-right"
+            role="menu"
+            tabIndex="-1"
+          >
+            <div
+              className="d-flex mb-3"
+            >
+              <div
+                className="d-flex align-items-center mr-3"
+              >
+                <div
+                  className="icon"
+                >
+                  <svg
+                    fill="none"
+                    height="26"
+                    width="26"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path
+                      clipRule="evenodd"
+                      d="M24.612 9.73c0 .39.305.695.694.695A.687.687 0 0026 9.73C26 4.373 21.641 0 16.27 0a.687.687 0 00-.695.694c0 .389.306.694.694.694 4.595 0 8.343 3.748 8.343 8.343zm-2.54-.069a.687.687 0 01-.694-.694 4.177 4.177 0 00-4.165-4.164.687.687 0 01-.694-.694c0-.389.306-.694.694-.694a5.55 5.55 0 015.553 5.552.687.687 0 01-.694.694zM6.33 8.051l11.8 11.8a8.47 8.47 0 01-4.429 1.22 8.547 8.547 0 01-6.08-2.512 8.537 8.537 0 01-2.526-6.08c0-1.582.43-3.11 1.235-4.428zm-.18-3.123c-4.164 4.164-4.164 10.938 0 15.103a10.646 10.646 0 007.551 3.123c2.735 0 5.47-1.041 7.552-3.123L6.15 4.928zm-.986 16.088c-.416-.416-.79-.86-1.138-1.332l-.402.707L1 24.946H11.536l-.389-.667a12.018 12.018 0 01-5.983-3.262zm13.673-11.23a2.423 2.423 0 01-2.429 2.43 2.423 2.423 0 01-2.43-2.43 2.423 2.423 0 012.43-2.43 2.423 2.423 0 012.43 2.43z"
+                      fill="#6B47D6"
+                      fillRule="evenodd"
+                    />
+                    <path
+                      clipRule="evenodd"
+                      d="M24.612 9.73c0 .39.305.695.694.695A.687.687 0 0026 9.73C26 4.373 21.641 0 16.27 0a.687.687 0 00-.695.694c0 .389.306.694.694.694 4.595 0 8.343 3.748 8.343 8.343zm-2.54-.069a.687.687 0 01-.694-.694 4.177 4.177 0 00-4.165-4.164.687.687 0 01-.694-.694c0-.389.306-.694.694-.694a5.55 5.55 0 015.553 5.552.687.687 0 01-.694.694zM6.33 8.051l11.8 11.8a8.47 8.47 0 01-4.429 1.22 8.547 8.547 0 01-6.08-2.512 8.537 8.537 0 01-2.526-6.08c0-1.582.43-3.11 1.235-4.428zm-.18-3.123c-4.164 4.164-4.164 10.938 0 15.103a10.646 10.646 0 007.551 3.123c2.735 0 5.47-1.041 7.552-3.123L6.15 4.928zm-.986 16.088c-.416-.416-.79-.86-1.138-1.332l-.402.707L1 24.946H11.536l-.389-.667a12.018 12.018 0 01-5.983-3.262zm13.673-11.23a2.423 2.423 0 01-2.429 2.43 2.423 2.423 0 01-2.43-2.43 2.423 2.423 0 012.43-2.43 2.423 2.423 0 012.43 2.43z"
+                      fill="url(#paint0_radial)"
+                      fillOpacity=".59"
+                      fillRule="evenodd"
+                    />
+                    <defs>
+                      <radialGradient
+                        cx="0"
+                        cy="0"
+                        gradientTransform="matrix(19.5 -2 2.17271 21.18397 11.5 14)"
+                        gradientUnits="userSpaceOnUse"
+                        id="paint0_radial"
+                        r="1"
+                      >
+                        <stop
+                          stopColor="#E105CB"
+                        />
+                        <stop
+                          offset="1"
+                          stopColor="#fff"
+                          stopOpacity="0"
+                        />
+                      </radialGradient>
+                    </defs>
+                  </svg>
+                </div>
+              </div>
+              <div>
+                <div
+                  className="title"
+                >
+                  <strong>
+                    Monitor code for changes
+                  </strong>
+                </div>
+                <div
+                  className="text-muted copyText"
+                >
+                  Create a monitor and get notified when your code changes. Free for registered users.
+                </div>
+              </div>
+            </div>
+            <a
+              className="btn btn-primary"
+              href="/sign-up?src=Monitor&returnTo=%2Fcode-monitoring%2Fnew%3Ftrigger-query%3Dfoo%2Btype%253Adiff%2Bpatterntype%253Aliteral"
+              onClick={[Function]}
+            >
+              Sign up for Sourcegraph
+            </a>
+          </div>
+        </div>
+      </li>
+      <li
+        className="mr-2"
+      >
+        <div
+          className="menu-nav-item btn-group"
+          onKeyDown={[Function]}
+        >
+          <a
+            aria-expanded={false}
+            aria-haspopup={true}
+            className="btn btn-sm btn-outline-secondary text-decoration-none test-save-search-link toggle nav-link"
+            href="#"
+            onClick={[Function]}
+          >
+            <svg
+              className="mdi-icon icon-inline mr-1"
+              fill="currentColor"
+              height={24}
+              viewBox="0 0 24 24"
+              width={24}
+            >
+              <path
+                d="M17,18L12,15.82L7,18V5H17M17,3H7A2,2 0 0,0 5,5V21L12,18L19,21V5C19,3.89 18.1,3 17,3Z"
+              />
+            </svg>
+            Save search
+          </a>
+          <div
+            aria-hidden={true}
+            className="container dropdown-menu dropdown-menu-right"
+            role="menu"
+            tabIndex="-1"
+          >
+            <div
+              className="d-flex mb-3"
+            >
+              <div
+                className="d-flex align-items-center mr-3"
+              >
+                <div
+                  className="icon"
+                >
+                  <svg
+                    fill="none"
+                    height="26"
+                    width="26"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path
+                      d="M20.143 21.667L13 18.517l-7.143 3.15V2.889h14.286v18.778zm0-21.667H5.857C5.1 0 4.373.304 3.837.846A2.905 2.905 0 003 2.89V26l10-4.333L23 26V2.889c0-.766-.301-1.501-.837-2.043A2.842 2.842 0 0020.143 0z"
+                      fill="#6B47D6"
+                    />
+                    <path
+                      d="M20.143 21.667L13 18.517l-7.143 3.15V2.889h14.286v18.778zm0-21.667H5.857C5.1 0 4.373.304 3.837.846A2.905 2.905 0 003 2.89V26l10-4.333L23 26V2.889c0-.766-.301-1.501-.837-2.043A2.842 2.842 0 0020.143 0z"
+                      fill="url(#paint0_radial)"
+                      fillOpacity=".59"
+                    />
+                    <defs>
+                      <radialGradient
+                        cx="0"
+                        cy="0"
+                        gradientTransform="matrix(18.00004 -1 1.4154 25.47731 8.5 12)"
+                        gradientUnits="userSpaceOnUse"
+                        id="paint0_radial"
+                        r="1"
+                      >
+                        <stop
+                          stopColor="#E105CB"
+                        />
+                        <stop
+                          offset="1"
+                          stopColor="#fff"
+                          stopOpacity="0"
+                        />
+                      </radialGradient>
+                    </defs>
+                  </svg>
+                </div>
+              </div>
+              <div>
+                <div
+                  className="title"
+                >
+                  <strong>
+                    Saved searches
+                  </strong>
+                </div>
+                <div
+                  className="text-muted copyText"
+                >
+                  Save your searches and quickly run them again. Free for registered users.
+                </div>
+              </div>
+            </div>
+            <a
+              className="btn btn-primary"
+              href="/sign-up?src=Saved&returnTo=%2Fsearch"
+              onClick={[Function]}
+            >
+              Sign up for Sourcegraph
+            </a>
+          </div>
+        </div>
+      </li>
       <li
         aria-hidden="true"
         className="search-results-info-bar__divider"
@@ -455,7 +774,7 @@ exports[`SearchResultsInfoBar code monitoring feature flag enabled, cannot creat
 </div>
 `;
 
-exports[`SearchResultsInfoBar feature flag enabled, unauthenticated user 1`] = `
+exports[`SearchResultsInfoBar unauthenticated user 1`] = `
 <div
   className="search-results-info-bar"
   data-testid="results-info-bar"

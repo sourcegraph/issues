@@ -152,17 +152,3 @@ add('with everything', () => (
         )}
     </WebStory>
 ))
-
-add('with cta link', () => (
-    <WebStory>
-        {() => (
-            <SearchSidebar
-                {...defaultProps}
-                authenticatedUser={null}
-                settingsCascade={{ subjects: [], final: { quicklinks, 'search.scopes': scopes } }}
-                filters={filters}
-                featureFlags={new Map([['w0-signup-optimisation', true]])}
-            />
-        )}
-    </WebStory>
-))
