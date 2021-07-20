@@ -3,7 +3,7 @@
 # This function installs the comby dependency for cmd/searcher.
 # The CI pipeline calls this script to install or upgrade comby
 # for tests or development environments.
-REQUIRE_VERSION="0.18.1"
+REQUIRE_VERSION="1.0.0"
 
 RELEASE_VERSION=$REQUIRE_VERSION
 RELEASE_TAG=$REQUIRE_VERSION
