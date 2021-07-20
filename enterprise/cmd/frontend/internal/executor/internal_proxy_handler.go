@@ -17,7 +17,6 @@ import (
 	"github.com/sourcegraph/sourcegraph/internal/env"
 )
 
-var queueURL = env.Get("EXECUTOR_QUEUE_URL", "", "HTTP address for the internal executor-queue.")
 var sharedUsername = env.Get("EXECUTOR_FRONTEND_USERNAME", "", "The username used to securely communicate between the executor service and the internal API provided by this proxy.")
 var sharedPassword = env.Get("EXECUTOR_FRONTEND_PASSWORD", "", "The password used to securely communicate between the executor service and the internal API provided by this proxy.")
 
