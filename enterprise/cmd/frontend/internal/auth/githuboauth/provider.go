@@ -66,7 +66,9 @@ func parseProvider(p *schema.GitHubAuthProvider, db dbutil.DB, sourceCfg schema.
 					allowSignup: p.AllowSignup,
 					allowOrgs:   p.AllowOrgs,
 				}, sessionKey),
-				nil,
+				http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+					http.Redirect(w, req, "/", http.StatusTemporaryRedirect)
+				}),
 			)
 		},
 	}), messages
