@@ -12,6 +12,7 @@ import (
 	"github.com/sourcegraph/sourcegraph/internal/search/filter"
 	"github.com/sourcegraph/sourcegraph/internal/search/query"
 	"github.com/sourcegraph/sourcegraph/internal/search/result"
+	"github.com/sourcegraph/sourcegraph/internal/types"
 	"github.com/sourcegraph/sourcegraph/internal/vcs/git"
 	"github.com/sourcegraph/sourcegraph/schema"
 )
@@ -135,10 +136,12 @@ type TextParameters struct {
 	ResultTypes result.Types
 	Timeout     time.Duration
 
-	// Performance optimization: For global queries, resolving repositories and
-	// querying zoekt happens concurrently.
+	// deprecated
 	RepoPromise *RepoPromise
-	Mode        GlobalSearchMode
+
+	// perf: For global queries, we only resolve private repos.
+	UserPrivateRepos []types.RepoName
+	Mode             GlobalSearchMode
 
 	// Query is the parsed query from the user. You should be using Pattern
 	// instead, but Query is useful for checking extra fields that are set and

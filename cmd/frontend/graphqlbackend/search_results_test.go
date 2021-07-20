@@ -523,6 +523,9 @@ func TestSearchResultsHydration(t *testing.T) {
 	}
 
 	database.Mocks.Repos.ListRepoNames = func(_ context.Context, op database.ReposListOptions) ([]types.RepoName, error) {
+		if op.OnlyPrivate {
+			return nil, nil
+		}
 		return []types.RepoName{{ID: repoWithIDs.ID, Name: repoWithIDs.Name}}, nil
 	}
 	database.Mocks.Repos.Count = mockCount

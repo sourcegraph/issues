@@ -21,11 +21,13 @@ import (
 	otlog "github.com/opentracing/opentracing-go/log"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
+	"github.com/sourcegraph/sourcegraph/internal/conf"
 
 	"github.com/sourcegraph/sourcegraph/cmd/frontend/envvar"
 	searchlogs "github.com/sourcegraph/sourcegraph/cmd/frontend/internal/search/logs"
 	"github.com/sourcegraph/sourcegraph/internal/actor"
 	"github.com/sourcegraph/sourcegraph/internal/api"
+	"github.com/sourcegraph/sourcegraph/internal/database"
 	"github.com/sourcegraph/sourcegraph/internal/database/dbutil"
 	"github.com/sourcegraph/sourcegraph/internal/featureflag"
 	"github.com/sourcegraph/sourcegraph/internal/goroutine"
@@ -1439,6 +1441,15 @@ func (r *searchResolver) doResults(ctx context.Context, args *search.TextParamet
 	// search results with resolved repos.
 	if args.Mode == search.ZoektGlobalSearch && !args.PatternInfo.IsEmpty() {
 		argsIndexed := *args
+
+		// Get all private repos that are accessible by the current actor.
+		if res, err := database.Repos(r.db).ListRepoNames(ctx, database.ReposListOptions{
+			OnlyPrivate: true,
+			LimitOffset: &database.LimitOffset{Limit: search.SearchLimits(conf.Get()).MaxRepos + 1},
+		}); err == nil {
+			argsIndexed.UserPrivateRepos = res
+		}
+
 		wg := waitGroup(true)
 		wg.Add(1)
 		goroutine.Go(func() {
