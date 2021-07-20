@@ -54,7 +54,7 @@ Enzyme allows [simulating events on elements](https://enzymejs.github.io/enzyme/
 [Sinon](https://sinonjs.org/) can be used to assert a callback prop is called in response to that, or Jest snapshots to assert the render output changes accordingly.
 
 Behaviors involving many components can be tested well in integration tests with Puppeteer to make sure they are wired up correctly.
-Documentation for integration tests in our main repository can be found in the [repository's developer documentation](https://docs.sourcegraph.com/dev/background-information/testing#browser-based-tests).
+Documentation for integration tests in our main repository can be found in the [repository's developer documentation](https://docs.sourcegraph.com/dev/how-to/testing#browser-based-tests).
 
 ## Writing testable code
 
