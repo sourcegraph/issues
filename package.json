@@ -179,7 +179,7 @@
     "@types/puppeteer": "5.4.2",
     "@types/react": "17.0.0",
     "@types/react-circular-progressbar": "1.0.2",
-    "@types/react-dom": "16.9.8",
+    "@types/react-dom": "17.0.6",
     "@types/react-grid-layout": "0.17.2",
     "@types/react-router": "5.1.10",
     "@types/react-router-dom": "5.1.7",
