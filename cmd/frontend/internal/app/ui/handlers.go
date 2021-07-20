@@ -152,6 +152,12 @@ func newCommon(w http.ResponseWriter, r *http.Request, title string, serveError 
 		WebpackDevServer: webpackDevServer,
 	}
 
+	assetsURL, err := assetsutil.GetDebugAssetsLocation(r)
+	if err == nil {
+		common.AssetURL = assetsURL.String()
+		common.WebpackDevServer = true
+	}
+
 	if _, ok := mux.Vars(r)["Repo"]; ok {
 		// Common repo pages (blob, tree, etc).
 		var err error
