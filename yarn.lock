@@ -23256,10 +23256,10 @@ webext-domain-permission-toggle@^1.0.1:
   dependencies:
     webext-additional-permissions "^1.0.0"
 
-webext-patterns@^0.9.0:
-  version "0.9.0"
-  resolved "https://registry.npmjs.org/webext-patterns/-/webext-patterns-0.9.0.tgz#4d475f0f8fab94438529c04b35d70185311ff403"
-  integrity sha512-eJDQjdJ8QmbURZtmRVnkLm4xHoG3YUNJzpIIJPmBKC4rjfT89IzZvUn70qJSKM9+S3sqefI1hzQIvSLp2uGWfw==
+webext-patterns@^0.9.1:
+  version "0.9.1"
+  resolved "https://registry.npmjs.org/webext-patterns/-/webext-patterns-0.9.1.tgz#27bfdbb306663ac555e035043d7c3f5cee214600"
+  integrity sha512-ZbzznXSq3/p0XwXRtMLjoFFPM7BIKVsGaEA44ZZ5OsnX085NpB3D3zzJkzpN0fQCrvuk6XRtao1YM3WN2/94VA==
 
 webextension-polyfill@^0.6.0:
   version "0.6.0"
