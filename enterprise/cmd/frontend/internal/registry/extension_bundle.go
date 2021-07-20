@@ -33,6 +33,13 @@ func handleRegistryExtensionBundle(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if cookie, err := r.Cookie("sourcegraphAnonymousUid"); err == nil {
+		fmt.Printf("anon user id: %v", cookie.Value)
+		// TODO(tj): proper `getUID` fn
+		filename := mux.Vars(r)["RegistryExtensionReleaseFilename"]
+		IncrementExtensionUserCount(filename, cookie.Value)
+	}
+
 	filename := mux.Vars(r)["RegistryExtensionReleaseFilename"]
 	wantSourceMap := filepath.Ext(filename) == ".map"
 
