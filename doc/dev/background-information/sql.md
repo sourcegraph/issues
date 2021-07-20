@@ -2,7 +2,13 @@
 
 This document contains recommendations on how to write efficient SQL for certain classes of tasks.
 
-## Batch insertions
+## Choosing indexes
+
+TODO
+
+## Batch operations
+
+### Insertions
 
 If a large number of rows are being inserted into the same table, use of a [batch inserter](https://sourcegraph.com/search?q=context:global+repo:%5Egithub%5C.com/sourcegraph/sourcegraph%24+file:%5Einternal/database/batch/batch%5C.go+content:%27func+NewInserter%28%27&patternType=literal) instance should be preferred over issuing an `INSERT` statement for each row. This inserter also emits `INSERT` statements, but batches values to inserted together, so that the minimum number of round trips to the database are made. The batch inserter instance is also aware of the maximum size of payloads that can be sent to PostgreSQL in one query and will adjust the flush rate accordingly to prevent large queries from being rejected.
 
@@ -29,7 +35,7 @@ Sample uses:
 - [data_write.go](https://sourcegraph.com/github.com/sourcegraph/sourcegraph@b795806a03468f565702cd8f1990a7fbc969722a/-/blob/enterprise/internal/codeintel/stores/lsifstore/data_write.go#L290:16): Code intelligence uses a batch inserter to write processed code intelligence index data to the codeintel-db. This use instantiates a number of inserters that read values to insert from a shared channel, all operating in parallel.
 - [changeset_jobs.go](https://sourcegraph.com/github.com/sourcegraph/sourcegraph@b795806a03468f565702cd8f1990a7fbc969722a/-/blob/enterprise/internal/batches/store/changeset_jobs.go#L99:15): Batch changes uses a batch inserter to insert a large number of changeset jobs atomically. Before using a batch inserter, this method would fail when a large number of rows were inserted. PostgreSQL accepts a maximum of `(2^15) - 1` parameters per query, which can be spent surprisingly quickly when inserting a large number of columns.
 
-## Batch insertion of common values
+### Insertion with common values
 
 During batch insertions, it is common for each of the rows being inserted to be logically related. For example, they may all share the same value for a portion of their primary key, a foreign key, or an insertion timestamp. In such cases, it is wasteful to send the same value explicitly in every row. This waste may be negligible for most insertions, but will be large when inserting a large number of rows or inserting a large number of identical columns.
 
@@ -86,7 +92,7 @@ if err := db.Exec(ctx, sqlf.Sprintf(insertQuery, val1, val2)); err != nil {
 }
 ```
 
-## Batch updates
+### Updates
 
 Not all batch operations can be accomplished with insertions alone. We have several cases where denormalized (or cached) data is persisted to PostgreSQL en masse. The obvious implementation is to delete any conflicting data prior to a full insertion of the data set. This works, but has an obvious drawback: if the data set changes incrementally between recalculation, then many identical rows may be deleted then re-inserted. This has the effect of creating null operations that requires two writes per row, which is obviously inefficient. However, the real danger comes from increased table and index bloat.
 
@@ -98,8 +104,7 @@ A better solution is to reduce the number of dead rows created during these batc
 
 In the following, we assume that `col1`, `col2`, and `col3` cover the identity of the row, and `col4` is a simple data point (which can be updated without changing the identity the row). For this to be optimally efficient, `col4` should not be present in any index so that a [HOT update](https://www.cybertec-postgresql.com/en/hot-updates-in-postgresql-for-better-performance/) is possible.
 
-#### Insert
-
+#### Insert new rows
 
 ```sql
 insertQuery := `
@@ -118,8 +123,7 @@ if err := db.Exec(ctx, sqlf.Sprintf(insertQuery, val1, val2, val1, val2)); err !
 }
 ```
 
-#### Delete
-
+#### Delete missing rows
 
 ```sql
 deleteQuery := `
@@ -137,7 +141,7 @@ if err := db.Exec(ctx, sqlf.Sprintf(deleteQuery, val1, val2)); err != nil {
 }
 ```
 
-#### Update
+#### Update changed rows
 
 ```sql
 updateQuery := `
@@ -156,3 +160,67 @@ if err := db.Exec(ctx, sqlf.Sprintf(updateQuery, val1, val2)); err != nil {
 Sample uses:
 
 - [commits.go](https://sourcegraph.com/github.com/sourcegraph/sourcegraph@b795806a03468f565702cd8f1990a7fbc969722a/-/blob/enterprise/internal/codeintel/stores/dbstore/commits.go#L292:16): Code intelligence uses this update-in-place technique over a set of tables to store an indexed and compressed view of the commit graph of a repository. This operation runs frequently (after each precise code intelligence index upload, and after updates from the code host) and generally changes only in a local way between updates.
+
+## Materialized cache
+
+TODO
+
+```sql
+CREATE TABLE conditions (
+    time timestamptz NOT NULL,
+    location_id int NOT NULL,
+    temperature_celsius double precision NOT NULL,
+    PRIMARY KEY (time, location_id)
+)
+
+CREATE INDEX conditions_location_id_time ON conditions(location_id, time);
+```
+
+Show query plan:
+
+```sql
+SELECT DISTINCT location_id FROM conditions
+```
+
+#### Insert trigger
+
+TODO
+
+```sql
+CREATE OR REPLACE FUNCTION update_condition_locations_insert() RETURNS trigger AS $$ BEGIN
+    INSERT INTO condition_locations SELECT location_id FROM newtab ON CONFLICT (location_id) DO NOTHING;
+    RETURN NULL;
+END $$ LANGUAGE plpgsql;
+
+CREATE TRIGGER condition_locations_insert
+AFTER INSERT ON conditions REFERENCING NEW TABLE AS newtab
+FOR EACH STATEMENT EXECUTE PROCEDURE update_condition_locations_insert();
+```
+
+#### Delete trigger
+
+TODO
+
+```sql
+CREATE OR REPLACE FUNCTION update_condition_locations_delete() RETURNS trigger AS $$ BEGIN
+    DELETE FROM condition_locations cl
+    WHERE
+        cl.location_id IN (SELECT location_id FROM oldtab) AND
+        NOT EXISTS (SELECT 1 FROM conditions c WHERE c.location_id = cl.location_id);
+    RETURN NULL;
+END $$ LANGUAGE plpgsql;
+
+CREATE TRIGGER condition_locations_delete
+AFTER DELETE ON conditions REFERENCING OLD TABLE AS oldtab
+FOR EACH STATEMENT EXECUTE PROCEDURE update_condition_locations_delete();
+```
+
+Show query plan:
+
+```
+SELECT DISTINCT location_id FROM condition_locations
+```
+
+#### Batch triggers
+
+TODO
