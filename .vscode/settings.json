@@ -13,6 +13,9 @@
     "doc/_resources/assets": true,
     "**/.eslintcache": true,
   },
+  "files.exclude": {
+    "**/*.scss.d.ts": true,
+  },
   "files.associations": {
     "**/dev/critical-config.json": "jsonc",
     "**/dev/site-config.json": "jsonc",
