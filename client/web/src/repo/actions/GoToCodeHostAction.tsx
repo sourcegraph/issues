@@ -50,6 +50,34 @@ interface Props extends RevisionSpec, Partial<FileSpec>, GoToCodeHostPopoverProp
 
 const HAS_PERMANENTLY_DISMISSED_POPUP_KEY = 'has-dismissed-browser-ext-popup'
 
+interface RangeOrPositionArguments {
+    url: string
+    kind: ExternalServiceKind
+    range?: Range
+    position?: Position
+}
+
+const appendRangeOrPosition = ({ url, kind, range, position }: RangeOrPositionArguments): string => {
+    const isBitbucketCloud = kind === ExternalServiceKind.BITBUCKETCLOUD
+    const isBitbucketServer = kind === ExternalServiceKind.BITBUCKETSERVER
+    const isGitLab = kind === ExternalServiceKind.GITLAB
+    const isBitbucket = isBitbucketCloud || isBitbucketServer
+
+    const hashPrefix = isBitbucketCloud ? '#lines' : isBitbucketServer ? '#' : '#L'
+    const hashPostfix = isBitbucketCloud ? '-' : ''
+
+    if (range) {
+        const rangeEndPrefix = isGitLab || isBitbucket ? '' : 'L'
+        const rangeDelimiter = isBitbucketCloud ? ':' : '-'
+
+        url += `${hashPrefix}${hashPostfix}${range.start.line}${rangeDelimiter}${rangeEndPrefix}${range.end.line}`
+    } else if (position) {
+        url += `${hashPrefix}${hashPostfix}${position.line}`
+    }
+
+    return url
+}
+
 /**
  * A repository header action that goes to the corresponding URL on an external code host.
  */
@@ -176,6 +204,7 @@ export const GoToCodeHostAction: React.FunctionComponent<Props & RepoHeaderConte
 
     // Extract url to add branch, line numbers or commit range.
     let url = externalURL.url
+
     if (
         externalURL.serviceKind === ExternalServiceKind.GITHUB ||
         externalURL.serviceKind === ExternalServiceKind.GITLAB
@@ -188,13 +217,20 @@ export const GoToCodeHostAction: React.FunctionComponent<Props & RepoHeaderConte
         if (props.commitRange) {
             url += `/compare/${props.commitRange.replace(/^\.{3}/, 'HEAD...').replace(/\.{3}$/, '...HEAD')}`
         }
-        // Add range or position path to the code host URL.
-        if (props.range) {
-            const rangeEndPrefix = externalURL.serviceKind === ExternalServiceKind.GITLAB ? '' : 'L'
-            url += `#L${props.range.start.line}-${rangeEndPrefix}${props.range.end.line}`
-        } else if (props.position) {
-            url += `#L${props.position.line}`
-        }
+    }
+
+    if (
+        externalURL.serviceKind === ExternalServiceKind.GITHUB ||
+        externalURL.serviceKind === ExternalServiceKind.GITLAB ||
+        externalURL.serviceKind === ExternalServiceKind.BITBUCKETCLOUD ||
+        externalURL.serviceKind === ExternalServiceKind.BITBUCKETSERVER
+    ) {
+        url = appendRangeOrPosition({
+            url,
+            kind: externalURL.serviceKind,
+            range: props.range,
+            position: props.position,
+        })
     }
 
     const TARGET_ID = 'go-to-code-host'
@@ -268,6 +304,8 @@ export function serviceKindDisplayNameAndIcon(
             return { displayName: 'Phabricator', icon: PhabricatorIcon }
         case ExternalServiceKind.AWSCODECOMMIT:
             return { displayName: 'AWS CodeCommit' }
+        case ExternalServiceKind.BITBUCKETCLOUD:
+            return { displayName: 'Bitbucket Cloud', icon: BitbucketIcon }
         default:
             return { displayName: upperFirst(toLower(serviceKind)) }
     }
