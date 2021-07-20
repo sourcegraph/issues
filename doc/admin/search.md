@@ -1,6 +1,6 @@
 # Search configuration
 
-See "[Code search overview](../code_search/index.md)" for general information about Sourcegraph's code search.
+See "[Universal Code Search overview](../code_search/index.md)" for general information about Sourcegraph's code search.
 
 ## Indexed search
 

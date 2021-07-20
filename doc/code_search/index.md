@@ -1,4 +1,4 @@
-# Code search
+# Universal Code Search
 
 <p class="subtitle">Search code across all your repositories and code hosts</p>
 
@@ -9,8 +9,7 @@
 - debug issues
 - determine the impact of changes
 
-Sourcegraph code search helps developers perform these tasks more quickly and effectively by providing fast, advanced code search across multiple repositories.
-
+Sourcegraph Universal Code Search helps developers perform these tasks more quickly and effectively by providing fast, advanced code search across multiple repositories.
 
 <div class="cta-group">
 <a class="btn btn-primary" href="reference/queries">★ Search query language</a>
@@ -27,9 +26,9 @@ Sourcegraph code search helps developers perform these tasks more quickly and ef
   </a>
 
   <a href="https://www.youtube.com/watch?v=GQj5jXdON3A" class="btn" alt="Watch the intro to code search video">
-   <span>Intro to code search video</span>
+   <span>Intro to Universal Code Search video</span>
    </br>
-   Watch the intro to code search video to see what you can do with Sourcegraph search.
+   Watch the intro to Universal Code Search video to see what you can do with Sourcegraph search.
   </a>
 
   <a href="reference/queries" class="btn" alt="Learn the search syntax">

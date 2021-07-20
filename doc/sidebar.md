@@ -13,7 +13,7 @@ Keep it as a single list with at most 2 levels. (Anything else may not render co
 - [Getting started](getting-started/index.md)
   - [Product tour](getting-started/tour.md)
   - [Personalization](getting-started/personalization/index.md)
-- [Code search](code_search/index.md)
+- [Universal Code Search](code_search/index.md)
   - [Tutorials](code_search/tutorials/index.md)
   - [How-to guides](code_search/how-to/index.md)
   - [Explanations](code_search/explanations/index.md)

@@ -32,7 +32,7 @@ img.toggle {
 
 </style>
 
-This page describes search pattern syntax and keywords available for code search. See the complementary [language reference](language.md) for a visual breakdown. A typical search pattern describes content or filenames to find across all repositories. At the most basic level, a search pattern can simply be a word like `hello`. See our [search patterns](#search-pattern-syntax) documentation for detailed usage. Queries can also include keywords. For example, a typical search query will include a `repo:` keyword that filters search results for a specific repository. See our [keywords](#keywords-all-searches) documentation for more examples.
+This page describes search pattern syntax and keywords available for Universal Code Search. See the complementary [language reference](language.md) for a visual breakdown. A typical search pattern describes content or filenames to find across all repositories. At the most basic level, a search pattern can simply be a word like `hello`. See our [search patterns](#search-pattern-syntax) documentation for detailed usage. Queries can also include keywords. For example, a typical search query will include a `repo:` keyword that filters search results for a specific repository. See our [keywords](#keywords-all-searches) documentation for more examples.
 
 ## Search pattern syntax
 

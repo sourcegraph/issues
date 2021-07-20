@@ -2,7 +2,7 @@
 
 ## Powerful, flexible queries
 
-Sourcegraph code search performs full-text searches and supports both regular expression and exact queries. By default, Sourcegraph searches across all your repositories. Our search query syntax allows for advanced queries, such as searching over any branch or commit, narrowing searches by programming language or file pattern, and more.
+Sourcegraph Universal Code Search performs full-text searches and supports both regular expression and exact queries. By default, Sourcegraph searches across all your repositories. Our search query syntax allows for advanced queries, such as searching over any branch or commit, narrowing searches by programming language or file pattern, and more.
 
 See the [query syntax](../reference/queries.md) and [query reference](../reference/language.md) documentation for a comprehensive overview of supported syntax.
 
