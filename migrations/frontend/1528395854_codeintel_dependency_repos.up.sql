@@ -8,6 +8,7 @@ CREATE TABLE IF NOT EXISTS codeintel_dependency_repo_adding_jobs (
     started_at timestamp with time zone,
     finished_at timestamp with time zone,
     process_after timestamp with time zone,
+    last_heartbeat_at timestamp with time zone,
     num_resets integer DEFAULT 0 NOT NULL,
     num_failures integer DEFAULT 0 NOT NULL,
     worker_hostname text NOT NULL DEFAULT '',
