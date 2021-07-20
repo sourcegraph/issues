@@ -382,7 +382,7 @@
     "rxjs": "^6.6.3",
     "sanitize-html": "^2.0.0",
     "semver": "^7.3.2",
-    "shepherd.js": "^8.0.2",
+    "shepherd.js": "^8.3.1",
     "string-score": "^1.0.1",
     "tabbable": "^5.1.5",
     "tagged-template-noop": "^2.1.1",

@@ -2711,7 +2711,7 @@
     qs "^6.7.0"
     url-parse "^1.4.7"
 
-"@popperjs/core@^2.4.4", "@popperjs/core@^2.5.4", "@popperjs/core@^2.6.0":
+"@popperjs/core@^2.5.4", "@popperjs/core@^2.6.0", "@popperjs/core@^2.9.2":
   version "2.9.2"
   resolved "https://registry.npmjs.org/@popperjs/core/-/core-2.9.2.tgz#adea7b6953cbb34651766b0548468e743c6a2353"
   integrity sha512-VZMYa7+fXHdwIq1TDhSXoVmSPEGM/aa+6Aiq3nVVJ9bXr24zScr+NlKFKC3iPljA7ho/GAZr+d2jOf5GIRC30Q==
@@ -20630,12 +20630,12 @@ shellwords@^0.1.1:
   resolved "https://registry.npmjs.org/shellwords/-/shellwords-0.1.1.tgz#d6b9181c1a48d397324c84871efbcfc73fc0654b"
   integrity sha512-vFwSUfQvqybiICwZY5+DAWIPLKsWO31Q91JSKl3UYv+K5c2QRPzn0qzec6QPu1Qc9eHYItiP3NdJqNVqetYAww==
 
-shepherd.js@^8.0.2:
-  version "8.0.2"
-  resolved "https://registry.npmjs.org/shepherd.js/-/shepherd.js-8.0.2.tgz#30675a68883c474b5c7b4056b98f2423b577708f"
-  integrity sha512-qFt5vrnVoshg6fS5gKGQznYGyIaEclyKKSl1Siw6gO7GyKnCEJ2aBDrp8pxKusMfZo5J5dtgeKJtsRav5cimjA==
+shepherd.js@^8.3.1:
+  version "8.3.1"
+  resolved "https://registry.npmjs.org/shepherd.js/-/shepherd.js-8.3.1.tgz#131eeefc5eb2bc44c9e23d0da139db46b2b55339"
+  integrity sha512-IhxZNhnK2m/pNTXudNfYrcwvcZNWkeYngQbQee8nC3xJ2GjeIatGqivhdZAMZ+LeogZvKMakB931d/V534uhrw==
   dependencies:
-    "@popperjs/core" "^2.4.4"
+    "@popperjs/core" "^2.9.2"
     deepmerge "^4.2.2"
     smoothscroll-polyfill "^0.4.4"
 
