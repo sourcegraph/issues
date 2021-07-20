@@ -12,6 +12,7 @@ $compact-summary-min-height: 2.75rem;
     &__nodes {
         list-style-type: none;
         padding: 0;
+        margin-bottom: 0;
     }
 
     &--noncompact &__form {
