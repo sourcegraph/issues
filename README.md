@@ -1,7 +1,7 @@
 # <a href="https://sourcegraph.com"><picture><source srcset="./ui/assets/img/sourcegraph-head-logo.svg" media="(prefers-color-scheme: dark)"/><img alt="Sourcegraph" src="./ui/assets/img/sourcegraph-light-head-logo.svg" height="48px" /></picture></a>
 
 [![build](https://badge.buildkite.com/00bbe6fa9986c78b8e8591cffeb0b0f2e8c4bb610d7e339ff6.svg?branch=master)](https://buildkite.com/sourcegraph/sourcegraph)
-[![apache license](https://img.shields.io/badge/license-Apache-blue.svg)](LICENSE)
+[![apache license](https://img.shields.io/badge/license-Apache-blue.svg)](LICENSE) [![Join the chat at https://gitter.im/sourcegraph/sourcegraph](https://badges.gitter.im/sourcegraph/sourcegraph.svg)](https://gitter.im/sourcegraph/sourcegraph?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
 [Sourcegraph](https://about.sourcegraph.com/) OSS edition is a fast, open-source, fully-featured code search and navigation engine. [Enterprise editions](https://about.sourcegraph.com/pricing) are available.
 
