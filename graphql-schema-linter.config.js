@@ -5,5 +5,7 @@ module.exports = {
     'fields-have-descriptions',
     'input-object-values-have-descriptions',
     'types-have-descriptions',
+    'relay-connection-types-spec',
+    'relay-connection-arguments-spec',
   ],
 }
