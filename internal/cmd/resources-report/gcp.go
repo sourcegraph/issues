@@ -9,6 +9,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/cockroachdb/errors"
 	gcp_crm "google.golang.org/api/cloudresourcemanager/v1"
 	gcp_cp "google.golang.org/api/compute/v1"
 	gcp_ct "google.golang.org/api/container/v1"
@@ -31,7 +32,7 @@ var gcpResources = map[string]GCPResourceFetchFunc{
 	"compute": func(ctx context.Context, results chan<- Resource, project string, since time.Time) error {
 		client, err := gcp_cp.NewService(ctx)
 		if err != nil {
-			return fmt.Errorf("failed to init client: %w", err)
+			return errors.Errorf("failed to init client: %w", err)
 		}
 
 		// compute APIs require us to specify zones, so we must iterate over all zones
@@ -46,7 +47,7 @@ var gcpResources = map[string]GCPResourceFetchFunc{
 						for _, instance := range instances.Items {
 							created, err := time.Parse(time.RFC3339, instance.CreationTimestamp)
 							if err != nil {
-								return fmt.Errorf("could not parse create time for instance %s: %w", instance.Name, err)
+								return errors.Errorf("could not parse create time for instance %s: %w", instance.Name, err)
 							}
 							machineTypeSegments := strings.Split(instance.MachineType, "/")
 							machineType := machineTypeSegments[len(machineTypeSegments)-1]
@@ -66,7 +67,7 @@ var gcpResources = map[string]GCPResourceFetchFunc{
 						}
 						return nil
 					}); err != nil {
-					return fmt.Errorf("instances: %w", err)
+					return errors.Errorf("instances: %w", err)
 				}
 
 				if err := client.Disks.List(project, zone.Name).
@@ -74,7 +75,7 @@ var gcpResources = map[string]GCPResourceFetchFunc{
 						for _, disk := range disks.Items {
 							created, err := time.Parse(time.RFC3339, disk.CreationTimestamp)
 							if err != nil {
-								return fmt.Errorf("could not parse create time for disk %s: %w", disk.Name, err)
+								return errors.Errorf("could not parse create time for disk %s: %w", disk.Name, err)
 							}
 							diskTypeSegments := strings.Split(disk.Type, "/")
 							diskType := diskTypeSegments[len(diskTypeSegments)-1]
@@ -94,7 +95,7 @@ var gcpResources = map[string]GCPResourceFetchFunc{
 						}
 						return nil
 					}); err != nil {
-					return fmt.Errorf("disks: %w", err)
+					return errors.Errorf("disks: %w", err)
 				}
 			}
 			return nil
@@ -108,19 +109,19 @@ var gcpResources = map[string]GCPResourceFetchFunc{
 	"containers": func(ctx context.Context, results chan<- Resource, project string, since time.Time) error {
 		client, err := gcp_ct.NewService(ctx)
 		if err != nil {
-			return fmt.Errorf("failed to init client: %w", err)
+			return errors.Errorf("failed to init client: %w", err)
 		}
 
 		// cluster api allows us to query all locations at once
 		parent := fmt.Sprintf("projects/%s/locations/-", project)
 		list, err := client.Projects.Locations.Clusters.List(parent).Context(ctx).Do()
 		if err != nil {
-			return fmt.Errorf("clusters: %w", err)
+			return errors.Errorf("clusters: %w", err)
 		}
 		for _, cluster := range list.Clusters {
 			created, err := time.Parse(time.RFC3339, cluster.CreateTime)
 			if err != nil {
-				return fmt.Errorf("could not parse create time for cluster %s: %w", cluster.Name, err)
+				return errors.Errorf("could not parse create time for cluster %s: %w", cluster.Name, err)
 			}
 			if created.After(since) {
 				results <- Resource{
@@ -148,7 +149,7 @@ func collectGCPResources(ctx context.Context, since time.Time, verbose bool, lab
 
 	crm, err := gcp_crm.NewService(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("failed to init cloud resources client: %w", err)
+		return nil, errors.Errorf("failed to init cloud resources client: %w", err)
 	}
 
 	results := make(chan Resource, resultsBuffer)
@@ -165,7 +166,7 @@ func collectGCPResources(ctx context.Context, since time.Time, verbose bool, lab
 				wait.Add(1)
 				go func(resourceID string, fetchResource GCPResourceFetchFunc, project string) {
 					if err := fetchResource(ctx, results, project, since); err != nil {
-						errs <- fmt.Errorf("project %s, resource %s: %w", project, resourceID, err)
+						errs <- errors.Errorf("project %s, resource %s: %w", project, resourceID, err)
 					}
 					wait.Done()
 				}(resourceID, fetchResource, project.ProjectId)

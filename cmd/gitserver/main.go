@@ -3,7 +3,6 @@ package main // import "github.com/sourcegraph/sourcegraph/cmd/gitserver"
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"net"
 	"net/http"
@@ -104,7 +103,7 @@ func main() {
 
 				return repos.CloneURL(svc.Kind, svc.Config, r)
 			}
-			return "", fmt.Errorf("no sources for %q", repo)
+			return "", errors.Errorf("no sources for %q", repo)
 		},
 		GetVCSSyncer: func(ctx context.Context, repo api.RepoName) (server.VCSSyncer, error) {
 			r, err := repoStore.GetByName(ctx, repo)
@@ -136,6 +135,26 @@ func main() {
 				return &server.PerforceDepotSyncer{
 					MaxChanges: int(c.MaxChanges),
 				}, nil
+			case extsvc.TypeJVMPackages:
+				var c schema.JVMPackagesConnection
+				for _, info := range r.Sources {
+					es, err := externalServiceStore.GetByID(ctx, info.ExternalServiceID())
+					if err != nil {
+						return nil, errors.Wrap(err, "get external service")
+					}
+
+					normalized, err := jsonc.Parse(es.Config)
+					if err != nil {
+						return nil, errors.Wrap(err, "normalize JSON")
+					}
+
+					if err = jsoniter.Unmarshal(normalized, &c); err != nil {
+						return nil, errors.Wrap(err, "unmarshal JSON")
+					}
+					break
+				}
+
+				return &server.JVMPackagesSyncer{Config: &c}, nil
 			}
 			return &server.GitRepoSyncer{}, nil
 		},
@@ -203,10 +222,10 @@ func main() {
 
 func getPercent(p int) (int, error) {
 	if p < 0 {
-		return 0, fmt.Errorf("negative value given for percentage: %d", p)
+		return 0, errors.Errorf("negative value given for percentage: %d", p)
 	}
 	if p > 100 {
-		return 0, fmt.Errorf("excessively high value given for percentage: %d", p)
+		return 0, errors.Errorf("excessively high value given for percentage: %d", p)
 	}
 	return p, nil
 }

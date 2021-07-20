@@ -5,6 +5,8 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/cockroachdb/errors"
+
 	"github.com/sourcegraph/sourcegraph/dev/depgraph/internal/graph"
 )
 
@@ -39,18 +41,18 @@ func Run(graph *graph.DependencyGraph, names []string) error {
 	for _, name := range names {
 		lint, ok := lintsByName[name]
 		if !ok {
-			return fmt.Errorf("unknown lint '%s'", name)
+			return errors.Errorf("unknown lint '%s'", name)
 		}
 
 		lints = append(lints, lint)
 	}
 
-	var errors []lintError
+	var errs []lintError
 	for _, lint := range lints {
-		errors = append(errors, lint(graph)...)
+		errs = append(errs, lint(graph)...)
 	}
 
-	return formatErrors(errors)
+	return formatErrors(errs)
 }
 
 // maxNumErrors is the maxmum number of errors that will be displayed at once.
@@ -58,24 +60,24 @@ const maxNumErrors = 500
 
 // formatErrors returns an error value that is formatted to display the given lint
 // errors. If there were no lint errors, this function will return nil.
-func formatErrors(errors []lintError) error {
-	if len(errors) == 0 {
+func formatErrors(errs []lintError) error {
+	if len(errs) == 0 {
 		return nil
 	}
 
-	sort.Slice(errors, func(i, j int) bool {
-		return errors[i].pkg < errors[j].pkg || (errors[i].pkg == errors[j].pkg && strings.Join(errors[i].message, "\n") < strings.Join(errors[j].message, "\n"))
+	sort.Slice(errs, func(i, j int) bool {
+		return errs[i].pkg < errs[j].pkg || (errs[i].pkg == errs[j].pkg && strings.Join(errs[i].message, "\n") < strings.Join(errs[j].message, "\n"))
 	})
 
-	preamble := fmt.Sprintf("%d lint violations", len(errors))
+	preamble := fmt.Sprintf("%d lint violations", len(errs))
 
-	if len(errors) > maxNumErrors {
-		errors = errors[:maxNumErrors]
-		preamble += fmt.Sprintf(" (showing %d)", len(errors))
+	if len(errs) > maxNumErrors {
+		errs = errs[:maxNumErrors]
+		preamble += fmt.Sprintf(" (showing %d)", len(errs))
 	}
 
-	items := make([]string, 0, len(errors))
-	for i, err := range errors {
+	items := make([]string, 0, len(errs))
+	for i, err := range errs {
 		pkg := err.pkg
 		if pkg == "" {
 			pkg = "<root>"
@@ -84,5 +86,5 @@ func formatErrors(errors []lintError) error {
 		items = append(items, fmt.Sprintf("%3d. %s\n     %s\n", i+1, pkg, strings.Join(err.message, "\n     ")))
 	}
 
-	return fmt.Errorf("%s:\n\n%s", preamble, strings.Join(items, "\n"))
+	return errors.Errorf("%s:\n\n%s", preamble, strings.Join(items, "\n"))
 }

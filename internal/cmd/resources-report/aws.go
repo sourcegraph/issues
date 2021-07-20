@@ -13,6 +13,7 @@ import (
 	aws_ec2 "github.com/aws/aws-sdk-go-v2/service/ec2"
 	aws_ec2_types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	aws_eks "github.com/aws/aws-sdk-go-v2/service/eks"
+	"github.com/cockroachdb/errors"
 )
 
 // for resources that require enumerating over regions, it is not very practical to
@@ -41,7 +42,7 @@ var awsResources = map[string]AWSResourceFetchFunc{
 		for instancesPager.HasMorePages() {
 			page, err := instancesPager.NextPage(ctx)
 			if err != nil {
-				return fmt.Errorf("failed to fetch page: %w", err)
+				return errors.Errorf("failed to fetch page: %w", err)
 			}
 			for _, reservation := range page.Reservations {
 				for _, instance := range reservation.Instances {
@@ -66,7 +67,7 @@ var awsResources = map[string]AWSResourceFetchFunc{
 		for volumesPager.HasMorePages() {
 			page, err := volumesPager.NextPage(ctx)
 			if err != nil {
-				return fmt.Errorf("failed to fetch page: %w", err)
+				return errors.Errorf("failed to fetch page: %w", err)
 			}
 			for _, volume := range page.Volumes {
 				if volume.CreateTime.After(since) {
@@ -100,14 +101,14 @@ var awsResources = map[string]AWSResourceFetchFunc{
 		for pager.HasMorePages() {
 			page, err := pager.NextPage(ctx)
 			if err != nil {
-				return fmt.Errorf("failed to fetch page: %w", err)
+				return errors.Errorf("failed to fetch page: %w", err)
 			}
 			for _, clusterName := range page.Clusters {
 				cluster, err := client.DescribeCluster(ctx, &aws_eks.DescribeClusterInput{
 					Name: aws.String(clusterName),
 				})
 				if err != nil {
-					return fmt.Errorf("failed to fetch details for cluster '%s': %w", clusterName, err)
+					return errors.Errorf("failed to fetch details for cluster '%s': %w", clusterName, err)
 				}
 				if cluster.Cluster.CreatedAt.After(since) {
 					results <- Resource{
@@ -136,7 +137,7 @@ func collectAWSResources(ctx context.Context, since time.Time, verbose bool, tag
 
 	cfg, err := aws_cfg.LoadDefaultConfig(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("failed to init client: %w", err)
+		return nil, errors.Errorf("failed to init client: %w", err)
 	}
 	cfg.Region = "us-east-1" // set an arbitrary region to start
 
@@ -149,7 +150,7 @@ func collectAWSResources(ctx context.Context, since time.Time, verbose bool, tag
 		AllRegions: true,
 	})
 	if err != nil {
-		return nil, fmt.Errorf("failed to list regions: %w", err)
+		return nil, errors.Errorf("failed to list regions: %w", err)
 	}
 	for _, region := range regions.Regions {
 		if !hasPrefix(*region.RegionName, awsRegionPrefixes) {
@@ -165,7 +166,7 @@ func collectAWSResources(ctx context.Context, since time.Time, verbose bool, tag
 			wait.Add(1)
 			go func(resourceID string, fetchResource AWSResourceFetchFunc, cfg aws.Config) {
 				if err := fetchResource(ctx, results, cfg, since); err != nil {
-					errs <- fmt.Errorf("region %s, resource %s: %w", cfg.Region, resourceID, err)
+					errs <- errors.Errorf("region %s, resource %s: %w", cfg.Region, resourceID, err)
 				}
 				wait.Done()
 			}(resourceID, fetchResource, cfg.Copy())

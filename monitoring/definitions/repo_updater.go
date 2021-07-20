@@ -63,7 +63,7 @@ func RepoUpdater() *monitoring.Container {
 							Description: "site level external service sync error rate",
 							Query:       `max by (family) (rate(src_repoupdater_syncer_sync_errors_total{owner!="user"}[5m]))`,
 							Critical:    monitoring.Alert().Greater(0, nil).For(10 * time.Minute),
-							Panel:       monitoring.Panel().Unit(monitoring.Number),
+							Panel:       monitoring.Panel().Unit(monitoring.Number).With(monitoring.PanelOptions.ZeroIfNoData()),
 							Owner:       monitoring.ObservableOwnerCoreApplication,
 							PossibleSolutions: `
 								An alert here indicates errors syncing site level repo metadata with code hosts. This indicates that there could be a configuration issue

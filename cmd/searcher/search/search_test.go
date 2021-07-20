@@ -5,7 +5,6 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
-	"fmt"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -451,7 +450,7 @@ func doSearch(u string, p *protocol.Request) ([]protocol.FileMatch, error) {
 		return nil, err
 	}
 	if resp.StatusCode != 200 {
-		return nil, fmt.Errorf("non-200 response: code=%d body=%s", resp.StatusCode, string(body))
+		return nil, errors.Errorf("non-200 response: code=%d body=%s", resp.StatusCode, string(body))
 	}
 
 	var r protocol.Response
@@ -527,15 +526,15 @@ func sanityCheckSorted(m []protocol.FileMatch) error {
 	}
 	for i := range m {
 		if i > 0 && m[i].Path == m[i-1].Path {
-			return fmt.Errorf("duplicate FileMatch on %s", m[i].Path)
+			return errors.Errorf("duplicate FileMatch on %s", m[i].Path)
 		}
 		lm := m[i].LineMatches
 		if !sort.IsSorted(sortByLineNumber(lm)) {
-			return fmt.Errorf("unsorted LineMatches for %s", m[i].Path)
+			return errors.Errorf("unsorted LineMatches for %s", m[i].Path)
 		}
 		for j := range lm {
 			if j > 0 && lm[j].LineNumber == lm[j-1].LineNumber {
-				return fmt.Errorf("duplicate LineNumber on %s:%d", m[i].Path, lm[j].LineNumber)
+				return errors.Errorf("duplicate LineNumber on %s:%d", m[i].Path, lm[j].LineNumber)
 			}
 		}
 	}

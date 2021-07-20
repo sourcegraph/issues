@@ -3,9 +3,9 @@ package compression
 import (
 	"context"
 	"database/sql"
-	"fmt"
 	"time"
 
+	"github.com/cockroachdb/errors"
 	"github.com/keegancsmith/sqlf"
 
 	"github.com/sourcegraph/sourcegraph/internal/api"
@@ -44,7 +44,7 @@ func (c *DBCommitStore) Transact(ctx context.Context) (*DBCommitStore, error) {
 func (c *DBCommitStore) Save(ctx context.Context, id api.RepoID, commit *git.Commit) error {
 	commitID := commit.ID
 	if err := c.Exec(ctx, sqlf.Sprintf(insertCommitIndexStr, id, dbutil.CommitBytea(commitID), commit.Committer.Date)); err != nil {
-		return fmt.Errorf("error saving commit for repo_id: %v commit_id %v: %w", id, commitID, err)
+		return errors.Errorf("error saving commit for repo_id: %v commit_id %v: %w", id, commitID, err)
 	}
 
 	return nil

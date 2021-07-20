@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"bytes"
 	"context"
-	"fmt"
 	"io"
 	"io/fs"
 	"os"
@@ -14,6 +13,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/cockroachdb/errors"
 	"github.com/go-enry/go-enry/v2"
 )
 
@@ -199,7 +199,7 @@ func newFileReader(files []fs.FileInfo) func(_ context.Context, path string) (io
 	return func(_ context.Context, path string) (io.ReadCloser, error) {
 		nc, ok := m[path]
 		if !ok {
-			return nil, fmt.Errorf("no file: %s", path)
+			return nil, errors.Errorf("no file: %s", path)
 		}
 		nc.reader.Reset(nc.data)
 		return nc, nil

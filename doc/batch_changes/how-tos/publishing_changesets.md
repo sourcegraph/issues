@@ -1,6 +1,20 @@
 # Publishing changesets to the code host
 
-After you've [created a batch change](creating_a_batch_change.md) with `published: false` in its batch spec, you can see a preview of the changesets (e.g., GitHub pull requests) that will be created on the code host once they're published:
+<style>
+
+.publishing-changesets td {
+  vertical-align: top;
+}
+
+/* ul elements are picking up the default browser style of 1rem top and bottom, so we should align the other cells the same way. */
+.publishing-changesets td > *:first-child {
+  margin-top: 1rem;
+  margin-bottom: 1rem;
+}
+
+</style>
+
+After you've [created a batch change](creating_a_batch_change.md) with the `published` field set to `false` or omitted in its batch spec, you can see a preview of the changesets (e.g., GitHub pull requests) that will be created on the code host once they're published:
 
 <img src="https://sourcegraphstatic.com/docs/images/batch_changes/browser_batch_created.png" class="screenshot center">
 
@@ -19,6 +33,75 @@ For more information, see "[Code host interactions in Batch Changes](../explanat
 
 ## Publishing changesets
 
+You can publish changesets either by [setting the `published` field in the batch spec](#within-the-spec), or [through the Sourcegraph UI](#within-the-ui). Both workflows are described in full below.
+
+A brief summary of the pros and cons of each workflow is:
+
+<table class="publishing-changesets">
+  <thead>
+    <tr>
+      <th>Workflow</th>
+      <th>Pros</th>
+      <th>Cons</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>
+        <div>
+          Setting <code>published</code> in the batch spec
+        </div>
+      </td>
+      <td>
+        <ul>
+          <li>
+            If you reuse your batch spec, or share it with others, the new batch changes will have the same changesets published
+          </li>
+          <li>
+            Easy to publish changesets in large batch changes based on specific criteria, such as the organization each repository is in
+          </li>
+        </ul>
+      </td>
+      <td>
+        <ul>
+          <li>
+            Requires the batch spec to be re-applied before changes take effect, which can be slower
+          </li>
+          <li>
+            Requires more context switching from the UI back to the spec file when previewing diffs
+          </li>
+        </ul>
+      </td>
+    </tr>
+    <tr>
+      <td>
+        <div>
+          Publishing from the UI
+        </div>
+      </td>
+      <td>
+        <ul>
+          <li>
+            Rapid feedback loop: you can check a specific diff and immediately publish it
+          </li>
+          <li>
+            Easy to publish random changesets without having to specify rules in the `published` field
+          </li>
+        </ul>
+      </td>
+      <td>
+        <ul>
+          <li>
+            Publication state isn't reproducible across multiple batch changes
+          </li>
+        </ul>
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+### Within the spec
+
 When you're ready, you can publish all of a batch change's changesets by changing the `published: false` in your batch spec to `true`:
 
 ```yaml
@@ -33,7 +116,7 @@ changesetTemplate:
 
 Then run the `src batch preview` command again, or `src batch apply` to immediately publish the changesets.
 
-Publishing a changesets will:
+Publishing a changeset will:
 
 - Create a commit with the changes from the patches for that repository.
 - Push a branch using the branch name you defined in the batch spec with [`changesetTemplate.branch`](../references/batch_spec_yaml_reference.md#changesettemplate-branch).
@@ -49,7 +132,7 @@ If you run into any errors, you can retry publishing after you've resolved the p
 
 You don't need to worry about multiple branches or pull requests being created when you retry, because the same branch name will be used and the commit will be overwritten.
 
-## Publishing a subset of changesets
+#### Publishing a subset of changesets
 
 Instead of publishing all changesets at the same time, you can also publish some of a batch change's changesets, by specifying which changesets you want to publish in the `published` field:
 
@@ -66,7 +149,7 @@ changesetTemplate:
 
 See [`changesetTemplate.published`](../references/batch_spec_yaml_reference.md#changesettemplate-published) in the batch spec reference for more details.
 
-## Publishing changesets as drafts
+#### Publishing changesets as drafts
 
 Some code hosts (GitHub, GitLab) allow publishing changesets as _drafts_. To publish a changeset as a draft, use the `'draft`' value in the `published` field:
 
@@ -80,14 +163,27 @@ changesetTemplate:
 
 See [`changesetTemplate.published`](../references/batch_spec_yaml_reference.md#changesettemplate-published) in the batch spec reference for more details.
 
-## Fully publishing draft changesets
+#### Fully publishing draft changesets
 
 If you have previously published changesets as drafts on code hosts by setting `published` to `draft`, you then fully publish them and take them out of draft mode by updating the `published` to `true`.
 
 See [`changesetTemplate.published`](../references/batch_spec_yaml_reference.md#changesettemplate-published) in the batch spec reference for more details.
 
+### Within the UI
+
+> NOTE: This functionality requires Sourcegraph 3.30 or later, and also requires `src` 3.29.2 or later.
+
+To publish from the Sourcegraph UI, you'll need to remove (or omit) the `published` field from your batch spec. When you first apply a batch change without an explicit `published` fields, all changesets are treated as unpublished.
+
+Once applied, you can select the changesets you want to publish from the batch change page and publish them using the [publish bulk operation](bulk_operations_on_changesets.md), as demonstrated in this video:
+
+<video width="1920" height="1080" loop playsinline controls style="width: 100%; height: auto; max-width: 50rem">
+  <source src="https://sourcegraphstatic.com/docs/videos/batch_changes/publish-ui-docs.webm" type="video/webm">
+  <source src="https://sourcegraphstatic.com/docs/videos/batch_changes/publish-ui-docs.mp4" type="video/mp4">
+</video>
+
 ## Specifying Git commit details
 
-The commit that's created and pushed to the branch uses the details specified in the batch spec's `changesetTemplate` field.
+Regardless of how you publish your changesets, the commit that's created and pushed to the branch uses the details specified in the batch spec's `changesetTemplate` field.
 
 See [`changesetTemplate.commit`](../references/batch_spec_yaml_reference.md#changesettemplate-commit) for details on how to set the author and the commit message.

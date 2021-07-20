@@ -1,12 +1,13 @@
 package symbols
 
 import (
-	"fmt"
 	"log"
 	"os"
 	"strconv"
 
+	"github.com/cockroachdb/errors"
 	"github.com/sourcegraph/go-ctags"
+
 	"github.com/sourcegraph/sourcegraph/internal/env"
 )
 
@@ -25,7 +26,7 @@ var rawPatternLengthLimit = env.Get("CTAGS_PATTERN_LENGTH_LIMIT", "250", "the ma
 func NewParser() (ctags.Parser, error) {
 	patternLengthLimit, err := strconv.Atoi(rawPatternLengthLimit)
 	if err != nil {
-		return nil, fmt.Errorf("invalid pattern length limit: %s", rawPatternLengthLimit)
+		return nil, errors.Errorf("invalid pattern length limit: %s", rawPatternLengthLimit)
 	}
 
 	var info *log.Logger

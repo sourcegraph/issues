@@ -13,6 +13,8 @@ import (
 
 	"golang.org/x/net/context/ctxhttp"
 
+	"github.com/cockroachdb/errors"
+
 	"github.com/sourcegraph/sourcegraph/internal/api"
 )
 
@@ -42,7 +44,7 @@ func FetchTarFromGithub(ctx context.Context, repo api.RepoName, commit api.Commi
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("github repo archive: URL %s returned HTTP %d", url, resp.StatusCode)
+		return nil, errors.Errorf("github repo archive: URL %s returned HTTP %d", url, resp.StatusCode)
 	}
 	f, err := os.OpenFile(tmpPath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0600)
 	if err != nil {

@@ -28,13 +28,12 @@ type State struct {
 	Diagnostics            *datastructures.DefaultIDSetMap // maps diagnostics to their documents
 
 	// Sourcegraph extensions
-	DocumentationResultsData        map[int]protocol.Documentation // maps documentationResult vertices -> their data
-	DocumentationStringsData        map[int]protocol.MarkupContent // maps documentationString vertices -> their data
-	DocumentationResultsByResultSet map[int]int                    // maps resultSet vertex -> documentationResult vertex
-	DocumentationResultRoot         int                            // the documentationResult vertex corresponding to the project root.
-	DocumentationChildren           map[int][]int                  // maps documentationResult vertex -> ordered list of children documentationResult vertices
-	DocumentationStringLabel        map[int]int                    // maps documentationResult vertex -> label documentationString vertex
-	DocumentationStringDetail       map[int]int                    // maps documentationResult vertex -> detail documentationString vertex
+	DocumentationResultsData  map[int]protocol.Documentation // maps documentationResult vertices -> their data
+	DocumentationStringsData  map[int]protocol.MarkupContent // maps documentationString vertices -> their data
+	DocumentationResultRoot   int                            // the documentationResult vertex corresponding to the project root.
+	DocumentationChildren     map[int][]int                  // maps documentationResult vertex -> ordered list of children documentationResult vertices
+	DocumentationStringLabel  map[int]int                    // maps documentationResult vertex -> label documentationString vertex
+	DocumentationStringDetail map[int]int                    // maps documentationResult vertex -> detail documentationString vertex
 }
 
 // newState create a new State with zero-valued map fields.
@@ -59,12 +58,11 @@ func newState() *State {
 		Diagnostics:            datastructures.NewDefaultIDSetMap(),
 
 		// Sourcegraph extensions
-		DocumentationResultsData:        map[int]protocol.Documentation{},
-		DocumentationStringsData:        map[int]protocol.MarkupContent{},
-		DocumentationResultsByResultSet: map[int]int{},
-		DocumentationResultRoot:         -1,
-		DocumentationChildren:           map[int][]int{},
-		DocumentationStringLabel:        map[int]int{},
-		DocumentationStringDetail:       map[int]int{},
+		DocumentationResultsData:  map[int]protocol.Documentation{},
+		DocumentationStringsData:  map[int]protocol.MarkupContent{},
+		DocumentationResultRoot:   -1,
+		DocumentationChildren:     map[int][]int{},
+		DocumentationStringLabel:  map[int]int{},
+		DocumentationStringDetail: map[int]int{},
 	}
 }

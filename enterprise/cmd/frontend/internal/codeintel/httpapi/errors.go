@@ -1,6 +1,6 @@
 package httpapi
 
-import "fmt"
+import "github.com/cockroachdb/errors"
 
 type ClientError struct {
 	err error
@@ -11,5 +11,5 @@ func (e *ClientError) Error() string {
 }
 
 func clientError(message string, vals ...interface{}) error {
-	return &ClientError{err: fmt.Errorf(message, vals...)}
+	return &ClientError{err: errors.Errorf(message, vals...)}
 }

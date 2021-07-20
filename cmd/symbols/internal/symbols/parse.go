@@ -2,7 +2,6 @@ package symbols
 
 import (
 	"context"
-	"fmt"
 	"runtime"
 	"strings"
 	"sync"
@@ -16,6 +15,7 @@ import (
 	nettrace "golang.org/x/net/trace"
 
 	"github.com/sourcegraph/go-ctags"
+
 	"github.com/sourcegraph/sourcegraph/internal/api"
 	"github.com/sourcegraph/sourcegraph/internal/search/result"
 	"github.com/sourcegraph/sourcegraph/internal/trace/ot"
@@ -156,7 +156,7 @@ func (s *Service) parse(ctx context.Context, req parseRequest) (entries []*ctags
 		defer func() {
 			if err == nil {
 				if e := recover(); e != nil {
-					err = fmt.Errorf("panic: %s", e)
+					err = errors.Errorf("panic: %s", e)
 				}
 			}
 			if err == nil {

@@ -97,7 +97,7 @@ export const SiteAdminGenerateProductLicenseForSubscriptionForm: React.FunctionC
                         return generateProductLicenseForSubscription({
                             productSubscriptionID: subscriptionID,
                             license: {
-                                tags: formData.tags ? formData.tags.split(',') : [],
+                                tags: formData.tags ? formData.tags.split(',').map(tag => tag.trim()) : [],
                                 userCount: formData.userCount,
                                 expiresAt: Math.ceil(formData.expiresAt / 1000),
                             },

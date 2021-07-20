@@ -1,7 +1,6 @@
 package graphqlbackend
 
 import (
-	"fmt"
 	"strconv"
 	"sync/atomic"
 
@@ -67,7 +66,7 @@ func EstimateQueryCost(query string, variables map[string]interface{}) (totalCos
 		case kinds.FragmentDefinition:
 			frag, ok := doc.Definitions[i].(*ast.FragmentDefinition)
 			if !ok {
-				return nil, fmt.Errorf("expected FragmentDefinition, got %T", doc.Definitions[i])
+				return nil, errors.Errorf("expected FragmentDefinition, got %T", doc.Definitions[i])
 			}
 			fragments = append(fragments, frag)
 		case kinds.OperationDefinition:
@@ -224,7 +223,7 @@ func calcNodeCost(def ast.Node, fragmentCosts map[string]int, variables map[stri
 				limitVar, ok := variables[node.Name.Value]
 				if !ok {
 					if _, nonNull := nonNullVariables[node.Name.Value]; nonNull {
-						visitErr = fmt.Errorf("missing nonnull variable: %q", node.Name.Value)
+						visitErr = errors.Errorf("missing nonnull variable: %q", node.Name.Value)
 						return visitor.ActionBreak, nil
 					}
 					if v, ok := defaultValues[node.Name.Value]; ok {
@@ -262,7 +261,7 @@ func calcNodeCost(def ast.Node, fragmentCosts map[string]int, variables map[stri
 			case *ast.FragmentSpread:
 				fragmentCost, ok := fragmentCosts[node.Name.Value]
 				if !ok {
-					visitErr = fmt.Errorf("unknown fragment %q", node.Name.Value)
+					visitErr = errors.Errorf("unknown fragment %q", node.Name.Value)
 					return visitor.ActionBreak, nil
 				}
 				fieldCount += fragmentCost * multiplier
@@ -339,7 +338,7 @@ func extractInt(i interface{}) (int, error) {
 	case nil:
 		return 0, nil
 	default:
-		return 0, fmt.Errorf("unknown limit type: %T", i)
+		return 0, errors.Errorf("unknown limit type: %T", i)
 	}
 }
 

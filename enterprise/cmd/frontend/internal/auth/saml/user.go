@@ -35,7 +35,7 @@ func readAuthnResponse(p *provider, encodedResp string) (*authnResponseInfo, err
 		return nil, errors.WithMessage(err, "reading AuthnResponse assertions")
 	}
 	if wi := assertions.WarningInfo; wi.InvalidTime || wi.NotInAudience {
-		return nil, fmt.Errorf("invalid SAML AuthnResponse: %+v", wi)
+		return nil, errors.Errorf("invalid SAML AuthnResponse: %+v", wi)
 	}
 
 	pi, err := p.getCachedInfoAndError()

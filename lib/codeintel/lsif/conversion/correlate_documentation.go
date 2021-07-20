@@ -41,8 +41,8 @@ func correlateDocumentationResultEdge(state *wrappedState, id int, edge Edge) er
 		return malformedDump(id, documentationResult, "documentationResult")
 	}
 
-	if _, ok := state.ResultSetData[projectOrResultSet]; ok {
-		state.DocumentationResultsByResultSet[projectOrResultSet] = documentationResult
+	if source, ok := state.ResultSetData[projectOrResultSet]; ok {
+		state.ResultSetData[projectOrResultSet] = source.SetDocumentationResultID(documentationResult)
 	} else {
 		// the `project` vertices are not stored, but this condition indicates the root documentationResult
 		// vertex was attached to the `project` vertex, and we want to store it.

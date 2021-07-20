@@ -17,6 +17,7 @@ A hands-on introduction for setting up your local development environment.
 - [Step 4: Get the code](getting-started/quickstart_4_clone_repository.md)
 - [Step 5: Configure HTTPS reverse proxy](getting-started/quickstart_5_configure_https_reverse_proxy.md)
 - [Step 6: Start the server](getting-started/quickstart_6_start_server.md)
+- [Step 7: Additional resources](getting-started/quickstart_7_additional_resources.md)
 
 ## [How-to guides](how-to/index.md)
 

@@ -41,7 +41,7 @@ func getUserToInviteToOrganization(ctx context.Context, db dbutil.DB, username s
 
 	if _, err := database.OrgMembers(db).GetByOrgIDAndUserID(ctx, orgID, userToInvite.ID); err == nil {
 		return nil, "", errors.New("user is already a member of the organization")
-	} else if _, ok := err.(*database.ErrOrgMemberNotFound); !ok {
+	} else if !errors.HasType(err, &database.ErrOrgMemberNotFound{}) {
 		return nil, "", err
 	}
 	return userToInvite, userEmailAddress, nil
@@ -126,7 +126,7 @@ func (r *schemaResolver) RespondToOrganizationInvitation(ctx context.Context, ar
 	case "REJECT":
 		// noop
 	default:
-		return nil, fmt.Errorf("invalid OrganizationInvitationResponseType value %q", args.ResponseType)
+		return nil, errors.Errorf("invalid OrganizationInvitationResponseType value %q", args.ResponseType)
 	}
 
 	// 🚨 SECURITY: This fails if the org invitation's recipient is not the one given (or if the

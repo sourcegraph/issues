@@ -4,12 +4,12 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
-	"fmt"
 	"io"
 	"net/http"
 	"strconv"
 	"time"
 
+	"github.com/cockroachdb/errors"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
 	"golang.org/x/net/context/ctxhttp"
@@ -46,7 +46,7 @@ func (c *internalClient) WaitForFrontend(ctx context.Context) error {
 		}
 		defer resp.Body.Close()
 		if resp.StatusCode != http.StatusOK {
-			return fmt.Errorf("ping: bad HTTP response status %d", resp.StatusCode)
+			return errors.Errorf("ping: bad HTTP response status %d", resp.StatusCode)
 		}
 		body, err := io.ReadAll(resp.Body)
 		if err != nil {
@@ -57,7 +57,7 @@ func (c *internalClient) WaitForFrontend(ctx context.Context) error {
 			if len(body) > max {
 				body = body[:max]
 			}
-			return fmt.Errorf("ping: bad HTTP response body %q (want %q)", body, want)
+			return errors.Errorf("ping: bad HTTP response body %q (want %q)", body, want)
 		}
 		return nil
 	}
@@ -67,7 +67,7 @@ func (c *internalClient) WaitForFrontend(ctx context.Context) error {
 		err := ping(ctx)
 		if err != nil {
 			if ctx.Err() != nil {
-				return fmt.Errorf("frontend API not reachable: %s (last error: %v)", err, lastErr)
+				return errors.Errorf("frontend API not reachable: %s (last error: %v)", err, lastErr)
 			}
 
 			// Keep trying.
@@ -353,9 +353,9 @@ func checkAPIResponse(resp *http.Response) error {
 		b := buf.Bytes()
 		errString := string(b)
 		if errString != "" {
-			return fmt.Errorf("internal API response error code %d: %s (%s)", resp.StatusCode, errString, resp.Request.URL)
+			return errors.Errorf("internal API response error code %d: %s (%s)", resp.StatusCode, errString, resp.Request.URL)
 		}
-		return fmt.Errorf("internal API response error code %d (%s)", resp.StatusCode, resp.Request.URL)
+		return errors.Errorf("internal API response error code %d (%s)", resp.StatusCode, resp.Request.URL)
 	}
 	return nil
 }

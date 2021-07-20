@@ -146,9 +146,9 @@ func main() {
 		exitCode = 2
 	case err := <-procErrs:
 		if err != nil {
-			var exitErr *exec.ExitError
-			if errors.As(err, &exitErr) {
-				exitCode = exitErr.ProcessState.ExitCode()
+			var e *exec.ExitError
+			if errors.As(err, &e) {
+				exitCode = e.ProcessState.ExitCode()
 			} else {
 				exitCode = 1
 			}

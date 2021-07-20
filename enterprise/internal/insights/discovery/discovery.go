@@ -25,7 +25,7 @@ type InsightFilterArgs struct {
 //
 // TODO(slimsag): future: include user/org settings and consider security implications of doing so.
 // In the future, this will be expanded to also include insights from users/orgs.
-func Discover(ctx context.Context, settingStore SettingStore, args InsightFilterArgs) ([]insights.SearchInsight, error) {
+func Discover(ctx context.Context, settingStore SettingStore, loader insights.Loader, args InsightFilterArgs) ([]insights.SearchInsight, error) {
 	// Get latest Global user settings.
 	subject := api.SettingsSubject{Site: true}
 	globalSettingsRaw, err := settingStore.GetLatest(ctx, subject)
@@ -37,6 +37,13 @@ func Discover(ctx context.Context, settingStore SettingStore, args InsightFilter
 		return nil, err
 	}
 	results := convertFromBackendInsight(globalSettings.Insights)
+
+	// load any insights that are integrated from the extensions version
+	integrated, err := loader.LoadAll(ctx)
+	if err != nil {
+		return []insights.SearchInsight{}, err
+	}
+	results = append(results, integrated...)
 
 	return applyFilters(results, args), nil
 }

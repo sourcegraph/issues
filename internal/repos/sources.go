@@ -72,6 +72,8 @@ func NewSource(svc *types.ExternalService, cf *httpcli.Factory) (Source, error) 
 		return NewAWSCodeCommitSource(svc, cf)
 	case extsvc.KindPerforce:
 		return NewPerforceSource(svc)
+	case extsvc.KindJVMPackages:
+		return NewJVMPackagesSource(svc)
 	case extsvc.KindOther:
 		return NewOtherSource(svc, cf)
 	default:
@@ -146,11 +148,12 @@ type SourceError struct {
 }
 
 func (s *SourceError) Error() string {
-	if multiErr, ok := s.Err.(*multierror.Error); ok {
+	var e *multierror.Error
+	if errors.As(s.Err, &e) {
 		// Create new Error with custom formatter. Do not mutate otherwise can
 		// race with other callers of Error.
 		return (&multierror.Error{
-			Errors:      multiErr.Errors,
+			Errors:      e.Errors,
 			ErrorFormat: sourceErrorFormatFunc,
 		}).Error()
 	}

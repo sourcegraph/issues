@@ -3,6 +3,7 @@ package store
 import (
 	"context"
 	"fmt"
+	"strconv"
 	"testing"
 	"time"
 
@@ -13,6 +14,7 @@ import (
 	ct "github.com/sourcegraph/sourcegraph/enterprise/internal/batches/testing"
 	btypes "github.com/sourcegraph/sourcegraph/enterprise/internal/batches/types"
 	"github.com/sourcegraph/sourcegraph/internal/actor"
+	"github.com/sourcegraph/sourcegraph/internal/api"
 	"github.com/sourcegraph/sourcegraph/internal/database"
 	"github.com/sourcegraph/sourcegraph/internal/extsvc"
 )
@@ -190,6 +192,86 @@ func testStoreBatchChanges(t *testing.T, ctx context.Context, s *Store, clock ct
 
 				if diff := cmp.Diff(have, want); diff != "" {
 					t.Fatalf("opts: %+v, diff: %s", opts, diff)
+				}
+			}
+		})
+
+		t.Run("By RepoID", func(t *testing.T) {
+			repoStore := database.ReposWith(s)
+			esStore := database.ExternalServicesWith(s)
+
+			repo1 := ct.TestRepo(t, esStore, extsvc.KindGitHub)
+			repo2 := ct.TestRepo(t, esStore, extsvc.KindGitHub)
+			repo3 := ct.TestRepo(t, esStore, extsvc.KindGitHub)
+			if err := repoStore.Create(ctx, repo1, repo2, repo3); err != nil {
+				t.Fatal(err)
+			}
+
+			// 1 batch change + changeset is associated with the first repo
+			ct.CreateChangeset(t, ctx, s, ct.TestChangesetOpts{
+				Repo:         repo1.ID,
+				BatchChanges: []btypes.BatchChangeAssoc{{BatchChangeID: cs[0].ID}},
+			})
+
+			// 2 batch changes, each with 1 changeset, are associated with the second repo
+			ct.CreateChangeset(t, ctx, s, ct.TestChangesetOpts{
+				Repo:         repo2.ID,
+				BatchChanges: []btypes.BatchChangeAssoc{{BatchChangeID: cs[0].ID}},
+			})
+			ct.CreateChangeset(t, ctx, s, ct.TestChangesetOpts{
+				Repo:         repo2.ID,
+				BatchChanges: []btypes.BatchChangeAssoc{{BatchChangeID: cs[1].ID}},
+			})
+
+			// no batch changes are associated with the third repo
+
+			{
+				tcs := []struct {
+					repoID        api.RepoID
+					listLen       int
+					batchChangeID *int64
+				}{
+					{
+						repoID:        repo1.ID,
+						listLen:       1,
+						batchChangeID: &cs[0].ID,
+					},
+					{
+						repoID:        repo2.ID,
+						listLen:       2,
+						batchChangeID: &cs[1].ID,
+					},
+					{
+						repoID:        repo3.ID,
+						listLen:       0,
+						batchChangeID: nil,
+					},
+				}
+
+				for i, tc := range tcs {
+					t.Run(strconv.Itoa(i), func(t *testing.T) {
+						opts := ListBatchChangesOpts{RepoID: tc.repoID}
+
+						ts, next, err := s.ListBatchChanges(ctx, opts)
+						if err != nil {
+							t.Fatal(err)
+						}
+
+						if have, want := next, int64(0); have != want {
+							t.Fatalf("opts: %+v: have next %v, want %v", opts, have, want)
+						}
+
+						if len(ts) != tc.listLen {
+							t.Fatalf("listed the wrong number of batch changes: have %v, want %v", len(ts), tc.listLen)
+						}
+
+						if len(ts) > 0 {
+							have, want := ts[0].ID, *tc.batchChangeID
+							if have != want {
+								t.Fatalf("listed batch change with id %d, wanted %d", have, want)
+							}
+						}
+					})
 				}
 			}
 		})
@@ -513,6 +595,114 @@ func testStoreBatchChanges(t *testing.T, ctx context.Context, s *Store, clock ct
 			}
 			opts := GetBatchChangeDiffStatOpts{BatchChangeID: batchChangeID}
 			have, err := s.GetBatchChangeDiffStat(userCtx, opts)
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if diff := cmp.Diff(have, want); diff != "" {
+				t.Fatal(diff)
+			}
+		}
+	})
+
+	t.Run("GetRepoDiffStat", func(t *testing.T) {
+		userID := ct.CreateTestUser(t, s.DB(), false).ID
+		userCtx := actor.WithActor(ctx, actor.FromUser(userID))
+		repoStore := database.ReposWith(s)
+		esStore := database.ExternalServicesWith(s)
+		repo1 := ct.TestRepo(t, esStore, extsvc.KindGitHub)
+		repo2 := ct.TestRepo(t, esStore, extsvc.KindGitHub)
+		repo3 := ct.TestRepo(t, esStore, extsvc.KindGitHub)
+		if err := repoStore.Create(ctx, repo1, repo2, repo3); err != nil {
+			t.Fatal(err)
+		}
+
+		batchChangeID := cs[0].ID
+		var testDiffStatCount1 int32 = 10
+		var testDiffStatCount2 int32 = 20
+
+		// two changesets on the first repo
+		ct.CreateChangeset(t, ctx, s, ct.TestChangesetOpts{
+			Repo:            repo1.ID,
+			BatchChange:     batchChangeID,
+			DiffStatAdded:   testDiffStatCount1,
+			DiffStatChanged: testDiffStatCount1,
+			DiffStatDeleted: testDiffStatCount1,
+		})
+		ct.CreateChangeset(t, ctx, s, ct.TestChangesetOpts{
+			Repo:            repo1.ID,
+			BatchChange:     batchChangeID,
+			DiffStatAdded:   testDiffStatCount2,
+			DiffStatChanged: 0,
+			DiffStatDeleted: testDiffStatCount2,
+		})
+
+		// one changeset on the second repo
+		ct.CreateChangeset(t, ctx, s, ct.TestChangesetOpts{
+			Repo:            repo2.ID,
+			BatchChange:     batchChangeID,
+			DiffStatAdded:   testDiffStatCount2,
+			DiffStatChanged: testDiffStatCount2,
+			DiffStatDeleted: testDiffStatCount2,
+		})
+
+		// no changesets on the third repo
+
+		{
+			tcs := []struct {
+				repoID api.RepoID
+				want   *diff.Stat
+			}{
+				{
+					repoID: repo1.ID,
+					want: &diff.Stat{
+						Added:   testDiffStatCount1 + testDiffStatCount2,
+						Changed: testDiffStatCount1,
+						Deleted: testDiffStatCount1 + testDiffStatCount2,
+					},
+				},
+				{
+					repoID: repo2.ID,
+					want: &diff.Stat{
+						Added:   testDiffStatCount2,
+						Changed: testDiffStatCount2,
+						Deleted: testDiffStatCount2,
+					},
+				},
+				{
+					repoID: repo3.ID,
+					want: &diff.Stat{
+						Added:   0,
+						Changed: 0,
+						Deleted: 0,
+					},
+				},
+			}
+
+			for i, tc := range tcs {
+				t.Run(strconv.Itoa(i), func(t *testing.T) {
+					have, err := s.GetRepoDiffStat(userCtx, tc.repoID)
+					if err != nil {
+						t.Fatal(err)
+					}
+
+					if diff := cmp.Diff(have, tc.want); diff != "" {
+						t.Errorf("wrong diff returned. have=%+v want=%+v", have, tc.want)
+					}
+				})
+			}
+
+		}
+
+		// Now revoke repo1 access, and check that we don't get a diff stat for it anymore.
+		ct.MockRepoPermissions(t, s.DB(), 0, repo1.ID)
+		{
+			want := &diff.Stat{
+				Added:   0,
+				Changed: 0,
+				Deleted: 0,
+			}
+			have, err := s.GetRepoDiffStat(userCtx, repo1.ID)
 			if err != nil {
 				t.Fatal(err)
 			}

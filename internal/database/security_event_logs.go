@@ -35,6 +35,9 @@ const (
 	SecurityEventNamePasswordChanged       SecurityEventName = "PasswordChanged"
 
 	SecurityEventNameEmailVerified SecurityEventName = "EmailVerified"
+
+	SecurityEventNameRoleChangeDenied  SecurityEventName = "RoleChangeDenied"
+	SecurityEventNameRoleChangeGranted SecurityEventName = "RoleChangeGranted"
 )
 
 // SecurityEvent contains information needed for logging a security-relevant event.

@@ -3,6 +3,7 @@ package reconciler
 import (
 	"context"
 
+	"github.com/hashicorp/go-multierror"
 	"github.com/inconshreveable/log15"
 
 	"github.com/sourcegraph/sourcegraph/enterprise/internal/batches/sources"
@@ -10,8 +11,6 @@ import (
 	btypes "github.com/sourcegraph/sourcegraph/enterprise/internal/batches/types"
 	"github.com/sourcegraph/sourcegraph/internal/gitserver/protocol"
 	"github.com/sourcegraph/sourcegraph/internal/workerutil"
-	"github.com/sourcegraph/sourcegraph/internal/workerutil/dbworker"
-	dbworkerstore "github.com/sourcegraph/sourcegraph/internal/workerutil/dbworker/store"
 )
 
 type GitserverClient interface {
@@ -41,9 +40,23 @@ func New(gitClient GitserverClient, sourcer sources.Sourcer, store *store.Store)
 
 // HandlerFunc returns a dbworker.HandlerFunc that can be passed to a
 // workerutil.Worker to process queued changesets.
-func (r *Reconciler) HandlerFunc() dbworker.HandlerFunc {
-	return func(ctx context.Context, tx dbworkerstore.Store, record workerutil.Record) error {
-		return r.process(ctx, r.store.With(tx), record.(*btypes.Changeset))
+func (r *Reconciler) HandlerFunc() workerutil.HandlerFunc {
+	return func(ctx context.Context, record workerutil.Record) (err error) {
+		tx, err := r.store.Transact(ctx)
+		if err != nil {
+			return err
+		}
+		defer func() {
+			doneErr := tx.Done(nil)
+			if err != nil && doneErr != nil {
+				err = multierror.Append(err, doneErr)
+			}
+			if doneErr != nil {
+				err = doneErr
+			}
+		}()
+
+		return r.process(ctx, tx, record.(*btypes.Changeset))
 	}
 }
 

@@ -50,6 +50,7 @@ $input-btn-focus-width: 2px;
 // should be clearly visible.
 $btn-focus-box-shadow: var(--focus-box-shadow);
 $btn-link-disabled-color: var(--btn-link-disabled-color);
+$btn-padding-y-sm: var(--btn-padding-y-sm);
 
 // Forms don't manipulate the colors at compile time,
 // which is why we can use CSS variables for theming here
@@ -119,6 +120,16 @@ $badge-transition: none; // Avoids setting transitions on badges that aren't lin
 @import 'bootstrap/scss/progress';
 @import 'bootstrap/scss/tooltip';
 @import 'bootstrap/scss/transitions';
+
+// Modified in `./buttons.scss`
+@import 'bootstrap/scss/buttons';
+@import 'bootstrap/scss/button-group';
+
+// Modified in `./forms.scss`
+@import 'bootstrap/scss/forms';
+@import 'bootstrap/scss/custom-forms';
+@import 'bootstrap/scss/input-group';
+
 @import 'wildcard/src/global-styles/breakpoints';
 @import 'shared/src/global-styles/icons';
 @import './background';
@@ -129,8 +140,8 @@ $badge-transition: none; // Avoids setting transitions on badges that aren't lin
 @import './meter';
 @import './popover';
 @import './nav';
-@import './typography';
 @import './list-group';
+@import './typography';
 @import './tables';
 @import './code';
 @import './buttons';

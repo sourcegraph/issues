@@ -21,6 +21,12 @@ export enum InsightsDashboardType {
      * dashboards that are stored in the organization settings (org dashboard)
      */
     Organization = 'organization',
+
+    /**
+     * This type of dashboard includes all insights from the site (global settings) or
+     * from dashboards that are stored in global (site) settings subject.
+     */
+    Global = 'global',
 }
 
 /**
@@ -37,7 +43,7 @@ export interface ExtendedInsightDashboard extends InsightDashboardConfiguration 
      * All dashboards that were created in users or org settings explicitly are
      * custom dashboards.
      */
-    type: InsightsDashboardType.Personal | InsightsDashboardType.Organization
+    type: InsightsDashboardType.Personal | InsightsDashboardType.Organization | InsightsDashboardType.Global
 
     /**
      * Subject that has a particular dashboard, it can be personal setting

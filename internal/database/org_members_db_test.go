@@ -2,9 +2,10 @@ package database
 
 import (
 	"context"
-	"fmt"
 	"reflect"
 	"testing"
+
+	"github.com/cockroachdb/errors"
 
 	"github.com/sourcegraph/sourcegraph/internal/database/dbtest"
 	"github.com/sourcegraph/sourcegraph/internal/types"
@@ -74,7 +75,7 @@ func TestOrgMembers_CreateMembershipInOrgsForAllUsers(t *testing.T) {
 			}
 		}
 		if !reflect.DeepEqual(got, want) {
-			return fmt.Errorf("got membership %+v, want %+v", got, want)
+			return errors.Errorf("got membership %+v, want %+v", got, want)
 		}
 		return nil
 	}

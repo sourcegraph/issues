@@ -533,6 +533,8 @@ type ExperimentalFeatures struct {
 	EnablePostSignupFlow bool `json:"enablePostSignupFlow,omitempty"`
 	// EventLogging description: Enables user event logging inside of the Sourcegraph instance. This will allow admins to have greater visibility of user activity, such as frequently viewed pages, frequent searches, and more. These event logs (and any specific user actions) are only stored locally, and never leave this Sourcegraph instance.
 	EventLogging string `json:"eventLogging,omitempty"`
+	// JvmPackages description: Allow adding JVM packages code host connections
+	JvmPackages string `json:"jvmPackages,omitempty"`
 	// Perforce description: Allow adding Perforce code host connections
 	Perforce string `json:"perforce,omitempty"`
 	// Ranking description: Experimental search result ranking options.
@@ -873,10 +875,36 @@ type InsightSeries struct {
 	Webhook string `json:"webhook,omitempty"`
 }
 
+// JVMPackagesConnection description: Configuration for a connection to a JVM packages repository.
+type JVMPackagesConnection struct {
+	// Maven description: Configuration for resolving from Maven repositories.
+	Maven *Maven `json:"maven,omitempty"`
+}
+
 // Log description: Configuration for logging and alerting, including to external services.
 type Log struct {
 	// Sentry description: Configuration for Sentry
 	Sentry *Sentry `json:"sentry,omitempty"`
+}
+
+// Maven description: Configuration for resolving from Maven repositories.
+type Maven struct {
+	// Credentials description: Contents of a coursier.credentials file needed for accessing the Maven repositories.
+	Credentials string `json:"credentials,omitempty"`
+	// Dependencies description: An array of artifact "groupID:artifactID:version" strings specifying which Maven artifacts to mirror on Sourcegraph.
+	Dependencies []string `json:"dependencies,omitempty"`
+	// RateLimit description: Rate limit applied when making background API requests to the Maven repository.
+	RateLimit *MavenRateLimit `json:"rateLimit,omitempty"`
+	// Repositories description: The url at which the maven repository can be found.
+	Repositories []string `json:"repositories,omitempty"`
+}
+
+// MavenRateLimit description: Rate limit applied when making background API requests to the Maven repository.
+type MavenRateLimit struct {
+	// Enabled description: true if rate limiting is enabled.
+	Enabled bool `json:"enabled"`
+	// RequestsPerHour description: Requests per hour permitted. This is an average, calculated per second. Internally, the burst limit is set to 100, which implies that for a requests per hour limit as low as 1, users will continue to be able to send a maximum of 100 requests immediately, provided that the complexity cost of each request is 1.
+	RequestsPerHour float64 `json:"requestsPerHour"`
 }
 
 // MountedEncryptionKey description: This encryption key is mounted from a given file path or an environment variable.
@@ -957,13 +985,15 @@ type NotifierEmail struct {
 
 // NotifierOpsGenie description: OpsGenie notifier
 type NotifierOpsGenie struct {
-	ApiKey   string `json:"apiKey,omitempty"`
-	ApiUrl   string `json:"apiUrl,omitempty"`
+	ApiKey string `json:"apiKey,omitempty"`
+	ApiUrl string `json:"apiUrl,omitempty"`
+	// Priority description: Defines the importance of an alert. Allowed values are P1, P2, P3, P4, P5 - or a Go template that resolves to one of those values. By default, Sourcegraph will fill this in for you if a value isn't specified here.
 	Priority string `json:"priority,omitempty"`
 	// Responders description: List of responders responsible for notifications.
 	Responders []*Responders `json:"responders,omitempty"`
-	Tags       string        `json:"tags,omitempty"`
-	Type       string        `json:"type"`
+	// Tags description: Comma separated list of tags attached to the notifications - or a Go template that produces such a list. Sourcegraph provides some default ones if this value isn't specified.
+	Tags string `json:"tags,omitempty"`
+	Type string `json:"type"`
 }
 
 // NotifierPagerduty description: PagerDuty notifier
@@ -1330,8 +1360,8 @@ type SettingsExperimentalFeatures struct {
 	BatchChangesExecution *bool `json:"batchChangesExecution,omitempty"`
 	// CodeInsights description: Enables code insights on directory pages.
 	CodeInsights *bool `json:"codeInsights,omitempty"`
-	// CodeInsightsDashboards description: Enables code insights dashboards separation for the code insight page.
-	CodeInsightsDashboards *bool `json:"codeInsightsDashboards,omitempty"`
+	// CodeInsightsAllRepos description: Enables the experimental ability to run an insight over all repositories on the instance.
+	CodeInsightsAllRepos *bool `json:"codeInsightsAllRepos,omitempty"`
 	// CodeMonitoring description: Enables code monitoring.
 	CodeMonitoring *bool `json:"codeMonitoring,omitempty"`
 	// CopyQueryButton description: DEPRECATED: This feature is now permanently enabled. Enables displaying the copy query button in the search bar when hovering over the global navigation bar.
@@ -1366,6 +1396,8 @@ type SettingsExperimentalFeatures struct {
 	ShowSearchContext *bool `json:"showSearchContext,omitempty"`
 	// ShowSearchContextManagement description: Enables search context management.
 	ShowSearchContextManagement *bool `json:"showSearchContextManagement,omitempty"`
+	// ShowSearchNotebook description: Enables the search notebook at search/notebook
+	ShowSearchNotebook *bool `json:"showSearchNotebook,omitempty"`
 }
 
 // SiteConfiguration description: Configuration for a Sourcegraph site.

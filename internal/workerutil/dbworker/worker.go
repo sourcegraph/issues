@@ -7,6 +7,6 @@ import (
 	"github.com/sourcegraph/sourcegraph/internal/workerutil/dbworker/store"
 )
 
-func NewWorker(ctx context.Context, store store.Store, handler Handler, options workerutil.WorkerOptions) *workerutil.Worker {
-	return workerutil.NewWorker(ctx, newStoreShim(store), newHandlerShim(handler), options)
+func NewWorker(ctx context.Context, store store.Store, handler workerutil.Handler, options workerutil.WorkerOptions) *workerutil.Worker {
+	return workerutil.NewWorker(ctx, newStoreShim(store), handler, options)
 }

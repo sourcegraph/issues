@@ -32,10 +32,10 @@ type promRule struct {
 
 func (r *promRule) validate() error {
 	if r.Record != "" && r.Alert != "" {
-		return fmt.Errorf("promRule cannot be both a record (%q) and an alert (%q)", r.Record, r.Alert)
+		return errors.Errorf("promRule cannot be both a record (%q) and an alert (%q)", r.Record, r.Alert)
 	}
 	if r.Alert == "" && r.For != nil {
-		return fmt.Errorf("promRule can only have a 'for' (%q) if it is an alert", r.For.String())
+		return errors.Errorf("promRule can only have a 'for' (%q) if it is an alert", r.For.String())
 	}
 	return nil
 }
@@ -60,7 +60,7 @@ func (g *promGroup) validate() error {
 	}
 	for _, r := range g.Rules {
 		if err := r.validate(); err != nil {
-			return fmt.Errorf("promGroup has invalid rule: %w", err)
+			return errors.Errorf("promGroup has invalid rule: %w", err)
 		}
 	}
 	return nil

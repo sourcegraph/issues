@@ -9,11 +9,8 @@ import { FormRadioInput } from '../../../../../../components/form/form-radio-inp
 import { useFieldAPI } from '../../../../../../components/form/hooks/useField'
 import { FORM_ERROR, SubmissionErrors } from '../../../../../../components/form/hooks/useForm'
 import { RepositoriesField } from '../../../../../../components/form/repositories-field/RepositoriesField'
-import {
-    getVisibilityValue,
-    Organization,
-    VisibilityPicker,
-} from '../../../../../../components/visibility-picker/VisibilityPicker'
+import { VisibilityPicker } from '../../../../../../components/visibility-picker/VisibilityPicker'
+import { SupportedInsightSubject } from '../../../../../../core/types/subjects'
 import { CreateInsightFormFields, EditableDataSeries } from '../../types'
 import { FormSeries } from '../form-series/FormSeries'
 
@@ -31,11 +28,17 @@ interface CreationSearchInsightFormProps {
     className?: string
     isFormClearActive?: boolean
 
+    /**
+     * Enables the experimental insight mode (run insight on all repositories in the instance)
+     */
+    hasAllReposUI?: boolean
+
     title: useFieldAPI<CreateInsightFormFields['title']>
     repositories: useFieldAPI<CreateInsightFormFields['repositories']>
+    allReposMode: useFieldAPI<CreateInsightFormFields['allRepos']>
 
     visibility: useFieldAPI<CreateInsightFormFields['visibility']>
-    organizations: Organization[]
+    subjects: SupportedInsightSubject[]
 
     series: useFieldAPI<CreateInsightFormFields['series']>
     step: useFieldAPI<CreateInsightFormFields['step']>
@@ -75,13 +78,15 @@ export const SearchInsightCreationForm: React.FunctionComponent<CreationSearchIn
         submitted,
         title,
         repositories,
+        allReposMode,
         visibility,
-        organizations,
+        subjects,
         series,
         stepValue,
         step,
         className,
         isFormClearActive,
+        hasAllReposUI,
         onCancel,
         onSeriesLiveChange,
         onEditSeriesRequest,
@@ -119,9 +124,24 @@ export const SearchInsightCreationForm: React.FunctionComponent<CreationSearchIn
                     {...repositories.input}
                     className="mb-0 d-flex flex-column"
                 />
-            </FormGroup>
 
-            <hr className={styles.creationInsightFormSeparator} />
+                {hasAllReposUI && (
+                    <>
+                        <label className="d-flex align-items-center mb-2 mt-2 font-weight-normal">
+                            <input
+                                type="checkbox"
+                                {...allReposMode.input}
+                                value="all-repos-mode"
+                                checked={allReposMode.input.value}
+                            />
+
+                            <span className="pl-2">Run your insight over all your repositories</span>
+                        </label>
+
+                        <hr className={styles.creationInsightFormSeparator} />
+                    </>
+                )}
+            </FormGroup>
 
             <FormGroup
                 name="data series group"
@@ -129,6 +149,7 @@ export const SearchInsightCreationForm: React.FunctionComponent<CreationSearchIn
                 subtitle="Add any number of data series to your chart"
                 error={series.meta.touched && series.meta.error}
                 innerRef={series.input.ref}
+                className={!hasAllReposUI ? 'mt-5' : undefined}
             >
                 <FormSeries
                     series={series.input.value}
@@ -156,10 +177,10 @@ export const SearchInsightCreationForm: React.FunctionComponent<CreationSearchIn
                 />
 
                 <VisibilityPicker
-                    organizations={organizations}
+                    subjects={subjects}
                     value={visibility.input.value}
                     labelClassName={styles.creationInsightFormGroupLabel}
-                    onChange={event => visibility.input.onChange(getVisibilityValue(event))}
+                    onChange={visibility.input.onChange}
                 />
 
                 <FormGroup
@@ -188,6 +209,7 @@ export const SearchInsightCreationForm: React.FunctionComponent<CreationSearchIn
                         value="hours"
                         checked={step.input.value === 'hours'}
                         onChange={step.input.onChange}
+                        disabled={step.input.disabled}
                         className="mr-3"
                     />
                     <FormRadioInput
@@ -196,6 +218,7 @@ export const SearchInsightCreationForm: React.FunctionComponent<CreationSearchIn
                         value="days"
                         checked={step.input.value === 'days'}
                         onChange={step.input.onChange}
+                        disabled={step.input.disabled}
                         className="mr-3"
                     />
                     <FormRadioInput
@@ -204,6 +227,7 @@ export const SearchInsightCreationForm: React.FunctionComponent<CreationSearchIn
                         value="weeks"
                         checked={step.input.value === 'weeks'}
                         onChange={step.input.onChange}
+                        disabled={step.input.disabled}
                         className="mr-3"
                     />
                     <FormRadioInput
@@ -212,6 +236,7 @@ export const SearchInsightCreationForm: React.FunctionComponent<CreationSearchIn
                         value="months"
                         checked={step.input.value === 'months'}
                         onChange={step.input.onChange}
+                        disabled={step.input.disabled}
                         className="mr-3"
                     />
                     <FormRadioInput
@@ -220,6 +245,7 @@ export const SearchInsightCreationForm: React.FunctionComponent<CreationSearchIn
                         value="years"
                         checked={step.input.value === 'years'}
                         onChange={step.input.onChange}
+                        disabled={step.input.disabled}
                         className="mr-3"
                     />
                 </FormGroup>

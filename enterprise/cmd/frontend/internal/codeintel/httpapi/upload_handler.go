@@ -78,8 +78,9 @@ func (h *UploadHandler) handleEnqueue(w http.ResponseWriter, r *http.Request) {
 
 	payload, err := h.handleEnqueueErr(w, r, repositoryID)
 	if err != nil {
-		if cerr, ok := err.(*ClientError); ok {
-			http.Error(w, cerr.Error(), http.StatusBadRequest)
+		var e *ClientError
+		if errors.As(err, &e) {
+			http.Error(w, e.Error(), http.StatusBadRequest)
 			return
 		}
 
@@ -331,8 +332,7 @@ func (h *UploadHandler) handleEnqueueMultipartFinalize(r *http.Request, upload s
 // trying to modify the record, it will be logged but will not be directly visible to the user.
 func (h *UploadHandler) markUploadAsFailed(ctx context.Context, tx DBStore, uploadID int, err error) {
 	var reason string
-
-	if _, ok := err.(*ClientError); ok {
+	if errors.HasType(err, &ClientError{}) {
 		reason = fmt.Sprintf("client misbehaving:\n* %s", err)
 	} else if awsErr := formatAWSError(err); awsErr != "" {
 		reason = fmt.Sprintf("object store error:\n* %s", awsErr)
@@ -399,7 +399,7 @@ func ensureRepoAndCommitExist(ctx context.Context, w http.ResponseWriter, repoNa
 	}
 
 	if _, err := backend.Repos.ResolveRev(ctx, repo, commit); err != nil {
-		if gitserver.IsRevisionNotFound(err) {
+		if errors.HasType(err, &gitserver.RevisionNotFoundError{}) {
 			http.Error(w, fmt.Sprintf("unknown commit %q", commit), http.StatusNotFound)
 			return nil, false
 		}
@@ -419,10 +419,10 @@ func ensureRepoAndCommitExist(ctx context.Context, w http.ResponseWriter, repoNa
 // formatAWSError returns the unwrapped, root AWS/S3 error. This method returns
 // an empty string when the given error value is neither an AWS nor an S3 error.
 func formatAWSError(err error) string {
-	var multipartErr manager.MultiUploadFailure
-	if !errors.As(err, &multipartErr) {
-		return ""
+	var e manager.MultiUploadFailure
+	if errors.As(err, &e) {
+		return e.Error()
 	}
 
-	return multipartErr.Error()
+	return ""
 }

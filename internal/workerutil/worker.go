@@ -90,7 +90,7 @@ loop:
 	for {
 		ok, err := w.dequeueAndHandle()
 		if err != nil {
-			if errors.Cause(err) == w.ctx.Err() {
+			if w.ctx.Err() != nil && errors.Is(err, w.ctx.Err()) {
 				// If the error is due to the loop being shut down, just break
 				break loop
 			}
@@ -155,7 +155,7 @@ func (w *Worker) dequeueAndHandle() (dequeued bool, err error) {
 	}
 
 	// Select a queued record to process and the transaction that holds it
-	record, tx, dequeued, err := w.store.Dequeue(w.ctx, w.options.WorkerHostname, extraDequeueArguments)
+	record, cancel, dequeued, err := w.store.Dequeue(w.ctx, w.options.WorkerHostname, extraDequeueArguments)
 	if err != nil {
 		return false, errors.Wrap(err, "store.Dequeue")
 	}
@@ -179,12 +179,13 @@ func (w *Worker) dequeueAndHandle() (dequeued bool, err error) {
 				hook.PostHandle(w.ctx, record)
 			}
 
+			cancel()
 			w.options.Metrics.numJobs.Dec()
 			w.handlerSemaphore <- struct{}{}
 			w.wg.Done()
 		}()
 
-		if err := w.handle(tx, record); err != nil {
+		if err := w.handle(record); err != nil {
 			log15.Error("Failed to finalize record", "name", w.options.Name, "err", err)
 		}
 	}()
@@ -192,35 +193,28 @@ func (w *Worker) dequeueAndHandle() (dequeued bool, err error) {
 	return true, nil
 }
 
-// handle processes the given record locked by the given transaction. This method returns an
-// error only if there is an issue committing the transaction - no handler errors will bubble
-// up.
-func (w *Worker) handle(tx Store, record Record) (err error) {
+// handle processes the given record. This method returns an error only if there is an issue updating
+// the record to a terminal state - no handler errors will bubble up.
+func (w *Worker) handle(record Record) (err error) {
 	ctx, endOperation := w.options.Metrics.operations.handle.With(w.ctx, &err, observation.Args{})
 	defer endOperation(1, observation.Args{})
 
-	defer func() {
-		// Notice that we will commit the transaction even on error from the handler
-		// function. We will only rollback the transaction if we fail to mark the job
-		// as completed or errored.
-		err = tx.Done(err)
-	}()
+	handleErr := w.handler.Handle(ctx, record)
 
-	handleErr := w.handler.Handle(ctx, tx, record)
 	if errcode.IsNonRetryable(handleErr) {
-		if marked, markErr := tx.MarkFailed(ctx, record.RecordID(), handleErr.Error()); markErr != nil {
+		if marked, markErr := w.store.MarkFailed(ctx, record.RecordID(), handleErr.Error()); markErr != nil {
 			return errors.Wrap(markErr, "store.MarkFailed")
 		} else if marked {
 			log15.Warn("Marked record as failed", "name", w.options.Name, "id", record.RecordID(), "err", handleErr)
 		}
 	} else if handleErr != nil {
-		if marked, markErr := tx.MarkErrored(ctx, record.RecordID(), handleErr.Error()); markErr != nil {
+		if marked, markErr := w.store.MarkErrored(ctx, record.RecordID(), handleErr.Error()); markErr != nil {
 			return errors.Wrap(markErr, "store.MarkErrored")
 		} else if marked {
 			log15.Warn("Marked record as errored", "name", w.options.Name, "id", record.RecordID(), "err", handleErr)
 		}
 	} else {
-		if marked, markErr := tx.MarkComplete(ctx, record.RecordID()); markErr != nil {
+		if marked, markErr := w.store.MarkComplete(ctx, record.RecordID()); markErr != nil {
 			return errors.Wrap(markErr, "store.MarkComplete")
 		} else if marked {
 			log15.Debug("Marked record as complete", "name", w.options.Name, "id", record.RecordID())

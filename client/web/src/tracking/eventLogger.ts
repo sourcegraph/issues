@@ -113,6 +113,22 @@ export class EventLogger implements TelemetryService {
         return firstSourceURL
     }
 
+    public getReferrer(): string {
+        const referrer = document.referrer
+        try {
+            // 🚨 SECURITY: If the referrer is a valid Sourcegraph.com URL,
+            // only send the hostname instead of the whole URL to avoid
+            // leaking private repository names and files into our data.
+            const url = new URL(referrer)
+            if (url.hostname === 'sourcegraph.com') {
+                return 'sourcegraph.com'
+            }
+            return referrer
+        } catch {
+            return ''
+        }
+    }
+
     /**
      * Gets the anonymous user ID and cohort ID of the user from cookies.
      * If user doesn't have an anonymous user ID yet, a new one is generated, along with

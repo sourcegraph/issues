@@ -428,7 +428,7 @@ func (s *Server) freeUpSpace(howManyBytesToFree int64) error {
 
 	// Check.
 	if spaceFreed < howManyBytesToFree {
-		return fmt.Errorf("only freed %d bytes, wanted to free %d", spaceFreed, howManyBytesToFree)
+		return errors.Errorf("only freed %d bytes, wanted to free %d", spaceFreed, howManyBytesToFree)
 	}
 	return nil
 }
@@ -727,7 +727,8 @@ func gitConfigGet(dir GitDir, key string) (string, error) {
 	out, err := cmd.Output()
 	if err != nil {
 		// Exit code 1 means the key is not set.
-		if ee, ok := err.(*exec.ExitError); ok && ee.Sys().(syscall.WaitStatus).ExitStatus() == 1 {
+		var e *exec.ExitError
+		if errors.As(err, &e) && e.Sys().(syscall.WaitStatus).ExitStatus() == 1 {
 			return "", nil
 		}
 		return "", errors.Wrapf(wrapCmdError(cmd, err), "failed to get git config %s", key)
@@ -751,7 +752,8 @@ func gitConfigUnset(dir GitDir, key string) error {
 	err := cmd.Run()
 	if err != nil {
 		// Exit code 5 means the key is not set.
-		if ee, ok := err.(*exec.ExitError); ok && ee.Sys().(syscall.WaitStatus).ExitStatus() == 5 {
+		var e *exec.ExitError
+		if errors.As(err, &e) && e.Sys().(syscall.WaitStatus).ExitStatus() == 5 {
 			return nil
 		}
 		return errors.Wrapf(wrapCmdError(cmd, err), "failed to unset git config %s", key)
@@ -781,8 +783,9 @@ func wrapCmdError(cmd *exec.Cmd, err error) error {
 	if err == nil {
 		return nil
 	}
-	if ee, ok := err.(*exec.ExitError); ok {
-		return errors.Wrapf(err, "%s %s failed with stderr: %s", cmd.Path, strings.Join(cmd.Args, " "), string(ee.Stderr))
+	var e *exec.ExitError
+	if errors.As(err, &e) {
+		return errors.Wrapf(err, "%s %s failed with stderr: %s", cmd.Path, strings.Join(cmd.Args, " "), string(e.Stderr))
 	}
 	return errors.Wrapf(err, "%s %s failed", cmd.Path, strings.Join(cmd.Args, " "))
 }

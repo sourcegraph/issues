@@ -106,7 +106,15 @@ const steps: Step[] = [
             const name = releaseName(release)
             const events: EventOptions[] = [
                 {
-                    title: `Cut and release Sourcegraph ${name}`,
+                    title: `Cut Sourcegraph ${name}`,
+                    description: '(This is not an actual event to attend, just a calendar marker.)',
+                    anyoneCanAddSelf: true,
+                    attendees: [config.teamEmail],
+                    transparency: 'transparent',
+                    ...calendarTime(config.oneWorkingDayBeforeRelease),
+                },
+                {
+                    title: `Release Sourcegraph ${name}`,
                     description: '(This is not an actual event to attend, just a calendar marker.)',
                     anyoneCanAddSelf: true,
                     attendees: [config.teamEmail],
@@ -141,6 +149,7 @@ const steps: Step[] = [
             const {
                 releaseDate,
                 captainGitHubUsername,
+                oneWorkingDayBeforeRelease,
                 oneWorkingDayAfterRelease,
                 captainSlackUsername,
                 slackAnnounceChannel,
@@ -154,6 +163,7 @@ const steps: Step[] = [
                 version: release,
                 assignees: [captainGitHubUsername],
                 releaseDate: date,
+                oneWorkingDayBeforeRelease: new Date(oneWorkingDayBeforeRelease),
                 oneWorkingDayAfterRelease: new Date(oneWorkingDayAfterRelease),
                 dryRun: dryRun.trackingIssues || false,
             })

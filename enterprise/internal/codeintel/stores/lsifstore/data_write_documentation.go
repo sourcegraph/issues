@@ -145,3 +145,64 @@ INSERT INTO lsif_data_documentation_path_info (dump_id, path_id, data)
 SELECT %s, source.path_id, source.data
 FROM t_lsif_data_documentation_path_info source
 `
+
+// WriteDocumentationMappings is called (transactionally) from the precise-code-intel-worker.
+func (s *Store) WriteDocumentationMappings(ctx context.Context, bundleID int, mappings chan semantic.DocumentationMapping) (err error) {
+	ctx, traceLog, endObservation := s.operations.writeDocumentationMappings.WithAndLogger(ctx, &err, observation.Args{LogFields: []log.Field{
+		log.Int("bundleID", bundleID),
+	}})
+	defer endObservation(1, observation.Args{})
+
+	tx, err := s.Transact(ctx)
+	if err != nil {
+		return err
+	}
+	defer func() { err = tx.Done(err) }()
+
+	// Create temporary table symmetric to lsif_data_documentation_mappings without the dump id
+	if err := tx.Exec(ctx, sqlf.Sprintf(writeDocumentationMappingsTemporaryTableQuery)); err != nil {
+		return err
+	}
+
+	var count uint32
+	inserter := func(inserter *batch.Inserter) error {
+		for mapping := range mappings {
+			if err := inserter.Insert(ctx, mapping.PathID, mapping.ResultID); err != nil {
+				return err
+			}
+			atomic.AddUint32(&count, 1)
+		}
+		return nil
+	}
+
+	// Bulk insert all the unique column values into the temporary table
+	if err := withBatchInserter(
+		ctx,
+		tx.Handle().DB(),
+		"t_lsif_data_documentation_mappings",
+		[]string{"path_id", "result_id"},
+		inserter,
+	); err != nil {
+		return err
+	}
+	traceLog(log.Int("numRecords", int(count)))
+
+	// Insert the values from the temporary table into the target table. We select a
+	// parameterized dump id here since it is the same for all rows in this operation.
+	return tx.Exec(ctx, sqlf.Sprintf(writeDocumentationMappingsInsertQuery, bundleID))
+}
+
+const writeDocumentationMappingsTemporaryTableQuery = `
+-- source: enterprise/internal/codeintel/stores/lsifstore/data_write_documentation.go:WriteDocumentationMappings
+CREATE TEMPORARY TABLE t_lsif_data_documentation_mappings (
+	path_id TEXT NOT NULL,
+	result_id integer NOT NULL
+) ON COMMIT DROP
+`
+
+const writeDocumentationMappingsInsertQuery = `
+-- source: enterprise/internal/codeintel/stores/lsifstore/data_write_documentation.go:WriteDocumentationMappings
+INSERT INTO lsif_data_documentation_mappings (dump_id, path_id, result_id)
+SELECT %s, source.path_id, source.result_id
+FROM t_lsif_data_documentation_mappings source
+`

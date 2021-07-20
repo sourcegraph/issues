@@ -3,7 +3,8 @@ package dbstore
 import (
 	"database/sql/driver"
 	"encoding/json"
-	"fmt"
+
+	"github.com/cockroachdb/errors"
 )
 
 type DockerStep struct {
@@ -15,7 +16,7 @@ type DockerStep struct {
 func (s *DockerStep) Scan(value interface{}) error {
 	b, ok := value.([]byte)
 	if !ok {
-		return fmt.Errorf("value is not []byte: %T", value)
+		return errors.Errorf("value is not []byte: %T", value)
 	}
 
 	return json.Unmarshal(b, &s)

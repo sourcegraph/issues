@@ -8,6 +8,7 @@ import (
 	"io"
 	"net/http"
 
+	"github.com/cockroachdb/errors"
 	"github.com/hashicorp/go-multierror"
 )
 
@@ -52,7 +53,7 @@ func QueryGraphQL(ctx context.Context, endpoint, queryName string, token, query 
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		return fmt.Errorf("unexpected status code: %d", resp.StatusCode)
+		return errors.Errorf("unexpected status code: %d", resp.StatusCode)
 	}
 
 	contents, err := io.ReadAll(resp.Body)
@@ -64,7 +65,7 @@ func QueryGraphQL(ctx context.Context, endpoint, queryName string, token, query 
 	if err := json.Unmarshal(contents, &errorPayload); err == nil && len(errorPayload.Errors) > 0 {
 		var combined error
 		for _, err := range errorPayload.Errors {
-			combined = multierror.Append(combined, fmt.Errorf("%s", err.Message))
+			combined = multierror.Append(combined, errors.Errorf("%s", err.Message))
 		}
 
 		return combined

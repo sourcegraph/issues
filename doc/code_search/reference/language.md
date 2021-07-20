@@ -207,7 +207,7 @@ ComplexDiagram(
         Terminal("r:")),
     Choice(0,
         Terminal("regex", {href: "#regular-expression"}),
-        Terminal("built-in", {href: "#built-in-predicate"})),
+        Terminal("built-in", {href: "#built-in-repo-predicate"})),
     Choice(0,
         Skip(),
         Sequence(
@@ -610,7 +610,7 @@ or a structural search pattern. This parameter is available as a command-line an
 accessibility option, and synonymous with the visual [search pattern](#search-pattern) toggles.
 in [search pattern](#search-pattern).
 
-## Built-in predicate
+## Built-in repo predicate
 
 <script>
 ComplexDiagram(
@@ -681,6 +681,30 @@ for accepted formats. Use this to filter out stale repositories that don’t con
 commits past the specified time frame. This parameter is experimental.
 
 **Example:** [`repo:contains.commit.after(1 month ago)` ↗](https://sourcegraph.com/search?q=repo:.*sourcegraph.*+repo:contains.commit.after%281+month+ago%29&patternType=literal)
+
+## Built-in file predicate
+
+<script>
+ComplexDiagram(
+    Choice(0,
+        Terminal("contains.content(...)", {href: "#file-contains-content"}),
+        Terminal("contains(...)", {href: "#file-contains-content"}))).addTo();
+</script>
+
+### File contains content
+
+<script>
+ComplexDiagram(
+    Terminal("contains"),
+	Optional(Terminal(".content")),
+    Terminal("("),
+    Terminal("regexp", {href: "#regexp"}),
+    Terminal(")")).addTo();
+</script>
+
+Search only inside files that contain content matching the provided regexp pattern.
+
+**Example:** [`file:contains(github\.com/sourcegraph/sourcegraph)` ↗](https://sourcegraph.com/search?q=repo:github%5C.com/sourcegraph/.*+repo:contains.file%28README%29&patternType=literal)
 
 ## Regular expression
 

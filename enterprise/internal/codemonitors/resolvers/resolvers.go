@@ -3,9 +3,9 @@ package resolvers
 import (
 	"context"
 	"database/sql"
-	"fmt"
 	"time"
 
+	"github.com/cockroachdb/errors"
 	"github.com/graph-gophers/graphql-go"
 	"github.com/graph-gophers/graphql-go/relay"
 	"github.com/keegancsmith/sqlf"
@@ -129,7 +129,7 @@ func (r *Resolver) CreateCodeMonitor(ctx context.Context, args *graphqlbackend.C
 func (r *Resolver) ToggleCodeMonitor(ctx context.Context, args *graphqlbackend.ToggleCodeMonitorArgs) (mr graphqlbackend.MonitorResolver, err error) {
 	err = r.isAllowedToEdit(ctx, args.Id)
 	if err != nil {
-		return nil, fmt.Errorf("ToggleCodeMonitor: %w", err)
+		return nil, errors.Errorf("ToggleCodeMonitor: %w", err)
 	}
 	var mo *cm.Monitor
 	mo, err = r.store.ToggleMonitor(ctx, args)
@@ -142,7 +142,7 @@ func (r *Resolver) ToggleCodeMonitor(ctx context.Context, args *graphqlbackend.T
 func (r *Resolver) DeleteCodeMonitor(ctx context.Context, args *graphqlbackend.DeleteCodeMonitorArgs) (*graphqlbackend.EmptyResponse, error) {
 	err := r.isAllowedToEdit(ctx, args.Id)
 	if err != nil {
-		return nil, fmt.Errorf("DeleteCodeMonitor: %w", err)
+		return nil, errors.Errorf("DeleteCodeMonitor: %w", err)
 	}
 	err = r.store.DeleteMonitor(ctx, args)
 	if err != nil {
@@ -154,7 +154,7 @@ func (r *Resolver) DeleteCodeMonitor(ctx context.Context, args *graphqlbackend.D
 func (r *Resolver) UpdateCodeMonitor(ctx context.Context, args *graphqlbackend.UpdateCodeMonitorArgs) (m graphqlbackend.MonitorResolver, err error) {
 	err = r.isAllowedToEdit(ctx, args.Monitor.Id)
 	if err != nil {
-		return nil, fmt.Errorf("UpdateCodeMonitor: %w", err)
+		return nil, errors.Errorf("UpdateCodeMonitor: %w", err)
 	}
 
 	var monitorID int64
@@ -171,7 +171,7 @@ func (r *Resolver) UpdateCodeMonitor(ctx context.Context, args *graphqlbackend.U
 
 	toCreate, toDelete, err := splitActionIDs(ctx, args, actionIDs)
 	if len(toDelete) == len(actionIDs) {
-		return nil, fmt.Errorf("you tried to delete all actions, but every monitor must be connected to at least 1 action")
+		return nil, errors.Errorf("you tried to delete all actions, but every monitor must be connected to at least 1 action")
 	}
 
 	// Run all queries within a transaction.
@@ -321,7 +321,7 @@ func splitActionIDs(ctx context.Context, args *graphqlbackend.UpdateCodeMonitorA
 			continue
 		}
 		if _, ok := aMap[*a.Email.Id]; !ok {
-			return nil, nil, fmt.Errorf("unknown ID=%s for action", *a.Email.Id)
+			return nil, nil, errors.Errorf("unknown ID=%s for action", *a.Email.Id)
 		}
 		toUpdateActions = append(toUpdateActions, a)
 		delete(aMap, *a.Email.Id)
@@ -361,7 +361,7 @@ func (r *Resolver) updateCodeMonitor(ctx context.Context, args *graphqlbackend.U
 	var e *cm.MonitorEmail
 	for i, action := range args.Actions {
 		if action.Email == nil {
-			return nil, fmt.Errorf("missing email object for action %d", i)
+			return nil, errors.Errorf("missing email object for action %d", i)
 		}
 		err = relay.UnmarshalSpec(*action.Email.Id, &emailID)
 		if err != nil {
@@ -428,7 +428,7 @@ func (r *Resolver) isAllowedToCreate(ctx context.Context, owner graphql.ID) erro
 	case "Org":
 		return backend.CheckOrgAccessOrSiteAdmin(ctx, r.store.Handle().DB(), ownerInt32)
 	default:
-		return fmt.Errorf("provided ID is not a namespace")
+		return errors.Errorf("provided ID is not a namespace")
 	}
 }
 
@@ -466,7 +466,7 @@ func (r *Resolver) ownerForID64(ctx context.Context, monitorID int64) (owner gra
 		return "", err
 	}
 	if (userID == nil && orgID == nil) || (userID != nil && orgID != nil) {
-		return "", fmt.Errorf("invalid owner")
+		return "", errors.Errorf("invalid owner")
 	}
 	if orgID != nil {
 		return graphqlbackend.MarshalOrgID(*orgID), nil
@@ -697,7 +697,7 @@ func (m *monitorTriggerEvent) Status() (string, error) {
 	if v, ok := stateToStatus[m.State]; ok {
 		return v, nil
 	}
-	return "", fmt.Errorf("unknown status: %s", m.State)
+	return "", errors.Errorf("unknown status: %s", m.State)
 }
 
 func (m *monitorTriggerEvent) Message() *string {
@@ -738,7 +738,7 @@ func (a *monitorActionConnection) PageInfo(ctx context.Context) (*graphqlutil.Pa
 	if email, ok := last.ToMonitorEmail(); ok {
 		return graphqlutil.NextPageCursor(string(email.ID())), nil
 	}
-	return nil, fmt.Errorf("we only support email actions for now")
+	return nil, errors.Errorf("we only support email actions for now")
 }
 
 //
@@ -895,7 +895,7 @@ func (m *monitorActionEvent) ID() graphql.ID {
 func (m *monitorActionEvent) Status() (string, error) {
 	status, ok := stateToStatus[m.State]
 	if !ok {
-		return "", fmt.Errorf("unknown state: %s", m.State)
+		return "", errors.Errorf("unknown state: %s", m.State)
 	}
 	return status, nil
 }

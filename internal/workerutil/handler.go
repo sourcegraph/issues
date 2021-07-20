@@ -8,9 +8,14 @@ import (
 // interface may also optionally conform to the PreDequeuer, PreHandler, and PostHandler
 // interfaces to further configure the behavior of the worker routine.
 type Handler interface {
-	// Handle processes a single record. The store provided by this method is the store
-	// returned from the Dequeue method returning the associated record.
-	Handle(ctx context.Context, store Store, record Record) error
+	// Handle processes a single record.
+	Handle(ctx context.Context, record Record) error
+}
+
+type HandlerFunc func(ctx context.Context, record Record) error
+
+func (f HandlerFunc) Handle(ctx context.Context, record Record) error {
+	return f(ctx, record)
 }
 
 // WithPreDequeue is an extension of the Handler interface.

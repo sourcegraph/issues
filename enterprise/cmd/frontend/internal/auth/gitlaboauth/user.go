@@ -2,7 +2,8 @@ package gitlaboauth
 
 import (
 	"context"
-	"fmt"
+
+	"github.com/cockroachdb/errors"
 
 	"github.com/sourcegraph/sourcegraph/internal/extsvc/gitlab"
 )
@@ -21,7 +22,7 @@ func WithUser(ctx context.Context, user *gitlab.User) context.Context {
 func UserFromContext(ctx context.Context) (*gitlab.User, error) {
 	user, ok := ctx.Value(userKey).(*gitlab.User)
 	if !ok {
-		return nil, fmt.Errorf("gitlab: Context missing GitLab User")
+		return nil, errors.Errorf("gitlab: Context missing GitLab User")
 	}
 	return user, nil
 }

@@ -124,6 +124,7 @@ var ExternalServiceKinds = map[string]ExternalServiceKind{
 	extsvc.KindGitHub:          {CodeHost: true, JSONSchema: schema.GitHubSchemaJSON},
 	extsvc.KindGitLab:          {CodeHost: true, JSONSchema: schema.GitLabSchemaJSON},
 	extsvc.KindGitolite:        {CodeHost: true, JSONSchema: schema.GitoliteSchemaJSON},
+	extsvc.KindJVMPackages:     {CodeHost: true, JSONSchema: schema.JVMPackagesSchemaJSON},
 	extsvc.KindPerforce:        {CodeHost: true, JSONSchema: schema.PerforceSchemaJSON},
 	extsvc.KindPhabricator:     {CodeHost: true, JSONSchema: schema.PhabricatorSchemaJSON},
 	extsvc.KindOther:           {CodeHost: true, JSONSchema: schema.OtherExternalServiceSchemaJSON},
@@ -209,7 +210,7 @@ type ValidateExternalServiceConfigOptions struct {
 func (e *ExternalServiceStore) ValidateConfig(ctx context.Context, opt ValidateExternalServiceConfigOptions) (normalized []byte, err error) {
 	ext, ok := ExternalServiceKinds[opt.Kind]
 	if !ok {
-		return nil, fmt.Errorf("invalid external service kind: %s", opt.Kind)
+		return nil, errors.Errorf("invalid external service kind: %s", opt.Kind)
 	}
 
 	// All configs must be valid JSON.
@@ -344,14 +345,14 @@ func validateOtherExternalServiceConnection(c *schema.OtherExternalServiceConnec
 	for i, repo := range c.Repos {
 		cloneURL, err := parseRepo(repo)
 		if err != nil {
-			return fmt.Errorf(`repos.%d: %s`, i, err)
+			return errors.Errorf(`repos.%d: %s`, i, err)
 		}
 
 		switch cloneURL.Scheme {
 		case "git", "http", "https", "ssh":
 			continue
 		default:
-			return fmt.Errorf("repos.%d: scheme %q not one of git, http, https or ssh", i, cloneURL.Scheme)
+			return errors.Errorf("repos.%d: scheme %q not one of git, http, https or ssh", i, cloneURL.Scheme)
 		}
 	}
 
@@ -455,7 +456,7 @@ func (e *ExternalServiceStore) validateDuplicateRateLimits(ctx context.Context, 
 				return errors.Wrap(err, "extracting rate limit config")
 			}
 			if rlc.BaseURL == baseURL && svc.ID != id && !rlc.IsDefault {
-				return fmt.Errorf("existing external service, %q, already has a rate limit set", rlc.DisplayName)
+				return errors.Errorf("existing external service, %q, already has a rate limit set", rlc.DisplayName)
 			}
 		}
 
@@ -488,7 +489,7 @@ func (e *ExternalServiceStore) validateSingleKindPerUser(ctx context.Context, id
 		// Fail if a service already exists that is not the current service
 		for _, svc := range svcs {
 			if svc.ID != id {
-				return fmt.Errorf("existing external service, %q, of same kind already added", svc.DisplayName)
+				return errors.Errorf("existing external service, %q, of same kind already added", svc.DisplayName)
 			}
 		}
 		if len(svcs) < opt.Limit {
@@ -614,12 +615,12 @@ func (e *ExternalServiceStore) maybeDecryptConfig(ctx context.Context, config st
 		// config is not encrypted, return plaintext
 		return config, nil
 	}
-	var key = keyring.Default().ExternalServiceKey
+	key := keyring.Default().ExternalServiceKey
 	if e.key != nil {
 		key = e.key
 	}
 	if key == nil {
-		return config, fmt.Errorf("couldn't decrypt encrypted config, key is nil")
+		return config, errors.Errorf("couldn't decrypt encrypted config, key is nil")
 	}
 	decrypted, err := key.Decrypt(ctx, []byte(config))
 	if err != nil {

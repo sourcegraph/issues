@@ -95,7 +95,14 @@ export function getFilePageInfo(): GitLabFileInfo {
  * Finds the merge request ID from the URL.
  */
 export const getMergeRequestID = (): string => {
-    const matches = window.location.pathname.match(/merge_requests\/(.*?)\/diffs/)
+    let matches = window.location.pathname.match(/merge_requests\/(.*?)\/diffs/)
+
+    // If /diffs hasn't been added to the path as a result of clicking the "Changes" tab (a known GitLab bug),
+    // check if the "Changes" tab is active. If so, try to find the merge request ID again.
+    if (!matches && !!document.querySelector('.diffs-tab.active')) {
+        // Matches with and without trailing slash (merge_requests/151 or merge_requests/151/)
+        matches = window.location.pathname.match(/merge_requests\/(.*?)((\/)|$)/)
+    }
     if (!matches) {
         throw new Error('Unable to determine merge request ID')
     }

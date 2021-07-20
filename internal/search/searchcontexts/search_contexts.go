@@ -2,7 +2,6 @@ package searchcontexts
 
 import (
 	"context"
-	"fmt"
 	"regexp"
 	"strings"
 
@@ -72,7 +71,7 @@ func ResolveSearchContextSpec(ctx context.Context, db dbutil.DB, searchContextSp
 			return nil, err
 		}
 		if namespace.User == 0 {
-			return nil, fmt.Errorf("search context %q not found", searchContextSpec)
+			return nil, errors.Errorf("search context %q not found", searchContextSpec)
 		}
 		return GetUserSearchContext(parsedSearchContextSpec.NamespaceName, namespace.User), nil
 	}
@@ -120,11 +119,11 @@ func ValidateSearchContextWriteAccessForCurrentUser(ctx context.Context, db dbut
 
 func validateSearchContextName(name string) error {
 	if len(name) > maxSearchContextNameLength {
-		return fmt.Errorf("search context name %q exceeds maximum allowed length (%d)", name, maxSearchContextNameLength)
+		return errors.Errorf("search context name %q exceeds maximum allowed length (%d)", name, maxSearchContextNameLength)
 	}
 
 	if !validateSearchContextNameRegexp.MatchString(name) {
-		return fmt.Errorf("%q is not a valid search context name", name)
+		return errors.Errorf("%q is not a valid search context name", name)
 	}
 
 	return nil
@@ -132,7 +131,7 @@ func validateSearchContextName(name string) error {
 
 func validateSearchContextDescription(description string) error {
 	if len(description) > maxSearchContextDescriptionLength {
-		return fmt.Errorf("search context description exceeds maximum allowed length (%d)", maxSearchContextDescriptionLength)
+		return errors.Errorf("search context description exceeds maximum allowed length (%d)", maxSearchContextDescriptionLength)
 	}
 	return nil
 }
@@ -141,7 +140,7 @@ func validateSearchContextRepositoryRevisions(repositoryRevisions []*types.Searc
 	for _, repository := range repositoryRevisions {
 		for _, revision := range repository.Revisions {
 			if len(revision) > maxRevisionLength {
-				return fmt.Errorf("revision %q exceeds maximum allowed length (%d)", revision, maxRevisionLength)
+				return errors.Errorf("revision %q exceeds maximum allowed length (%d)", revision, maxRevisionLength)
 			}
 		}
 	}

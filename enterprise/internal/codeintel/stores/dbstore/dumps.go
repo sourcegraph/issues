@@ -164,7 +164,8 @@ func (s *Store) FindClosestDumps(ctx context.Context, repositoryID int, commit, 
 
 const findClosestDumpsQuery = `
 -- source: enterprise/internal/codeintel/stores/dbstore/dumps.go:FindClosestDumps
-WITH visible_uploads AS (%s)
+WITH
+visible_uploads AS (%s)
 SELECT
 	u.id,
 	u.commit,
@@ -245,7 +246,8 @@ func (s *Store) FindClosestDumpsFromGraphFragment(ctx context.Context, repositor
 
 const findClosestDumpsFromGraphFragmentCommitGraphQuery = `
 -- source: enterprise/internal/codeintel/stores/dbstore/dumps.go:FindClosestDumpsFromGraphFragment
-WITH visible_uploads AS (%s)
+WITH
+visible_uploads AS (%s)
 SELECT
 	vu.upload_id,
 	encode(vu.commit_bytea, 'hex'),
@@ -379,26 +381,25 @@ func (s *Store) DeleteOverlappingDumps(ctx context.Context, repositoryID int, co
 
 const deleteOverlappingDumpsQuery = `
 -- source: enterprise/internal/codeintel/stores/dbstore/dumps.go:DeleteOverlappingDumps
-WITH overlapping_dumps AS (
-	SELECT id
-	FROM lsif_uploads
+WITH
+candidates AS (
+	SELECT u.id
+	FROM lsif_uploads u
 	WHERE
-		state = 'completed' AND
-		repository_id = %s AND
-		commit = %s AND
-		root = %s AND
-		indexer = %s
+		u.state = 'completed' AND
+		u.repository_id = %s AND
+		u.commit = %s AND
+		u.root = %s AND
+		u.indexer = %s
 
-	-- Lock these rows in a deterministic order before the update
-	-- below. If we don't do this then we run into a pretty high
-	-- deadlock rate during upload processing as multiple workers
-	-- issue commands for the same set of records, but upload locks
-	-- records nondeterministically.
-	ORDER BY id FOR UPDATE
+	-- Lock these rows in a deterministic order so that we don't
+	-- deadlock with other processes updating the lsif_uploads table.
+	ORDER BY u.id FOR UPDATE
 ),
 updated AS (
-	UPDATE lsif_uploads SET state = 'deleted'
-	WHERE id IN (SELECT id FROM overlapping_dumps)
+	UPDATE lsif_uploads u
+	SET state = 'deleted'
+	WHERE id IN (SELECT id FROM candidates)
 	RETURNING 1
 )
 SELECT COUNT(*) FROM updated

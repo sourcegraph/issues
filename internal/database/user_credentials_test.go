@@ -256,8 +256,8 @@ func TestUserCredentials_Delete(t *testing.T) {
 			t.Error("unexpected nil error")
 		}
 
-		e, ok := err.(UserCredentialNotFoundErr)
-		if !ok {
+		var e UserCredentialNotFoundErr
+		if !errors.As(err, &e) {
 			t.Errorf("error is not a userCredentialNotFoundError; got %T: %v", err, err)
 		}
 		if len(e.args) != 1 || e.args[0].(int64) != 1 {
@@ -284,7 +284,7 @@ func TestUserCredentials_Delete(t *testing.T) {
 		}
 
 		_, err = UserCredentials(db, key).GetByID(ctx, cred.ID)
-		if _, ok := err.(UserCredentialNotFoundErr); !ok {
+		if !errors.HasType(err, UserCredentialNotFoundErr{}) {
 			t.Errorf("unexpected error retrieving credential after deletion: %v", err)
 		}
 	})
@@ -304,8 +304,8 @@ func TestUserCredentials_GetByID(t *testing.T) {
 			t.Error("unexpected nil error")
 		}
 
-		e, ok := err.(UserCredentialNotFoundErr)
-		if !ok {
+		var e UserCredentialNotFoundErr
+		if !errors.As(err, &e) {
 			t.Errorf("error is not a userCredentialNotFoundError; got %T: %v", err, err)
 		}
 		if len(e.args) != 1 || e.args[0].(int64) != 1 {
@@ -359,8 +359,8 @@ func TestUserCredentials_GetByScope(t *testing.T) {
 			t.Error("unexpected nil error")
 		}
 
-		e, ok := err.(UserCredentialNotFoundErr)
-		if !ok {
+		var e UserCredentialNotFoundErr
+		if !errors.As(err, &e) {
 			t.Errorf("error is not a userCredentialNotFoundError; got %T: %v", err, err)
 		}
 		if diff := cmp.Diff(e.args, []interface{}{scope}); diff != "" {

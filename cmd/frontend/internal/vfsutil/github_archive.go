@@ -3,6 +3,7 @@ package vfsutil
 import (
 	"fmt"
 
+	"github.com/cockroachdb/errors"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
 
@@ -13,7 +14,7 @@ import (
 // repository archive.
 func NewGitHubRepoVFS(repo, rev string) (*ArchiveFS, error) {
 	if !githubRepoRx.MatchString(repo) {
-		return nil, fmt.Errorf(`invalid GitHub repo %q: must be "github.com/user/repo"`, repo)
+		return nil, errors.Errorf(`invalid GitHub repo %q: must be "github.com/user/repo"`, repo)
 	}
 
 	url := fmt.Sprintf("https://codeload.%s/zip/%s", repo, rev)

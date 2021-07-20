@@ -2,7 +2,8 @@ package shared
 
 import (
 	"database/sql"
-	"fmt"
+
+	"github.com/cockroachdb/errors"
 
 	"github.com/sourcegraph/sourcegraph/internal/conf/conftypes"
 	"github.com/sourcegraph/sourcegraph/internal/database/dbconn"
@@ -25,7 +26,7 @@ var initDatabaseMemo = NewMemoizedConstructor(func() (interface{}, error) {
 
 	opts := dbconn.Opts{DSN: postgresDSN, DBName: "frontend", AppName: "worker"}
 	if err := dbconn.SetupGlobalConnection(opts); err != nil {
-		return nil, fmt.Errorf("failed to connect to frontend database: %s", err)
+		return nil, errors.Errorf("failed to connect to frontend database: %s", err)
 	}
 
 	return dbconn.Global, nil

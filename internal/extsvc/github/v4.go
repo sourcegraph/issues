@@ -285,7 +285,8 @@ func (e graphqlErrors) Error() string {
 // json.UnmarshalTypeError
 func unmarshal(data []byte, v interface{}) error {
 	err := json.Unmarshal(data, v)
-	if e, ok := err.(*json.UnmarshalTypeError); ok && e.Offset >= 0 {
+	var e *json.UnmarshalTypeError
+	if errors.As(err, &e) && e.Offset >= 0 {
 		a := e.Offset - 100
 		b := e.Offset + 100
 		if a < 0 {
@@ -388,8 +389,9 @@ func (c *V4Client) GetReposByNameWithOwner(ctx context.Context, namesWithOwners 
 	var result map[string]*Repository
 	err = c.requestGraphQL(ctx, query, map[string]interface{}{}, &result)
 	if err != nil {
-		if gqlErrs, ok := err.(graphqlErrors); ok {
-			for _, err2 := range gqlErrs {
+		var e graphqlErrors
+		if errors.As(err, &e) {
+			for _, err2 := range e {
 				if err2.Type == graphqlErrTypeNotFound {
 					log15.Warn("GitHub repository not found", "error", err2)
 					continue

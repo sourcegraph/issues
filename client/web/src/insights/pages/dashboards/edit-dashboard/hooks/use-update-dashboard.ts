@@ -29,7 +29,7 @@ export type DashboardUpdateHandler = (dashboardValues: DashboardCreationFields) 
  * Returns an update-callback to update (remove old and add new one) dashboard.
  */
 export function useUpdateDashboardCallback(props: useUpdateDashboardProps): DashboardUpdateHandler {
-    const { authenticatedUser, platformContext, previousDashboard } = props
+    const { platformContext, previousDashboard } = props
     const { updateSubjectSettings, getSubjectSettings } = useContext(InsightsApiContext)
     const history = useHistory()
 
@@ -46,8 +46,7 @@ export function useUpdateDashboardCallback(props: useUpdateDashboardProps): Dash
                 await updateSubjectSettings(platformContext, previousDashboard.owner.id, editedSettings).toPromise()
             }
 
-            const { id: userID } = authenticatedUser
-            const subjectID = dashboardValues.visibility === 'personal' ? userID : dashboardValues.visibility
+            const subjectID = dashboardValues.visibility
 
             const settings = await getSubjectSettings(subjectID).toPromise()
 

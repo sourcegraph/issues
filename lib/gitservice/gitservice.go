@@ -3,12 +3,13 @@ package gitservice
 
 import (
 	"compress/gzip"
-	"fmt"
 	"net/http"
 	"os"
 	"os/exec"
 	"strconv"
 	"strings"
+
+	"github.com/cockroachdb/errors"
 )
 
 var uploadPackArgs = []string{
@@ -110,7 +111,7 @@ func (s *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	case "/git-upload-pack":
 		w.Header().Set("Content-Type", "application/x-git-upload-pack-result")
 	default:
-		err = fmt.Errorf("unexpected subpath (want /info/refs or /git-upload-pack): %q", svc)
+		err = errors.Errorf("unexpected subpath (want /info/refs or /git-upload-pack): %q", svc)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -132,7 +133,7 @@ func (s *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	err = cmd.Run()
 	if err != nil {
-		err = fmt.Errorf("error running git service command args=%q: %w", args, err)
+		err = errors.Errorf("error running git service command args=%q: %w", args, err)
 		_, _ = w.Write([]byte("\n" + err.Error() + "\n"))
 	}
 }

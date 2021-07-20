@@ -7,6 +7,7 @@ import (
 	"sort"
 	"testing"
 
+	"github.com/cockroachdb/errors"
 	"github.com/google/go-cmp/cmp"
 	"github.com/hashicorp/go-multierror"
 	"github.com/kylelemons/godebug/pretty"
@@ -1293,15 +1294,17 @@ func TestExternalServices_ValidateConfig(t *testing.T) {
 				Config:        tc.config,
 				AuthProviders: tc.ps,
 			})
-			switch e := err.(type) {
-			case nil:
+			if err == nil {
 				have = append(have, "<nil>")
-			case *multierror.Error:
-				for _, err := range e.Errors {
+			} else {
+				var errs *multierror.Error
+				if errors.As(err, &errs) {
+					for _, err := range errs.Errors {
+						have = append(have, err.Error())
+					}
+				} else {
 					have = append(have, err.Error())
 				}
-			default:
-				have = append(have, err.Error())
 			}
 
 			tc.assert(t, have)

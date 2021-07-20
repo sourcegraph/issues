@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"testing"
 
+	"github.com/cockroachdb/errors"
 	"github.com/google/go-cmp/cmp"
 
 	"github.com/sourcegraph/sourcegraph/internal/api"
@@ -71,13 +72,13 @@ func TestOAuthProvider_FetchUserPerms(t *testing.T) {
 			do: func(r *http.Request) (*http.Response, error) {
 				want := "https://gitlab.com/api/v4/projects?min_access_level=20&per_page=100&visibility=private"
 				if r.URL.String() != want {
-					return nil, fmt.Errorf("URL: want %q but got %q", want, r.URL)
+					return nil, errors.Errorf("URL: want %q but got %q", want, r.URL)
 				}
 
 				want = "Bearer my_access_token"
 				got := r.Header.Get("Authorization")
 				if got != want {
-					return nil, fmt.Errorf("HTTP Authorization: want %q but got %q", want, got)
+					return nil, errors.Errorf("HTTP Authorization: want %q but got %q", want, got)
 				}
 
 				body := `[{"id": 1}, {"id": 2}, {"id": 3}]`
@@ -161,13 +162,13 @@ func TestOAuthProvider_FetchRepoPerms(t *testing.T) {
 				do: func(r *http.Request) (*http.Response, error) {
 					want := "https://gitlab.com/api/v4/projects/gitlab_project_id/members/all?per_page=100"
 					if r.URL.String() != want {
-						return nil, fmt.Errorf("URL: want %q but got %q", want, r.URL)
+						return nil, errors.Errorf("URL: want %q but got %q", want, r.URL)
 					}
 
 					want = "admin_token"
 					got := r.Header.Get("Private-Token")
 					if got != want {
-						return nil, fmt.Errorf("HTTP Private-Token: want %q but got %q", want, got)
+						return nil, errors.Errorf("HTTP Private-Token: want %q but got %q", want, got)
 					}
 
 					body := `
@@ -217,13 +218,13 @@ func TestOAuthProvider_FetchRepoPerms(t *testing.T) {
 				do: func(r *http.Request) (*http.Response, error) {
 					want := "https://gitlab.com/api/v4/projects/gitlab_project_id/members/all?per_page=100"
 					if r.URL.String() != want {
-						return nil, fmt.Errorf("URL: want %q but got %q", want, r.URL)
+						return nil, errors.Errorf("URL: want %q but got %q", want, r.URL)
 					}
 
 					want = "Bearer admin_token"
 					got := r.Header.Get("Authorization")
 					if got != want {
-						return nil, fmt.Errorf("HTTP Private-Token: want %q but got %q", want, got)
+						return nil, errors.Errorf("HTTP Private-Token: want %q but got %q", want, got)
 					}
 
 					body := `

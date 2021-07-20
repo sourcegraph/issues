@@ -9,6 +9,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/cockroachdb/errors"
 	"github.com/google/go-cmp/cmp"
 	"k8s.io/apimachinery/pkg/util/rand"
 
@@ -176,7 +177,7 @@ func (s *RepoStore) Upsert(ctx context.Context, op InsertRepoOp) error {
 	// log_statement='mod'.
 	r, err := s.GetByName(ctx, op.Name)
 	if err != nil {
-		if _, ok := err.(*RepoNotFoundErr); !ok {
+		if !errors.HasType(err, &RepoNotFoundErr{}) {
 			return err
 		}
 		insert = true // missing

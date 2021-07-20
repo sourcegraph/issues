@@ -5,7 +5,6 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
-	"fmt"
 	"net/http"
 	"net/url"
 	"time"
@@ -113,5 +112,5 @@ func (c *client) post(path string, data interface{}) error {
 	if err := json.NewDecoder(resp.Body).Decode(&errResp); err != nil {
 		return errors.Wrap(err, "Decoding response")
 	}
-	return fmt.Errorf("Error from %s: %s", u.String(), errResp.Message)
+	return errors.Errorf("Error from %s: %s", u.String(), errResp.Message)
 }

@@ -9,6 +9,7 @@ import (
 	"runtime/debug"
 	"unicode/utf8"
 
+	"github.com/cockroachdb/errors"
 	"github.com/sourcegraph/go-diff/diff"
 
 	"github.com/sourcegraph/sourcegraph/internal/pathmatch"
@@ -32,7 +33,7 @@ func filterAndHighlightDiff(rawDiff []byte, query *regexp.Regexp, onlyMatchingHu
 		if panicValue := recover(); panicValue != nil {
 			stack := debug.Stack()
 			log.Printf("filterAndHighlightDiff panic: %v\n%s", panicValue, stack)
-			err = fmt.Errorf("filterAndHighlightDiff panic: %v", panicValue)
+			err = errors.Errorf("filterAndHighlightDiff panic: %v", panicValue)
 		}
 	}()
 

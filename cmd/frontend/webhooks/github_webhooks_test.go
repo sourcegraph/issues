@@ -8,12 +8,12 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"flag"
-	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"os"
 	"testing"
 
+	"github.com/cockroachdb/errors"
 	gh "github.com/google/go-github/v28/github"
 
 	"github.com/sourcegraph/sourcegraph/internal/database"
@@ -81,7 +81,7 @@ func TestGithubWebhookDispatchError(t *testing.T) {
 	)
 	h.Register(func(ctx context.Context, svc *types.ExternalService, payload interface{}) error {
 		called <- struct{}{}
-		return fmt.Errorf("oh no")
+		return errors.Errorf("oh no")
 	}, "test-event-1")
 	h.Register(func(ctx context.Context, svc *types.ExternalService, payload interface{}) error {
 		called <- struct{}{}

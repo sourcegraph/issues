@@ -6,12 +6,12 @@ import { SettingsExperimentalFeatures } from '../../schema/settings.schema'
 /**
  * Returns experimentalFeatures from setting cascade.
  *
- * @param settingsCascade - Possible settings cascade object or error.
+ * @param finalSettings - final (merged) settings from settings cascade subjects.
  */
 export function getExperimentalFeatures<S extends Settings = Settings>(
-    settingsCascade: SettingsCascadeOrError<S>
+    finalSettings?: SettingsCascadeOrError<S>['final']
 ): SettingsExperimentalFeatures {
-    const settings = !isErrorLike(settingsCascade.final) ? settingsCascade.final : ({} as S)
+    const settings = !isErrorLike(finalSettings) ? finalSettings : ({} as S)
 
     return settings?.experimentalFeatures ?? {}
 }

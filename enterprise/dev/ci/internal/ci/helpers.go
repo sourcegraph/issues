@@ -8,6 +8,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/cockroachdb/errors"
 	"github.com/hashicorp/go-multierror"
 
 	"github.com/sourcegraph/sourcegraph/enterprise/dev/ci/images"
@@ -148,7 +149,7 @@ func (c Config) ensureCommit() error {
 			found = true
 			break
 		}
-		errs = multierror.Append(errs, fmt.Errorf("%v | Output: %q", err, string(output)))
+		errs = multierror.Append(errs, errors.Errorf("%v | Output: %q", err, string(output)))
 	}
 	if !found {
 		fmt.Printf("This branch %q at commit %s does not include any of these commits: %s.\n", c.branch, c.commit, strings.Join(c.mustIncludeCommit, ", "))

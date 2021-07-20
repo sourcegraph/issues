@@ -17,6 +17,7 @@ export interface Config {
     previousRelease: string
     upcomingRelease: string
 
+    oneWorkingDayBeforeRelease: string
     releaseDate: string
     oneWorkingDayAfterRelease: string
 

@@ -28,7 +28,6 @@ In order to create batch changes we need to [install the Sourcegraph CLI](../cli
     curl -L https://YOUR-SOURCEGRAPH-INSTANCE/.api/src-cli/src_linux_amd64 -o /usr/local/bin/src
     chmod +x /usr/local/bin/src
     ```
-    **Windows**: see ["Sourcegraph CLI for Windows"](../cli/explanations/windows.md)
 2. Authenticate `src` with your Sourcegraph instance by running **`src login`** and following the instructions:
 
     ```
@@ -132,6 +131,8 @@ Now that you have credentials set up, you can publish the changesets in the batc
     <img src="https://sourcegraphstatic.com/docs/images/batch_changes/browser_batch_async.png" class="screenshot">
 
     > NOTE: You can also create or update a batch change by running `src batch apply`. This skips the preview stage, and is especially useful when updating an existing batch change.
+
+> NOTE: You can also publish directly from Sourcegraph by omitting the `published` field from your batch spec. This is described in more detail in "[Publishing changesets to the code host](how-tos/publishing_changesets.md#publishing-changesets)".
 
 ## Congratulations!
 

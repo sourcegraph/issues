@@ -298,7 +298,7 @@ var repoRemoteRefs = func(ctx context.Context, remoteURL *vcs.URL, prefix string
 		if len(stderr) > 200 {
 			stderr = stderr[:200]
 		}
-		return nil, fmt.Errorf("git %s failed: %s (%q)", cmd.Args, err, stderr)
+		return nil, errors.Errorf("git %s failed: %s (%q)", cmd.Args, err, stderr)
 	}
 
 	refs := make(map[string]string)
@@ -310,12 +310,12 @@ var repoRemoteRefs = func(ctx context.Context, remoteURL *vcs.URL, prefix string
 
 		fields := strings.Fields(line)
 		if len(fields) != 2 {
-			return nil, fmt.Errorf("git %s failed (invalid output): %s", cmd.Args, line)
+			return nil, errors.Errorf("git %s failed (invalid output): %s", cmd.Args, line)
 		}
 
 		split := strings.SplitN(fields[1], "/", 3)
 		if len(split) != 3 {
-			return nil, fmt.Errorf("git %s failed (invalid refname): %s", cmd.Args, fields[1])
+			return nil, errors.Errorf("git %s failed (invalid refname): %s", cmd.Args, fields[1])
 		}
 
 		refs[split[2]] = fields[0]

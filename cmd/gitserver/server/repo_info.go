@@ -99,7 +99,7 @@ func (s *Server) handleRepoInfo(w http.ResponseWriter, r *http.Request) {
 
 func (s *Server) handleReposStats(w http.ResponseWriter, r *http.Request) {
 	b, err := os.ReadFile(filepath.Join(s.ReposDir, reposStatsName))
-	if err != nil && errors.Is(err, os.ErrNotExist) {
+	if errors.Is(err, os.ErrNotExist) {
 		// When a gitserver is new this file might not have been computed
 		// yet. Clients are expected to handle this case by noticing UpdatedAt
 		// is not set.

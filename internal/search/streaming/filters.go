@@ -23,15 +23,15 @@ type Filter struct {
 	// Kind of filter. Should be "repo", "file", or "lang".
 	Kind string
 
-	// Important is used to prioritize the order that filters appear in.
-	Important bool
+	// important is used to prioritize the order that filters appear in.
+	important bool
 }
 
 // Less returns true if f is more important the o.
 func (f *Filter) Less(o *Filter) bool {
-	if f.Important != o.Important {
+	if f.important != o.important {
 		// Prefer more important
-		return f.Important
+		return f.important
 	}
 	if f.Count != o.Count {
 		// Prefer higher count
@@ -42,11 +42,11 @@ func (f *Filter) Less(o *Filter) bool {
 
 }
 
-// Filters is a map of filter values to the Filter.
-type Filters map[string]*Filter
+// filters is a map of filter values to the Filter.
+type filters map[string]*Filter
 
 // Add the count to the filter with value.
-func (m Filters) Add(value string, label string, count int32, limitHit bool, kind string) {
+func (m filters) Add(value string, label string, count int32, limitHit bool, kind string) {
 	sf, ok := m[value]
 	if !ok {
 		sf = &Filter{
@@ -64,14 +64,23 @@ func (m Filters) Add(value string, label string, count int32, limitHit bool, kin
 
 // MarkImportant sets the filter with value as important. Can only be called
 // after Add.
-func (m Filters) MarkImportant(value string) {
-	m[value].Important = true
+func (m filters) MarkImportant(value string) {
+	m[value].important = true
+}
+
+// computeOpts are the options for calling filters.Compute.
+type computeOpts struct {
+	// MaxRepos is the maximum number of filters to return with kind repo.
+	MaxRepos int
+
+	// MaxOther is the maximum number of filters to return which are not repo.
+	MaxOther int
 }
 
 // Compute returns an ordered slice of Filter to present to the user.
-func (m Filters) Compute() []*Filter {
-	repos := filterHeap{max: 12}
-	other := filterHeap{max: 12}
+func (m filters) Compute(opts computeOpts) []*Filter {
+	repos := filterHeap{max: opts.MaxRepos}
+	other := filterHeap{max: opts.MaxOther}
 	for _, f := range m {
 		if f.Kind == "repo" {
 			repos.Add(f)
@@ -112,7 +121,7 @@ func (h *filterHeap) Add(f *Filter) {
 	if len(h.filterSlice) < h.max {
 		// Less than max, we keep the filter.
 		heap.Push(h, f)
-	} else if f.Less(h.filterSlice[0]) {
+	} else if h.max > 0 && f.Less(h.filterSlice[0]) {
 		// f is more important than the least important filter we have
 		// kept. So Pop that filter away and add in f. We should keep the
 		// invariant that len == h.max.

@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/Masterminds/semver"
+	"github.com/cockroachdb/errors"
 	amconfig "github.com/prometheus/alertmanager/config"
 	commoncfg "github.com/prometheus/common/config"
 
@@ -61,6 +62,8 @@ var (
 	firingTitleTemplate       = "[{{ .CommonLabels.level | toUpper }}] {{ .CommonLabels.description }}"
 	resolvedTitleTemplate     = "[RESOLVED] {{ .CommonLabels.description }}"
 	notificationTitleTemplate = fmt.Sprintf(`{{ if eq .Status "firing" }}%s{{ else }}%s{{ end }}`, firingTitleTemplate, resolvedTitleTemplate)
+
+	tagsTemplateDefault = "{{ range $key, $value := .CommonLabels }}{{$key}}={{$value}},{{end}}"
 )
 
 // newRoutesAndReceivers converts the given alerts from Sourcegraph site configuration into Alertmanager receivers
@@ -147,7 +150,7 @@ For more details, please refer to the service dashboard: %s`, firingBodyTemplate
 			owners := strings.Join(alert.Owners, "|")
 			ownerRegexp, err := amconfig.NewRegexp(fmt.Sprintf("^(%s)$", owners))
 			if err != nil {
-				newProblem(fmt.Errorf("failed to apply alert %d: %w", i, err))
+				newProblem(errors.Errorf("failed to apply alert %d: %w", i, err))
 				continue
 			}
 
@@ -203,7 +206,7 @@ For more details, please refer to the service dashboard: %s`, firingBodyTemplate
 			if notifier.Opsgenie.ApiUrl != "" {
 				u, err := url.Parse(notifier.Opsgenie.ApiUrl)
 				if err != nil {
-					newProblem(fmt.Errorf("failed to apply notifier %d: %w", i, err))
+					newProblem(errors.Errorf("failed to apply notifier %d: %w", i, err))
 					continue
 				}
 				apiURL = &amconfig.URL{URL: u}
@@ -226,8 +229,27 @@ For more details, please refer to the service dashboard: %s`, firingBodyTemplate
 				}
 			}
 
-			priority := notifier.Opsgenie.Priority
-			tags := notifier.Opsgenie.Tags
+			var priority string
+
+			switch alert.Level {
+			case "critical":
+				priority = "P1"
+			case "warning":
+				priority = "P2"
+			case "info":
+				priority = "P3"
+			default:
+				priority = "P4"
+			}
+
+			if notifier.Opsgenie.Priority != "" {
+				priority = notifier.Opsgenie.Priority
+			}
+
+			tags := tagsTemplateDefault
+			if notifier.Opsgenie.Tags != "" {
+				tags = notifier.Opsgenie.Tags
+			}
 
 			receiver.OpsGenieConfigs = append(receiver.OpsGenieConfigs, &amconfig.OpsGenieConfig{
 				APIKey: apiKEY,
@@ -252,7 +274,7 @@ For more details, please refer to the service dashboard: %s`, firingBodyTemplate
 			if notifier.Pagerduty.ApiUrl != "" {
 				u, err := url.Parse(notifier.Pagerduty.ApiUrl)
 				if err != nil {
-					newProblem(fmt.Errorf("failed to apply notifier %d: %w", i, err))
+					newProblem(errors.Errorf("failed to apply notifier %d: %w", i, err))
 					continue
 				}
 				apiURL = &amconfig.URL{URL: u}
@@ -278,7 +300,7 @@ For more details, please refer to the service dashboard: %s`, firingBodyTemplate
 		case notifier.Slack != nil:
 			u, err := url.Parse(notifier.Slack.Url)
 			if err != nil {
-				newProblem(fmt.Errorf("failed to apply notifier %d: %w", i, err))
+				newProblem(errors.Errorf("failed to apply notifier %d: %w", i, err))
 				continue
 			}
 
@@ -316,7 +338,7 @@ For more details, please refer to the service dashboard: %s`, firingBodyTemplate
 		case notifier.Webhook != nil:
 			u, err := url.Parse(notifier.Webhook.Url)
 			if err != nil {
-				newProblem(fmt.Errorf("failed to apply notifier %d: %w", i, err))
+				newProblem(errors.Errorf("failed to apply notifier %d: %w", i, err))
 				continue
 			}
 			receiver.WebhookConfigs = append(receiver.WebhookConfigs, &amconfig.WebhookConfig{
@@ -334,7 +356,7 @@ For more details, please refer to the service dashboard: %s`, firingBodyTemplate
 
 		// define new notifiers to support in site.schema.json
 		default:
-			newProblem(fmt.Errorf("failed to apply notifier %d: no configuration found", i))
+			newProblem(errors.Errorf("failed to apply notifier %d: no configuration found", i))
 		}
 	}
 

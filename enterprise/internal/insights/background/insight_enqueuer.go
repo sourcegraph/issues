@@ -45,7 +45,7 @@ func newInsightEnqueuer(ctx context.Context, workerBaseStore *basestore.Store, s
 				_, err := queryrunner.EnqueueJob(ctx, workerBaseStore, job)
 				return err
 			}
-			return discoverAndEnqueueInsights(ctx, time.Now, settingStore, queryRunnerEnqueueJob)
+			return discoverAndEnqueueInsights(ctx, time.Now, settingStore, insights.NewLoader(workerBaseStore.Handle().DB()), queryRunnerEnqueueJob)
 		},
 	), operation)
 }
@@ -58,9 +58,10 @@ func discoverAndEnqueueInsights(
 	ctx context.Context,
 	now func() time.Time,
 	settingStore discovery.SettingStore,
+	loader insights.Loader,
 	enqueueQueryRunnerJob func(ctx context.Context, job *queryrunner.Job) error,
 ) error {
-	foundInsights, err := discovery.Discover(ctx, settingStore, discovery.InsightFilterArgs{})
+	foundInsights, err := discovery.Discover(ctx, settingStore, loader, discovery.InsightFilterArgs{})
 	if err != nil {
 		return errors.Wrap(err, "Discover")
 	}

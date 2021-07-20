@@ -177,6 +177,27 @@ func TestDetermineReconcilerPlan(t *testing.T) {
 			wantOperations: Operations{},
 		},
 		{
+			name:        "ui published draft to ui published published",
+			currentSpec: &ct.TestSpecOpts{Published: nil},
+			changeset: ct.TestChangesetOpts{
+				PublicationState:   btypes.ChangesetPublicationStatePublished,
+				ExternalState:      btypes.ChangesetExternalStateDraft,
+				UiPublicationState: &btypes.ChangesetUiPublicationStatePublished,
+			},
+			wantOperations: Operations{btypes.ReconcilerOperationUndraft},
+		},
+		{
+			name:        "ui published published to ui published draft",
+			currentSpec: &ct.TestSpecOpts{Published: nil},
+			changeset: ct.TestChangesetOpts{
+				PublicationState:   btypes.ChangesetPublicationStatePublished,
+				ExternalState:      btypes.ChangesetExternalStateOpen,
+				UiPublicationState: &btypes.ChangesetUiPublicationStateDraft,
+			},
+			// We expect a no-op here.
+			wantOperations: Operations{},
+		},
+		{
 			name:         "title changed on published changeset",
 			previousSpec: &ct.TestSpecOpts{Published: true, Title: "Before"},
 			currentSpec:  &ct.TestSpecOpts{Published: true, Title: "After"},

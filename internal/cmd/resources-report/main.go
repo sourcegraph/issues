@@ -9,6 +9,8 @@ import (
 	"sort"
 	"strings"
 	"time"
+
+	"github.com/cockroachdb/errors"
 )
 
 const resultsBuffer = 5
@@ -86,7 +88,7 @@ func run(opts options) error {
 		rs, err := collectGCPResources(ctx, since, *opts.verbose, opts.gcpLabelsAllowlist)
 		if err != nil {
 			reportError(ctx, opts, err, "gcp")
-			return fmt.Errorf("gcp: failed to collect resources")
+			return errors.Errorf("gcp: failed to collect resources")
 		}
 		resources = append(resources, rs...)
 	}
@@ -94,7 +96,7 @@ func run(opts options) error {
 		rs, err := collectAWSResources(ctx, since, *opts.verbose, opts.awsTagsAllowlist)
 		if err != nil {
 			reportError(ctx, opts, err, "aws")
-			return fmt.Errorf("aws: failed to collect resources")
+			return errors.Errorf("aws: failed to collect resources")
 		}
 		resources = append(resources, rs...)
 	}
@@ -108,7 +110,7 @@ func run(opts options) error {
 	if !*opts.dry {
 		if err := generateReport(ctx, opts, resources); err != nil {
 			reportError(ctx, opts, err, "report")
-			return fmt.Errorf("report: %w", err)
+			return errors.Errorf("report: %w", err)
 		}
 	}
 

@@ -253,7 +253,6 @@ func HandleSignIn(db dbutil.DB) func(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		log15.Warn("userIdentified", "usrID", string(usr.ID))
 		actor.UID = usr.ID
 
 		// Write the session cookie

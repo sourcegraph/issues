@@ -2,9 +2,9 @@ package codeintel
 
 import (
 	"context"
-	"fmt"
 	"net/http"
 
+	"github.com/cockroachdb/errors"
 	"github.com/inconshreveable/log15"
 	"github.com/opentracing/opentracing-go"
 	"github.com/prometheus/client_golang/prometheus"
@@ -52,7 +52,7 @@ func Init(ctx context.Context, db dbutil.DB, outOfBandMigrationRunner *oobmigrat
 func newResolver(ctx context.Context, db dbutil.DB, observationContext *observation.Context) (gql.CodeIntelResolver, error) {
 	hunkCache, err := codeintelresolvers.NewHunkCache(config.HunkCacheSize)
 	if err != nil {
-		return nil, fmt.Errorf("failed to initialize hunk cache: %s", err)
+		return nil, errors.Errorf("failed to initialize hunk cache: %s", err)
 	}
 
 	innerResolver := codeintelresolvers.NewResolver(

@@ -10,8 +10,9 @@
   16686 to public Internet traffic from your IP, then navigate to `http://${NODE_IP}:16686` in your
   browser.
 * **Kubernetes:** Jaeger is already deployed, unless you explicitly removed it from the Sourcegraph
-  manifest. Access it by running `kubectl port-forward svc/jaeger-query 16686` and going to
-  `http://localhost:16686` in your browser.
+  manifest. Jaeger can be accessed from the admin UI under Maintenance/Tracing. Or by running `kubectl port-forward svc/jaeger-query 16686` and going to
+  `http://localhost:16686` in your browser. 
+  
 
 The Jaeger UI should look something like this:
 

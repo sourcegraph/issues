@@ -106,7 +106,7 @@ func TestActionRunner(t *testing.T) {
 			}
 
 			a := actionRunner{s}
-			err = a.Handle(ctx, createDBWorkerStoreForActionJobs(s), record)
+			err = a.Handle(ctx, record)
 			if err != nil {
 				t.Fatal(err)
 			}

@@ -21,6 +21,8 @@ type operations struct {
 	references                 *observation.Operation
 	documentationPage          *observation.Operation
 	documentationPathInfo      *observation.Operation
+	documentationIDToPathID    *observation.Operation
+	documentationPathIDToID    *observation.Operation
 	writeDefinitions           *observation.Operation
 	writeDocuments             *observation.Operation
 	writeMeta                  *observation.Operation
@@ -28,6 +30,7 @@ type operations struct {
 	writeResultChunks          *observation.Operation
 	writeDocumentationPages    *observation.Operation
 	writeDocumentationPathInfo *observation.Operation
+	writeDocumentationMappings *observation.Operation
 
 	locations           *observation.Operation
 	locationsWithinFile *observation.Operation
@@ -72,6 +75,8 @@ func newOperations(observationContext *observation.Context) *operations {
 		references:                 op("References"),
 		documentationPage:          op("DocumentationPage"),
 		documentationPathInfo:      op("DocumentationPathInfo"),
+		documentationIDToPathID:    op("DocumentationIDToPathID"),
+		documentationPathIDToID:    op("DocumentationPathIDToID"),
 		writeDefinitions:           op("WriteDefinitions"),
 		writeDocuments:             op("WriteDocuments"),
 		writeMeta:                  op("WriteMeta"),
@@ -79,6 +84,7 @@ func newOperations(observationContext *observation.Context) *operations {
 		writeResultChunks:          op("WriteResultChunks"),
 		writeDocumentationPages:    op("WriteDocumentationPages"),
 		writeDocumentationPathInfo: op("WriteDocumentationPathInfo"),
+		writeDocumentationMappings: op("WriteDocumentationMappings"),
 
 		locations:           subOp("locations"),
 		locationsWithinFile: subOp("locationsWithinFile"),

@@ -7,6 +7,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/cockroachdb/errors"
 	"github.com/derision-test/glock"
 
 	"github.com/sourcegraph/sourcegraph/internal/observation"
@@ -33,7 +34,8 @@ func TestWorkerHandlerSuccess(t *testing.T) {
 		Metrics:        NewMetrics(&observation.TestContext, "", nil),
 	}
 
-	store.DequeueFunc.PushReturn(TestRecord{ID: 42}, store, true, nil)
+	var cancel int
+	store.DequeueFunc.PushReturn(TestRecord{ID: 42}, func() { cancel++ }, true, nil)
 	store.DequeueFunc.SetDefaultReturn(nil, nil, false, nil)
 	store.MarkCompleteFunc.SetDefaultReturn(true, nil)
 
@@ -44,7 +46,7 @@ func TestWorkerHandlerSuccess(t *testing.T) {
 
 	if callCount := len(handler.HandleFunc.History()); callCount != 1 {
 		t.Errorf("unexpected handle call count. want=%d have=%d", 1, callCount)
-	} else if arg := handler.HandleFunc.History()[0].Arg2; arg.RecordID() != 42 {
+	} else if arg := handler.HandleFunc.History()[0].Arg1; arg.RecordID() != 42 {
 		t.Errorf("unexpected record. want=%d have=%d", 42, arg.RecordID())
 	}
 
@@ -54,10 +56,8 @@ func TestWorkerHandlerSuccess(t *testing.T) {
 		t.Errorf("unexpected id argument to mark complete. want=%v have=%v", 42, id)
 	}
 
-	if callCount := len(store.DoneFunc.History()); callCount != 1 {
-		t.Errorf("unexpected done call count. want=%d have=%d", 1, callCount)
-	} else if err := store.DoneFunc.History()[0].Arg0; err != nil {
-		t.Errorf("unexpected error argument to done. want=%v have=%v", nil, err)
+	if cancel != 1 {
+		t.Errorf("unexpected cancel call count. want=%d have=%d", 1, cancel)
 	}
 }
 
@@ -73,10 +73,11 @@ func TestWorkerHandlerFailure(t *testing.T) {
 		Metrics:        NewMetrics(&observation.TestContext, "", nil),
 	}
 
-	store.DequeueFunc.PushReturn(TestRecord{ID: 42}, store, true, nil)
+	var cancel int
+	store.DequeueFunc.PushReturn(TestRecord{ID: 42}, func() { cancel++ }, true, nil)
 	store.DequeueFunc.SetDefaultReturn(nil, nil, false, nil)
 	store.MarkErroredFunc.SetDefaultReturn(true, nil)
-	handler.HandleFunc.SetDefaultReturn(fmt.Errorf("oops"))
+	handler.HandleFunc.SetDefaultReturn(errors.Errorf("oops"))
 
 	worker := newWorker(context.Background(), store, handler, options, clock)
 	go func() { worker.Start() }()
@@ -85,7 +86,7 @@ func TestWorkerHandlerFailure(t *testing.T) {
 
 	if callCount := len(handler.HandleFunc.History()); callCount != 1 {
 		t.Errorf("unexpected handle call count. want=%d have=%d", 1, callCount)
-	} else if arg := handler.HandleFunc.History()[0].Arg2; arg.RecordID() != 42 {
+	} else if arg := handler.HandleFunc.History()[0].Arg1; arg.RecordID() != 42 {
 		t.Errorf("unexpected record. want=%d have=%d", 42, arg.RecordID())
 	}
 
@@ -97,10 +98,8 @@ func TestWorkerHandlerFailure(t *testing.T) {
 		t.Errorf("unexpected failure message argument to mark errored. want=%q have=%q", "oops", failureMessage)
 	}
 
-	if callCount := len(store.DoneFunc.History()); callCount != 1 {
-		t.Errorf("unexpected done call count. want=%d have=%d", 1, callCount)
-	} else if err := store.DoneFunc.History()[0].Arg0; err != nil {
-		t.Errorf("unexpected error argument to done. want=%v have=%v", nil, err)
+	if cancel != 1 {
+		t.Errorf("unexpected cancel call count. want=%d have=%d", 1, cancel)
 	}
 }
 
@@ -121,7 +120,8 @@ func TestWorkerHandlerNonRetryableFailure(t *testing.T) {
 		Metrics:        NewMetrics(&observation.TestContext, "", nil),
 	}
 
-	store.DequeueFunc.PushReturn(TestRecord{ID: 42}, store, true, nil)
+	var cancel int
+	store.DequeueFunc.PushReturn(TestRecord{ID: 42}, func() { cancel++ }, true, nil)
 	store.DequeueFunc.SetDefaultReturn(nil, nil, false, nil)
 	store.MarkFailedFunc.SetDefaultReturn(true, nil)
 
@@ -135,7 +135,7 @@ func TestWorkerHandlerNonRetryableFailure(t *testing.T) {
 
 	if callCount := len(handler.HandleFunc.History()); callCount != 1 {
 		t.Errorf("unexpected handle call count. want=%d have=%d", 1, callCount)
-	} else if arg := handler.HandleFunc.History()[0].Arg2; arg.RecordID() != 42 {
+	} else if arg := handler.HandleFunc.History()[0].Arg1; arg.RecordID() != 42 {
 		t.Errorf("unexpected record. want=%d have=%d", 42, arg.RecordID())
 	}
 
@@ -147,10 +147,8 @@ func TestWorkerHandlerNonRetryableFailure(t *testing.T) {
 		t.Errorf("unexpected failure message argument to mark failed. want=%q have=%q", testErr.Error(), failureMessage)
 	}
 
-	if callCount := len(store.DoneFunc.History()); callCount != 1 {
-		t.Errorf("unexpected done call count. want=%d have=%d", 1, callCount)
-	} else if err := store.DoneFunc.History()[0].Arg0; err != nil {
-		t.Errorf("unexpected error argument to done. want=%v have=%v", nil, err)
+	if cancel != 1 {
+		t.Errorf("unexpected cancel call count. want=%d have=%d", 1, cancel)
 	}
 }
 
@@ -174,8 +172,10 @@ func TestWorkerConcurrent(t *testing.T) {
 				Metrics:        NewMetrics(&observation.TestContext, "", nil),
 			}
 
+			cancelCalls := make([]int, NumTestRecords)
 			for i := 0; i < NumTestRecords; i++ {
-				store.DequeueFunc.PushReturn(TestRecord{ID: i}, store, true, nil)
+				index := i
+				store.DequeueFunc.PushReturn(TestRecord{ID: i}, func() { cancelCalls[index]++ }, true, nil)
 			}
 			store.DequeueFunc.SetDefaultReturn(nil, nil, false, nil)
 
@@ -191,7 +191,7 @@ func TestWorkerConcurrent(t *testing.T) {
 
 			handler.PreHandleFunc.SetDefaultHook(func(ctx context.Context, record Record) { markTime(record.RecordID(), 0) })
 			handler.PostHandleFunc.SetDefaultHook(func(ctx context.Context, record Record) { markTime(record.RecordID(), 1) })
-			handler.HandleFunc.SetDefaultHook(func(context.Context, Store, Record) error {
+			handler.HandleFunc.SetDefaultHook(func(context.Context, Record) error {
 				// Do a _very_ small sleep to make it very unlikely that the scheduler
 				// will happen to invoke all of the handlers sequentially.
 				<-time.After(time.Millisecond * 10)
@@ -244,6 +244,12 @@ func TestWorkerConcurrent(t *testing.T) {
 			if numHandlers > 1 && intersecting == 0 {
 				t.Errorf("no handler routines were concurrent")
 			}
+
+			for i := 0; i < NumTestRecords; i++ {
+				if cancelCalls[i] != 1 {
+					t.Errorf("unexpected cancel call count (record #%d). want=%d have=%d", i, 1, cancelCalls[i])
+				}
+			}
 		})
 	}
 }
@@ -260,7 +266,7 @@ func TestWorkerBlockingPreDequeueHook(t *testing.T) {
 		Metrics:        NewMetrics(&observation.TestContext, "", nil),
 	}
 
-	store.DequeueFunc.PushReturn(TestRecord{ID: 42}, store, true, nil)
+	store.DequeueFunc.PushReturn(TestRecord{ID: 42}, func() {}, true, nil)
 	store.DequeueFunc.SetDefaultReturn(nil, nil, false, nil)
 
 	// Block all dequeues
@@ -288,9 +294,10 @@ func TestWorkerConditionalPreDequeueHook(t *testing.T) {
 		Metrics:        NewMetrics(&observation.TestContext, "", nil),
 	}
 
-	store.DequeueFunc.PushReturn(TestRecord{ID: 42}, store, true, nil)
-	store.DequeueFunc.PushReturn(TestRecord{ID: 43}, store, true, nil)
-	store.DequeueFunc.PushReturn(TestRecord{ID: 44}, store, true, nil)
+	var cancel1, cancel2, cancel3 int
+	store.DequeueFunc.PushReturn(TestRecord{ID: 42}, func() { cancel1++ }, true, nil)
+	store.DequeueFunc.PushReturn(TestRecord{ID: 43}, func() { cancel2++ }, true, nil)
+	store.DequeueFunc.PushReturn(TestRecord{ID: 44}, func() { cancel3++ }, true, nil)
 	store.DequeueFunc.SetDefaultReturn(nil, nil, false, nil)
 
 	// Return additional arguments
@@ -317,6 +324,16 @@ func TestWorkerConditionalPreDequeueHook(t *testing.T) {
 				t.Errorf("unexpected extra argument for dequeue call %d. want=%q have=%q", i, expected, extra)
 			}
 		}
+	}
+
+	if cancel1 != 1 {
+		t.Errorf("unexpected cancel call count (record 1). want=%d have=%d", 1, cancel1)
+	}
+	if cancel2 != 1 {
+		t.Errorf("unexpected cancel call count (record 2). want=%d have=%d", 1, cancel2)
+	}
+	if cancel3 != 1 {
+		t.Errorf("unexpected cancel call count (record 3). want=%d have=%d", 1, cancel3)
 	}
 }
 

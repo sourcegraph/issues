@@ -23,6 +23,7 @@ import (
 	"time"
 
 	"cloud.google.com/go/storage"
+	"github.com/cockroachdb/errors"
 	"github.com/drexedam/gravatar"
 	gim "github.com/ozankasikci/go-image-merge"
 	"github.com/slack-go/slack"
@@ -181,7 +182,7 @@ func (cl Changelog) ToSlackMessage(cli *SlackClient, bucket *storage.BucketHandl
 	}
 
 	if merged.IsEmpty() {
-		return nil, fmt.Errorf("changelog is empty")
+		return nil, errors.Errorf("changelog is empty")
 	}
 
 	for _, s := range []struct {
@@ -301,7 +302,7 @@ func NewGroupAvatarImageURL(bucket *storage.BucketHandle, urls map[string]struct
 	}
 
 	if len(filtered) == 0 {
-		return "", fmt.Errorf("no avatar images")
+		return "", errors.Errorf("no avatar images")
 	}
 
 	merged, err := gim.New(filtered, 3, 3, func(m *gim.MergeImage) {
@@ -387,7 +388,7 @@ func parseChangelog(blame GitBlame, filter func(*Change) bool) (Changelog, error
 			if txt := n.FirstChild(); section != nil && txt != nil {
 				ln := lineNumber(source, txt)
 				if ln == -1 {
-					return ast.WalkStop, fmt.Errorf("found no blame line for %+v", n)
+					return ast.WalkStop, errors.Errorf("found no blame line for %+v", n)
 				}
 
 				c := Change{

@@ -4,11 +4,11 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
-	"fmt"
 	"io"
 	"net/http"
 	"net/url"
 
+	"github.com/cockroachdb/errors"
 	"golang.org/x/net/context/ctxhttp"
 )
 
@@ -78,7 +78,7 @@ func (c *BaseClient) Do(ctx context.Context, req *http.Request) (hasContent bool
 			return false, nil, nil
 		}
 
-		return false, nil, fmt.Errorf("unexpected status code %d", resp.StatusCode)
+		return false, nil, errors.Errorf("unexpected status code %d", resp.StatusCode)
 	}
 
 	return true, resp.Body, nil

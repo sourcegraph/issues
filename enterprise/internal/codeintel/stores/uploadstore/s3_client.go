@@ -284,12 +284,7 @@ func (s *s3Store) create(ctx context.Context) error {
 		Bucket: aws.String(s.bucket),
 	})
 
-	var bae *s3types.BucketAlreadyExists
-	if errors.As(err, &bae) {
-		return nil
-	}
-	var baoby *s3types.BucketAlreadyOwnedByYou
-	if errors.As(err, &baoby) {
+	if errors.HasType(err, &s3types.BucketAlreadyExists{}) || errors.HasType(err, &s3types.BucketAlreadyOwnedByYou{}) {
 		return nil
 	}
 
@@ -363,11 +358,7 @@ func writeToPipe(fn func(w io.Writer) error) io.Reader {
 }
 
 func isConnectionResetError(err error) bool {
-	if err != nil && strings.Contains(err.Error(), "read: connection reset by peer") {
-		return true
-	}
-
-	return false
+	return err != nil && strings.Contains(err.Error(), "read: connection reset by peer")
 }
 
 func s3BucketLifecycleConfiguration(backend string, ttl time.Duration) *s3types.BucketLifecycleConfiguration {

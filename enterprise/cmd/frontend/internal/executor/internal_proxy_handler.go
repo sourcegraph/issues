@@ -33,10 +33,10 @@ func newInternalProxyHandler(uploadHandler http.Handler) (func() http.Handler, e
 	}
 
 	if sharedUsername == "" {
-		return nil, fmt.Errorf("invalid value for EXECUTOR_FRONTEND_USERNAME: no value supplied")
+		return nil, errors.Errorf("invalid value for EXECUTOR_FRONTEND_USERNAME: no value supplied")
 	}
 	if sharedPassword == "" {
-		return nil, fmt.Errorf("invalid value for EXECUTOR_FRONTEND_PASSWORD: no value supplied")
+		return nil, errors.Errorf("invalid value for EXECUTOR_FRONTEND_PASSWORD: no value supplied")
 	}
 
 	host, port, err := net.SplitHostPort(envvar.HTTPAddrInternal)

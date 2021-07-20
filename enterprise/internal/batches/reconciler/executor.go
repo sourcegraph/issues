@@ -103,7 +103,7 @@ func (e *executor) Run(ctx context.Context, plan *Plan) (err error) {
 			e.archiveChangeset()
 
 		default:
-			err = fmt.Errorf("executor operation %q not implemented", op)
+			err = errors.Errorf("executor operation %q not implemented", op)
 		}
 
 		if err != nil {
@@ -216,8 +216,7 @@ func (e *executor) publishChangeset(ctx context.Context, asDraft bool) (err erro
 
 func (e *executor) syncChangeset(ctx context.Context) error {
 	if err := e.loadChangeset(ctx); err != nil {
-		_, ok := err.(sources.ChangesetNotFoundError)
-		if !ok {
+		if !errors.HasType(err, sources.ChangesetNotFoundError{}) {
 			return err
 		}
 
@@ -367,8 +366,9 @@ func loadChangesetSource(ctx context.Context, s *store.Store, sourcer sources.So
 			case sources.ErrNoSSHCredential:
 				return nil, &errNoSSHCredential{}
 			default:
-				if enpc, ok := err.(sources.ErrNoPushCredentials); ok {
-					return nil, &errNoPushCredentials{credentialsType: enpc.CredentialsType}
+				var e sources.ErrNoPushCredentials
+				if errors.As(err, &e) {
+					return nil, &errNoPushCredentials{credentialsType: e.CredentialsType}
 				}
 				return nil, err
 			}
@@ -391,14 +391,15 @@ func loadChangesetSource(ctx context.Context, s *store.Store, sourcer sources.So
 func (e *executor) pushCommit(ctx context.Context, opts protocol.CreateCommitFromPatchRequest) error {
 	_, err := e.gitserverClient.CreateCommitFromPatch(ctx, opts)
 	if err != nil {
-		if diffErr, ok := err.(*protocol.CreateCommitFromPatchError); ok {
+		var e *protocol.CreateCommitFromPatchError
+		if errors.As(err, &e) {
 			return errors.Errorf(
 				"creating commit from patch for repository %q: %s\n"+
 					"```\n"+
 					"$ %s\n"+
 					"%s\n"+
 					"```",
-				diffErr.RepositoryName, diffErr.InternalError, diffErr.Command, strings.TrimSpace(diffErr.CombinedOutput))
+				e.RepositoryName, e.InternalError, e.Command, strings.TrimSpace(e.CombinedOutput))
 		}
 		return err
 	}

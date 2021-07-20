@@ -16,13 +16,19 @@ import { createViewContent } from '../utils/create-view-content'
  * Used for fetching insights in different places (insight, home, directory pages)
  * */
 export const getCombinedViews = (
-    getExtensionsInsights: () => Observable<ViewProviderResult[]>
+    getExtensionsInsights: () => Observable<ViewProviderResult[]>,
+    insightIds?: string[]
 ): Observable<ViewInsightProviderResult[]> =>
     combineLatest([
         getExtensionsInsights().pipe(
             map(extensionInsights =>
                 extensionInsights.map(insight => ({
                     ...insight,
+                    // According to our naming convention of insight
+                    // <type>.<name>.<render view = insight page | directory | home page>
+                    // You can see insight id generation at extension codebase like here
+                    // https://github.com/sourcegraph/sourcegraph-search-insights/blob/master/src/search-insights.ts#L86
+                    id: insight.id.split('.').slice(0, -1).join('.'),
                     // Convert error like errors since Firefox and Safari don't support
                     // receiving native errors from web worker thread
                     view: isErrorLike(insight.view) ? asError(insight.view) : insight.view,
@@ -30,14 +36,14 @@ export const getCombinedViews = (
                 }))
             )
         ),
-        fetchBackendInsights().pipe(
+        fetchBackendInsights(insightIds ?? []).pipe(
             startWith(null),
             map(backendInsights =>
                 backendInsights === null
                     ? [{ id: 'Backend insights', view: undefined, source: ViewInsightProviderSourceType.Backend }]
                     : backendInsights?.map(
-                          (insight, index): ViewInsightProviderResult => ({
-                              id: `Backend insight ${index + 1}`,
+                          (insight): ViewInsightProviderResult => ({
+                              id: insight.id,
                               view: {
                                   title: insight.title,
                                   subtitle: insight.description,
@@ -66,8 +72,10 @@ export const getInsightCombinedViews = (
     extensionApi: Promise<Remote<FlatExtensionHostAPI>>,
     insightIds?: string[]
 ): Observable<ViewInsightProviderResult[]> =>
-    getCombinedViews(() =>
-        from(extensionApi).pipe(
-            switchMap(extensionHostAPI => wrapRemoteObservable(extensionHostAPI.getInsightsViews({}, insightIds)))
-        )
+    getCombinedViews(
+        () =>
+            from(extensionApi).pipe(
+                switchMap(extensionHostAPI => wrapRemoteObservable(extensionHostAPI.getInsightsViews({}, insightIds)))
+            ),
+        insightIds
     )

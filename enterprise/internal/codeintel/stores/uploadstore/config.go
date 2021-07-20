@@ -1,9 +1,10 @@
 package uploadstore
 
 import (
-	"fmt"
 	"strings"
 	"time"
+
+	"github.com/cockroachdb/errors"
 
 	"github.com/sourcegraph/sourcegraph/internal/env"
 )
@@ -42,7 +43,7 @@ func (c *Config) Load() {
 
 	config, ok := loaders[c.Backend]
 	if !ok {
-		c.AddError(fmt.Errorf("invalid backend %q for PRECISE_CODE_INTEL_UPLOAD_BACKEND: must be S3, GCS, or MinIO", c.Backend))
+		c.AddError(errors.Errorf("invalid backend %q for PRECISE_CODE_INTEL_UPLOAD_BACKEND: must be S3, GCS, or MinIO", c.Backend))
 		return
 	}
 

@@ -7,6 +7,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/cockroachdb/errors"
 	"github.com/inconshreveable/log15"
 
 	btypes "github.com/sourcegraph/sourcegraph/enterprise/internal/batches/types"
@@ -535,7 +536,7 @@ func TestBitbucketServerSource_WithAuthenticator(t *testing.T) {
 				src, err := bbsSrc.WithAuthenticator(tc)
 				if err == nil {
 					t.Error("unexpected nil error")
-				} else if _, ok := err.(UnsupportedAuthenticatorError); !ok {
+				} else if !errors.HasType(err, UnsupportedAuthenticatorError{}) {
 					t.Errorf("unexpected error of type %T: %v", err, err)
 				}
 				if src != nil {

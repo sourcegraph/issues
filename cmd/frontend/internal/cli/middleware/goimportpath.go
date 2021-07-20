@@ -1,12 +1,13 @@
 package middleware
 
 import (
-	"fmt"
 	"html/template"
 	"log"
 	"net/http"
 	"path"
 	"strings"
+
+	"github.com/cockroachdb/errors"
 
 	"github.com/sourcegraph/sourcegraph/cmd/frontend/globals"
 	"github.com/sourcegraph/sourcegraph/internal/trace"
@@ -51,7 +52,7 @@ func SourcegraphComGoGetHandler(next http.Handler) http.Handler {
 
 		trace.SetRouteName(req, "middleware.go-get")
 		if !strings.HasPrefix(req.URL.Path, "/") {
-			err := fmt.Errorf("req.URL.Path doesn't have a leading /: %q", req.URL.Path)
+			err := errors.Errorf("req.URL.Path doesn't have a leading /: %q", req.URL.Path)
 			log.Println(err)
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return

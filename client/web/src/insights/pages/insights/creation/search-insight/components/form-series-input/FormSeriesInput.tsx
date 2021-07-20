@@ -85,9 +85,22 @@ export const FormSeriesInput: React.FunctionComponent<FormSeriesInputProps> = pr
         },
     })
 
-    const nameField = useField('seriesName', formAPI, { sync: requiredNameField })
-    const queryField = useField('seriesQuery', formAPI, { sync: validQuery })
-    const colorField = useField('seriesColor', formAPI)
+    const nameField = useField({
+        name: 'seriesName',
+        formApi: formAPI,
+        validators: { sync: requiredNameField },
+    })
+
+    const queryField = useField({
+        name: 'seriesQuery',
+        formApi: formAPI,
+        validators: { sync: validQuery },
+    })
+
+    const colorField = useField({
+        name: 'seriesColor',
+        formApi: formAPI,
+    })
 
     return (
         <div data-testid="series-form" ref={ref} className={classnames('d-flex flex-column', className)}>

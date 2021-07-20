@@ -41,7 +41,7 @@ func TestClient_ListCloned(t *testing.T) {
 					Body: io.NopCloser(bytes.NewBufferString(`["repo1-a", "repo1-b"]`)),
 				}, nil
 			default:
-				return nil, fmt.Errorf("unexpected url: %s", r.URL.String())
+				return nil, errors.Errorf("unexpected url: %s", r.URL.String())
 			}
 		}),
 	}
@@ -94,7 +94,7 @@ func TestClient_Archive(t *testing.T) {
 			if testData.remote != "" {
 				return testData.remote, nil
 			}
-			return "", fmt.Errorf("no remote for %s", name)
+			return "", errors.Errorf("no remote for %s", name)
 		},
 		GetVCSSyncer: func(ctx context.Context, name api.RepoName) (server.VCSSyncer, error) {
 			return &server.GitRepoSyncer{}, nil

@@ -5,10 +5,11 @@ import (
 	"crypto/rand"
 	"encoding/base64"
 	"encoding/json"
-	"fmt"
 	"net/http"
 	"net/url"
 	"path"
+
+	"github.com/cockroachdb/errors"
 
 	"github.com/sourcegraph/sourcegraph/cmd/frontend/globals"
 
@@ -218,7 +219,7 @@ func getRedirect(req *http.Request) (string, error) {
 	// to prevent open redirect vulnerabilities used for phishing
 	// we limit the redirect URL to only permit certain urls
 	if !canRedirect(returnTo) {
-		return "", fmt.Errorf("invalid URL in returnTo parameter: %s", returnTo)
+		return "", errors.Errorf("invalid URL in returnTo parameter: %s", returnTo)
 	}
 	return returnTo, nil
 }

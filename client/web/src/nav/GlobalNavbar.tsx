@@ -257,7 +257,7 @@ export const GlobalNavbar: React.FunctionComponent<Props> = ({
                         {props.showBatchChanges && <BatchChangesNavItem isSourcegraphDotCom={isSourcegraphDotCom} />}
                         {codeInsights && (
                             <NavItem icon={BarChartIcon}>
-                                <NavLink to="/insights">Insights</NavLink>
+                                <NavLink to="/insights/dashboards/all">Insights</NavLink>
                             </NavItem>
                         )}
                         <NavItem icon={PuzzleOutlineIcon}>

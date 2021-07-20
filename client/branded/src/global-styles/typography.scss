@@ -1,41 +1,57 @@
 @import 'bootstrap/scss/type';
 
 h1 {
-    font-size: 1.75rem;
-    font-weight: 500;
+    font-size: 1.625rem; // 26px
+    font-weight: 600;
+    letter-spacing: (0.5/26) + em;
     margin: 0 0 1rem;
 }
 
 h2 {
-    font-size: 1.5rem;
-    font-weight: 500;
+    font-size: 1.25rem; // 20px
+    font-weight: 600;
+    letter-spacing: (0.25/20) + em;
 }
 
 h3 {
-    font-size: 1rem;
+    font-size: 1rem; // 16px
     font-weight: 600;
+    letter-spacing: (0.25/16) + em;
 }
 
 h4 {
-    font-size: 0.875rem;
-    font-weight: 600;
+    font-size: 0.875rem; // 14px
+    font-weight: 500;
+    letter-spacing: (0.25/14) + em;
 }
 
 h5 {
-    font-size: 0.875rem;
-    letter-spacing: 0.05em;
-    font-weight: normal;
+    font-size: 0.625rem; // 10px
+    font-weight: 600;
+    letter-spacing: (0.5/10) + em;
     text-transform: uppercase;
     margin: 0;
 }
 
 h6 {
-    font-size: 0.75rem;
-    font-weight: 600;
+    font-size: 0.625rem;
+    font-weight: 400;
 }
 
-small {
-    font-size: 0.75rem;
+%small {
+    // Use string interpolation and calc() to avoid using Sass own max() function.
+    // See: https://github.com/sass/node-sass/issues/2815#issuecomment-575926329
+    font-size: calc(min(0.75rem, #{(11/12)}em));
+    line-height: 1rem;
+}
+
+// Body / Small / Regular
+small,
+.small {
+    @extend %small;
+    // Bootstrap applies `font-weight: 400;` to `small` element,
+    // but we want to control `font-weight` only with `strong` or `.font-weight-medium`.
+    font-weight: inherit;
 }
 
 sup,
@@ -50,19 +66,56 @@ legend {
     font-size: 1rem;
 }
 
+// Body / Base / Medium
 .font-weight-medium {
+    font-weight: 500;
+}
+
+// Body / Base / Strong
+strong {
     font-weight: 600;
 }
 
-// Make sure text color utilities are theme-aware
-.theme-light {
-    @each $color, $value in $theme-colors-light {
-        @include text-emphasis-variant('.text-#{$color}', $value, true);
-    }
+$input-font-size-sm: (11/14) + em;
+
+// Input / Small
+.form-control-sm,
+%form-control-sm,
+.custom-select-sm,
+%custom-select-sm {
+    font-size: $input-font-size-sm;
+    line-height: 1rem;
 }
 
-.theme-light.theme-redesign,
-.theme-dark.theme-redesign {
+// Label / Base
+label,
+%label-base {
+    font-weight: 500;
+    letter-spacing: -(0.1/14) + em;
+}
+
+label small,
+%label-base-small {
+    @extend %small;
+    letter-spacing: -(0.25/12) + em;
+}
+
+// Label / Uppercase
+label.text-uppercase,
+%label-uppercase {
+    font-size: 0.75rem;
+    letter-spacing: (0.25/14) + em;
+}
+
+label.text-uppercase small,
+%label-uppercase-small {
+    font-size: 0.75rem;
+    letter-spacing: -(0.25/12) + em;
+}
+
+// Make sure text color utilities are theme-aware
+.theme-light,
+.theme-dark {
     @each $color, $value in $theme-colors-redesign {
         @include text-emphasis-variant('.text-#{$color}', $value, true);
     }
@@ -81,5 +134,3 @@ legend {
         text-align: right;
     }
 }
-
-@import './typography-redesign';

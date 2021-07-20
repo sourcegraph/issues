@@ -156,21 +156,23 @@ func newCommon(w http.ResponseWriter, r *http.Request, title string, serveError 
 		// Common repo pages (blob, tree, etc).
 		var err error
 		common.Repo, common.CommitID, err = handlerutil.GetRepoAndRev(r.Context(), mux.Vars(r))
-		isRepoEmptyError := routevar.ToRepoRev(mux.Vars(r)).Rev == "" && gitserver.IsRevisionNotFound(errors.Cause(err)) // should reply with HTTP 200
+		isRepoEmptyError := routevar.ToRepoRev(mux.Vars(r)).Rev == "" && errors.HasType(err, &gitserver.RevisionNotFoundError{}) // should reply with HTTP 200
 		if err != nil && !isRepoEmptyError {
-			if e, ok := err.(*handlerutil.URLMovedError); ok {
+			var urlMovedError *handlerutil.URLMovedError
+			if errors.As(err, &urlMovedError) {
 				// The repository has been renamed, e.g. "github.com/docker/docker"
 				// was renamed to "github.com/moby/moby" -> redirect the user now.
-				err = handlerutil.RedirectToNewRepoName(w, r, e.NewRepo)
+				err = handlerutil.RedirectToNewRepoName(w, r, urlMovedError.NewRepo)
 				if err != nil {
 					return nil, errors.Wrap(err, "when sending renamed repository redirect response")
 				}
 
 				return nil, nil
 			}
-			if e, ok := err.(backend.ErrRepoSeeOther); ok {
+			var repoSeeOtherError backend.ErrRepoSeeOther
+			if errors.As(err, &repoSeeOtherError) {
 				// Repo does not exist here, redirect to the recommended location.
-				u, err := url.Parse(e.RedirectURL)
+				u, err := url.Parse(repoSeeOtherError.RedirectURL)
 				if err != nil {
 					return nil, err
 				}
@@ -178,12 +180,12 @@ func newCommon(w http.ResponseWriter, r *http.Request, title string, serveError 
 				http.Redirect(w, r, u.String(), http.StatusSeeOther)
 				return nil, nil
 			}
-			if gitserver.IsRevisionNotFound(errors.Cause(err)) {
+			if errors.HasType(err, &gitserver.RevisionNotFoundError{}) {
 				// Revision does not exist.
 				serveError(w, r, err, http.StatusNotFound)
 				return nil, nil
 			}
-			if _, ok := errors.Cause(err).(*gitserver.RepoNotCloneableErr); ok {
+			if errors.HasType(err, &gitserver.RepoNotCloneableErr{}) {
 				if errcode.IsNotFound(err) {
 					// Repository is not found.
 					serveError(w, r, err, http.StatusNotFound)

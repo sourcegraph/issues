@@ -64,7 +64,7 @@ func (c *Client) RepoUpdateSchedulerInfo(ctx context.Context, args protocol.Repo
 
 	if resp.StatusCode != http.StatusOK {
 		stack := fmt.Sprintf("RepoScheduleInfo: %+v", args)
-		return nil, errors.Wrap(fmt.Errorf("http status %d", resp.StatusCode), stack)
+		return nil, errors.Wrap(errors.Errorf("http status %d", resp.StatusCode), stack)
 	}
 	defer resp.Body.Close()
 	err = json.NewDecoder(resp.Body).Decode(&result)

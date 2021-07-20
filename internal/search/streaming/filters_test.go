@@ -11,7 +11,7 @@ func TestFilters(t *testing.T) {
 	// Add lots of repos, files and fork. Ensure we compute a good summary
 	// which balances types.
 
-	m := make(Filters)
+	m := make(filters)
 	for count := int32(1); count <= 1000; count++ {
 		repo := fmt.Sprintf("repo-%d", count)
 		m.Add(repo, repo, count, false, "repo")
@@ -55,7 +55,10 @@ func TestFilters(t *testing.T) {
 		"file-90 90",
 	}
 
-	filters := m.Compute()
+	filters := m.Compute(computeOpts{
+		MaxRepos: 12,
+		MaxOther: 12,
+	})
 	var got []string
 	for _, f := range filters {
 		got = append(got, fmt.Sprintf("%s %d", f.Value, f.Count))

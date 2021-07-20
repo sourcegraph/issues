@@ -50,7 +50,8 @@ func TestUnmarshal(t *testing.T) {
 		if !reflect.DeepEqual(a, b) {
 			t.Errorf("Expected the same result unmarshalling %v\na: %v\nb: %v", data, a, b)
 		}
-		if !reflect.DeepEqual(errA, errors.Cause(errB)) {
+
+		if !errors.Is(errA, errors.Cause(errB)) {
 			t.Errorf("Expected the same underlying error unmarshalling %v\na: %v\nb: %v", data, errA, errB)
 		}
 		got := ""

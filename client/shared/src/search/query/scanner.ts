@@ -233,7 +233,7 @@ export const scanBalancedLiteral: Scanner<Literal> = (input, start) => {
             result.push(current)
         } else if (current === ')') {
             balanced -= 1
-            if (balanced < 0) {
+            if (balanced < 0 && adjustedStart > 1) {
                 // This paren is an unmatched closing paren, so we stop treating it as a potential
                 // pattern here--it might be closing a group.
                 adjustedStart -= 1 // Backtrack.

@@ -3,9 +3,9 @@ package codemonitors
 import (
 	"context"
 	"database/sql"
-	"fmt"
 	"time"
 
+	"github.com/cockroachdb/errors"
 	"github.com/graph-gophers/graphql-go/relay"
 	"github.com/keegancsmith/sqlf"
 
@@ -99,7 +99,7 @@ func (s *Store) runEmailQuery(ctx context.Context, q *sqlf.Query) (*MonitorEmail
 		return nil, err
 	}
 	if len(es) == 0 {
-		return nil, fmt.Errorf("operation failed. Query should have returned 1 row")
+		return nil, errors.Errorf("operation failed. Query should have returned 1 row")
 	}
 	return es[0], nil
 }
@@ -119,7 +119,7 @@ RETURNING %s;
 func (s *Store) updateActionEmailQuery(ctx context.Context, monitorID int64, args *graphqlbackend.EditActionEmailArgs) (q *sqlf.Query, err error) {
 	var actionID int64
 	if args.Id == nil {
-		return nil, fmt.Errorf("nil is not a valid action ID")
+		return nil, errors.Errorf("nil is not a valid action ID")
 	}
 	err = relay.UnmarshalSpec(*args.Id, &actionID)
 	if err != nil {

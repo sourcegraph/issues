@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
-	"fmt"
 	"io"
 	"math/rand"
 	"net/http"
@@ -12,6 +11,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/cockroachdb/errors"
 	"github.com/gomodule/redigo/redis"
 	"github.com/inconshreveable/log15"
 	"github.com/prometheus/client_golang/prometheus"
@@ -307,7 +307,7 @@ func parseRedisInfo(buf []byte) (map[string]string, error) {
 
 		parts := bytes.Split(line, []byte(":"))
 		if len(parts) != 2 {
-			return nil, fmt.Errorf("expected a key:value line, got %q", string(line))
+			return nil, errors.Errorf("expected a key:value line, got %q", string(line))
 		}
 		m[string(parts[0])] = string(parts[1])
 	}
@@ -554,7 +554,7 @@ func check(db dbutil.DB) {
 			} else {
 				description = strconv.Quote(string(bytes.TrimSpace(body)))
 			}
-			return "", fmt.Errorf("update endpoint returned HTTP error %d: %s", resp.StatusCode, description)
+			return "", errors.Errorf("update endpoint returned HTTP error %d: %s", resp.StatusCode, description)
 		}
 
 		if resp.StatusCode == http.StatusNoContent {

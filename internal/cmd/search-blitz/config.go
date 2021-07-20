@@ -2,10 +2,10 @@ package main
 
 import (
 	_ "embed"
-	"fmt"
 	"strings"
 	"time"
 
+	"github.com/cockroachdb/errors"
 	"gopkg.in/yaml.v2"
 )
 
@@ -54,7 +54,7 @@ func (s *Protocol) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	case "batch":
 		*s = Batch
 	default:
-		return fmt.Errorf("invalid search type %s", v)
+		return errors.Errorf("invalid search type %s", v)
 	}
 
 	return nil

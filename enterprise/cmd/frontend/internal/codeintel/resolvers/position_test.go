@@ -255,8 +255,8 @@ index d1d9f650d673..076f2ae4d63b 100644
 
         "github.com/gohugoio/hugo/resources/resource"
 
--       "github.com/pkg/errors"
-        _errors "github.com/pkg/errors"
+-       "github.com/cockroachdb/errors"
+        _errors "github.com/cockroachdb/errors"
 
         "github.com/gohugoio/hugo/helpers"
 @@ -235,7 +234,7 @@ const imageProcWorkers = 1

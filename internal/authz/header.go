@@ -2,7 +2,6 @@ package authz
 
 import (
 	"bytes"
-	"fmt"
 	"strings"
 
 	"github.com/cockroachdb/errors"
@@ -17,12 +16,12 @@ const (
 
 // errUnrecognizedScheme occurs when the Authorization header scheme (the first token) is not
 // recognized.
-var errUnrecognizedScheme = fmt.Errorf("unrecognized HTTP Authorization request header scheme (supported values: %q, %q)", SchemeToken, SchemeTokenSudo)
+var errUnrecognizedScheme = errors.Errorf("unrecognized HTTP Authorization request header scheme (supported values: %q, %q)", SchemeToken, SchemeTokenSudo)
 
 // IsUnrecognizedScheme reports whether err indicates that the request's Authorization header scheme
 // is unrecognized or unparseable (i.e., is neither "token" nor "token-sudo").
 func IsUnrecognizedScheme(err error) bool {
-	return err == errUnrecognizedScheme || err == errHTTPAuthParamsDuplicateKey || err == errHTTPAuthParamsNoEquals
+	return errors.IsAny(err, errUnrecognizedScheme, errHTTPAuthParamsDuplicateKey, errHTTPAuthParamsNoEquals)
 }
 
 // ParseAuthorizationHeader parses the HTTP Authorization request header for supported credentials

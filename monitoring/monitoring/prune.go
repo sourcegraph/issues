@@ -1,12 +1,12 @@
 package monitoring
 
 import (
-	"fmt"
 	"io/fs"
 	"os"
 	"path/filepath"
 	"strings"
 
+	"github.com/cockroachdb/errors"
 	"github.com/inconshreveable/log15"
 )
 
@@ -35,7 +35,7 @@ func pruneAssets(logger log15.Logger, filelist []string, grafanaDir, promDir str
 			return os.Remove(path)
 		})
 		if err != nil {
-			return fmt.Errorf("error pruning Grafana assets: %w", err)
+			return errors.Errorf("error pruning Grafana assets: %w", err)
 		}
 	}
 
@@ -64,7 +64,7 @@ func pruneAssets(logger log15.Logger, filelist []string, grafanaDir, promDir str
 			return os.Remove(path)
 		})
 		if err != nil {
-			return fmt.Errorf("error pruning Prometheus assets: %w", err)
+			return errors.Errorf("error pruning Prometheus assets: %w", err)
 		}
 	}
 

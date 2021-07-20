@@ -65,7 +65,7 @@ func (r *insightConnectionResolver) PageInfo(ctx context.Context) (*graphqlutil.
 
 func (r *insightConnectionResolver) compute(ctx context.Context) ([]insights.SearchInsight, int64, error) {
 	r.once.Do(func() {
-		r.insights, r.err = discovery.Discover(ctx, r.settingStore, discovery.InsightFilterArgs{Ids: r.ids})
+		r.insights, r.err = discovery.Discover(ctx, r.settingStore, insights.NewLoader(r.workerBaseStore.Handle().DB()), discovery.InsightFilterArgs{Ids: r.ids})
 	})
 	return r.insights, r.next, r.err
 }

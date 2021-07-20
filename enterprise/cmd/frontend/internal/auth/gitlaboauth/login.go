@@ -1,7 +1,6 @@
 package gitlaboauth
 
 import (
-	"fmt"
 	"net/http"
 	"net/url"
 
@@ -38,7 +37,7 @@ func gitlabHandler(config *oauth2.Config, success, failure http.Handler) http.Ha
 
 		gitlabClient, err := gitlabClientFromAuthURL(config.Endpoint.AuthURL, token.AccessToken)
 		if err != nil {
-			ctx = gologin.WithError(ctx, fmt.Errorf("could not parse AuthURL %s", config.Endpoint.AuthURL))
+			ctx = gologin.WithError(ctx, errors.Errorf("could not parse AuthURL %s", config.Endpoint.AuthURL))
 			failure.ServeHTTP(w, req.WithContext(ctx))
 			return
 		}

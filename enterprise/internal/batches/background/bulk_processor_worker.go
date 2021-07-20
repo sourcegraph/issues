@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"time"
 
+	"github.com/hashicorp/go-multierror"
 	"github.com/keegancsmith/sqlf"
 
 	"github.com/sourcegraph/sourcegraph/enterprise/internal/batches/sources"
@@ -70,8 +71,9 @@ func createBulkOperationDBWorkerStore(s *store.Store) dbworkerstore.Store {
 
 		OrderByExpression: sqlf.Sprintf("changeset_jobs.state = 'errored', changeset_jobs.updated_at DESC"),
 
-		StalledMaxAge: 60 * time.Second,
-		MaxNumResets:  bulkProcessorMaxNumResets,
+		HeartbeatInterval: 15 * time.Second,
+		StalledMaxAge:     60 * time.Second,
+		MaxNumResets:      bulkProcessorMaxNumResets,
 
 		RetryAfter:    5 * time.Second,
 		MaxNumRetries: bulkProcessorMaxNumRetries,
@@ -91,11 +93,25 @@ type bulkProcessorWorker struct {
 	sourcer sources.Sourcer
 }
 
-func (b *bulkProcessorWorker) HandlerFunc() dbworker.HandlerFunc {
-	return func(ctx context.Context, tx dbworkerstore.Store, record workerutil.Record) error {
+func (b *bulkProcessorWorker) HandlerFunc() workerutil.HandlerFunc {
+	return func(ctx context.Context, record workerutil.Record) (err error) {
+		tx, err := b.store.Transact(ctx)
+		if err != nil {
+			return err
+		}
+		defer func() {
+			doneErr := tx.Done(nil)
+			if err != nil && doneErr != nil {
+				err = multierror.Append(err, doneErr)
+			}
+			if doneErr != nil {
+				err = doneErr
+			}
+		}()
+
 		processor := &bulkProcessor{
+			tx:      tx,
 			sourcer: b.sourcer,
-			tx:      b.store.With(tx),
 		}
 		return processor.process(ctx, record.(*btypes.ChangesetJob))
 	}

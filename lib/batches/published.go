@@ -2,7 +2,8 @@ package batches
 
 import (
 	"encoding/json"
-	"fmt"
+
+	"github.com/cockroachdb/errors"
 )
 
 // PublishedValue is a wrapper type that supports the quadruple `true`, `false`,
@@ -67,7 +68,7 @@ func (p PublishedValue) MarshalJSON() ([]byte, error) {
 		v := `"draft"`
 		return []byte(v), nil
 	}
-	return nil, fmt.Errorf("invalid PublishedValue: %s (%T)", p.Val, p.Val)
+	return nil, errors.Errorf("invalid PublishedValue: %s (%T)", p.Val, p.Val)
 }
 
 func (p *PublishedValue) UnmarshalJSON(b []byte) error {
@@ -86,7 +87,7 @@ func (p *PublishedValue) UnmarshalYAML(unmarshal func(interface{}) error) error 
 func (p *PublishedValue) UnmarshalGraphQL(input interface{}) error {
 	p.Val = input
 	if !p.Valid() {
-		return fmt.Errorf("invalid PublishedValue: %v", input)
+		return errors.Errorf("invalid PublishedValue: %v", input)
 	}
 	return nil
 }

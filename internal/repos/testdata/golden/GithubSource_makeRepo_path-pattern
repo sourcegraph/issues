@@ -30,7 +30,9 @@
     "IsPrivate": false,
     "IsFork": false,
     "IsArchived": false,
-    "ViewerPermission": "READ"
+    "IsLocked": false,
+    "IsDisabled": false,
+    "ViewerPermission": ""
    }
   },
   {
@@ -64,7 +66,9 @@
     "IsPrivate": true,
     "IsFork": false,
     "IsArchived": false,
-    "ViewerPermission": "ADMIN"
+    "IsLocked": false,
+    "IsDisabled": false,
+    "ViewerPermission": ""
    }
   }
  ]

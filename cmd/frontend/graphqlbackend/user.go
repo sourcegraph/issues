@@ -2,7 +2,6 @@ package graphqlbackend
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/cockroachdb/errors"
 	"github.com/graph-gophers/graphql-go"
@@ -212,7 +211,7 @@ func (r *schemaResolver) UpdateUser(ctx context.Context, args *updateUserArgs) (
 	}
 	if args.Username != nil && viewerIsChangingUsername(ctx, r.db, userID, *args.Username) {
 		if !viewerCanChangeUsername(ctx, r.db, userID) {
-			return nil, fmt.Errorf("unable to change username because auth.enableUsernameChanges is false in site configuration")
+			return nil, errors.Errorf("unable to change username because auth.enableUsernameChanges is false in site configuration")
 		}
 		update.Username = *args.Username
 	}

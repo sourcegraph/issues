@@ -2,6 +2,7 @@ package shared
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/sourcegraph/sourcegraph/monitoring/monitoring"
 )
@@ -61,10 +62,11 @@ func DatabaseConnectionsMonitoring(app string) []monitoring.Row {
 				Description: "mean blocked seconds per conn request",
 				Query: fmt.Sprintf(`sum by (app_name, db_name) (increase(src_pgsql_conns_blocked_seconds{app_name=%q}[5m])) / `+
 					`sum by (app_name, db_name) (increase(src_pgsql_conns_waited_for{app_name=%q}[5m]))`, app, app),
-				Panel:          monitoring.Panel().LegendFormat("dbname={{db_name}}").Unit(monitoring.Seconds),
-				NoAlert:        true,
-				Owner:          monitoring.ObservableOwnerCoreApplication,
-				Interpretation: "none",
+				Panel:             monitoring.Panel().LegendFormat("dbname={{db_name}}").Unit(monitoring.Seconds),
+				Warning:           monitoring.Alert().GreaterOrEqual(0.05, nil).For(5 * time.Minute),
+				Critical:          monitoring.Alert().GreaterOrEqual(0.10, nil).For(10 * time.Minute),
+				Owner:             monitoring.ObservableOwnerCoreApplication,
+				PossibleSolutions: "none",
 			},
 		},
 		{

@@ -6,6 +6,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/sourcegraph/sourcegraph/internal/insights"
+
 	"github.com/hexops/autogold"
 
 	"github.com/sourcegraph/sourcegraph/enterprise/internal/insights/background/queryrunner"
@@ -17,10 +19,10 @@ var testRealGlobalSettings = &api.Settings{ID: 1, Contents: `{
 	"insights": [
 		{
 		  "title": "fmt usage",
-		  "description": "fmt.Errorf/fmt.Printf usage",
+		  "description": "errors.Errorf/fmt.Printf usage",
 		  "series": [
 			{
-			  "label": "fmt.Errorf",
+			  "label": "errors.Errorf",
 			  "search": "errorf",
 			},
 			{
@@ -73,6 +75,8 @@ func Test_discoverAndEnqueueInsights(t *testing.T) {
 		return nil
 	}
 
+	loader := insights.NewMockLoader()
+
 	// Create a fake clock so the times reported in our test data do not change and can be easily verified.
 	now, err := time.Parse(time.RFC3339, "2020-03-01T00:00:00Z")
 	if err != nil {
@@ -80,7 +84,7 @@ func Test_discoverAndEnqueueInsights(t *testing.T) {
 	}
 	clock := func() time.Time { return now }
 
-	if err := discoverAndEnqueueInsights(ctx, clock, settingStore, enqueueQueryRunnerJob); err != nil {
+	if err := discoverAndEnqueueInsights(ctx, clock, settingStore, loader, enqueueQueryRunnerJob); err != nil {
 		t.Fatal(err)
 	}
 

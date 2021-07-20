@@ -2,7 +2,6 @@ package handlerutil
 
 import (
 	"context"
-	"fmt"
 	"io"
 	"net/http"
 	"os"
@@ -44,7 +43,7 @@ func (h HandlerWithErrorReturn) ServeHTTP(w http.ResponseWriter, r *http.Request
 			_, _ = io.WriteString(os.Stderr, "\nstack trace:\n")
 			_, _ = os.Stderr.Write(stack)
 
-			err := fmt.Errorf("panic: %v\n\nstack trace:\n%s", e, stack)
+			err := errors.Errorf("panic: %v\n\nstack trace:\n%s", e, stack)
 			status := http.StatusInternalServerError
 			reportError(r, status, err, true)
 			h.Error(w, r, status, err) // No need to handle a possible panic in h.Error because it's required not to panic.
@@ -67,7 +66,7 @@ func httpErrCode(r *http.Request, err error) int {
 	// the connection. If that is the case, return 499. We do not just check
 	// if the client closed the connection, in case we failed due to another
 	// reason leading to the client closing the connection.
-	if errors.Cause(err) == context.Canceled && r.Context().Err() == context.Canceled {
+	if errors.Is(err, context.Canceled) && errors.Is(r.Context().Err(), context.Canceled) {
 		return 499
 	}
 	return errcode.HTTP(err)
@@ -78,8 +77,10 @@ func httpErrCode(r *http.Request, err error) int {
 // unchanged. This lets us return the proper HTTP status code for
 // single errors.
 func collapseMultipleErrors(err error) error {
-	if errs, ok := err.(parallel.Errors); ok && len(errs) == 1 {
-		return errs[0]
+	var e parallel.Errors
+	if errors.As(err, &e) && len(e) == 1 {
+		return e[0]
 	}
+
 	return err
 }

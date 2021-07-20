@@ -12,7 +12,7 @@ import { Link } from '@sourcegraph/shared/src/components/Link'
 import { Maybe } from '@sourcegraph/shared/src/graphql-operations'
 import { ThemeProps } from '@sourcegraph/shared/src/theme'
 
-import { DiffStat } from '../../../../components/diff/DiffStat'
+import { DiffStatStack } from '../../../../components/diff/DiffStat'
 import { FileDiffConnection } from '../../../../components/diff/FileDiffConnection'
 import { FileDiffNode } from '../../../../components/diff/FileDiffNode'
 import { FilteredConnectionQueryArguments } from '../../../../components/FilteredConnection'
@@ -531,7 +531,7 @@ const ApplyDiffStat: React.FunctionComponent<{ spec: VisibleChangesetApplyPrevie
     } else {
         diffStat = spec.targets.changesetSpec.description.diffStat
     }
-    return <DiffStat {...diffStat} expandedCounts={true} separateLines={true} />
+    return <DiffStatStack {...diffStat} />
 }
 
 const VisibleChangesetApplyPreviewNodeStatusCell: React.FunctionComponent<

@@ -1,24 +1,25 @@
 import classnames from 'classnames'
+import { cloneDeep } from 'lodash'
 import MapSearchIcon from 'mdi-react/MapSearchIcon'
-import React, { useContext, useMemo, useState } from 'react'
-import { useHistory, Link } from 'react-router-dom'
+import React, { useMemo, useState } from 'react'
+import { Link } from 'react-router-dom'
 
 import { PlatformContextProps } from '@sourcegraph/shared/src/platform/context'
 import { Settings, SettingsCascadeProps } from '@sourcegraph/shared/src/settings/settings'
-import { asError, isErrorLike } from '@sourcegraph/shared/src/util/errors'
+import { isErrorLike } from '@sourcegraph/shared/src/util/errors'
 
 import { AuthenticatedUser } from '../../../../auth'
 import { HeroPage } from '../../../../components/HeroPage'
 import { Page } from '../../../../components/Page'
 import { PageTitle } from '../../../../components/PageTitle'
-import { FORM_ERROR, SubmissionErrors } from '../../../components/form/hooks/useForm'
-import { InsightsApiContext } from '../../../core/backend/api-provider'
-import { addInsightToSettings, removeInsightFromSettings } from '../../../core/settings-action/insights'
-import { Insight, isLangStatsInsight, isSearchBasedInsight } from '../../../core/types'
+import { INSIGHTS_ALL_REPOS_SETTINGS_KEY, isLangStatsInsight, isSearchBasedInsight } from '../../../core/types'
+import { useInsightSubjects } from '../../../hooks/use-insight-subjects/use-insight-subjects'
+import { findInsightById } from '../../../hooks/use-insight/use-insight'
 
 import { EditLangStatsInsight } from './components/EditLangStatsInsight'
 import { EditSearchBasedInsight } from './components/EditSearchInsight'
 import styles from './EditInsightPage.module.scss'
+import { useHandleSubmit } from './hooks/use-handle-submit'
 
 export interface EditInsightPageProps extends SettingsCascadeProps, PlatformContextProps<'updateSettings'> {
     /** Normalized insight id <type insight>.insight.<name of insight> */
@@ -31,113 +32,43 @@ export interface EditInsightPageProps extends SettingsCascadeProps, PlatformCont
     authenticatedUser: Pick<AuthenticatedUser, 'id' | 'organizations' | 'username'>
 }
 
-interface ParsedInsightInfo {
-    insight?: Insight | null
-    originalSubjectID?: string
-}
-
 export const EditInsightPage: React.FunctionComponent<EditInsightPageProps> = props => {
     const { insightID, settingsCascade, authenticatedUser, platformContext } = props
-    const { getSubjectSettings, updateSubjectSettings } = useContext(InsightsApiContext)
-    const history = useHistory()
+
+    const subjects = useInsightSubjects({ settingsCascade })
 
     // We need to catch the settings only once during the first render otherwise
     // if we used useMemo then after we update the settings further in the submit
     // handler we will again try to find an insight that may no longer exist and
     // (if user changed visibility we remove insight first from previous subject)
     // show the wrong visual state.
-    const [{ insight, originalSubjectID }] = useState<ParsedInsightInfo>(() => {
-        if (!authenticatedUser) {
-            return {}
-        }
-
-        const subjects = settingsCascade.subjects
-        const { id: userID } = authenticatedUser
-
-        const subject = subjects?.find(({ settings }) => settings && !isErrorLike(settings) && !!settings[insightID])
-
-        if (!subject?.settings || isErrorLike(subject.settings)) {
-            return {}
-        }
-
-        // Form insight object from user/org settings to pass that info as
-        // initial values for edit components
-        const insight: Insight = {
-            id: insightID,
-            visibility: userID === subject.subject.id ? 'personal' : subject.subject.id,
-            ...subject.settings[insightID],
-        }
-
-        return {
-            insight,
-            originalSubjectID: subject.subject.id,
-        }
+    const [insight] = useState(() => findInsightById(settingsCascade, insightID))
+    const { handleEditInsightSubmit } = useHandleSubmit({
+        originalInsight: insight,
+        settingsCascade,
+        platformContext,
     })
 
     const finalSettings = useMemo(() => {
-        if (!insight) {
-            return settingsCascade.final ?? {}
+        if (!insight || !settingsCascade.final || isErrorLike(settingsCascade.final)) {
+            return {}
         }
 
-        const newSettings: Settings = { ...settingsCascade.final }
+        const newSettings: Settings = cloneDeep(settingsCascade.final)
 
         // Final settings used below as a store of all existing insights
         // Usually we have validation for title of insight because user can't
         // have two insights with the same name/id.
         // In edit mode we should allow users to have insight with id (camelCase(insight title))
-        // which already exists in setting store. For turning off this id/title validation
-        // we are removing current insight from final settings.
+        // which already exists in the setting store. For turning it off (this id/title validation)
+        // we remove current insight from the final settings.
         delete newSettings[insightID]
+
+        // Also remove settings key from all repos insights map
+        delete newSettings[INSIGHTS_ALL_REPOS_SETTINGS_KEY]?.[insightID]
 
         return newSettings
     }, [settingsCascade.final, insight, insightID])
-
-    const handleSubmit = async (newInsight: Insight): Promise<SubmissionErrors> => {
-        if (!insight || !originalSubjectID) {
-            return
-        }
-
-        try {
-            // Since insights live in user/org settings if visibility setting
-            // has been changed we need remove previous (old) insight from previous
-            // subject settings (user or org) and create new insight to new setting file.
-            if (insight.visibility !== newInsight.visibility) {
-                const settings = await getSubjectSettings(originalSubjectID).toPromise()
-                const editedSettings = removeInsightFromSettings({
-                    originalSettings: settings.contents,
-                    insightID: insight.id,
-                })
-
-                await updateSubjectSettings(platformContext, originalSubjectID, editedSettings).toPromise()
-            }
-
-            const { id: userID } = authenticatedUser
-            const subjectID = newInsight.visibility === 'personal' ? userID : newInsight.visibility
-
-            const settings = await getSubjectSettings(subjectID).toPromise()
-
-            let settingsContent = settings.contents
-
-            // Since id of insight is based on insight title if title was changed
-            // we need remove old insight object from settings by insight old id
-            if (insight.title !== newInsight.title) {
-                settingsContent = removeInsightFromSettings({
-                    originalSettings: settingsContent,
-                    insightID: insight.id,
-                })
-            }
-
-            settingsContent = addInsightToSettings(settingsContent, newInsight)
-
-            await updateSubjectSettings(platformContext, subjectID, settingsContent).toPromise()
-
-            history.push('/insights')
-        } catch (error) {
-            return { [FORM_ERROR]: asError(error) }
-        }
-
-        return
-    }
 
     if (!insight) {
         return (
@@ -148,20 +79,12 @@ export const EditInsightPage: React.FunctionComponent<EditInsightPageProps> = pr
                     <span>
                         We couldn't find that insight. Try to find the insight with ID:{' '}
                         <code className="badge badge-secondary">{insightID}</code> in your{' '}
-                        {authenticatedUser ? (
-                            <Link to={`/users/${authenticatedUser?.username}/settings`}>user or org settings</Link>
-                        ) : (
-                            <span>user or org settings</span>
-                        )}
+                        <Link to={`/users/${authenticatedUser?.username}/settings`}>user or org settings</Link>
                     </span>
                 }
             />
         )
     }
-
-    const {
-        organizations: { nodes: orgs },
-    } = authenticatedUser
 
     return (
         <Page className={classnames('col-10', styles.creationPage)}>
@@ -182,8 +105,8 @@ export const EditInsightPage: React.FunctionComponent<EditInsightPageProps> = pr
                 <EditSearchBasedInsight
                     insight={insight}
                     finalSettings={finalSettings}
-                    organizations={orgs}
-                    onSubmit={handleSubmit}
+                    subjects={subjects}
+                    onSubmit={handleEditInsightSubmit}
                 />
             )}
 
@@ -191,8 +114,8 @@ export const EditInsightPage: React.FunctionComponent<EditInsightPageProps> = pr
                 <EditLangStatsInsight
                     insight={insight}
                     finalSettings={finalSettings}
-                    organizations={orgs}
-                    onSubmit={handleSubmit}
+                    subjects={subjects}
+                    onSubmit={handleEditInsightSubmit}
                 />
             )}
         </Page>

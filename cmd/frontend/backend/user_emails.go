@@ -4,7 +4,6 @@ import (
 	"context"
 	"crypto/rand"
 	"encoding/base64"
-	"fmt"
 	"net/url"
 
 	"github.com/cockroachdb/errors"
@@ -98,7 +97,7 @@ func (userEmails) Add(ctx context.Context, db dbutil.DB, userID int32, email str
 		if err != nil {
 			return err
 		} else if abused {
-			return fmt.Errorf("refusing to add email address because %s", reason)
+			return errors.Errorf("refusing to add email address because %s", reason)
 		}
 	}
 

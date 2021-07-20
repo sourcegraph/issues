@@ -38,7 +38,7 @@ type PermsStore struct {
 	clock func() time.Time
 }
 
-// NewPermsStore returns a new PermsStore with given parameters.
+// Perms returns a new PermsStore with given parameters.
 func Perms(db dbutil.DB, clock func() time.Time) *PermsStore {
 	return &PermsStore{Store: basestore.NewWithDB(db, sql.TxOptions{}), clock: clock}
 }
@@ -633,7 +633,7 @@ func (s *PermsStore) loadUserPendingPermissionsIDs(ctx context.Context, q *sqlf.
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	for rows.Next() {
 		var id uint32
@@ -948,7 +948,7 @@ AND service_id = %s
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	for rows.Next() {
 		var bindID string
@@ -1132,7 +1132,7 @@ ORDER BY id ASC
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	for rows.Next() {
 		var (
@@ -1215,7 +1215,7 @@ AND account_id IN (%s)
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	userIDs := make(map[string]int32)
 	for rows.Next() {
@@ -1336,7 +1336,7 @@ func (s *PermsStore) loadIDsWithTime(ctx context.Context, q *sqlf.Query) (map[in
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	results := make(map[int32]time.Time)
 	for rows.Next() {

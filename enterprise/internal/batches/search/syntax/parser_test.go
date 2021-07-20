@@ -3,6 +3,8 @@ package syntax
 import (
 	"reflect"
 	"testing"
+
+	"github.com/cockroachdb/errors"
 )
 
 func TestParser(t *testing.T) {
@@ -87,7 +89,7 @@ func TestParser(t *testing.T) {
 				t.Fatal(err)
 			} else if err == nil && test.wantErr != nil {
 				t.Fatalf("got err == nil, want %q", test.wantErr)
-			} else if test.wantErr != nil && !reflect.DeepEqual(err, test.wantErr) {
+			} else if test.wantErr != nil && !errors.Is(err, test.wantErr) {
 				t.Fatalf("got err == %q, want %q", err, test.wantErr)
 			}
 			if err != nil {

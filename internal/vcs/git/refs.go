@@ -203,7 +203,7 @@ func branches(ctx context.Context, repo api.RepoName, args ...string) ([]string,
 	cmd.Repo = repo
 	out, err := cmd.Output(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("exec %v in %s failed: %v (output follows)\n\n%s", cmd.Args, cmd.Repo, err, out)
+		return nil, errors.Errorf("exec %v in %s failed: %v (output follows)\n\n%s", cmd.Args, cmd.Repo, err, out)
 	}
 	lines := strings.Split(string(out), "\n")
 	lines = lines[:len(lines)-1]
@@ -276,7 +276,7 @@ func parseTags(in []byte) ([]*Tag, error) {
 	for i, line := range lines {
 		parts := bytes.SplitN(line, []byte("\x00"), 3)
 		if len(parts) != 3 {
-			return nil, fmt.Errorf("invalid git tag list output line: %q", line)
+			return nil, errors.Errorf("invalid git tag list output line: %q", line)
 		}
 
 		tag := &Tag{

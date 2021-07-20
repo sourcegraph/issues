@@ -32,7 +32,7 @@ interface CreationRoutesProps extends TelemetryProps, PlatformContextProps<'upda
  * Renders code insights creation routes (insight creation UI pages, creation intro page)
  */
 export const CreationRoutes: React.FunctionComponent<CreationRoutesProps> = props => {
-    const { telemetryService, platformContext, authenticatedUser, settingsCascade } = props
+    const { telemetryService, platformContext, settingsCascade } = props
 
     const match = useRouteMatch()
 
@@ -50,7 +50,6 @@ export const CreationRoutes: React.FunctionComponent<CreationRoutesProps> = prop
                     <SearchInsightCreationLazyPage
                         telemetryService={telemetryService}
                         platformContext={platformContext}
-                        authenticatedUser={authenticatedUser}
                         settingsCascade={settingsCascade}
                     />
                 )}
@@ -63,7 +62,6 @@ export const CreationRoutes: React.FunctionComponent<CreationRoutesProps> = prop
                     <LangStatsInsightCreationLazyPage
                         telemetryService={telemetryService}
                         platformContext={platformContext}
-                        authenticatedUser={authenticatedUser}
                         settingsCascade={settingsCascade}
                     />
                 )}

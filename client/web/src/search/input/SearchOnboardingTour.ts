@@ -7,7 +7,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import Shepherd from 'shepherd.js'
 import Tour from 'shepherd.js/src/types/tour'
 
-import { LANGUAGES } from '@sourcegraph/shared/src/search/query/filters'
+import { ALL_LANGUAGES } from '@sourcegraph/shared/src/search/query/languageFilter'
 import { scanSearchQuery } from '@sourcegraph/shared/src/search/query/scanner'
 import { Token } from '@sourcegraph/shared/src/search/query/token'
 import { useLocalStorage } from '@sourcegraph/shared/src/util/useLocalStorage'
@@ -133,7 +133,7 @@ const shouldAdvanceLangOrRepoStep = (currentTourStep: TourStepID | undefined, qu
         return (
             filterToken.field.value === 'lang' &&
             filterToken.value?.type === 'literal' &&
-            LANGUAGES.includes(filterToken.value?.value)
+            ALL_LANGUAGES.includes(filterToken.value?.value)
         )
     }
     return false

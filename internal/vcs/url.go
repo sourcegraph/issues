@@ -21,6 +21,8 @@ import (
 	"net/url"
 	"regexp"
 	"strings"
+
+	"github.com/cockroachdb/errors"
 )
 
 // ParseURL parses rawurl into a URL structure. Parse first attempts to
@@ -48,7 +50,7 @@ func ParseURL(rawurl string) (u *URL, err error) {
 
 	// It's unlikely that none of the parsers will succeed, since
 	// ParseLocal is very forgiving.
-	return new(URL), fmt.Errorf("failed to parse %q", rawurl)
+	return new(URL), errors.Errorf("failed to parse %q", rawurl)
 }
 
 var schemes = map[string]struct{}{
@@ -71,7 +73,7 @@ func parseScheme(rawurl string) (*URL, error) {
 	}
 
 	if _, valid := schemes[u.Scheme]; !valid {
-		return nil, fmt.Errorf("scheme %q is not a valid transport", u.Scheme)
+		return nil, errors.Errorf("scheme %q is not a valid transport", u.Scheme)
 	}
 
 	return &URL{format: formatStdlib, URL: *u}, nil
@@ -96,7 +98,7 @@ var scpSyntax = regexp.MustCompile(fmt.Sprintf(`^%s?%s:%s$`, usernameRe, urlRe, 
 func parseScp(rawurl string) (*URL, error) {
 	match := scpSyntax.FindAllStringSubmatch(rawurl, -1)
 	if len(match) == 0 {
-		return nil, fmt.Errorf("no scp URL found in %q", rawurl)
+		return nil, errors.Errorf("no scp URL found in %q", rawurl)
 	}
 	m := match[0]
 	user := strings.TrimRight(m[1], "@")

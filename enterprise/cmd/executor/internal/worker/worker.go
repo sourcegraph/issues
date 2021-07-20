@@ -69,6 +69,7 @@ func NewWorker(options Options, observationContext *observation.Context) gorouti
 
 	handler := &handler{
 		idSet:         idSet,
+		store:         store,
 		options:       options,
 		operations:    command.NewOperations(observationContext),
 		runnerFactory: command.NewRunner,
@@ -117,11 +118,11 @@ func connectToFrontend(queueStore *apiclient.Client, options Options) bool {
 		}
 
 		var e *os.SyscallError
-		if !errors.As(err, &e) || e.Syscall != "connect" || time.Since(start) >= time.Minute {
-			// Hide initial connection logs due to services starting up in an
-			// nondeterminstic order. If one service doesn't come up within a
-			// minute, we'll log all errors. Unexpected error types are also
-			// unfiltered and logged immediately.
+		if errors.As(err, &e) && e.Syscall == "connect" && time.Since(start) < time.Minute {
+			// Hide initial connection logs due to services starting up in an nondeterminstic order.
+			// Logs occurring one minute after startup or later are not filtered, nor are non-expected
+			// connection errors during app startup.
+		} else {
 			log15.Error("Failed to connect to Sourcegraph instance", "error", err)
 		}
 

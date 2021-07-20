@@ -191,7 +191,7 @@ func (s *UserEmailsStore) Remove(ctx context.Context, userID int32, email string
 	if err := tx.Handle().DB().QueryRowContext(ctx, "SELECT is_primary FROM user_emails WHERE user_id=$1 AND email=$2",
 		userID, email,
 	).Scan(&isPrimary); err != nil {
-		return fmt.Errorf("fetching email address: %w", err)
+		return errors.Errorf("fetching email address: %w", err)
 	}
 	if isPrimary {
 		return errors.New("can't delete primary email address")

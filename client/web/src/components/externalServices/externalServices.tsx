@@ -5,6 +5,7 @@ import BitbucketIcon from 'mdi-react/BitbucketIcon'
 import GithubIcon from 'mdi-react/GithubIcon'
 import GitIcon from 'mdi-react/GitIcon'
 import GitLabIcon from 'mdi-react/GitlabIcon'
+import LanguageJavaIcon from 'mdi-react/LanguageJavaIcon'
 import React from 'react'
 
 import { PhabricatorIcon } from '@sourcegraph/shared/src/components/icons'
@@ -15,6 +16,7 @@ import bitbucketServerSchemaJSON from '../../../../../schema/bitbucket_server.sc
 import githubSchemaJSON from '../../../../../schema/github.schema.json'
 import gitlabSchemaJSON from '../../../../../schema/gitlab.schema.json'
 import gitoliteSchemaJSON from '../../../../../schema/gitolite.schema.json'
+import jvmPackagesSchemaJSON from '../../../../../schema/jvm-packages.schema.json'
 import otherExternalServiceSchemaJSON from '../../../../../schema/other_external_service.schema.json'
 import perforceSchemaJSON from '../../../../../schema/perforce.schema.json'
 import phabricatorSchemaJSON from '../../../../../schema/phabricator.schema.json'
@@ -1175,6 +1177,37 @@ const PERFORCE: AddExternalServiceOptions = {
         },
     ],
 }
+const JVM_PACKAGES: AddExternalServiceOptions = {
+    kind: ExternalServiceKind.JVMPACKAGES,
+    title: 'JVM Dependencies',
+    icon: LanguageJavaIcon,
+    jsonSchema: jvmPackagesSchemaJSON,
+    defaultDisplayName: 'JVM Dependencies',
+    defaultConfig: `{
+  "maven": {
+    "repositories": [],
+    "dependencies": []
+  }
+}`,
+    instructions: (
+        <div>
+            <ol>
+                <li>
+                    In the configuration below, set <Field>maven.repositories</Field> to the list of Maven repositories.
+                    For example,
+                    <code>"https://maven.google.com"</code>.
+                </li>
+                <li>
+                    In the configuration below, set <Field>maven.dependencies</Field> to the list of artifacts that you
+                    want to manually add. For example,
+                    <code>"junit:junit:4.13.2"</code> or
+                    <code>"org.hamcrest:hamcrest-core:1.3:default"</code>.
+                </li>
+            </ol>
+        </div>
+    ),
+    editorActions: [],
+}
 
 export const codeHostExternalServices: Record<string, AddExternalServiceOptions> = {
     github: GITHUB_DOTCOM,
@@ -1188,6 +1221,7 @@ export const codeHostExternalServices: Record<string, AddExternalServiceOptions>
     gitolite: GITOLITE,
     git: GENERIC_GIT,
     ...(window.context?.experimentalFeatures?.perforce === 'enabled' ? { perforce: PERFORCE } : {}),
+    ...(window.context?.experimentalFeatures?.jvmPackages === 'enabled' ? { jvmPackages: JVM_PACKAGES } : {}),
 }
 
 export const nonCodeHostExternalServices: Record<string, AddExternalServiceOptions> = {
@@ -1209,4 +1243,5 @@ export const defaultExternalServices: Record<ExternalServiceKind, AddExternalSer
     [ExternalServiceKind.OTHER]: GENERIC_GIT,
     [ExternalServiceKind.AWSCODECOMMIT]: AWS_CODE_COMMIT,
     [ExternalServiceKind.PERFORCE]: PERFORCE,
+    [ExternalServiceKind.JVMPACKAGES]: JVM_PACKAGES,
 }

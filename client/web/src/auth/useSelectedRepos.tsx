@@ -1,14 +1,6 @@
-import {
-    ApolloError,
-    ApolloQueryResult,
-    QueryLazyOptions,
-    gql,
-    MutationFunctionOptions,
-    FetchResult,
-    makeVar,
-} from '@apollo/client'
+import { ApolloError, ApolloQueryResult, gql, MutationFunctionOptions, FetchResult, makeVar } from '@apollo/client'
 
-import { useLazyQuery, useMutation } from '@sourcegraph/shared/src/graphql/graphql'
+import { useQuery, useMutation } from '@sourcegraph/shared/src/graphql/graphql'
 
 import {
     Maybe,
@@ -23,6 +15,7 @@ export interface MinSelectedRepo {
     name: string
     externalRepository: {
         serviceType: string
+        id: string
     }
 }
 
@@ -48,22 +41,6 @@ interface UseSelectedReposResult {
                   | undefined
           ) => Promise<ApolloQueryResult<UserRepositoriesResult>>)
         | undefined
-    fetchSelectedRepos: (
-        options?:
-            | QueryLazyOptions<
-                  Exact<{
-                      id: string
-                      cloned: Maybe<boolean>
-                      notCloned: Maybe<boolean>
-                      indexed: Maybe<boolean>
-                      notIndexed: Maybe<boolean>
-                      first: Maybe<number>
-                      query: Maybe<string>
-                      externalServiceID: Maybe<string>
-                  }>
-              >
-            | undefined
-    ) => void
 }
 
 const SAVE_SELECTED_REPOS = gql`
@@ -146,27 +123,26 @@ export const SELECTED_REPOS = gql`
 `
 
 export const useSelectedRepos = (userId: string, first?: number): UseSelectedReposResult => {
-    const [trigger, { data, loading, error, refetch }] = useLazyQuery<
-        UserRepositoriesResult,
-        UserRepositoriesVariables
-    >(SELECTED_REPOS, {
-        variables: {
-            id: userId,
-            cloned: true,
-            notCloned: true,
-            indexed: true,
-            notIndexed: true,
-            first: first || 2000,
-            query: null,
-            externalServiceID: null,
-        },
-    })
+    const { data, loading, error, refetch } = useQuery<UserRepositoriesResult, UserRepositoriesVariables>(
+        SELECTED_REPOS,
+        {
+            variables: {
+                id: userId,
+                cloned: true,
+                notCloned: true,
+                indexed: true,
+                notIndexed: true,
+                first: first || 2000,
+                query: null,
+                externalServiceID: null,
+            },
+        }
+    )
 
     return {
         selectedRepos: data?.node?.repositories.nodes,
         loadingSelectedRepos: loading,
         errorSelectedRepos: error,
         refetchSelectedRepos: refetch,
-        fetchSelectedRepos: trigger,
     }
 }

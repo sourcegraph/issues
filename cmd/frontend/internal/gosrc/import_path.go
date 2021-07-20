@@ -2,7 +2,6 @@ package gosrc
 
 import (
 	"encoding/xml"
-	"fmt"
 	"io"
 	"net/http"
 	"runtime"
@@ -56,7 +55,7 @@ func resolveStaticImportPath(importPath string) (*Directory, error) {
 	case strings.HasPrefix(importPath, "github.com/"):
 		parts := strings.SplitN(importPath, "/", 4)
 		if len(parts) < 3 {
-			return nil, fmt.Errorf("invalid github.com/golang.org import path: %q", importPath)
+			return nil, errors.Errorf("invalid github.com/golang.org import path: %q", importPath)
 		}
 		repo := parts[0] + "/" + parts[1] + "/" + parts[2]
 		return &Directory{
@@ -95,7 +94,7 @@ func resolveDynamicImportPath(client httpcli.Doer, importPath string) (*Director
 			return nil, err
 		}
 		if *imRoot != *im {
-			return nil, fmt.Errorf("project root mismatch: %q != %q", *imRoot, *im)
+			return nil, errors.Errorf("project root mismatch: %q != %q", *imRoot, *im)
 		}
 	}
 
@@ -105,7 +104,7 @@ func resolveDynamicImportPath(client httpcli.Doer, importPath string) (*Director
 	// a possible ".vcs" suffix trimmed.
 	i := strings.Index(im.repo, "://")
 	if i < 0 {
-		return nil, fmt.Errorf("bad repo URL: %s", im.repo)
+		return nil, errors.Errorf("bad repo URL: %s", im.repo)
 	}
 	clonePath := im.repo[i+len("://"):]
 	repo := strings.TrimSuffix(clonePath, "."+im.vcs)
@@ -263,7 +262,7 @@ metaScan:
 		}
 	}
 	if im == nil {
-		return nil, nil, fmt.Errorf("%s at %s://%s", errorMessage, scheme, importPath)
+		return nil, nil, errors.Errorf("%s at %s://%s", errorMessage, scheme, importPath)
 	}
 	if sm != nil && sm.prefix != im.prefix {
 		sm = nil

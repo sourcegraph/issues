@@ -11,7 +11,7 @@ import { isErrorLike } from '../util/errors'
 import { sanitizeClass } from '../util/strings'
 
 import { toNativeEvent } from './helpers'
-import { HoverContext, HoverOverlayBaseProps, GetAlertClassName } from './HoverOverlay.types'
+import type { HoverContext, HoverOverlayBaseProps, GetAlertClassName } from './HoverOverlay.types'
 import { HoverOverlayAlerts, HoverOverlayAlertsProps } from './HoverOverlayAlerts'
 import { HoverOverlayContents } from './HoverOverlayContents'
 import { useLogTelemetryEvent } from './useLogTelemetryEvent'
@@ -21,7 +21,7 @@ const LOADING = 'loading' as const
 const transformMouseEvent = (handler: (event: MouseEvent) => void) => (event: React.MouseEvent<HTMLElement>) =>
     handler(toNativeEvent(event))
 
-export { HoverContext }
+export type { HoverContext }
 
 export interface HoverOverlayClassProps {
     /** An optional class name to apply to the outermost element of the HoverOverlay */

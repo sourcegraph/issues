@@ -77,7 +77,7 @@ export const DocumentationNode: React.FunctionComponent<Props> = ({ useBreadcrum
                     child.node &&
                     !isExcluded(child.node, props.excludingTags) && (
                         <DocumentationNode
-                            key={`${depth}-${child.node!.pathID}`}
+                            key={`${depth}-${child.node.pathID}`}
                             {...props}
                             node={child.node}
                             depth={depth + 1}

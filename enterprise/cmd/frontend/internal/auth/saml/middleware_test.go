@@ -9,7 +9,6 @@ import (
 	"encoding/base64"
 	"encoding/pem"
 	"encoding/xml"
-	"fmt"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -19,6 +18,7 @@ import (
 	"time"
 
 	"github.com/beevik/etree"
+	"github.com/cockroachdb/errors"
 	"github.com/crewjam/saml"
 	"github.com/crewjam/saml/samlidp"
 
@@ -204,7 +204,7 @@ func TestMiddleware(t *testing.T) {
 		if op.ExternalAccount.ServiceType == "saml" && op.ExternalAccount.ServiceID == idpServer.IDP.MetadataURL.String() && op.ExternalAccount.ClientID == "http://example.com/.auth/saml/metadata" && op.ExternalAccount.AccountID == mockedExternalID {
 			return mockedUserID, "", nil
 		}
-		return 0, "safeErr", fmt.Errorf("account %v not found in mock", op.ExternalAccount)
+		return 0, "safeErr", errors.Errorf("account %v not found in mock", op.ExternalAccount)
 	}
 	defer func() { auth.MockGetAndSaveUser = nil }()
 

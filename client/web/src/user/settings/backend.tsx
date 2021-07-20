@@ -135,6 +135,7 @@ export function logEvent(event: string, eventProperties?: unknown): void {
                 $userCookieID: String!
                 $cohortID: String
                 $firstSourceURL: String!
+                $referrer: String
                 $url: String!
                 $source: EventSource!
                 $argument: String
@@ -144,6 +145,7 @@ export function logEvent(event: string, eventProperties?: unknown): void {
                     userCookieID: $userCookieID
                     cohortID: $cohortID
                     firstSourceURL: $firstSourceURL
+                    referrer: $referrer
                     url: $url
                     source: $source
                     argument: $argument
@@ -157,6 +159,7 @@ export function logEvent(event: string, eventProperties?: unknown): void {
             userCookieID: eventLogger.getAnonymousUserID(),
             cohortID: eventLogger.getCohortID() || null,
             firstSourceURL: eventLogger.getFirstSourceURL(),
+            referrer: eventLogger.getReferrer(),
             url: window.location.href,
             source: EventSource.WEB,
             argument: eventProperties ? JSON.stringify(eventProperties) : null,

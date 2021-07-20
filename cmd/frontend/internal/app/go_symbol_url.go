@@ -50,7 +50,7 @@ func serveGoSymbolURL(w http.ResponseWriter, r *http.Request) error {
 	cloneURL := dir.CloneURL
 
 	if cloneURL == "" || !strings.HasPrefix(cloneURL, "https://github.com") {
-		return fmt.Errorf("non-github clone URL resolved for import path %s", spec.Pkg)
+		return errors.Errorf("non-github clone URL resolved for import path %s", spec.Pkg)
 	}
 
 	repoName := api.RepoName(strings.TrimSuffix(strings.TrimPrefix(cloneURL, "https://"), ".git"))
@@ -146,7 +146,7 @@ func parseGoSymbolURLPath(path string) (*goSymbolSpec, error) {
 		receiver = &symbolComponents[0]
 		symbolName = symbolComponents[1]
 	default:
-		return nil, fmt.Errorf("invalid def %s (must have 1 or 2 path components)", def)
+		return nil, errors.Errorf("invalid def %s (must have 1 or 2 path components)", def)
 	}
 
 	return &goSymbolSpec{
@@ -250,7 +250,7 @@ func repoVFS(ctx context.Context, name api.RepoName, rev api.CommitID) (ctxvfs.F
 	}
 
 	// Fall back to a full git clone for non-github.com repos.
-	return nil, fmt.Errorf("unable to fetch repo %s (only github.com repos are supported)", name)
+	return nil, errors.Errorf("unable to fetch repo %s (only github.com repos are supported)", name)
 }
 
 func parseFiles(fset *token.FileSet, bctx *build.Context, importPath, srcDir string) (*ast.Package, error) {
@@ -437,7 +437,7 @@ func Panicf(r interface{}, format string, v ...interface{}) error {
 		buf = buf[:runtime.Stack(buf, false)]
 		id := fmt.Sprintf(format, v...)
 		log.Printf("panic serving %s: %v\n%s", id, r, string(buf))
-		return fmt.Errorf("unexpected panic: %v", r)
+		return errors.Errorf("unexpected panic: %v", r)
 	}
 	return nil
 }

@@ -27,9 +27,9 @@ compiler.watch(
         aggregateTimeout: 300,
     },
     (error, stats) => {
-        signale.complete(stats.toString(tasks.WEBPACK_STATS_OPTIONS))
+        signale.complete(stats?.toString(tasks.WEBPACK_STATS_OPTIONS))
 
-        if (error || stats.hasErrors()) {
+        if (error || stats?.hasErrors()) {
             signale.error('Webpack compilation error')
             return
         }

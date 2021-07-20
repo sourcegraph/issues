@@ -26,6 +26,8 @@ const config: Configuration = {
         filename: '[name].bundle.[contenthash].js',
         path: dllPluginConfig.context,
         library: dllPluginConfig.name,
+        // Required to fix the `WebpackManifestPlugin` output: https://github.com/shellscape/webpack-manifest-plugin/issues/229
+        publicPath: '',
     },
     module: {
         rules: [

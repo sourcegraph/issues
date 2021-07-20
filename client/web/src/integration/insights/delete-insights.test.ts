@@ -81,7 +81,7 @@ describe('Code insights page', () => {
 
         const variables = await testContext.waitForGraphQLRequest(async () => {
             await driver.page.click(
-                '[data-testid="insight-card.searchInsights.insight.graphQLTypesMigration.insightsPage"] [data-testid="InsightContextMenuButton"]'
+                '[data-testid="insight-card.searchInsights.insight.graphQLTypesMigration"] [data-testid="InsightContextMenuButton"]'
             )
             await driver.page.click('[data-testid="insight-context-menu-delete-button"]')
         }, 'OverwriteSettings')

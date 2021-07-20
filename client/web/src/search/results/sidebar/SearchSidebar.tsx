@@ -95,7 +95,6 @@ export const SearchSidebar: React.FunctionComponent<SearchSidebarProps> = props 
         },
         [setOpenSections]
     )
-    console.log(props.featureFlags)
 
     return (
         <div className={classNames(styles.searchSidebar, props.className)}>

@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/cockroachdb/errors"
 	"github.com/inconshreveable/log15"
 
 	"golang.org/x/time/rate"
@@ -107,6 +108,7 @@ func createDBWorkerStore(s *basestore.Store) dbworkerstore.Store {
 		//
 		// If you change this, be sure to adjust the interval that work is enqueued in
 		// enterprise/internal/insights/background:newInsightEnqueuer.
+		HeartbeatInterval: 15 * time.Second,
 		StalledMaxAge:     60 * time.Second,
 		RetryAfter:        10 * time.Second,
 		MaxNumRetries:     3,
@@ -152,7 +154,7 @@ func dequeueJob(ctx context.Context, workerBaseStore *basestore.Store, recordID 
 		return nil, err
 	}
 	if len(jobs) != 1 {
-		return nil, fmt.Errorf("expected 1 job to dequeue, found %v", len(jobs))
+		return nil, errors.Errorf("expected 1 job to dequeue, found %v", len(jobs))
 	}
 	return jobs[0], nil
 }

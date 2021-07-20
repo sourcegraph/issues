@@ -1,0 +1,66 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "jvm-packages.schema.json#",
+  "title": "JVMPackagesConnection",
+  "description": "Configuration for a connection to a JVM packages repository.",
+  "allowComments": true,
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "maven": {
+      "description": "Configuration for resolving from Maven repositories.",
+      "title": "Maven",
+      "type": "object",
+      "properties": {
+        "repositories": {
+          "description": "The url at which the maven repository can be found.",
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": ["central"],
+          "examples": [
+            ["https://maven.google.com", "https://artifactory.mycompany.com", "central"],
+            ["https://nexus.mycompany.com", "jcenter", "clojars", "jitpack"]
+          ]
+        },
+        "credentials": {
+          "description": "Contents of a coursier.credentials file needed for accessing the Maven repositories.",
+          "type": "string"
+        },
+        "rateLimit": {
+          "description": "Rate limit applied when making background API requests to the Maven repository.",
+          "title": "MavenRateLimit",
+          "type": "object",
+          "required": ["enabled", "requestsPerHour"],
+          "properties": {
+            "enabled": {
+              "description": "true if rate limiting is enabled.",
+              "type": "boolean",
+              "default": true
+            },
+            "requestsPerHour": {
+              "description": "Requests per hour permitted. This is an average, calculated per second. Internally, the burst limit is set to 100, which implies that for a requests per hour limit as low as 1, users will continue to be able to send a maximum of 100 requests immediately, provided that the complexity cost of each request is 1.",
+              "type": "number",
+              "default": 5000,
+              "minimum": 0
+            }
+          },
+          "default": {
+            "enabled": true,
+            "requestsPerHour": 5000
+          }
+        },
+        "dependencies": {
+          "description": "An array of artifact \"groupID:artifactID:version\" strings specifying which Maven artifacts to mirror on Sourcegraph.",
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^[^:]+:[^:]+:[^:]+(:[^:]+)?$"
+          },
+          "examples": [["groupID:artifactID"], ["org.apache.commons:commons-csv", "com.google.guava:guava"]]
+        }
+      }
+    }
+  }
+}

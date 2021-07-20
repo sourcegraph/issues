@@ -5,6 +5,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/cockroachdb/errors"
 	"github.com/google/go-cmp/cmp"
 	"github.com/hashicorp/go-multierror"
 
@@ -364,10 +365,11 @@ func TestParseConfiguration(t *testing.T) {
 			},
 		} {
 			t.Run(name, func(t *testing.T) {
-				if _, err := parseConfiguration(tc.in); err == nil {
-					t.Error("unexpected nil error")
-				} else if have := len(err.(*multierror.Error).Errors); have != tc.want {
-					t.Errorf("unexpected number of errors: have=%d want=%d", have, tc.want)
+				_, err := parseConfiguration(tc.in)
+
+				var e *multierror.Error
+				if !errors.As(err, &e) || len(e.Errors) != tc.want {
+					t.Errorf("unexpected number of errors: have=%d want=%d", len(e.Errors), tc.want)
 				}
 			})
 		}

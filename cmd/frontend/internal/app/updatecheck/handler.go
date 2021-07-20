@@ -2,7 +2,6 @@ package updatecheck
 
 import (
 	"encoding/json"
-	"fmt"
 	"io"
 	"net/http"
 	"net/url"
@@ -147,7 +146,7 @@ var timeNow = time.Now
 func canUpdateDate(clientVersionString string) (bool, error) {
 	match := dateRegex.FindStringSubmatch(clientVersionString)
 	if len(match) != 2 {
-		return false, fmt.Errorf("no date in version string %q", clientVersionString)
+		return false, errors.Errorf("no date in version string %q", clientVersionString)
 	}
 
 	t, err := time.ParseInLocation("2006-01-02", match[1], time.UTC)

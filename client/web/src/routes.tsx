@@ -10,6 +10,7 @@ import { android } from './repogroups/Android'
 import { cncf } from './repogroups/cncf'
 import { golang } from './repogroups/Golang'
 import { kubernetes } from './repogroups/Kubernetes'
+import { o3de } from './repogroups/o3de'
 import { python2To3Metadata } from './repogroups/Python2To3'
 import { reactHooks } from './repogroups/ReactHooks'
 import { RepogroupPage } from './repogroups/RepogroupPage'
@@ -27,6 +28,7 @@ const StreamingSearchResults = lazyComponent(
 const SiteAdminArea = lazyComponent(() => import('./site-admin/SiteAdminArea'), 'SiteAdminArea')
 const ExtensionsArea = lazyComponent(() => import('./extensions/ExtensionsArea'), 'ExtensionsArea')
 const SearchConsolePage = lazyComponent(() => import('./search/SearchConsolePage'), 'SearchConsolePage')
+const SearchNotebookPage = lazyComponent(() => import('./search/notebook/SearchNotebookPage'), 'SearchNotebookPage')
 const SignInPage = lazyComponent(() => import('./auth/SignInPage'), 'SignInPage')
 const SignUpPage = lazyComponent(() => import('./auth/SignUpPage'), 'SignUpPage')
 const PostSignUpPage = lazyComponent(() => import('./auth/PostSignUpPage'), 'PostSignUpPage')
@@ -99,6 +101,16 @@ export const routes: readonly LayoutRouteProps<any>[] = [
         render: props =>
             props.showMultilineSearchConsole ? (
                 <SearchConsolePage {...props} isMacPlatform={isMacPlatform} />
+            ) : (
+                <Redirect to="/search" />
+            ),
+        exact: true,
+    },
+    {
+        path: '/search/notebook',
+        render: props =>
+            props.showSearchNotebook ? (
+                <SearchNotebookPage {...props} isMacPlatform={isMacPlatform} />
             ) : (
                 <Redirect to="/search" />
             ),
@@ -250,6 +262,11 @@ export const routes: readonly LayoutRouteProps<any>[] = [
     {
         path: '/temporal',
         render: props => <RepogroupPage {...props} repogroupMetadata={temporal} />,
+        condition: ({ isSourcegraphDotCom }) => isSourcegraphDotCom,
+    },
+    {
+        path: '/o3de',
+        render: props => <RepogroupPage {...props} repogroupMetadata={o3de} />,
         condition: ({ isSourcegraphDotCom }) => isSourcegraphDotCom,
     },
     {

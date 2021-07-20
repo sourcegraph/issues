@@ -29,10 +29,10 @@ var testRealGlobalSettings = &api.Settings{ID: 1, Contents: `{
 	"insights": [
 		{
 		  "title": "fmt usage",
-		  "description": "fmt.Errorf/fmt.Printf usage",
+		  "description": "errors.Errorf/fmt.Printf usage",
 		  "series": [
 			{
-			  "label": "fmt.Errorf",
+			  "label": "errors.Errorf",
 			  "search": "errorf",
 			},
 			{
@@ -63,10 +63,10 @@ var testOneGlobalSeries = &api.Settings{ID: 1, Contents: `{
 	"insights": [
 		{
 		  "title": "fmt usage",
-		  "description": "fmt.Errorf",
+		  "description": "errors.Errorf",
 		  "series": [
 			{
-			  "label": "fmt.Errorf",
+			  "label": "errors.Errorf",
 			  "search": "errorf",
 			}
 		  ]
@@ -136,7 +136,7 @@ func TestResolver_InsightConnection(t *testing.T) {
 		if len(nodes) != 2 {
 			t.Fatal("incorrect length")
 		}
-		autogold.Want("first insight", map[string]interface{}{"description": "fmt.Errorf/fmt.Printf usage", "title": "fmt usage"}).Equal(t, map[string]interface{}{
+		autogold.Want("first insight", map[string]interface{}{"description": "errors.Errorf/fmt.Printf usage", "title": "fmt usage"}).Equal(t, map[string]interface{}{
 			"title":       nodes[0].Title(),
 			"description": nodes[0].Description(),
 		})

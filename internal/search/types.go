@@ -2,7 +2,9 @@ package search
 
 import (
 	"fmt"
+	"strconv"
 	"strings"
+	"time"
 
 	"github.com/sourcegraph/sourcegraph/internal/api"
 	"github.com/sourcegraph/sourcegraph/internal/endpoint"
@@ -11,6 +13,7 @@ import (
 	"github.com/sourcegraph/sourcegraph/internal/search/query"
 	"github.com/sourcegraph/sourcegraph/internal/search/result"
 	"github.com/sourcegraph/sourcegraph/internal/vcs/git"
+	"github.com/sourcegraph/sourcegraph/schema"
 )
 
 type TypeParameters interface {
@@ -89,13 +92,15 @@ type SymbolsParameters struct {
 type GlobalSearchMode int
 
 const (
+	DefaultMode GlobalSearchMode = iota
+
 	// ZoektGlobalSearch designates a performance optimised code path for indexed
 	// searches. For a global search we don't need to resolve repos before searching
 	// shards on Zoekt, instead we can resolve repos and call Zoekt concurrently.
 	//
 	// Note: Even for a global search we have to resolve repos to filter search results
 	// returned by Zoekt.
-	ZoektGlobalSearch GlobalSearchMode = iota + 1
+	ZoektGlobalSearch
 
 	// SearcherOnly designated a code path on which we skip indexed search, even if
 	// the user specified index:yes. SearcherOnly is used in conjunction with
@@ -126,7 +131,9 @@ func (m GlobalSearchMode) String() string {
 // search. It defines behavior for text search on repository names, file names, and file content.
 type TextParameters struct {
 	PatternInfo *TextPatternInfo
+	RepoOptions RepoOptions
 	ResultTypes result.Types
+	Timeout     time.Duration
 
 	// Performance optimization: For global queries, resolving repositories and
 	// querying zoekt happens concurrently.
@@ -241,4 +248,71 @@ func (p *TextPatternInfo) String() string {
 	}
 
 	return fmt.Sprintf("TextPatternInfo{%s}", strings.Join(args, ","))
+}
+
+type RepoOptions struct {
+	RepoFilters        []string
+	MinusRepoFilters   []string
+	RepoGroupFilters   []string
+	SearchContextSpec  string
+	VersionContextName string
+	UserSettings       *schema.Settings
+	NoForks            bool
+	OnlyForks          bool
+	NoArchived         bool
+	OnlyArchived       bool
+	CommitAfter        string
+	OnlyPrivate        bool
+	OnlyPublic         bool
+	Ranked             bool // Return results ordered by rank
+	Limit              int
+	CacheLookup        bool
+	Query              query.Q
+}
+
+func (op *RepoOptions) String() string {
+	var b strings.Builder
+	if len(op.RepoFilters) == 0 {
+		b.WriteString("r=[]")
+	}
+	for i, r := range op.RepoFilters {
+		if i != 0 {
+			b.WriteByte(' ')
+		}
+		b.WriteString(strconv.Quote(r))
+	}
+
+	if len(op.MinusRepoFilters) > 0 {
+		_, _ = fmt.Fprintf(&b, " -r=%v", op.MinusRepoFilters)
+	}
+	if len(op.RepoGroupFilters) > 0 {
+		_, _ = fmt.Fprintf(&b, " groups=%v", op.RepoGroupFilters)
+	}
+	if op.VersionContextName != "" {
+		_, _ = fmt.Fprintf(&b, " versionContext=%q", op.VersionContextName)
+	}
+	if op.CommitAfter != "" {
+		_, _ = fmt.Fprintf(&b, " CommitAfter=%q", op.CommitAfter)
+	}
+
+	if op.NoForks {
+		b.WriteString(" NoForks")
+	}
+	if op.OnlyForks {
+		b.WriteString(" OnlyForks")
+	}
+	if op.NoArchived {
+		b.WriteString(" NoArchived")
+	}
+	if op.OnlyArchived {
+		b.WriteString(" OnlyArchived")
+	}
+	if op.OnlyPrivate {
+		b.WriteString(" OnlyPrivate")
+	}
+	if op.OnlyPublic {
+		b.WriteString(" OnlyPublic")
+	}
+
+	return b.String()
 }

@@ -8,6 +8,7 @@ import (
 	"sync/atomic"
 	"time"
 
+	"github.com/cockroachdb/errors"
 	"github.com/google/go-cmp/cmp"
 
 	"github.com/sourcegraph/sourcegraph/internal/cmd/precise-code-intel-tester/util"
@@ -93,7 +94,7 @@ func makeTestQueryFunction(name string, location Location, expectedLocations []L
 			sortLocations(locations)
 
 			if diff := cmp.Diff(expectedLocations, locations); diff != "" {
-				return fmt.Errorf("unexpected locations (-want +got):\n%s", diff)
+				return errors.Errorf("unexpected locations (-want +got):\n%s", diff)
 			}
 		}
 

@@ -109,10 +109,10 @@ func parseSubset(sec [][]byte, lineCount int) (*changeSubset, error) {
 		return nil, nil
 	}
 	if len(sec) < 2 {
-		return nil, fmt.Errorf("subsection not long enough")
+		return nil, errors.Errorf("subsection not long enough")
 	}
 	if len(sec[0]) < 5 {
-		return nil, fmt.Errorf("subsection first line ('%s') not long enough", sec[0])
+		return nil, errors.Errorf("subsection first line ('%s') not long enough", sec[0])
 	}
 	css := &changeSubset{heading: string(sec[0][4:])}
 	for _, l := range sec[1:] {

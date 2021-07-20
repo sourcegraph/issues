@@ -127,6 +127,7 @@ export interface LayoutProps
 
     globbing: boolean
     showMultilineSearchConsole: boolean
+    showSearchNotebook: boolean
     showQueryBuilder: boolean
     isSourcegraphDotCom: boolean
     showBatchChanges: boolean
@@ -140,6 +141,7 @@ export const Layout: React.FunctionComponent<LayoutProps> = props => {
     const minimalNavLinks = routeMatch === '/cncf'
     const isSearchHomepage = props.location.pathname === '/search' && !parseSearchURLQuery(props.location.search)
     const isSearchConsolePage = routeMatch?.startsWith('/search/console')
+    const isSearchNotebookPage = routeMatch?.startsWith('/search/notebook')
 
     // Update parsedSearchQuery, patternType, caseSensitivity, versionContext, and selectedSearchContextSpec based on current URL
     const {
@@ -217,6 +219,7 @@ export const Layout: React.FunctionComponent<LayoutProps> = props => {
         '/stanford',
         '/stackstorm',
         '/temporal',
+        '/o3de',
         '/cncf',
     ]
     const isRepogroupPage = repogroupPages.includes(props.location.pathname)
@@ -241,7 +244,8 @@ export const Layout: React.FunctionComponent<LayoutProps> = props => {
     const hideGlobalSearchInput: boolean =
         props.location.pathname === '/stats' ||
         props.location.pathname === '/search/query-builder' ||
-        props.location.pathname === '/search/console'
+        props.location.pathname === '/search/console' ||
+        props.location.pathname === '/search/notebook'
 
     const breadcrumbProps = useBreadcrumbs()
 
@@ -279,7 +283,13 @@ export const Layout: React.FunctionComponent<LayoutProps> = props => {
                 <GlobalNavbar
                     {...props}
                     authRequired={!!authRequired}
-                    showSearchBox={isSearchRelatedPage && !isSearchHomepage && !isRepogroupPage && !isSearchConsolePage}
+                    showSearchBox={
+                        isSearchRelatedPage &&
+                        !isSearchHomepage &&
+                        !isRepogroupPage &&
+                        !isSearchConsolePage &&
+                        !isSearchNotebookPage
+                    }
                     variant={
                         hideGlobalSearchInput
                             ? 'no-search-input'

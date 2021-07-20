@@ -7,6 +7,8 @@ import (
 	"os"
 	"time"
 
+	"github.com/cockroachdb/errors"
+
 	"github.com/sourcegraph/sourcegraph/internal/search/streaming/api"
 	streamhttp "github.com/sourcegraph/sourcegraph/internal/search/streaming/http"
 )
@@ -20,11 +22,11 @@ type streamClient struct {
 func newStreamClient() (*streamClient, error) {
 	tkn := os.Getenv(envToken)
 	if tkn == "" {
-		return nil, fmt.Errorf("%s not set", envToken)
+		return nil, errors.Errorf("%s not set", envToken)
 	}
 	endpoint := os.Getenv(envEndpoint)
 	if endpoint == "" {
-		return nil, fmt.Errorf("%s not set", envEndpoint)
+		return nil, errors.Errorf("%s not set", envEndpoint)
 	}
 
 	return &streamClient{
@@ -37,7 +39,7 @@ func newStreamClient() (*streamClient, error) {
 func (s *streamClient) search(ctx context.Context, query, queryName string) (*metrics, error) {
 	req, err := streamhttp.NewRequest(s.endpoint, query)
 	if err != nil {
-		return nil, fmt.Errorf("create request: %w", err)
+		return nil, errors.Errorf("create request: %w", err)
 	}
 	req = req.WithContext(ctx)
 	req.Header.Set("Authorization", "token "+s.token)

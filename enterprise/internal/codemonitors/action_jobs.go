@@ -3,9 +3,9 @@ package codemonitors
 import (
 	"context"
 	"database/sql"
-	"fmt"
 	"time"
 
+	"github.com/cockroachdb/errors"
 	"github.com/keegancsmith/sqlf"
 
 	"github.com/sourcegraph/sourcegraph/cmd/frontend/graphqlbackend"
@@ -166,7 +166,7 @@ func (s *Store) runActionJobQuery(ctx context.Context, q *sqlf.Query) (ajs *Acti
 		return nil, err
 	}
 	if len(es) == 0 {
-		return nil, fmt.Errorf("operation failed. Query should have returned at least 1 row")
+		return nil, errors.Errorf("operation failed. Query should have returned at least 1 row")
 	}
 	return es[0], nil
 }

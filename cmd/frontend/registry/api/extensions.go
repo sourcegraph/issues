@@ -2,9 +2,10 @@ package api
 
 import (
 	"context"
-	"fmt"
 	"net/url"
 	"strings"
+
+	"github.com/cockroachdb/errors"
 
 	"github.com/sourcegraph/sourcegraph/cmd/frontend/globals"
 	"github.com/sourcegraph/sourcegraph/schema"
@@ -24,15 +25,15 @@ import (
 func SplitExtensionID(extensionID string) (prefix, publisher, name string, err error) {
 	parts := strings.Split(extensionID, "/")
 	if len(parts) == 0 || len(parts) == 1 {
-		return "", "", "", fmt.Errorf("invalid extension ID: %q (2+ slash-separated path components required)", extensionID)
+		return "", "", "", errors.Errorf("invalid extension ID: %q (2+ slash-separated path components required)", extensionID)
 	}
 	name = parts[len(parts)-1] // last
 	if name == "" {
-		return "", "", "", fmt.Errorf("invalid extension ID: %q (trailing slash is forbidden)", extensionID)
+		return "", "", "", errors.Errorf("invalid extension ID: %q (trailing slash is forbidden)", extensionID)
 	}
 	publisher = parts[len(parts)-2] // 2nd to last
 	if publisher == "" {
-		return "", "", "", fmt.Errorf("invalid extension ID: %q (empty publisher)", extensionID)
+		return "", "", "", errors.Errorf("invalid extension ID: %q (empty publisher)", extensionID)
 	}
 	prefix = strings.Join(parts[:len(parts)-2], "/") // prefix
 	return
@@ -54,12 +55,12 @@ func ParseExtensionID(extensionID string) (prefix, extensionIDWithoutPrefix stri
 		if configuredPrefix == nil {
 			// Don't look up fully qualified extensions from Sourcegraph.com; it only cares about
 			// its own extensions.
-			return "", "", false, fmt.Errorf("remote extension lookup is not supported for host %q", prefix)
+			return "", "", false, errors.Errorf("remote extension lookup is not supported for host %q", prefix)
 		}
 
 		// Local extension on non-Sourcegraph.com instance.
 		if prefix != *configuredPrefix {
-			return "", "", false, fmt.Errorf("remote extension lookup is forbidden (extension ID prefix %q, allowed prefixes are \"\" (default) and %q (local))", prefix, *configuredPrefix)
+			return "", "", false, errors.Errorf("remote extension lookup is forbidden (extension ID prefix %q, allowed prefixes are \"\" (default) and %q (local))", prefix, *configuredPrefix)
 		}
 		isLocal = true
 	} else if configuredPrefix == nil { // Extension ID is publisher/name.
@@ -170,7 +171,7 @@ func getRemoteRegistryExtension(ctx context.Context, field, value string) (*regi
 	}
 
 	if x != nil && !IsRemoteExtensionAllowed(x.ExtensionID) {
-		return nil, fmt.Errorf("extension is not allowed in site configuration: %q", x.ExtensionID)
+		return nil, errors.Errorf("extension is not allowed in site configuration: %q", x.ExtensionID)
 	}
 
 	return x, err

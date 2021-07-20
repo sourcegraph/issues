@@ -62,6 +62,27 @@ Tracks the range of schema_versions for each upload in the lsif_data_definitions
 
 **min_schema_version**: A lower-bound on the `lsif_data_definitions.schema_version` where `lsif_data_definitions.dump_id = dump_id`.
 
+# Table "public.lsif_data_documentation_mappings"
+```
+  Column   |  Type   | Collation | Nullable | Default 
+-----------+---------+-----------+----------+---------
+ dump_id   | integer |           | not null | 
+ path_id   | text    |           | not null | 
+ result_id | integer |           | not null | 
+Indexes:
+    "lsif_data_documentation_mappings_pkey" PRIMARY KEY, btree (dump_id, path_id)
+    "lsif_data_documentation_mappings_inverse_unique_idx" UNIQUE, btree (dump_id, result_id)
+
+```
+
+Maps documentation path IDs to their corresponding integral documentationResult vertex IDs, which are unique within a dump.
+
+**dump_id**: The identifier of the associated dump in the lsif_uploads table (state=completed).
+
+**path_id**: The documentation page path ID, see see GraphQL codeintel.schema:documentationPage for what this is.
+
+**result_id**: The documentationResult vertex ID.
+
 # Table "public.lsif_data_documentation_pages"
 ```
  Column  |  Type   | Collation | Nullable | Default 

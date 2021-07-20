@@ -74,8 +74,12 @@ func Generate(logger log15.Logger, opts GenerateOptions, containers ...*Containe
 			if opts.Reload {
 				crlog := clog.New("instance", localGrafanaURL)
 				crlog.Debug("Reloading Grafana instance")
-				client := sdk.NewClient(localGrafanaURL, localGrafanaCredentials, sdk.DefaultHTTPClient)
-				_, err := client.SetDashboard(context.Background(), *board, sdk.SetDashboardParams{Overwrite: true})
+				client, err := sdk.NewClient(localGrafanaURL, localGrafanaCredentials, sdk.DefaultHTTPClient)
+				if err != nil {
+					crlog.Crit("Failed to initialize Grafana client", "error", err)
+					return err
+				}
+				_, err = client.SetDashboard(context.Background(), *board, sdk.SetDashboardParams{Overwrite: true})
 				if err != nil {
 					crlog.Crit("Could not reload Grafana instance", "error", err)
 					return err

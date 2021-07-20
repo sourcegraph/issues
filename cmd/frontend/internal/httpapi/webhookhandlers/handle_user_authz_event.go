@@ -4,6 +4,8 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/cockroachdb/errors"
+
 	"github.com/sourcegraph/sourcegraph/cmd/frontend/globals"
 
 	gh "github.com/google/go-github/v28/github"
@@ -41,7 +43,7 @@ func handleGitHubUserAuthzEvent(db dbutil.DB) func(ctx context.Context, extSvc *
 			user = e.GetMembership().GetUser()
 		}
 		if user == nil {
-			return fmt.Errorf("could not extract GitHub user from %T GitHub event", payload)
+			return errors.Errorf("could not extract GitHub user from %T GitHub event", payload)
 		}
 
 		return scheduleUserUpdate(ctx, db, extSvc, user)

@@ -71,7 +71,8 @@ const getRepositoriesWithIndexConfigurationQuery = `
 -- source: enterprise/internal/codeintel/stores/dbstore/index_configuration.go:GetRepositoriesWithIndexConfiguration
 SELECT c.repository_id
 FROM lsif_index_configuration c
-WHERE c.autoindex_enabled = TRUE
+LEFT JOIN repo r ON r.id = c.repository_id
+WHERE c.autoindex_enabled = true AND r.deleted_at IS NULL
 `
 
 func (s *Store) GetAutoindexDisabledRepositories(ctx context.Context) (_ []int, err error) {
@@ -91,7 +92,8 @@ const getAutoIndexDisabledRepositoriesQuery = `
 -- source: enterprise/internal/codeintel/stores/dbstore/index_configuration.go:GetAutoindexDisabledRepositories
 SELECT c.repository_id
 FROM lsif_index_configuration c
-WHERE c.autoindex_enabled = FALSE
+LEFT JOIN repo r ON r.id = c.repository_id
+WHERE c.autoindex_enabled = false AND r.deleted_at IS NULL
 `
 
 // GetIndexConfigurationByRepositoryID returns the index configuration for a repository.

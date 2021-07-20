@@ -173,7 +173,7 @@ func adminOnly(next http.Handler, db dbutil.DB) http.Handler {
 func newPrometheusValidator(prom srcprometheus.Client, promErr error) conf.Validator {
 	return func(c conf.Unified) conf.Problems {
 		// surface new prometheus client error if it was unexpected
-		prometheusUnavailable := promErr != nil && errors.Is(promErr, srcprometheus.ErrPrometheusUnavailable)
+		prometheusUnavailable := errors.Is(promErr, srcprometheus.ErrPrometheusUnavailable)
 		if promErr != nil && !prometheusUnavailable {
 			return conf.NewSiteProblems(fmt.Sprintf("Prometheus (`PROMETHEUS_URL`) might be misconfigured: %v", promErr))
 		}

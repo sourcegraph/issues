@@ -2,10 +2,10 @@ package database
 
 import (
 	"context"
-	"fmt"
 	"testing"
 	"time"
 
+	"github.com/cockroachdb/errors"
 	"github.com/google/go-cmp/cmp"
 
 	"github.com/sourcegraph/sourcegraph/internal/database/dbtest"
@@ -408,7 +408,7 @@ func isUserEmailVerified(ctx context.Context, db dbutil.DB, userID int32, email 
 			return v.VerifiedAt != nil, nil
 		}
 	}
-	return false, fmt.Errorf("email not found: %s", email)
+	return false, errors.Errorf("email not found: %s", email)
 }
 
 func isUserEmailPrimary(ctx context.Context, db dbutil.DB, userID int32, email string) (bool, error) {
@@ -423,7 +423,7 @@ func isUserEmailPrimary(ctx context.Context, db dbutil.DB, userID int32, email s
 			return v.Primary, nil
 		}
 	}
-	return false, fmt.Errorf("email not found: %s", email)
+	return false, errors.Errorf("email not found: %s", email)
 }
 
 func TestUserEmails_SetLastVerificationSentAt(t *testing.T) {

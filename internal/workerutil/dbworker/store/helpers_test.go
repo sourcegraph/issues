@@ -1,10 +1,12 @@
 package store
 
 import (
+	"context"
 	"database/sql"
 	"testing"
 	"time"
 
+	"github.com/derision-test/glock"
 	"github.com/keegancsmith/sqlf"
 
 	"github.com/sourcegraph/sourcegraph/internal/database/basestore"
@@ -109,17 +111,18 @@ func setupStoreTest(t *testing.T) dbutil.DB {
 
 	if _, err := db.Exec(`
 		CREATE TABLE IF NOT EXISTS workerutil_test (
-			id              integer NOT NULL,
-			state           text NOT NULL,
-			failure_message text,
-			started_at      timestamp with time zone,
-			finished_at     timestamp with time zone,
-			process_after   timestamp with time zone,
-			num_resets      integer NOT NULL default 0,
-			num_failures    integer NOT NULL default 0,
-			uploaded_at     timestamp with time zone NOT NULL default NOW(),
-			execution_logs  json[],
-			worker_hostname text NOT NULL default ''
+			id                integer NOT NULL,
+			state             text NOT NULL,
+			failure_message   text,
+			started_at        timestamp with time zone,
+			last_heartbeat_at timestamp with time zone,
+			finished_at       timestamp with time zone,
+			process_after     timestamp with time zone,
+			num_resets        integer NOT NULL default 0,
+			num_failures      integer NOT NULL default 0,
+			uploaded_at       timestamp with time zone NOT NULL default NOW(),
+			execution_logs    json[],
+			worker_hostname   text NOT NULL default ''
 		)
 	`); err != nil {
 		t.Fatalf("unexpected error creating test table: %s", err)
@@ -135,28 +138,32 @@ func setupStoreTest(t *testing.T) dbutil.DB {
 	return db
 }
 
-var defaultTestStoreOptions = Options{
-	Name:              "test",
-	TableName:         "workerutil_test w",
-	Scan:              testScanFirstRecord,
-	OrderByExpression: sqlf.Sprintf("w.uploaded_at"),
-	ColumnExpressions: []*sqlf.Query{
-		sqlf.Sprintf("w.id"),
-		sqlf.Sprintf("w.state"),
-	},
-	StalledMaxAge: time.Second * 5,
-	MaxNumResets:  5,
-	MaxNumRetries: 3,
+func defaultTestStoreOptions(clock glock.Clock) Options {
+	return Options{
+		Name:              "test",
+		TableName:         "workerutil_test w",
+		Scan:              testScanFirstRecord,
+		OrderByExpression: sqlf.Sprintf("w.uploaded_at"),
+		ColumnExpressions: []*sqlf.Query{
+			sqlf.Sprintf("w.id"),
+			sqlf.Sprintf("w.state"),
+		},
+		HeartbeatInterval: time.Second,
+		StalledMaxAge:     time.Second * 5,
+		MaxNumResets:      5,
+		MaxNumRetries:     3,
+		clock:             clock,
+	}
 }
 
-func assertDequeueRecordResult(t *testing.T, expectedID int, record interface{}, tx Store, ok bool, err error) {
+func assertDequeueRecordResult(t *testing.T, expectedID int, record interface{}, cancel context.CancelFunc, ok bool, err error) {
 	if err != nil {
 		t.Fatalf("unexpected error: %s", err)
 	}
 	if !ok {
 		t.Fatalf("expected a dequeueable record")
 	}
-	defer func() { _ = tx.Done(nil) }()
+	defer cancel()
 
 	if val := record.(TestRecord).ID; val != expectedID {
 		t.Errorf("unexpected id. want=%d have=%d", expectedID, val)
@@ -166,14 +173,14 @@ func assertDequeueRecordResult(t *testing.T, expectedID int, record interface{},
 	}
 }
 
-func assertDequeueRecordViewResult(t *testing.T, expectedID, expectedNewField int, record interface{}, tx Store, ok bool, err error) {
+func assertDequeueRecordViewResult(t *testing.T, expectedID, expectedNewField int, record interface{}, cancel context.CancelFunc, ok bool, err error) {
 	if err != nil {
 		t.Fatalf("unexpected error: %s", err)
 	}
 	if !ok {
 		t.Fatalf("expected a dequeueable record")
 	}
-	defer func() { _ = tx.Done(nil) }()
+	defer cancel()
 
 	if val := record.(TestRecordView).ID; val != expectedID {
 		t.Errorf("unexpected id. want=%d have=%d", expectedID, val)
@@ -186,14 +193,14 @@ func assertDequeueRecordViewResult(t *testing.T, expectedID, expectedNewField in
 	}
 }
 
-func assertDequeueRecordRetryResult(t *testing.T, expectedID, record interface{}, tx Store, ok bool, err error) {
+func assertDequeueRecordRetryResult(t *testing.T, expectedID, record interface{}, cancel context.CancelFunc, ok bool, err error) {
 	if err != nil {
 		t.Fatalf("unexpected error: %s", err)
 	}
 	if !ok {
 		t.Fatalf("expected a dequeueable record")
 	}
-	defer func() { _ = tx.Done(nil) }()
+	defer cancel()
 
 	if val := record.(TestRecordRetry).ID; val != expectedID {
 		t.Errorf("unexpected id. want=%d have=%d", expectedID, val)

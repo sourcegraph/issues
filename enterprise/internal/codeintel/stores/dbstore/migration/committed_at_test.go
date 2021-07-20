@@ -6,6 +6,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/cockroachdb/errors"
 	"github.com/google/go-cmp/cmp"
 	"github.com/keegancsmith/sqlf"
 
@@ -38,7 +39,7 @@ func TestCommittedAtMigrator(t *testing.T) {
 			return expectedCommitDates[i], nil
 		}
 
-		return time.Time{}, fmt.Errorf("too many calls")
+		return time.Time{}, errors.Errorf("too many calls")
 	})
 
 	assertProgress := func(expectedProgress float64) {
@@ -141,7 +142,7 @@ func TestCommittedAtMigratorUnknownRepository(t *testing.T) {
 			return allDates[i], nil
 		}
 
-		return time.Time{}, fmt.Errorf("too many calls")
+		return time.Time{}, errors.Errorf("too many calls")
 	})
 
 	assertProgress := func(expectedProgress float64) {
@@ -244,7 +245,7 @@ func TestCommittedAtMigratorUnknownCommits(t *testing.T) {
 			return allDates[i], nil
 		}
 
-		return time.Time{}, fmt.Errorf("too many calls")
+		return time.Time{}, errors.Errorf("too many calls")
 	})
 
 	assertProgress := func(expectedProgress float64) {

@@ -283,7 +283,7 @@ func buildChangesetSource(store SourcerStore, cf *httpcli.Factory, externalServi
 	case extsvc.KindBitbucketServer:
 		return NewBitbucketServerSource(externalService, cf)
 	default:
-		return nil, fmt.Errorf("unsupported external service type %q", extsvc.KindToType(externalService.Kind))
+		return nil, errors.Errorf("unsupported external service type %q", extsvc.KindToType(externalService.Kind))
 	}
 }
 

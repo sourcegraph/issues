@@ -1,6 +1,7 @@
 import {
     ChangeEvent,
     FocusEventHandler,
+    InputHTMLAttributes,
     RefObject,
     useCallback,
     useEffect,
@@ -22,6 +23,13 @@ export interface Validators<FieldValue> {
 }
 
 /**
+ * Subset of native input props that useField can set to the native input element.
+ */
+interface InputProps<Value> extends Omit<InputHTMLAttributes<HTMLInputElement>, 'name' | 'value' | 'onChange'> {
+    onChange?: (value: Value) => void
+}
+
+/**
  * Public API for input element. Contains all handlers and props for
  * native input element and expose meta state of input like touched,
  * validState and etc.
@@ -38,7 +46,7 @@ export interface useFieldAPI<FieldValue> {
         value: FieldValue
         onChange: (event: ChangeEvent<HTMLInputElement> | FieldValue) => void
         onBlur: FocusEventHandler<HTMLInputElement>
-    }
+    } & InputProps<FieldValue>
     /**
      * Meta state of form field - like touched, valid state and last
      * native validity state.
@@ -53,6 +61,12 @@ export interface useFieldAPI<FieldValue> {
     }
 }
 
+export type UseFieldProps<FormValues, Key, Value> = {
+    name: Key
+    formApi: FormAPI<FormValues>
+    validators?: Validators<Value>
+} & InputProps<Value>
+
 /**
  * React hook to manage validation of a single form input field.
  * `useInputValidation` helps with coordinating the constraint validation API
@@ -60,18 +74,15 @@ export interface useFieldAPI<FieldValue> {
  *
  * Should be used with useForm hook to connect field and form component's states.
  * */
-export function useField<FormValues, FieldValueKey extends keyof FormAPI<FormValues>['initialValues']>(
-    name: FieldValueKey,
-    formApi: FormAPI<FormValues>,
-    validators?: Validators<FormValues[FieldValueKey]>
-): useFieldAPI<FormValues[FieldValueKey]> {
+export function useField<FormValues, Key extends keyof FormAPI<FormValues>['initialValues']>(
+    props: UseFieldProps<FormValues, Key, FormValues[Key]>
+): useFieldAPI<FormValues[Key]> {
+    const { formApi, name, validators, onChange = noop, ...inputProps } = props
     const { setFieldState, initialValues, submitted, touched: formTouched } = formApi
-
     const { sync = noop, async } = validators ?? {}
-
     const inputReference = useRef<HTMLInputElement & HTMLFieldSetElement>(null)
 
-    const [state, setState] = useState<FieldState<FormValues[FieldValueKey]>>({
+    const [state, setState] = useState<FieldState<FormValues[Key]>>({
         value: initialValues[name],
         touched: false,
         validState: 'NOT_VALIDATED',
@@ -155,11 +166,15 @@ export function useField<FormValues, FieldValueKey extends keyof FormAPI<FormVal
     useEffect(() => setFieldStateReference.current(name, state), [name, state])
 
     const handleBlur = useCallback(() => setState(state => ({ ...state, touched: true })), [])
-    const handleChange = useCallback((event: ChangeEvent<HTMLInputElement> | FormValues[FieldValueKey]) => {
-        const value = getEventValue(event)
+    const handleChange = useCallback(
+        (event: ChangeEvent<HTMLInputElement> | FormValues[Key]) => {
+            const value = getEventValue(event)
 
-        setState(state => ({ ...state, value }))
-    }, [])
+            setState(state => ({ ...state, value }))
+            onChange(value)
+        },
+        [onChange]
+    )
 
     return {
         input: {
@@ -168,6 +183,7 @@ export function useField<FormValues, FieldValueKey extends keyof FormAPI<FormVal
             value: state.value,
             onBlur: handleBlur,
             onChange: handleChange,
+            ...inputProps,
         },
         meta: {
             ...state,

@@ -6,6 +6,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/sourcegraph/sourcegraph/internal/insights"
+
 	"github.com/sourcegraph/sourcegraph/enterprise/internal/insights/compression"
 
 	"golang.org/x/time/rate"
@@ -120,9 +122,9 @@ func testHistoricalEnqueuer(t *testing.T, p *testParams) *testResults {
 		gitFindNearestCommit:  gitFindNearestCommit,
 		limiter:               limiter,
 		frameFilter:           &dataFrameFilter,
-
-		framesToBackfill: func() int { return p.frames },
-		frameLength:      func() time.Duration { return 7 * 24 * time.Hour },
+		loader:                insights.NewMockLoader(),
+		framesToBackfill:      func() int { return p.frames },
+		frameLength:           func() time.Duration { return 7 * 24 * time.Hour },
 	}
 
 	// If we do an iteration without any insights or repos, we should expect no sleep calls to be made.

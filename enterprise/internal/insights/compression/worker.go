@@ -6,9 +6,12 @@ import (
 	"time"
 
 	"github.com/cockroachdb/errors"
+
 	"github.com/sourcegraph/sourcegraph/internal/types"
 
 	"github.com/inconshreveable/log15"
+	"golang.org/x/time/rate"
+
 	"github.com/sourcegraph/sourcegraph/cmd/frontend/envvar"
 	"github.com/sourcegraph/sourcegraph/enterprise/internal/insights/discovery"
 	"github.com/sourcegraph/sourcegraph/internal/api"
@@ -17,7 +20,6 @@ import (
 	"github.com/sourcegraph/sourcegraph/internal/database/dbutil"
 	"github.com/sourcegraph/sourcegraph/internal/goroutine"
 	"github.com/sourcegraph/sourcegraph/internal/vcs/git"
-	"golang.org/x/time/rate"
 )
 
 type RepoStore interface {
@@ -128,7 +130,7 @@ func (i *CommitIndexer) index(name string) error {
 	}
 
 	if !metadata.Enabled {
-		logger.Info("commit indexing disabled", "repo_id", repoId)
+		logger.Debug("commit indexing disabled", "repo_id", repoId)
 		return nil
 	}
 
@@ -141,7 +143,7 @@ func (i *CommitIndexer) index(name string) error {
 	}
 
 	if len(commits) == 0 {
-		logger.Info("commit index up to date", "repo_id", repoId)
+		logger.Debug("commit index up to date", "repo_id", repoId)
 
 		if _, err = i.commitStore.UpsertMetadataStamp(ctx, repoId); err != nil {
 			return err
@@ -151,7 +153,7 @@ func (i *CommitIndexer) index(name string) error {
 		return nil
 	}
 
-	log15.Info("indexing commits", "repo_id", repoId, "count", len(commits))
+	log15.Debug("indexing commits", "repo_id", repoId, "count", len(commits))
 	err = i.commitStore.InsertCommits(ctx, repoId, commits)
 	if err != nil {
 		return errors.Wrapf(err, "unable to update commit index repo_id: %v", repoId)
@@ -169,7 +171,7 @@ func getCommits(ctx context.Context, name api.RepoName, after time.Time) ([]*git
 // in the case of a newly installed repository.
 func getMetadata(ctx context.Context, id api.RepoID, store CommitStore) (CommitIndexMetadata, error) {
 	metadata, err := store.GetMetadata(ctx, id)
-	if err != nil && errors.Is(err, sql.ErrNoRows) {
+	if errors.Is(err, sql.ErrNoRows) {
 		metadata, err = store.UpsertMetadataStamp(ctx, id)
 	}
 	if err != nil {

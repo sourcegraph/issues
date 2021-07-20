@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/cockroachdb/errors"
 	gh "github.com/google/go-github/v28/github"
 	"github.com/inconshreveable/log15"
 
@@ -31,7 +32,7 @@ func handleGitHubRepoAuthzEvent(ctx context.Context, extSvc *types.ExternalServi
 
 	e, ok := payload.(repoGetter)
 	if !ok {
-		return fmt.Errorf("incorrect event type sent to github event handler: %T", payload)
+		return errors.Errorf("incorrect event type sent to github event handler: %T", payload)
 	}
 	return scheduleRepoUpdate(ctx, e.GetRepo())
 }

@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
-	"fmt"
 	"log"
 	"net/url"
 	"runtime"
@@ -147,7 +146,7 @@ func search(ctx context.Context, query string) (*gqlSearchResponse, error) {
 		return nil, errors.Wrap(err, "Decode")
 	}
 	if len(res.Errors) > 0 {
-		return res, fmt.Errorf("graphql: errors: %v", res.Errors)
+		return res, errors.Errorf("graphql: errors: %v", res.Errors)
 	}
 	return res, nil
 }
@@ -173,7 +172,7 @@ func extractTime(result interface{}) (t *time.Time, err error) {
 			buf := make([]byte, size)
 			buf = buf[:runtime.Stack(buf, false)]
 			log.Printf("failed to extract time from search result: %v\n%s", r, buf)
-			err = fmt.Errorf("failed to extract time from search result")
+			err = errors.Errorf("failed to extract time from search result")
 		}
 	}()
 
@@ -193,6 +192,6 @@ func extractTime(result interface{}) (t *time.Time, err error) {
 		}
 		return &t, nil
 	default:
-		return nil, fmt.Errorf("unexpected result __typename %q", typeName)
+		return nil, errors.Errorf("unexpected result __typename %q", typeName)
 	}
 }

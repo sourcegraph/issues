@@ -2,7 +2,8 @@ package graphql
 
 import (
 	"context"
-	"fmt"
+
+	"github.com/cockroachdb/errors"
 
 	gql "github.com/sourcegraph/sourcegraph/cmd/frontend/graphqlbackend"
 	"github.com/sourcegraph/sourcegraph/enterprise/cmd/frontend/internal/codeintel/resolvers"
@@ -48,7 +49,7 @@ var severities = map[int]string{
 func toSeverity(val int) (*string, error) {
 	severity, ok := severities[val]
 	if !ok {
-		return nil, fmt.Errorf("unknown diagnostic severity %d", val)
+		return nil, errors.Errorf("unknown diagnostic severity %d", val)
 	}
 
 	return &severity, nil

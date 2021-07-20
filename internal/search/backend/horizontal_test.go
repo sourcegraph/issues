@@ -9,6 +9,7 @@ import (
 	"sync/atomic"
 	"testing"
 
+	"github.com/cockroachdb/errors"
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
 	"github.com/google/zoekt"
@@ -24,13 +25,18 @@ func TestHorizontalSearcher(t *testing.T) {
 		Dial: func(endpoint string) zoekt.Streamer {
 			var rle zoekt.RepoListEntry
 			rle.Repository.Name = endpoint
+			repoID, _ := strconv.Atoi(endpoint)
 			client := &mockSearcher{
 				searchResult: &zoekt.SearchResult{
 					Files: []zoekt.FileMatch{{
 						Repository: endpoint,
 					}},
 				},
-				listResult: &zoekt.RepoList{Repos: []*zoekt.RepoListEntry{&rle}},
+				listResult: &zoekt.RepoList{
+					Repos:   []*zoekt.RepoListEntry{&rle},
+					Crashes: 0,
+					Minimal: map[uint32]*zoekt.MinimalRepoListEntry{uint32(repoID): {}},
+				},
 			}
 			// Return metered searcher to test that codepath
 			return NewMeteredSearcher(endpoint, &StreamSearchAdapter{client})
@@ -99,6 +105,15 @@ func TestHorizontalSearcher(t *testing.T) {
 		if !cmp.Equal(want, got, cmpopts.EquateEmpty()) {
 			t.Errorf("list mismatch (-want +got):\n%s", cmp.Diff(want, got))
 		}
+
+		got = []string{}
+		for r := range rle.Minimal {
+			got = append(got, strconv.Itoa(int(r)))
+		}
+		sort.Strings(got)
+		if !cmp.Equal(want, got, cmpopts.EquateEmpty()) {
+			t.Errorf("list mismatch (-want +got):\n%s", cmp.Diff(want, got))
+		}
 	}
 
 	searcher.Close()
@@ -113,7 +128,7 @@ func TestDoStreamSearch(t *testing.T) {
 		Dial: func(endpoint string) zoekt.Streamer {
 			client := &mockSearcher{
 				searchResult: nil,
-				searchError:  fmt.Errorf("test error"),
+				searchError:  errors.Errorf("test error"),
 			}
 			// Return metered searcher to test that codepath
 			return NewMeteredSearcher(endpoint, &StreamSearchAdapter{client})

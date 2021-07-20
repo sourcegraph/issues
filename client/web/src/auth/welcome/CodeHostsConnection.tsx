@@ -1,7 +1,8 @@
 import { ApolloError } from '@apollo/client'
-import React from 'react'
+import React, { useEffect } from 'react'
 
 import { LoadingSpinner } from '@sourcegraph/react-loading-spinner'
+import { useSteps } from '@sourcegraph/wildcard/src/components/Steps'
 
 import { UserCodeHosts } from '../../user/settings/codeHosts/UserCodeHosts'
 
@@ -9,6 +10,7 @@ interface CodeHostsConnection extends Omit<UserCodeHosts, 'onDidRemove' | 'onDid
     refetch: UserCodeHosts['onDidRemove']
     loading: boolean
     error: ApolloError | undefined
+    onNavigation?: (called: boolean) => void
 }
 
 export const CodeHostsConnection: React.FunctionComponent<CodeHostsConnection> = ({
@@ -17,18 +19,24 @@ export const CodeHostsConnection: React.FunctionComponent<CodeHostsConnection> =
     refetch,
     externalServices,
     loading,
-    error,
+    onNavigation,
 }) => {
+    const { setComplete, currentIndex } = useSteps()
+
+    useEffect(() => {
+        if (Array.isArray(externalServices) && externalServices.length > 0) {
+            setComplete(currentIndex, true)
+        } else {
+            setComplete(currentIndex, false)
+        }
+    }, [currentIndex, externalServices, setComplete])
+
     if (loading) {
         return (
             <div className="d-flex justify-content-center">
                 <LoadingSpinner className="icon-inline" />
             </div>
         )
-    }
-
-    if (error) {
-        console.log(error)
     }
 
     return (
@@ -44,8 +52,9 @@ export const CodeHostsConnection: React.FunctionComponent<CodeHostsConnection> =
                 user={user}
                 externalServices={externalServices}
                 context={context}
+                onNavigation={onNavigation}
                 onDidError={error => console.warn('<UserCodeHosts .../>', error)}
-                onDidRemove={() => refetch()}
+                onDidRemove={refetch}
             />
         </>
     )

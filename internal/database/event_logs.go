@@ -320,12 +320,12 @@ type PercentileValue struct {
 func (l *EventLogStore) CountUniqueUsersPerPeriod(ctx context.Context, periodType PeriodType, now time.Time, periods int, opt *CountUniqueUsersOptions) ([]UsageValue, error) {
 	startDate, ok := calcStartDate(now, periodType, periods)
 	if !ok {
-		return nil, fmt.Errorf("periodType must be \"daily\", \"weekly\", or \"monthly\". Got %s", periodType)
+		return nil, errors.Errorf("periodType must be \"daily\", \"weekly\", or \"monthly\". Got %s", periodType)
 	}
 
 	endDate, ok := calcEndDate(startDate, periodType, periods)
 	if !ok {
-		return nil, fmt.Errorf("periodType must be \"daily\", \"weekly\", or \"monthly\". Got %s", periodType)
+		return nil, errors.Errorf("periodType must be \"daily\", \"weekly\", or \"monthly\". Got %s", periodType)
 	}
 
 	conds := []*sqlf.Query{sqlf.Sprintf("TRUE")}

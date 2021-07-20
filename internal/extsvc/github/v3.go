@@ -206,9 +206,11 @@ func (e *APIError) AccountSuspended() bool {
 // HTTPErrorCode returns err's HTTP status code, if it is an HTTP error from
 // this package. Otherwise it returns 0.
 func HTTPErrorCode(err error) int {
-	if e, ok := errors.Cause(err).(*APIError); ok {
+	var e *APIError
+	if errors.As(err, &e) {
 		return e.Code
 	}
+
 	return 0
 }
 

@@ -26,7 +26,7 @@ export const getMonacoCSSRule = (): RuleSetRule => ({
 export const getMonacoTTFRule = (): RuleSetRule => ({
     test: /\.ttf$/,
     include: [monacoEditorPath],
-    use: ['file-loader'],
+    type: 'asset/resource',
 })
 
 export const getBasicCSSLoader = (): RuleSetUseItem => ({

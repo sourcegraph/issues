@@ -6,6 +6,7 @@ import (
 
 	gql "github.com/sourcegraph/sourcegraph/cmd/frontend/graphqlbackend"
 	store "github.com/sourcegraph/sourcegraph/enterprise/internal/codeintel/stores/dbstore"
+	"github.com/sourcegraph/sourcegraph/internal/database/dbconn"
 	"github.com/sourcegraph/sourcegraph/internal/workerutil"
 )
 
@@ -50,7 +51,7 @@ func (r *indexStepsResolver) Index() gql.IndexStepResolver {
 
 func (r *indexStepsResolver) Upload() gql.ExecutionLogEntryResolver {
 	if entry, ok := r.findExecutionLogEntry("step.src.0"); ok {
-		return &executionLogEntryResolver{entry: entry}
+		return gql.NewExecutionLogEntryResolver(dbconn.Global, entry)
 	}
 
 	return nil
@@ -76,10 +77,8 @@ func (r *indexStepsResolver) executionLogEntryResolversWithPrefix(prefix string)
 		if !strings.HasPrefix(entry.Key, prefix) {
 			continue
 		}
-
-		resolvers = append(resolvers, &executionLogEntryResolver{
-			entry: entry,
-		})
+		r := gql.NewExecutionLogEntryResolver(dbconn.Global, entry)
+		resolvers = append(resolvers, r)
 	}
 
 	return resolvers

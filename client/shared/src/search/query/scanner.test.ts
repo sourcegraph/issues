@@ -69,6 +69,12 @@ describe('scanBalancedPattern()', () => {
             '{"type":"error","expected":"no unbalanced parentheses","at":4}'
         )
     })
+
+    test('single unbalanced paren', () => {
+        expect(scanSearchQuery(')', false, SearchPatternType.regexp)).toMatchInlineSnapshot(
+            '{"type":"success","term":[{"type":"closingParen","range":{"start":0,"end":1}}]}'
+        )
+    })
 })
 
 describe('scanSearchQuery() for literal search', () => {

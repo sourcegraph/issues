@@ -122,7 +122,7 @@ func TestSearchFilesInRepos(t *testing.T) {
 	}
 
 	_, _, err = SearchFilesInReposBatch(context.Background(), args)
-	if !gitserver.IsRevisionNotFound(errors.Cause(err)) {
+	if !errors.HasType(err, &gitserver.RevisionNotFoundError{}) {
 		t.Fatalf("searching non-existent rev expected to fail with RevisionNotFoundError got: %v", err)
 	}
 }

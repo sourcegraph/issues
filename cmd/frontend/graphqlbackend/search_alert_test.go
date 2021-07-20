@@ -249,7 +249,7 @@ func TestAlertForOverRepoLimit(t *testing.T) {
 	}
 
 	setMockResolveRepositories := func(numRepos int) {
-		mockResolveRepositories = func(effectiveRepoFieldValues []string) (resolved searchrepos.Resolved, err error) {
+		mockResolveRepositories = func() (resolved searchrepos.Resolved, err error) {
 			return searchrepos.Resolved{
 				RepoRevs:        generateRepoRevs(numRepos),
 				MissingRepoRevs: make([]*search.RepositoryRevisions, 0),
@@ -405,7 +405,7 @@ func TestCapFirst(t *testing.T) {
 func TestAlertForNoResolvedReposWithNonGlobalSearchContext(t *testing.T) {
 	db := new(dbtesting.MockDB)
 
-	mockResolveRepositories = func(effectiveRepoFieldValues []string) (resolved searchrepos.Resolved, err error) {
+	mockResolveRepositories = func() (resolved searchrepos.Resolved, err error) {
 		return searchrepos.Resolved{
 			RepoRevs:        []*search.RepositoryRevisions{},
 			MissingRepoRevs: make([]*search.RepositoryRevisions, 0),
@@ -440,7 +440,7 @@ func TestAlertForNoResolvedReposWithNonGlobalSearchContext(t *testing.T) {
 		},
 	}
 
-	alert, err := errorToAlert(sr.errorForNoResolvedRepos(context.Background()))
+	alert := sr.alertForNoResolvedRepos(context.Background(), q)
 	require.NoError(t, err)
 	require.Equal(t, wantAlert, alert)
 }

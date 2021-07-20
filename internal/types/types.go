@@ -11,7 +11,6 @@ import (
 
 	"github.com/sourcegraph/sourcegraph/internal/api"
 	"github.com/sourcegraph/sourcegraph/internal/extsvc"
-	"github.com/sourcegraph/sourcegraph/internal/extsvc/github"
 )
 
 // A SourceInfo represents a source a Repo belongs to (such as an external service).
@@ -122,7 +121,7 @@ func (r *Repo) IsBlocked() error {
 // Update updates Repo r with the fields from the given newer Repo n,
 // returning true if modified.
 func (r *Repo) Update(n *Repo) (modified bool) {
-	if r.Name != n.Name {
+	if !r.Name.Equal(n.Name) {
 		r.Name, modified = n.Name, true
 	}
 
@@ -155,26 +154,15 @@ func (r *Repo) Update(n *Repo) (modified bool) {
 		r.Stars, modified = n.Stars, true
 	}
 
-	if !reflect.DeepEqual(r.Sources, n.Sources) {
-		r.Sources, modified = n.Sources, true
-	}
-
-	// As a special case, we clear out the value of ViewerPermission for GitHub repos as
-	// the value is dependent on the token used to fetch it. We don't want to store this in the DB as it will
-	// flip flop as we fetch the same repo from different external services.
-	switch x := n.Metadata.(type) {
-	case *github.Repository:
-		cp := *x
-		cp.ViewerPermission = ""
-		n = n.With(func(clone *Repo) {
-			// Repo.Clone does not currently clone metadata for any types as they could contain hard to clone
-			// items such as maps. However, we know that copying github.Repository is safe as it only contains values.
-			clone.Metadata = &cp
-		})
-	}
-
 	if !reflect.DeepEqual(r.Metadata, n.Metadata) {
 		r.Metadata, modified = n.Metadata, true
+	}
+
+	for urn, info := range n.Sources {
+		if old, ok := r.Sources[urn]; !ok || !reflect.DeepEqual(info, old) {
+			r.Sources[urn] = info
+			modified = true
+		}
 	}
 
 	return modified
@@ -1117,7 +1105,7 @@ type InsightUsageStatistics struct {
 
 type PingName string
 
-//AggregatedPingStats is a generic representation of an aggregated ping statistic
+// AggregatedPingStats is a generic representation of an aggregated ping statistic
 type AggregatedPingStats struct {
 	Name        PingName
 	TotalCount  int

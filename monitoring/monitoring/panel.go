@@ -19,6 +19,28 @@ type ObservablePanel struct {
 	unitType UnitType
 }
 
+// PanelType denotes the type of the panel's visualization.
+//
+// Note that this affects `*sdk.Panel` usage in `ObservablePanelOption`s - the value that
+// must be modified for changes to apply has to be `p.GraphPanel` or `p.HeatmapPanel`, for example.
+// When adding new `PanelType`s, ensure all `ObservablePanelOption`s in this package are
+// compatible with each supported type.
+type PanelType string
+
+const (
+	PanelTypeGraph   PanelType = "graph"
+	PanelTypeHeatmap PanelType = "heatmap"
+)
+
+func (pt PanelType) validate() bool {
+	switch pt {
+	case PanelTypeGraph, PanelTypeHeatmap:
+		return true
+	default:
+		return false
+	}
+}
+
 // Panel provides a builder for customizing an Observable visualization, starting
 // with recommended defaults.
 func Panel() ObservablePanel {
@@ -26,7 +48,7 @@ func Panel() ObservablePanel {
 		panelType: PanelTypeGraph,
 		options: []ObservablePanelOption{
 			PanelOptions.basicPanel(), // required basic values
-			PanelOptions.OpinionatedDefaults(),
+			PanelOptions.OpinionatedGraphPanelDefaults(),
 			PanelOptions.AlertThresholds(),
 		},
 	}

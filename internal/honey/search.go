@@ -30,7 +30,7 @@ func SearchEvent(ctx context.Context, args SearchEventArgs) *libhoney.Event {
 	ev.AddField("actor_internal", act.Internal)
 	ev.AddField("type", args.Typ)
 	ev.AddField("source", args.Source)
-	ev.AddField("Status", args.Status)
+	ev.AddField("status", args.Status)
 	ev.AddField("alert_type", args.AlertType)
 	ev.AddField("duration_ms", args.DurationMs)
 	ev.AddField("result_size", args.ResultSize)

@@ -3,6 +3,7 @@ package licensing
 import (
 	"fmt"
 	"strconv"
+	"strings"
 
 	"github.com/cockroachdb/errors"
 
@@ -39,16 +40,23 @@ func checkFeature(info *Info, feature Feature) error {
 		return NewFeatureNotActivatedError(fmt.Sprintf("The feature %q is not activated because it requires a valid Sourcegraph license. Purchase a Sourcegraph subscription to activate this feature.", feature))
 	}
 
+	featureTrimmed := Feature(strings.TrimSpace(string(feature)))
+
 	// Check if the feature is explicitly allowed via license tag.
 	hasFeature := func(want Feature) bool {
 		for _, t := range info.Tags {
-			if Feature(t) == want {
+			// We have been issuing licenses with trailing spaces in the tags for a while.
+			// Eventually we should be able to remove these `TrimSpace` calls again,
+			// as we now guard against that while generating licenses, but there
+			// are quite a few "wrong" licenses out there as of today (2021-07-19).
+			if Feature(strings.TrimSpace(t)) == want {
+				fmt.Printf("fuck yeah feature %q is on\n", want)
 				return true
 			}
 		}
 		return false
 	}
-	if !info.Plan().HasFeature(feature) && !hasFeature(feature) {
+	if !info.Plan().HasFeature(featureTrimmed) && !hasFeature(featureTrimmed) {
 		return NewFeatureNotActivatedError(fmt.Sprintf("The feature %q is not activated in your Sourcegraph license. Upgrade your Sourcegraph subscription to use this feature.", feature))
 	}
 	return nil // feature is activated for current license
@@ -80,15 +88,8 @@ type featureNotActivatedError struct{ errcode.PresentationError }
 // failed license verification, or a valid license that does not activate a feature (e.g.,
 // Enterprise Starter not including an Enterprise-only feature).
 func IsFeatureNotActivated(err error) bool {
-	if err == nil {
-		return false
-	}
-	_, ok := err.(featureNotActivatedError)
-	if !ok {
-		// Also check for the pointer type to guard against stupid mistakes.
-		_, ok = err.(*featureNotActivatedError)
-	}
-	return ok
+	// Also check for the pointer type to guard against stupid mistakes.
+	return errors.HasType(err, featureNotActivatedError{}) || errors.HasType(err, &featureNotActivatedError{})
 }
 
 // IsFeatureEnabledLenient reports whether the current license enables the given feature. If there

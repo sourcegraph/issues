@@ -2,7 +2,6 @@ package httpapi
 
 import (
 	"context"
-	"fmt"
 	"net/http"
 	"net/url"
 	"strings"
@@ -62,7 +61,7 @@ func enforceAuthGithub(ctx context.Context, w http.ResponseWriter, r *http.Reque
 				return nil
 			}
 		}
-		return fmt.Errorf("given repository %s not listed in installed repositories", nameWithOwner)
+		return errors.Errorf("given repository %s not listed in installed repositories", nameWithOwner)
 	}
 
 	authViaReposEndpoint := func() error {

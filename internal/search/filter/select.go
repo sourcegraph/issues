@@ -1,8 +1,9 @@
 package filter
 
 import (
-	"fmt"
 	"strings"
+
+	"github.com/cockroachdb/errors"
 )
 
 const (
@@ -81,7 +82,7 @@ func SelectPathFromString(s string) (SelectPath, error) {
 	for _, field := range fields {
 		child, ok := cur[field]
 		if !ok {
-			return SelectPath{}, fmt.Errorf("invalid field %q on select path %q", field, s)
+			return SelectPath{}, errors.Errorf("invalid field %q on select path %q", field, s)
 		}
 		cur = child
 	}

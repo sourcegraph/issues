@@ -3,6 +3,7 @@ package dbstore
 import (
 	"context"
 	"database/sql"
+	"sort"
 	"strconv"
 	"strings"
 	"time"
@@ -257,11 +258,21 @@ func (s *Store) DeleteUploadsStuckUploading(ctx context.Context, uploadedBefore 
 
 const deleteUploadsStuckUploadingQuery = `
 -- source: enterprise/internal/codeintel/stores/dbstore/uploads.go:DeleteUploadsStuckUploading
-WITH deleted AS (
-	UPDATE lsif_uploads
+WITH
+candidates AS (
+	SELECT u.id
+	FROM lsif_uploads u
+	WHERE u.state = 'uploading' AND u.uploaded_at < %s
+
+	-- Lock these rows in a deterministic order so that we don't
+	-- deadlock with other processes updating the lsif_uploads table.
+	ORDER BY u.id FOR UPDATE
+),
+deleted AS (
+	UPDATE lsif_uploads u
 	SET state = 'deleted'
-	WHERE state = 'uploading' AND uploaded_at < %s
-	RETURNING repository_id
+	WHERE id IN (SELECT id FROM candidates)
+	RETURNING u.repository_id
 )
 SELECT count(*) FROM deleted
 `
@@ -604,19 +615,24 @@ func (s *Store) DeleteUploadsWithoutRepository(ctx context.Context, now time.Tim
 
 const deleteUploadsWithoutRepositoryQuery = `
 -- source: enterprise/internal/codeintel/stores/dbstore/uploads.go:DeleteUploadsWithoutRepository
-WITH deleted_repos AS (
-	SELECT r.id AS id FROM repo r
-	WHERE
-		%s - r.deleted_at >= %s * interval '1 second' AND
-		EXISTS (SELECT 1 from lsif_uploads u WHERE u.repository_id = r.id)
+WITH
+candidates AS (
+	SELECT u.id
+	FROM repo r
+	JOIN lsif_uploads u ON u.repository_id = r.id
+	WHERE %s - r.deleted_at >= %s * interval '1 second'
+
+	-- Lock these rows in a deterministic order so that we don't
+	-- deadlock with other processes updating the lsif_uploads table.
+	ORDER BY u.id FOR UPDATE
 ),
-deleted_uploads AS (
+deleted AS (
 	UPDATE lsif_uploads u
 	SET state = 'deleted'
-	WHERE u.repository_id IN (SELECT id FROM deleted_repos)
+	WHERE u.id IN (SELECT id FROM candidates)
 	RETURNING u.id, u.repository_id
 )
-SELECT d.repository_id, COUNT(*) FROM deleted_uploads d GROUP BY d.repository_id
+SELECT d.repository_id, COUNT(*) FROM deleted d GROUP BY d.repository_id
 `
 
 // HardDeleteUploadByID deletes the upload record with the given identifier.
@@ -630,6 +646,11 @@ func (s *Store) HardDeleteUploadByID(ctx context.Context, ids ...int) (err error
 	if len(ids) == 0 {
 		return nil
 	}
+
+	// Ensure ids are sorted so that we take row locks during the
+	// DELETE query in a determinstic order. This should prevent
+	// deadlocks with other queries that mass update lsif_uploads.
+	sort.Ints(ids)
 
 	var idQueries []*sqlf.Query
 	for _, id := range ids {
@@ -660,7 +681,7 @@ func (s *Store) SoftDeleteOldUploads(ctx context.Context, maxAge time.Duration, 
 	defer func() { err = tx.Done(err) }()
 
 	seconds := strconv.Itoa(int(maxAge / time.Second))
-	repositories, err := scanCounts(tx.Store.Query(ctx, sqlf.Sprintf(softDeleteOldUploadsQuery, now, seconds, now, seconds)))
+	repositories, err := scanCounts(tx.Store.Query(ctx, sqlf.Sprintf(softDeleteOldUploadsQuery, now, seconds)))
 	if err != nil {
 		return 0, err
 	}
@@ -684,19 +705,48 @@ func (s *Store) SoftDeleteOldUploads(ctx context.Context, maxAge time.Duration, 
 
 const softDeleteOldUploadsQuery = `
 -- source: enterprise/internal/codeintel/stores/dbstore/uploads.go:SoftDeleteOldUploads
-WITH u AS (
+WITH RECURSIVE
+protected_uploads AS (
+	(
+		-- Base case: select all upload records that are yonger than the configured
+		-- retention age, as well as all upload records visible from a non-stale
+		-- branch or tag. These form the roots of our dependency graph traversal.
+
+		SELECT u.id FROM lsif_uploads u
+		WHERE %s - COALESCE(u.finished_at, u.uploaded_at) <= (%s || ' second')::interval
+		UNION
+		SELECT upload_id as id FROM lsif_uploads_visible_at_tip
+	) UNION (
+		-- Iterative case: expand the working set of protected uploads by traversing
+		-- the dependency graph: select all upload records that define an LSIF package
+		-- that is referenced by an upload already in the working set. We skip any
+		-- self-imports here, which may occur on some older Sourcegraph instances.
+
+		SELECT p.dump_id as id
+		FROM protected_uploads pu
+		JOIN lsif_references r ON r.dump_id = pu.id
+		JOIN lsif_packages p ON p.scheme = r.scheme AND p.name = r.name AND p.version = r.version AND p.dump_id != r.dump_id
+	)
+),
+candidates AS (
+	-- Find the inverse of protected_uploads, which contains each upload record
+	-- that is older than the configured retention age and is not reachable via
+	-- the dependencies of any upload in protected_uploads.
+	SELECT u.id
+	FROM lsif_uploads u
+	WHERE u.id NOT IN (SELECT id FROM protected_uploads)
+
+	-- Lock these rows in a deterministic order so that we don't
+	-- deadlock with other processes updating the lsif_uploads table.
+	ORDER BY u.id FOR UPDATE
+),
+updated AS (
 	UPDATE lsif_uploads u
-		SET state = 'deleted'
-		WHERE
-			(
-				%s - u.finished_at > (%s || ' second')::interval OR
-				(u.finished_at IS NULL AND %s - u.uploaded_at > (%s || ' second')::interval)
-			) AND
-				-- Anything visible from a non-stale branch or tag is protected from expiration
-				u.id NOT IN (SELECT uvt.upload_id FROM lsif_uploads_visible_at_tip uvt WHERE uvt.repository_id = u.repository_id)
-		RETURNING id, repository_id
+	SET state = 'deleted'
+	WHERE u.id IN (SELECT id FROM candidates)
+	RETURNING u.id, u.repository_id
 )
-SELECT u.repository_id, count(*) FROM u GROUP BY u.repository_id
+SELECT u.repository_id, count(*) FROM updated u GROUP BY u.repository_id
 `
 
 // GetOldestCommitDate returns the oldest commit date for all uploads for the given repository. If there are no

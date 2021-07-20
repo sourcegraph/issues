@@ -2,7 +2,6 @@ package server
 
 import (
 	"context"
-	"fmt"
 	"os"
 	"os/exec"
 	"strconv"
@@ -60,7 +59,7 @@ func (s *GitRepoSyncer) IsCloneable(ctx context.Context, remoteURL *vcs.URL) err
 			err = ctxerr
 		}
 		if len(out) > 0 {
-			err = fmt.Errorf("%s (output follows)\n\n%s", err, out)
+			err = errors.Errorf("%s (output follows)\n\n%s", err, out)
 		}
 		return err
 	}
@@ -163,7 +162,7 @@ func p4ping(ctx context.Context, host, username, password string) error {
 			err = ctxerr
 		}
 		if len(out) > 0 {
-			err = fmt.Errorf("%s (output follows)\n\n%s", err, out)
+			err = errors.Errorf("%s (output follows)\n\n%s", err, out)
 		}
 		return err
 	}
@@ -186,7 +185,7 @@ func p4trust(ctx context.Context, host string) error {
 			err = ctxerr
 		}
 		if len(out) > 0 {
-			err = fmt.Errorf("%s (output follows)\n\n%s", err, out)
+			err = errors.Errorf("%s (output follows)\n\n%s", err, out)
 		}
 		return err
 	}

@@ -1,11 +1,14 @@
 package main
 
 import (
-	"fmt"
 	"io"
 	"net/http"
 	"strings"
 
+	"github.com/cockroachdb/errors"
+	"golang.org/x/mod/semver"
+
+	"github.com/sourcegraph/sourcegraph/dev/sg/internal/command"
 	"github.com/sourcegraph/sourcegraph/lib/output"
 )
 
@@ -55,23 +58,32 @@ func printDeployedVersion(e environment) error {
 		return err
 	}
 
-	elems := strings.Split(string(body), "_")
+	bodyStr := string(body)
+	if semver.IsValid("v" + bodyStr) {
+		out.WriteLine(output.Linef(
+			output.EmojiLightbulb, output.StyleLogo,
+			"Live on %q: v%s",
+			e.Name, bodyStr,
+		))
+		return nil
+	}
+	elems := strings.Split(bodyStr, "_")
 	if len(elems) != 3 {
-		return fmt.Errorf("unknown format of /__version response: %q", body)
+		return errors.Errorf("unknown format of /__version response: %q", body)
 	}
 
 	buildDate := elems[1]
 	buildSha := elems[2]
 
 	pending = out.Pending(output.Line("", output.StylePending, "Running 'git fetch' to update list of commits..."))
-	_, err = runGitCmd("fetch", "-q")
+	_, err = command.RunGit("fetch", "-q")
 	if err != nil {
 		pending.Complete(output.Linef(output.EmojiFailure, output.StyleWarning, "Failed: %s", err))
 		return err
 	}
 	pending.Complete(output.Linef(output.EmojiSuccess, output.StyleSuccess, "Done updating list of commits"))
 
-	log, err := runGitCmd("log", "--oneline", "-n", "20", `--pretty=format:%h|%ar|%an|%s`, "origin/main")
+	log, err := command.RunGit("log", "--oneline", "-n", "20", `--pretty=format:%h|%ar|%an|%s`, "origin/main")
 	if err != nil {
 		pending.Complete(output.Linef(output.EmojiFailure, output.StyleWarning, "Failed: %s", err))
 		return err

@@ -2,13 +2,13 @@ package graphqlbackend
 
 import (
 	"context"
-	"fmt"
 	"sync"
 
 	"github.com/cockroachdb/errors"
 	"github.com/graph-gophers/graphql-go"
 	"github.com/graph-gophers/graphql-go/relay"
 	"github.com/inconshreveable/log15"
+
 	"github.com/sourcegraph/sourcegraph/internal/conf"
 	"github.com/sourcegraph/sourcegraph/internal/database"
 	"github.com/sourcegraph/sourcegraph/internal/database/dbutil"
@@ -54,7 +54,7 @@ func marshalExternalServiceID(id int64) graphql.ID {
 
 func unmarshalExternalServiceID(id graphql.ID) (externalServiceID int64, err error) {
 	if kind := relay.UnmarshalKind(id); kind != externalServiceIDKind {
-		err = fmt.Errorf("expected graphql ID to have kind %q; got %q", externalServiceIDKind, kind)
+		err = errors.Errorf("expected graphql ID to have kind %q; got %q", externalServiceIDKind, kind)
 		return
 	}
 	err = relay.UnmarshalSpec(id, &externalServiceID)

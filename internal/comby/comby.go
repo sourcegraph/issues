@@ -90,7 +90,12 @@ func waitForCompletion(cmd *exec.Cmd, stdout, stderr io.ReadCloser, w io.Writer)
 			msg := fmt.Sprintf("failed to wait for executing comby command: comby error: %s", stderrMsg)
 			return errors.Wrap(err, msg)
 		}
-		log15.Error("failed to wait for executing comby command", "error", string(err.(*exec.ExitError).Stderr))
+		var stderr string
+		var e *exec.ExitError
+		if errors.As(err, &e) {
+			stderr = string(e.Stderr)
+		}
+		log15.Error("failed to wait for executing comby command", "error", stderr)
 		return errors.Wrap(err, "failed to wait for executing comby command")
 	}
 	return nil

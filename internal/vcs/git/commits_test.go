@@ -7,6 +7,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/cockroachdb/errors"
+
 	"github.com/sourcegraph/sourcegraph/internal/api"
 	"github.com/sourcegraph/sourcegraph/internal/gitserver"
 )
@@ -72,7 +74,7 @@ func TestRepository_GetCommit(t *testing.T) {
 		}
 
 		// Test that trying to get a nonexistent commit returns RevisionNotFoundError.
-		if _, err := GetCommit(ctx, test.repo, NonExistentCommitID, resolveRevisionOptions); !gitserver.IsRevisionNotFound(err) {
+		if _, err := GetCommit(ctx, test.repo, NonExistentCommitID, resolveRevisionOptions); !errors.HasType(err, &gitserver.RevisionNotFoundError{}) {
 			t.Errorf("%s: for nonexistent commit: got err %v, want RevisionNotFoundError", label, err)
 		}
 
@@ -335,7 +337,7 @@ func TestRepository_Commits(t *testing.T) {
 		}
 
 		// Test that trying to get a nonexistent commit returns RevisionNotFoundError.
-		if _, err := Commits(ctx, test.repo, CommitsOptions{Range: string(NonExistentCommitID)}); !gitserver.IsRevisionNotFound(err) {
+		if _, err := Commits(ctx, test.repo, CommitsOptions{Range: string(NonExistentCommitID)}); !errors.HasType(err, &gitserver.RevisionNotFoundError{}) {
 			t.Errorf("%s: for nonexistent commit: got err %v, want RevisionNotFoundError", label, err)
 		}
 	}

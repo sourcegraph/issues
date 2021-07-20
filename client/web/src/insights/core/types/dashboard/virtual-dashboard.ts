@@ -7,5 +7,5 @@ import { InsightsDashboardType } from './core'
 export interface VirtualInsightsDashboard {
     type: InsightsDashboardType.All
     id: string
-    insightIds?: string[]
+    insightIds: string[]
 }

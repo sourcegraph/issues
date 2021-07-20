@@ -2,8 +2,9 @@
 package suspiciousnames
 
 import (
-	"fmt"
 	"strings"
+
+	"github.com/cockroachdb/errors"
 
 	"github.com/sourcegraph/sourcegraph/cmd/frontend/envvar"
 )
@@ -19,7 +20,7 @@ import (
 // confused with a name like "security", or they might find another synonym that we didn't think of.
 func CheckNameAllowedForUserOrOrganization(desiredName string) error {
 	if envvar.SourcegraphDotComMode() && isSuspicious(desiredName) {
-		return fmt.Errorf("rejected suspicious name %q", desiredName)
+		return errors.Errorf("rejected suspicious name %q", desiredName)
 	}
 	return nil
 }

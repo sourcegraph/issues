@@ -81,6 +81,8 @@ func (b *bulkProcessor) process(ctx context.Context, job *btypes.ChangesetJob) (
 		return b.mergeChangeset(ctx, job)
 	case btypes.ChangesetJobTypeClose:
 		return b.closeChangeset(ctx, job)
+	case btypes.ChangesetJobTypePublish:
+		return b.publishChangeset(ctx, job)
 
 	default:
 		return &unknownJobTypeErr{jobType: string(job.JobType)}
@@ -90,7 +92,7 @@ func (b *bulkProcessor) process(ctx context.Context, job *btypes.ChangesetJob) (
 func (b *bulkProcessor) comment(ctx context.Context, job *btypes.ChangesetJob) error {
 	typedPayload, ok := job.Payload.(*btypes.ChangesetJobCommentPayload)
 	if !ok {
-		return fmt.Errorf("invalid payload type for changeset_job, want=%T have=%T", &btypes.ChangesetJobCommentPayload{}, job.Payload)
+		return errors.Errorf("invalid payload type for changeset_job, want=%T have=%T", &btypes.ChangesetJobCommentPayload{}, job.Payload)
 	}
 	cs := &sources.Changeset{
 		Changeset: b.ch,
@@ -116,8 +118,16 @@ func (b *bulkProcessor) detach(ctx context.Context, job *btypes.ChangesetJob) er
 	}
 
 	// If we successfully marked the record as to-be-detached, trigger a reconciler run.
-	b.ch.ResetReconcilerState(global.DefaultReconcilerEnqueueState())
-	return b.tx.UpdateChangeset(ctx, b.ch)
+
+	// We do two `UPDATE` queries here: first we update all of the changesets
+	// columns to refelct the changes made here in the bulkProcessor. Then,
+	// with `EnqueueChangeset`, we do a second UPDATE that only updates the
+	// worker/reconciler-related columns.
+	if err := b.tx.UpdateChangeset(ctx, b.ch); err != nil {
+		return err
+	}
+
+	return b.tx.EnqueueChangeset(ctx, b.ch, global.DefaultReconcilerEnqueueState(), "")
 }
 
 func (b *bulkProcessor) reenqueueChangeset(ctx context.Context, job *btypes.ChangesetJob) error {
@@ -129,7 +139,7 @@ func (b *bulkProcessor) reenqueueChangeset(ctx context.Context, job *btypes.Chan
 func (b *bulkProcessor) mergeChangeset(ctx context.Context, job *btypes.ChangesetJob) (err error) {
 	typedPayload, ok := job.Payload.(*btypes.ChangesetJobMergePayload)
 	if !ok {
-		return fmt.Errorf("invalid payload type for changeset_job, want=%T have=%T", &btypes.ChangesetJobMergePayload{}, job.Payload)
+		return errors.Errorf("invalid payload type for changeset_job, want=%T have=%T", &btypes.ChangesetJobMergePayload{}, job.Payload)
 	}
 
 	cs := &sources.Changeset{
@@ -152,7 +162,7 @@ func (b *bulkProcessor) mergeChangeset(ctx context.Context, job *btypes.Changese
 		return errcode.MakeNonRetryable(err)
 	}
 
-	if err := b.tx.UpdateChangeset(ctx, cs.Changeset); err != nil {
+	if err := b.tx.UpdateChangesetCodeHostState(ctx, cs.Changeset); err != nil {
 		log15.Error("UpdateChangeset", "err", err)
 		return errcode.MakeNonRetryable(err)
 	}
@@ -181,10 +191,57 @@ func (b *bulkProcessor) closeChangeset(ctx context.Context, job *btypes.Changese
 		return errcode.MakeNonRetryable(err)
 	}
 
-	if err := b.tx.UpdateChangeset(ctx, cs.Changeset); err != nil {
+	if err := b.tx.UpdateChangesetCodeHostState(ctx, cs.Changeset); err != nil {
 		log15.Error("UpdateChangeset", "err", err)
 		return errcode.MakeNonRetryable(err)
 	}
 
+	return nil
+}
+
+func (b *bulkProcessor) publishChangeset(ctx context.Context, job *btypes.ChangesetJob) (err error) {
+	typedPayload, ok := job.Payload.(*btypes.ChangesetJobPublishPayload)
+	if !ok {
+		return errors.Errorf("invalid payload type for changeset_job, want=%T have=%T", &btypes.ChangesetJobPublishPayload{}, job.Payload)
+	}
+
+	// We can't publish an imported changeset.
+	if b.ch.CurrentSpecID == 0 {
+		return errcode.MakeNonRetryable(errors.New("cannot publish an imported changeset"))
+	}
+
+	// We can't publish a changeset with its publication state set in the spec.
+	spec, err := b.tx.GetChangesetSpecByID(ctx, b.ch.CurrentSpecID)
+	if err != nil {
+		log15.Error("GetChangesetSpecByID", "err", err)
+		return errcode.MakeNonRetryable(errors.Wrapf(err, "getting changeset spec for changeset %d", b.ch.ID))
+	} else if spec == nil {
+		return errcode.MakeNonRetryable(errors.Newf("no changeset spec for changeset %d", b.ch.ID))
+	}
+
+	if !spec.Spec.Published.Nil() {
+		return errcode.MakeNonRetryable(errors.New("cannot publish a changeset that has a published value set in its changesetTemplate"))
+	}
+
+	// Changesets that are currently processing should be retried at a later stage.
+	if b.ch.ReconcilerState == btypes.ReconcilerStateProcessing {
+		return errors.New("cannot update a changeset that is currently being processed; will retry")
+	}
+
+	// Set the desired UI publication state.
+	if typedPayload.Draft {
+		b.ch.UiPublicationState = &btypes.ChangesetUiPublicationStateDraft
+	} else {
+		b.ch.UiPublicationState = &btypes.ChangesetUiPublicationStatePublished
+	}
+
+	// Reset the reconciler state.
+	b.ch.ResetReconcilerState(global.DefaultReconcilerEnqueueState())
+
+	// And finally update the changeset record.
+	if err := b.tx.UpdateChangeset(ctx, b.ch); err != nil {
+		log15.Error("UpdateChangeset", "err", err)
+		return errcode.MakeNonRetryable(err)
+	}
 	return nil
 }

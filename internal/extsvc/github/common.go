@@ -572,13 +572,11 @@ func (c *V4Client) CreatePullRequest(ctx context.Context, in *CreatePullRequestI
 	input := map[string]interface{}{"input": compatibleInput}
 	err = c.requestGraphQL(ctx, q.String(), input, &result)
 	if err != nil {
-		if gqlErrs, ok := err.(graphqlErrors); ok && len(gqlErrs) == 1 {
-			e := gqlErrs[0]
-			if strings.Contains(e.Message, "A pull request already exists for") {
-				return nil, ErrPullRequestAlreadyExists
-			}
+		var errs graphqlErrors
+		if errors.As(err, &errs) && len(errs) == 1 && strings.Contains(errs[0].Message, "A pull request already exists for") {
+			return nil, ErrPullRequestAlreadyExists
 		}
-		return nil, err
+		return nil, errs
 	}
 
 	ti := result.CreatePullRequest.PullRequest.TimelineItems
@@ -637,11 +635,9 @@ func (c *V4Client) UpdatePullRequest(ctx context.Context, in *UpdatePullRequestI
 	input := map[string]interface{}{"input": in}
 	err = c.requestGraphQL(ctx, q.String(), input, &result)
 	if err != nil {
-		if gqlErrs, ok := err.(graphqlErrors); ok && len(gqlErrs) == 1 {
-			e := gqlErrs[0]
-			if strings.Contains(e.Message, "A pull request already exists for") {
-				return nil, ErrPullRequestAlreadyExists
-			}
+		var errs graphqlErrors
+		if errors.As(err, &errs) && len(errs) == 1 && strings.Contains(errs[0].Message, "A pull request already exists for") {
+			return nil, ErrPullRequestAlreadyExists
 		}
 		return nil, err
 	}
@@ -840,16 +836,17 @@ query($owner: String!, $name: String!, $number: Int!) {
 
 	err = c.requestGraphQL(ctx, q, map[string]interface{}{"owner": owner, "name": repo, "number": pr.Number}, &result)
 	if err != nil {
-		if gqlErrs, ok := err.(graphqlErrors); ok {
-			for _, err2 := range gqlErrs {
-				if err2.Type == graphqlErrTypeNotFound && len(err2.Path) >= 1 {
-					if repoPath, ok := err2.Path[0].(string); !ok || repoPath != "repository" {
+		var errs graphqlErrors
+		if errors.As(err, &errs) {
+			for _, err := range errs {
+				if err.Type == graphqlErrTypeNotFound && len(err.Path) >= 1 {
+					if repoPath, ok := err.Path[0].(string); !ok || repoPath != "repository" {
 						continue
 					}
-					if len(err2.Path) == 1 {
+					if len(err.Path) == 1 {
 						return ErrRepoNotFound
 					}
-					if prPath, ok := err2.Path[1].(string); !ok || prPath != "pullRequest" {
+					if prPath, ok := err.Path[1].(string); !ok || prPath != "pullRequest" {
 						continue
 					}
 					return ErrPullRequestNotFound(pr.Number)
@@ -909,7 +906,7 @@ func (c *V4Client) GetOpenPullRequestByRefs(ctx context.Context, owner, name, ba
 		return nil, err
 	}
 	if len(results.Repository.PullRequests.Nodes) != 1 {
-		return nil, fmt.Errorf("expected 1 pull request, got %d instead", len(results.Repository.PullRequests.Nodes))
+		return nil, errors.Errorf("expected 1 pull request, got %d instead", len(results.Repository.PullRequests.Nodes))
 	}
 
 	node := results.Repository.PullRequests.Nodes[0]
@@ -979,7 +976,7 @@ func (c *V4Client) MergePullRequest(ctx context.Context, pr *PullRequest, squash
 		} `json:"mergePullRequest"`
 	}
 
-	var mergeMethod = "MERGE"
+	mergeMethod := "MERGE"
 	if squash {
 		mergeMethod = "SQUASH"
 	}
@@ -1054,7 +1051,7 @@ func (c *V4Client) loadRemainingTimelineItems(ctx context.Context, prID string, 
 		}
 
 		if results.Node.TypeName != "PullRequest" {
-			return nil, fmt.Errorf("invalid node type received, want PullRequest, got %s", results.Node.TypeName)
+			return nil, errors.Errorf("invalid node type received, want PullRequest, got %s", results.Node.TypeName)
 		}
 
 		items = append(items, results.Node.TimelineItems.Nodes...)
@@ -1077,9 +1074,11 @@ func abbreviateRef(ref string) string {
 // timelineItemTypes contains all the types requested via GraphQL from the timelineItems connection on a pull request.
 const timelineItemTypesFmtStr = `ASSIGNED_EVENT, CLOSED_EVENT, ISSUE_COMMENT, RENAMED_TITLE_EVENT, MERGED_EVENT, PULL_REQUEST_REVIEW, PULL_REQUEST_REVIEW_THREAD, REOPENED_EVENT, REVIEW_DISMISSED_EVENT, REVIEW_REQUEST_REMOVED_EVENT, REVIEW_REQUESTED_EVENT, UNASSIGNED_EVENT, LABELED_EVENT, UNLABELED_EVENT, PULL_REQUEST_COMMIT, READY_FOR_REVIEW_EVENT`
 
-var ghe220Semver, _ = semver.NewConstraint("~2.20.0")
-var ghe221PlusOrDotComSemver, _ = semver.NewConstraint(">= 2.21.0")
-var ghe300PlusOrDotComSemver, _ = semver.NewConstraint(">= 3.0.0")
+var (
+	ghe220Semver, _             = semver.NewConstraint("~2.20.0")
+	ghe221PlusOrDotComSemver, _ = semver.NewConstraint(">= 2.21.0")
+	ghe300PlusOrDotComSemver, _ = semver.NewConstraint(">= 3.0.0")
+)
 
 func timelineItemTypes(version *semver.Version) (string, error) {
 	if ghe220Semver.Check(version) {
@@ -1088,7 +1087,7 @@ func timelineItemTypes(version *semver.Version) (string, error) {
 	if ghe221PlusOrDotComSemver.Check(version) {
 		return timelineItemTypesFmtStr + `, CONVERT_TO_DRAFT_EVENT`, nil
 	}
-	return "", fmt.Errorf("unsupported version of GitHub: %s", version)
+	return "", errors.Errorf("unsupported version of GitHub: %s", version)
 }
 
 // This fragment was formatted using the "prettify" button in the GitHub API explorer:
@@ -1330,7 +1329,7 @@ func timelineItemsFragment(version *semver.Version) (string, error) {
 	if ghe221PlusOrDotComSemver.Check(version) {
 		return fmt.Sprintf(timelineItemsFragmentFmtstr, convertToDraftEventFmtstr), nil
 	}
-	return "", fmt.Errorf("unsupported version of GitHub: %s", version)
+	return "", errors.Errorf("unsupported version of GitHub: %s", version)
 }
 
 // This fragment was formatted using the "prettify" button in the GitHub API explorer:
@@ -1431,7 +1430,7 @@ func pullRequestFragments(version *semver.Version) (string, error) {
 	if ghe221PlusOrDotComSemver.Check(version) {
 		return fmt.Sprintf(timelineItemsFragment+pullRequestFragmentsFmtstr, "isDraft", timelineItemTypes), nil
 	}
-	return "", fmt.Errorf("unsupported version of GitHub: %s", version)
+	return "", errors.Errorf("unsupported version of GitHub: %s", version)
 }
 
 // ExternalRepoSpec returns an api.ExternalRepoSpec that refers to the specified GitHub repository.
@@ -1541,22 +1540,16 @@ var ErrRepoNotFound = errors.New("GitHub repository not found")
 // IsNotFound reports whether err is a GitHub API error of type NOT_FOUND, the equivalent cached
 // response error, or HTTP 404.
 func IsNotFound(err error) bool {
-	if err == ErrRepoNotFound || errors.Cause(err) == ErrRepoNotFound {
+	if errors.Is(err, ErrRepoNotFound) || errors.HasType(err, ErrPullRequestNotFound(0)) || HTTPErrorCode(err) == http.StatusNotFound {
 		return true
 	}
-	if _, ok := err.(ErrPullRequestNotFound); ok {
-		return true
-	}
-	if HTTPErrorCode(err) == http.StatusNotFound {
-		return true
-	}
-	errs, ok := err.(graphqlErrors)
-	if !ok {
-		return false
-	}
-	for _, err := range errs {
-		if err.Type == "NOT_FOUND" {
-			return true
+
+	var errs graphqlErrors
+	if errors.As(err, &errs) {
+		for _, err := range errs {
+			if err.Type == "NOT_FOUND" {
+				return true
+			}
 		}
 	}
 	return false
@@ -1565,22 +1558,22 @@ func IsNotFound(err error) bool {
 // IsRateLimitExceeded reports whether err is a GitHub API error reporting that the GitHub API rate
 // limit was exceeded.
 func IsRateLimitExceeded(err error) bool {
-	if err == errInternalRateLimitExceeded {
+	if errors.Is(err, errInternalRateLimitExceeded) {
 		return true
 	}
-	if e, ok := errors.Cause(err).(*APIError); ok {
+	var e *APIError
+	if errors.As(err, &e) {
 		return strings.Contains(e.Message, "API rate limit exceeded") || strings.Contains(e.DocumentationURL, "#rate-limiting")
 	}
 
-	errs, ok := err.(graphqlErrors)
-	if !ok {
-		return false
-	}
-	for _, err := range errs {
-		// This error is not documented, so be lenient here (instead of just checking for exact
-		// error type match.)
-		if err.Type == "RATE_LIMITED" || strings.Contains(err.Message, "API rate limit exceeded") {
-			return true
+	var errs graphqlErrors
+	if errors.As(err, &errs) {
+		for _, err := range errs {
+			// This error is not documented, so be lenient here (instead of just checking for exact
+			// error type match.)
+			if err.Type == "RATE_LIMITED" || strings.Contains(err.Message, "API rate limit exceeded") {
+				return true
+			}
 		}
 	}
 	return false
@@ -1589,15 +1582,15 @@ func IsRateLimitExceeded(err error) bool {
 // IsNotMergeable reports whether err is a GitHub API error reporting that a PR
 // was not in a mergeable state.
 func IsNotMergeable(err error) bool {
-	errs, ok := err.(graphqlErrors)
-	if !ok {
-		return false
-	}
-	for _, err := range errs {
-		if strings.Contains(strings.ToLower(err.Message), "pull request is not mergeable") {
-			return true
+	var errs graphqlErrors
+	if errors.As(err, &errs) {
+		for _, err := range errs {
+			if strings.Contains(strings.ToLower(err.Message), "pull request is not mergeable") {
+				return true
+			}
 		}
 	}
+
 	return false
 }
 
@@ -1627,7 +1620,7 @@ func (t disabledClient) Do(r *http.Request) (*http.Response, error) {
 func SplitRepositoryNameWithOwner(nameWithOwner string) (owner, repo string, err error) {
 	parts := strings.SplitN(nameWithOwner, "/", 2)
 	if len(parts) != 2 || strings.Contains(parts[1], "/") || parts[0] == "" || parts[1] == "" {
-		return "", "", fmt.Errorf("invalid GitHub repository \"owner/name\" string: %q", nameWithOwner)
+		return "", "", errors.Errorf("invalid GitHub repository \"owner/name\" string: %q", nameWithOwner)
 	}
 	return parts[0], parts[1], nil
 }
@@ -1642,8 +1635,8 @@ type Repository struct {
 	IsPrivate     bool   // whether the repository is private
 	IsFork        bool   // whether the repository is a fork of another repository
 	IsArchived    bool   // whether the repository is archived on the code host
-	IsLocked      bool   `json:"-"` // whether the repository is locked on the code host
-	IsDisabled    bool   `json:"-"` // whether the repository is disabled on the code host
+	IsLocked      bool   // whether the repository is locked on the code host
+	IsDisabled    bool   // whether the repository is disabled on the code host
 	// This field will always be blank on repos stored in our database because the value will be different
 	// depending on which token was used to fetch it
 	ViewerPermission string // ADMIN, WRITE, READ, or empty if unknown. Only the graphql api populates this. https://developer.github.com/v4/enum/repositorypermission/

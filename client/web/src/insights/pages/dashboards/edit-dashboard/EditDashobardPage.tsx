@@ -16,9 +16,10 @@ import { Page } from '../../../../components/Page'
 import { PageTitle } from '../../../../components/PageTitle'
 import { Settings } from '../../../../schema/settings.schema'
 import { CodeInsightsIcon } from '../../../components'
+import { getSubjectDashboardByID } from '../../../hooks/use-dashboards/utils'
+import { useInsightSubjects } from '../../../hooks/use-insight-subjects/use-insight-subjects'
 import { InsightsDashboardCreationContent } from '../creation/components/insights-dashboard-creation-content/InsightsDashboardCreationContent'
 import { useDashboardSettings } from '../creation/hooks/use-dashboard-settings'
-import { getSubjectDashboardByID } from '../dashboard-page/hooks/use-dashboards/utils'
 
 import styles from './EditDashboardPage.module.scss'
 import { useUpdateDashboardCallback } from './hooks/use-update-dashboard'
@@ -35,6 +36,7 @@ interface EditDashboardPageProps extends SettingsCascadeProps<Settings>, Platfor
 export const EditDashboardPage: React.FunctionComponent<EditDashboardPageProps> = props => {
     const { dashboardId, settingsCascade, authenticatedUser, platformContext } = props
     const history = useHistory()
+    const subjects = useInsightSubjects({ settingsCascade })
 
     const [previousDashboard] = useState(() => {
         const subjects = settingsCascade.subjects
@@ -56,14 +58,13 @@ export const EditDashboardPage: React.FunctionComponent<EditDashboardPageProps> 
             return undefined
         }
 
-        const { id: userID } = authenticatedUser
         const dashboardOwnerID = previousDashboard.owner.id
 
         return {
             name: previousDashboard.title,
-            visibility: userID === dashboardOwnerID ? 'personal' : dashboardOwnerID,
+            visibility: dashboardOwnerID,
         }
-    }, [previousDashboard, authenticatedUser])
+    }, [previousDashboard])
 
     const finalDashboardSettings = useDashboardSettings({
         settingsCascade,
@@ -102,11 +103,22 @@ export const EditDashboardPage: React.FunctionComponent<EditDashboardPageProps> 
 
             <PageHeader path={[{ icon: CodeInsightsIcon }, { text: 'Configure dashboard' }]} />
 
+            <span className="text-muted d-block mt-2">
+                Dashboards group your insights and let you share them with others.{' '}
+                <a
+                    href="https://docs.sourcegraph.com/code_insights/explanations/viewing_code_insights"
+                    target="_blank"
+                    rel="noopener"
+                >
+                    Learn more.
+                </a>
+            </span>
+
             <Container className="mt-4">
                 <InsightsDashboardCreationContent
                     initialValues={dashboardInitialValues}
                     dashboardsSettings={finalDashboardSettings}
-                    organizations={authenticatedUser.organizations.nodes}
+                    subjects={subjects}
                     onSubmit={handleSubmit}
                 >
                     {formAPI => (

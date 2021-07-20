@@ -1,0 +1,29 @@
+.insights-container {
+    max-height: 14rem;
+    overflow: auto;
+}
+
+.insight-item {
+    /*
+       According to our global styles all small tags have font-weight: 500
+       but it makes this description difficult to read, so for now we override
+       this insight items label and make them with normal font-weight.
+    */
+    font-weight: normal !important;
+    display: flex;
+    align-items: center;
+    width: 100%;
+    margin: 0;
+    padding: 0.5rem 0.5rem;
+
+    &:hover,
+    &:focus-within {
+        cursor: pointer;
+        background: var(--color-bg-3);
+    }
+}
+
+.insight-owner-name {
+    max-width: 40%;
+    margin-left: 1rem;
+}

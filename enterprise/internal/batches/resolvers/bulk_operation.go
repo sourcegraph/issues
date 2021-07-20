@@ -2,8 +2,8 @@ package resolvers
 
 import (
 	"context"
-	"fmt"
 
+	"github.com/cockroachdb/errors"
 	"github.com/graph-gophers/graphql-go"
 	"github.com/graph-gophers/graphql-go/relay"
 
@@ -119,8 +119,10 @@ func changesetJobTypeToBulkOperationType(t btypes.ChangesetJobType) (string, err
 		return "MERGE", nil
 	case btypes.ChangesetJobTypeClose:
 		return "CLOSE", nil
+	case btypes.ChangesetJobTypePublish:
+		return "PUBLISH", nil
 	default:
-		return "", fmt.Errorf("invalid job type %q", t)
+		return "", errors.Errorf("invalid job type %q", t)
 	}
 }
 

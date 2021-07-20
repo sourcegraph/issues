@@ -32,7 +32,7 @@ type BitbucketCloudSource struct {
 func NewBitbucketCloudSource(svc *types.ExternalService, cf *httpcli.Factory) (*BitbucketCloudSource, error) {
 	var c schema.BitbucketCloudConnection
 	if err := jsonc.Unmarshal(svc.Config, &c); err != nil {
-		return nil, fmt.Errorf("external service id=%d config error: %s", svc.ID, err)
+		return nil, errors.Errorf("external service id=%d config error: %s", svc.ID, err)
 	}
 	return newBitbucketCloudSource(svc, &c, cf)
 }

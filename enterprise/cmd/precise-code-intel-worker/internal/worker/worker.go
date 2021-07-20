@@ -26,6 +26,7 @@ func NewWorker(
 
 	handler := &handler{
 		dbStore:         dbStore,
+		workerStore:     workerStore,
 		lsifStore:       lsifStore,
 		uploadStore:     uploadStore,
 		gitserverClient: gitserverClient,

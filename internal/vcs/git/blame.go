@@ -49,7 +49,7 @@ func blameFileCmd(ctx context.Context, command cmdFunc, path string, opt *BlameO
 		opt = &BlameOptions{}
 	}
 	if opt.OldestCommit != "" {
-		return nil, fmt.Errorf("OldestCommit not implemented")
+		return nil, errors.Errorf("OldestCommit not implemented")
 	}
 	if err := checkSpecArgSafety(string(opt.NewestCommit)); err != nil {
 		return nil, err
@@ -80,7 +80,7 @@ func blameFileCmd(ctx context.Context, command cmdFunc, path string, opt *BlameO
 		// Consume hunk
 		hunkHeader := strings.Split(remainingLines[0], " ")
 		if len(hunkHeader) != 4 {
-			return nil, fmt.Errorf("Expected at least 4 parts to hunkHeader, but got: '%s'", hunkHeader)
+			return nil, errors.Errorf("Expected at least 4 parts to hunkHeader, but got: '%s'", hunkHeader)
 		}
 		commitID := hunkHeader[0]
 		lineNoCur, _ := strconv.Atoi(hunkHeader[2])
@@ -105,7 +105,7 @@ func blameFileCmd(ctx context.Context, command cmdFunc, path string, opt *BlameO
 			}
 			authorTime, err := strconv.ParseInt(strings.Join(strings.Split(remainingLines[3], " ")[1:], " "), 10, 64)
 			if err != nil {
-				return nil, fmt.Errorf("Failed to parse author-time %q", remainingLines[3])
+				return nil, errors.Errorf("Failed to parse author-time %q", remainingLines[3])
 			}
 			summary := strings.Join(strings.Split(remainingLines[9], " ")[1:], " ")
 			commit := Commit{
@@ -131,7 +131,7 @@ func blameFileCmd(ctx context.Context, command cmdFunc, path string, opt *BlameO
 				// Empty file
 				remainingLines = remainingLines[11:]
 			} else {
-				return nil, fmt.Errorf("Unexpected number of remaining lines (%d):\n%s", len(remainingLines), "  "+strings.Join(remainingLines, "\n  "))
+				return nil, errors.Errorf("Unexpected number of remaining lines (%d):\n%s", len(remainingLines), "  "+strings.Join(remainingLines, "\n  "))
 			}
 
 			commits[commitID] = commit

@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/cockroachdb/errors"
+	"github.com/inconshreveable/log15"
 	"github.com/keegancsmith/sqlf"
 	"github.com/lib/pq"
 
@@ -27,6 +28,7 @@ import (
 	"github.com/sourcegraph/sourcegraph/internal/extsvc/github"
 	"github.com/sourcegraph/sourcegraph/internal/extsvc/gitlab"
 	"github.com/sourcegraph/sourcegraph/internal/extsvc/gitolite"
+	"github.com/sourcegraph/sourcegraph/internal/extsvc/jvmpackages"
 	"github.com/sourcegraph/sourcegraph/internal/extsvc/perforce"
 	"github.com/sourcegraph/sourcegraph/internal/extsvc/phabricator"
 	"github.com/sourcegraph/sourcegraph/internal/trace"
@@ -36,11 +38,6 @@ import (
 type RepoNotFoundErr struct {
 	ID   api.RepoID
 	Name api.RepoName
-}
-
-func IsRepoNotFoundErr(err error) bool {
-	_, ok := err.(*RepoNotFoundErr)
-	return ok
 }
 
 func (e *RepoNotFoundErr) Error() string {
@@ -241,8 +238,7 @@ const listReposQueryFmtstr = `
 SELECT %s
 FROM %%s
 WHERE
-	repo.deleted_at IS NULL
-AND %%s   -- Populates "queryConds"
+%%s       -- Populates "queryConds"
 AND (%%s) -- Populates "authzConds"
 %%s       -- Populates "querySuffix"
 `
@@ -348,6 +344,7 @@ func scanRepo(rows *sql.Rows, r *types.Repo) (err error) {
 
 	typ, ok := extsvc.ParseServiceType(r.ExternalRepo.ServiceType)
 	if !ok {
+		log15.Warn("scanRepo - failed to parse service type", "r.ExternalRepo.ServiceType", r.ExternalRepo.ServiceType)
 		return nil
 	}
 	switch typ {
@@ -369,7 +366,10 @@ func scanRepo(rows *sql.Rows, r *types.Repo) (err error) {
 		r.Metadata = new(phabricator.Repo)
 	case extsvc.TypeOther:
 		r.Metadata = new(extsvc.OtherRepoMetadata)
+	case extsvc.TypeJVMPackages:
+		r.Metadata = new(jvmpackages.Metadata)
 	default:
+		log15.Warn("scanRepo - unknown service type", "typ", typ)
 		return nil
 	}
 
@@ -500,6 +500,9 @@ type ReposListOptions struct {
 	// IncludeBlocked, if true, will include blocked repositories in the result set. Repos can be blocked
 	// automatically or manually for different reasons, like being too big or having copyright issues.
 	IncludeBlocked bool
+
+	// IncludeDeleted, if true, will include soft deleted repositories in the result set.
+	IncludeDeleted bool
 
 	*LimitOffset
 }
@@ -808,8 +811,11 @@ func (s *RepoStore) listSQL(ctx context.Context, opt ReposListOptions) (*sqlf.Qu
 	fromClause := sqlf.Sprintf("repo %s", sqlf.Join(from, " "))
 
 	baseConds := sqlf.Sprintf("TRUE")
+	if !opt.IncludeDeleted {
+		baseConds = sqlf.Sprintf("deleted_at IS NULL")
+	}
 	if !opt.IncludeBlocked {
-		baseConds = sqlf.Sprintf("blocked IS NULL")
+		baseConds = sqlf.Sprintf("%s AND blocked IS NULL", baseConds)
 	}
 
 	whereConds := sqlf.Sprintf("TRUE")
@@ -1358,7 +1364,7 @@ func parseCursorConds(opt ReposListOptions) (conds []*sqlf.Query, err error) {
 	case "prev":
 		direction = "<="
 	default:
-		return nil, fmt.Errorf("missing or invalid cursor direction: %q", opt.CursorDirection)
+		return nil, errors.Errorf("missing or invalid cursor direction: %q", opt.CursorDirection)
 	}
 
 	switch opt.CursorColumn {
@@ -1367,7 +1373,7 @@ func parseCursorConds(opt ReposListOptions) (conds []*sqlf.Query, err error) {
 	case string(RepoListCreatedAt):
 		conds = append(conds, sqlf.Sprintf("created_at "+direction+" %s", opt.CursorValue))
 	default:
-		return nil, fmt.Errorf("missing or invalid cursor: %q %q", opt.CursorColumn, opt.CursorValue)
+		return nil, errors.Errorf("missing or invalid cursor: %q %q", opt.CursorColumn, opt.CursorValue)
 	}
 	return conds, nil
 }

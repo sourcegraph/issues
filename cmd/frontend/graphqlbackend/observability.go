@@ -2,9 +2,9 @@ package graphqlbackend
 
 import (
 	"context"
-	"fmt"
 	"time"
 
+	"github.com/cockroachdb/errors"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
 
@@ -36,7 +36,7 @@ func (r *schemaResolver) TriggerObservabilityTestAlert(ctx context.Context, args
 	case "critical":
 		metric = testMetricCritical
 	default:
-		return nil, fmt.Errorf("invalid alert level %q", args.Level)
+		return nil, errors.Errorf("invalid alert level %q", args.Level)
 	}
 
 	// set metric to firing state

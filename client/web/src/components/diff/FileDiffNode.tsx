@@ -15,7 +15,7 @@ import { FileDiffFields } from '../../graphql-operations'
 import { DiffMode } from '../../repo/commit/RepositoryCommitPage'
 import { dirname } from '../../util/path'
 
-import { DiffStat } from './DiffStat'
+import { DiffStat, DiffStatSquares } from './DiffStat'
 import { ExtensionInfo } from './FileDiffConnection'
 import { FileDiffHunks } from './FileDiffHunks'
 
@@ -81,15 +81,13 @@ export const FileDiffNode: React.FunctionComponent<FileDiffNodeProps> = ({
     if (node.oldFile?.binary || node.newFile?.binary) {
         const sizeChange = (node.newFile?.byteSize ?? 0) - (node.oldFile?.byteSize ?? 0)
         const className = sizeChange >= 0 ? 'text-success' : 'text-danger'
-        stat = <strong className={classnames(className, 'mr-2 code')}>{prettyBytes(sizeChange)}</strong>
+        stat = <strong className={classnames(className, 'code')}>{prettyBytes(sizeChange)}</strong>
     } else {
         stat = (
-            <DiffStat
-                added={node.stat.added}
-                changed={node.stat.changed}
-                deleted={node.stat.deleted}
-                className="file-diff-node__header-stat"
-            />
+            <>
+                <DiffStat className="mr-1" {...node.stat} />
+                <DiffStatSquares {...node.stat} />
+            </>
         )
     }
 
@@ -118,7 +116,7 @@ export const FileDiffNode: React.FunctionComponent<FileDiffNodeProps> = ({
                             </span>
                         )}
                         {stat}
-                        <Link to={{ ...location, hash: anchor }} className="file-diff-node__header-path">
+                        <Link to={{ ...location, hash: anchor }} className="file-diff-node__header-path ml-2">
                             {path}
                         </Link>
                     </div>

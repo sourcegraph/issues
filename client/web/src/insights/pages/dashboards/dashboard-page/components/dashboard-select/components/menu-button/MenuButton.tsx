@@ -28,7 +28,7 @@ export const MenuButton: React.FunctionComponent<MenuButtonProps> = props => {
                 const dashboard = dashboards.find(dashboard => dashboard.id === value)
 
                 if (!dashboard) {
-                    return <MenuButtonContent title="Unknown value" isExpanded={isExpanded} />
+                    return <MenuButtonContent title="Unknown dashboard" isExpanded={isExpanded} />
                 }
 
                 if (dashboard.type === InsightsDashboardType.All) {

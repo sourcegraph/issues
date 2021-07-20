@@ -1,12 +1,13 @@
 package server
 
 import (
-	"fmt"
 	"net"
 	"testing"
 
 	"golang.org/x/crypto/ssh"
 	"golang.org/x/crypto/ssh/agent"
+
+	"github.com/cockroachdb/errors"
 
 	"github.com/sourcegraph/sourcegraph/internal/encryption"
 )
@@ -37,7 +38,7 @@ func TestSSHAgent(t *testing.T) {
 			if string(pubKey.Marshal()) == string(authorizedKey.Marshal()) {
 				return &ssh.Permissions{}, nil
 			}
-			return nil, fmt.Errorf("unknown public key for %q", c.User())
+			return nil, errors.Errorf("unknown public key for %q", c.User())
 		},
 	}
 	serverKey, err := encryption.GenerateRSAKey()

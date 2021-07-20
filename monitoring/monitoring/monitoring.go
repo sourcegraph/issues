@@ -44,17 +44,17 @@ type Container struct {
 
 func (c *Container) validate() error {
 	if !isValidGrafanaUID(c.Name) {
-		return fmt.Errorf("Name must be lowercase alphanumeric + dashes; found \"%s\"", c.Name)
+		return errors.Errorf("Name must be lowercase alphanumeric + dashes; found \"%s\"", c.Name)
 	}
 	if c.Title != strings.Title(c.Title) {
-		return fmt.Errorf("Title must be in Title Case; found \"%s\" want \"%s\"", c.Title, strings.Title(c.Title))
+		return errors.Errorf("Title must be in Title Case; found \"%s\" want \"%s\"", c.Title, strings.Title(c.Title))
 	}
 	if c.Description != withPeriod(c.Description) || c.Description != upperFirst(c.Description) {
-		return fmt.Errorf("Description must be sentence starting with an uppercas eletter and ending with period; found \"%s\"", c.Description)
+		return errors.Errorf("Description must be sentence starting with an uppercase letter and ending with period; found \"%s\"", c.Description)
 	}
 	for i, g := range c.Groups {
 		if err := g.validate(); err != nil {
-			return fmt.Errorf("Group %d %q: %v", i, g.Title, err)
+			return errors.Errorf("Group %d %q: %v", i, g.Title, err)
 		}
 	}
 	return nil
@@ -289,7 +289,7 @@ func (c *Container) alertDescription(o Observable, alert *ObservableAlertDefinit
 		// e.g. "zoekt-indexserver: less than 20 indexed search requests every 5m by code"
 		description = fmt.Sprintf("%s: less than %v%s %s", c.Name, alert.threshold, units, o.Description)
 	} else {
-		return "", fmt.Errorf("unable to generate description for observable %+v", o)
+		return "", errors.Errorf("unable to generate description for observable %+v", o)
 	}
 
 	// add information about "for"
@@ -330,7 +330,7 @@ func (c *Container) renderRules() (*promRulesFile, error) {
 					// Build the rule with appropriate labels. Labels are leveraged in various integrations, such as with prom-wrapper.
 					description, err := c.alertDescription(o, a)
 					if err != nil {
-						return nil, fmt.Errorf("%s.%s.%s: unable to generate labels: %+v",
+						return nil, errors.Errorf("%s.%s.%s: unable to generate labels: %+v",
 							c.Name, o.Name, level, err)
 					}
 					group.appendRow(alertQuery, map[string]string{
@@ -378,11 +378,11 @@ type Group struct {
 
 func (g Group) validate() error {
 	if g.Title != upperFirst(g.Title) || g.Title == withPeriod(g.Title) {
-		return fmt.Errorf("Title must start with an uppercase letter and not end with a period; found \"%s\"", g.Title)
+		return errors.Errorf("Title must start with an uppercase letter and not end with a period; found \"%s\"", g.Title)
 	}
 	for i, r := range g.Rows {
 		if err := r.validate(); err != nil {
-			return fmt.Errorf("Row %d: %v", i, err)
+			return errors.Errorf("Row %d: %v", i, err)
 		}
 	}
 	return nil
@@ -395,11 +395,11 @@ type Row []Observable
 
 func (r Row) validate() error {
 	if len(r) < 1 || len(r) > 4 {
-		return fmt.Errorf("row must have 1 to 4 observables only, found %v", len(r))
+		return errors.Errorf("row must have 1 to 4 observables only, found %v", len(r))
 	}
 	for i, o := range r {
 		if err := o.validate(); err != nil {
-			return fmt.Errorf("Observable %d %q: %v", i, o.Name, err)
+			return errors.Errorf("Observable %d %q: %v", i, o.Name, err)
 		}
 	}
 	return nil
@@ -558,18 +558,18 @@ type Observable struct {
 
 func (o Observable) validate() error {
 	if strings.Contains(o.Name, " ") || strings.ToLower(o.Name) != o.Name {
-		return fmt.Errorf("Name must be in lower_snake_case; found \"%s\"", o.Name)
+		return errors.Errorf("Name must be in lower_snake_case; found \"%s\"", o.Name)
 	}
 	if len(o.Description) == 0 {
 		return errors.New("Description must be set")
 	}
 	if v := string([]rune(o.Description)[0]); v != strings.ToLower(v) {
-		return fmt.Errorf("Description must be lowercase; found \"%s\"", o.Description)
+		return errors.Errorf("Description must be lowercase; found \"%s\"", o.Description)
 	}
 	if o.Owner == "" && !o.NoAlert {
 		return errors.New("Owner must be defined for observables with alerts")
 	}
-	if !o.Panel.panelType.Valid() {
+	if !o.Panel.panelType.validate() {
 		return errors.New(`Panel.panelType must be "graph" or "heatmap"`)
 	}
 
@@ -577,20 +577,20 @@ func (o Observable) validate() error {
 	if allAlertsEmpty || o.NoAlert {
 		// Ensure lack of alerts is intentional
 		if allAlertsEmpty && !o.NoAlert {
-			return fmt.Errorf("Warning or Critical must be set or explicitly disable alerts with NoAlert")
+			return errors.Errorf("Warning or Critical must be set or explicitly disable alerts with NoAlert")
 		} else if !allAlertsEmpty && o.NoAlert {
-			return fmt.Errorf("An alert is set, but NoAlert is also true")
+			return errors.Errorf("An alert is set, but NoAlert is also true")
 		}
 		// PossibleSolutions if there are no alerts is redundant and likely an error
 		if o.PossibleSolutions != "" {
-			return fmt.Errorf(`PossibleSolutions is not required if no alerts are configured - did you mean to provide an Interpretation instead?`)
+			return errors.Errorf(`PossibleSolutions is not required if no alerts are configured - did you mean to provide an Interpretation instead?`)
 		}
 		// Interpretation must be provided and valid
 		if o.Interpretation == "" {
-			return fmt.Errorf("Interpretation must be provided if no alerts are set")
+			return errors.Errorf("Interpretation must be provided if no alerts are set")
 		} else if o.Interpretation != "none" {
 			if _, err := toMarkdown(o.Interpretation, false); err != nil {
-				return fmt.Errorf("Interpretation cannot be converted to Markdown: %w", err)
+				return errors.Errorf("Interpretation cannot be converted to Markdown: %w", err)
 			}
 		}
 	} else {
@@ -600,17 +600,17 @@ func (o Observable) validate() error {
 			"Critical": o.Critical,
 		} {
 			if err := alert.validate(); err != nil {
-				return fmt.Errorf("%s Alert: %w", alertLevel, err)
+				return errors.Errorf("%s Alert: %w", alertLevel, err)
 			}
 		}
 		// PossibleSolutions must be provided and valid
 		if o.PossibleSolutions == "" {
-			return fmt.Errorf(`PossibleSolutions must list solutions or an explicit "none"`)
+			return errors.Errorf(`PossibleSolutions must list solutions or an explicit "none"`)
 		} else if o.PossibleSolutions != "none" {
 			if solutions, err := toMarkdown(o.PossibleSolutions, true); err != nil {
-				return fmt.Errorf("PossibleSolutions cannot be converted to Markdown: %w", err)
+				return errors.Errorf("PossibleSolutions cannot be converted to Markdown: %w", err)
 			} else if l := strings.ToLower(solutions); strings.Contains(l, "contact support") || strings.Contains(l, "contact us") {
-				return fmt.Errorf("PossibleSolutions should not include mentions of contacting support")
+				return errors.Errorf("PossibleSolutions should not include mentions of contacting support")
 			}
 		}
 	}

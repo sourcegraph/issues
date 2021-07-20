@@ -242,10 +242,11 @@ func runWatch(ctx context.Context, cmd Command, root string, reload <-chan struc
 
 				err := sc.Wait()
 
-				if exitErr, ok := err.(*exec.ExitError); ok {
+				var e *exec.ExitError
+				if errors.As(err, &e) {
 					err = runErr{
 						cmdName:  cmd.Name,
-						exitCode: exitErr.ExitCode(),
+						exitCode: e.ExitCode(),
 						stderr:   sc.CapturedStderr(),
 						stdout:   sc.CapturedStdout(),
 					}

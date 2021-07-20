@@ -5,7 +5,6 @@ import (
 	"log"
 	"math/rand"
 	"net"
-	"net/url"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -209,17 +208,8 @@ func (c *client) continuouslyUpdate(optOnlySetByTests *continuousUpdateOptions) 
 	}
 
 	isFrontendUnreachableError := func(err error) bool {
-		// Unwrap error one layer at a time to determine if any part of the chain is a
-		// dialing error until it reaches the root cause.
-
-		var targetUrlErr *url.Error
-		if ok := errors.As(err, &targetUrlErr); ok {
-			if netErr, ok := targetUrlErr.Err.(*net.OpError); ok && netErr.Op == "dial" {
-				return true
-			}
-		}
-
-		return false
+		var e *net.OpError
+		return errors.As(err, &e) && e.Op == "dial"
 	}
 
 	start := time.Now()

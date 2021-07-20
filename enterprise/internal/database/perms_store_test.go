@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/RoaringBitmap/roaring"
+	"github.com/cockroachdb/errors"
 	"github.com/gitchander/permutation"
 	"github.com/google/go-cmp/cmp"
 	"github.com/keegancsmith/sqlf"
@@ -272,13 +273,13 @@ func checkRegularPermsTable(s *PermsStore, sql string, expects map[int32][]uint3
 		}
 
 		if expects[id] == nil {
-			return fmt.Errorf("unexpected row in table: (id: %v) -> (ids: %v)", id, intIDs)
+			return errors.Errorf("unexpected row in table: (id: %v) -> (ids: %v)", id, intIDs)
 		}
 		want := fmt.Sprintf("%v", expects[id])
 
 		have := fmt.Sprintf("%v", intIDs)
 		if have != want {
-			return fmt.Errorf("intIDs - key %v: want %q but got %q", id, want, have)
+			return errors.Errorf("intIDs - key %v: want %q but got %q", id, want, have)
 		}
 
 		delete(expects, id)
@@ -289,7 +290,7 @@ func checkRegularPermsTable(s *PermsStore, sql string, expects map[int32][]uint3
 	}
 
 	if len(expects) > 0 {
-		return fmt.Errorf("missing rows from table: %v", expects)
+		return errors.Errorf("missing rows from table: %v", expects)
 	}
 
 	return nil
@@ -897,13 +898,13 @@ func checkUserPendingPermsTable(
 		}
 
 		if expects[spec] == nil {
-			return nil, fmt.Errorf("unexpected row in table: (spec: %v) -> (ids: %v)", spec, intIDs)
+			return nil, errors.Errorf("unexpected row in table: (spec: %v) -> (ids: %v)", spec, intIDs)
 		}
 		want := fmt.Sprintf("%v", expects[spec])
 
 		have := fmt.Sprintf("%v", intIDs)
 		if have != want {
-			return nil, fmt.Errorf("intIDs - spec %q: want %q but got %q", spec, want, have)
+			return nil, errors.Errorf("intIDs - spec %q: want %q but got %q", spec, want, have)
 		}
 		delete(expects, spec)
 	}
@@ -913,7 +914,7 @@ func checkUserPendingPermsTable(
 	}
 
 	if len(expects) > 0 {
-		return nil, fmt.Errorf("missing rows from table: %v", expects)
+		return nil, errors.Errorf("missing rows from table: %v", expects)
 	}
 
 	return idToSpecs, nil
@@ -943,7 +944,7 @@ func checkRepoPendingPermsTable(
 		}
 
 		if expects[id] == nil {
-			return fmt.Errorf("unexpected row in table: (id: %v) -> (ids: %v)", id, intIDs)
+			return errors.Errorf("unexpected row in table: (id: %v) -> (ids: %v)", id, intIDs)
 		}
 		want := fmt.Sprintf("%v", expects[id])
 
@@ -959,7 +960,7 @@ func checkRepoPendingPermsTable(
 
 		have := fmt.Sprintf("%v", haveSpecs)
 		if have != want {
-			return fmt.Errorf("intIDs - id %d: want %q but got %q", id, want, have)
+			return errors.Errorf("intIDs - id %d: want %q but got %q", id, want, have)
 		}
 		delete(expects, id)
 	}
@@ -969,7 +970,7 @@ func checkRepoPendingPermsTable(
 	}
 
 	if len(expects) > 0 {
-		return fmt.Errorf("missing rows from table: %v", expects)
+		return errors.Errorf("missing rows from table: %v", expects)
 	}
 
 	return nil

@@ -52,6 +52,11 @@ func (r *Resolver) NodeResolvers() map[string]gql.NodeByIDFunc {
 }
 
 func (r *Resolver) LSIFUploadByID(ctx context.Context, id graphql.ID) (gql.LSIFUploadResolver, error) {
+	// 🚨 SECURITY: Only site admins may see LSIF upload data
+	if err := backend.CheckCurrentUserIsSiteAdmin(ctx, dbconn.Global); err != nil {
+		return nil, err
+	}
+
 	uploadID, err := unmarshalLSIFUploadGQLID(id)
 	if err != nil {
 		return nil, err
@@ -75,6 +80,11 @@ func (r *Resolver) LSIFUploads(ctx context.Context, args *gql.LSIFUploadsQueryAr
 }
 
 func (r *Resolver) LSIFUploadsByRepo(ctx context.Context, args *gql.LSIFRepositoryUploadsQueryArgs) (gql.LSIFUploadConnectionResolver, error) {
+	// 🚨 SECURITY: Only site admins may see LSIF upload data
+	if err := backend.CheckCurrentUserIsSiteAdmin(ctx, dbconn.Global); err != nil {
+		return nil, err
+	}
+
 	opts, err := makeGetUploadsOptions(ctx, args)
 	if err != nil {
 		return nil, err
@@ -112,6 +122,11 @@ func (r *Resolver) LSIFIndexByID(ctx context.Context, id graphql.ID) (gql.LSIFIn
 		return nil, errAutoIndexingNotEnabled
 	}
 
+	// 🚨 SECURITY: Only site admins may see LSIF index data
+	if err := backend.CheckCurrentUserIsSiteAdmin(ctx, dbconn.Global); err != nil {
+		return nil, err
+	}
+
 	indexID, err := unmarshalLSIFIndexGQLID(id)
 	if err != nil {
 		return nil, err
@@ -141,6 +156,11 @@ func (r *Resolver) LSIFIndexes(ctx context.Context, args *gql.LSIFIndexesQueryAr
 func (r *Resolver) LSIFIndexesByRepo(ctx context.Context, args *gql.LSIFRepositoryIndexesQueryArgs) (gql.LSIFIndexConnectionResolver, error) {
 	if !autoIndexingEnabled() {
 		return nil, errAutoIndexingNotEnabled
+	}
+
+	// 🚨 SECURITY: Only site admins may see LSIF index data
+	if err := backend.CheckCurrentUserIsSiteAdmin(ctx, dbconn.Global); err != nil {
+		return nil, err
 	}
 
 	opts, err := makeGetIndexesOptions(ctx, args)

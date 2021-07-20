@@ -9,6 +9,8 @@ import (
 	"net/http"
 	"os"
 	"time"
+
+	"github.com/cockroachdb/errors"
 )
 
 const (
@@ -25,11 +27,11 @@ type client struct {
 func newClient() (*client, error) {
 	tkn := os.Getenv(envToken)
 	if tkn == "" {
-		return nil, fmt.Errorf("%s not set", envToken)
+		return nil, errors.Errorf("%s not set", envToken)
 	}
 	endpoint := os.Getenv(envEndpoint)
 	if endpoint == "" {
-		return nil, fmt.Errorf("%s not set", envEndpoint)
+		return nil, errors.Errorf("%s not set", envEndpoint)
 	}
 
 	return &client{
@@ -68,7 +70,7 @@ func (s *client) search(ctx context.Context, query, queryName string) (*metrics,
 	case 200:
 		break
 	default:
-		return nil, fmt.Errorf("unexpected status code: %d", resp.StatusCode)
+		return nil, errors.Errorf("unexpected status code: %d", resp.StatusCode)
 	}
 
 	// Decode the response.

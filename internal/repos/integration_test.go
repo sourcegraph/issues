@@ -29,79 +29,72 @@ func TestIntegration(t *testing.T) {
 
 	t.Parallel()
 
-	db := dbtest.NewDB(t, *dsn)
-
-	store := repos.NewStore(db, sql.TxOptions{
-		Isolation: sql.LevelReadCommitted,
-	})
-
-	lg := log15.New()
-	lg.SetHandler(log15.DiscardHandler())
-
-	store.Log = lg
-	store.Metrics = repos.NewStoreMetrics()
-	store.Tracer = trace.Tracer{Tracer: opentracing.GlobalTracer()}
-
-	userID := insertTestUser(t, db)
-
-	dbconn.Global = db
-	defer func() {
-		dbconn.Global = nil
-	}()
-
 	for _, tc := range []struct {
 		name string
-		test func(*testing.T, *repos.Store) func(*testing.T)
+		test func(*repos.Store) func(*testing.T)
 	}{
 		{"DBStore/SyncRateLimiters", testSyncRateLimiters},
 		{"DBStore/UpsertRepos", testStoreUpsertRepos},
 		{"DBStore/UpsertSources", testStoreUpsertSources},
-		{"DBStore/EnqueueSyncJobs", testStoreEnqueueSyncJobs(db, store)},
-		{"DBStore/EnqueueSingleSyncJob", testStoreEnqueueSingleSyncJob(db)},
-		{"DBStore/ListExternalRepoSpecs", testStoreListExternalRepoSpecs(db)},
+		{"DBStore/EnqueueSyncJobs", testStoreEnqueueSyncJobs},
+		{"DBStore/EnqueueSingleSyncJob", testStoreEnqueueSingleSyncJob},
+		{"DBStore/ListExternalRepoSpecs", testStoreListExternalRepoSpecs},
 		{"DBStore/SetClonedRepos", testStoreSetClonedRepos},
 		{"DBStore/CountNotClonedRepos", testStoreCountNotClonedRepos},
-		{"DBStore/Syncer/Sync", testSyncerSync},
-		{"DBStore/Syncer/SyncRepo", testSyncRepo},
-		{"DBStore/Syncer/SyncWorker", testSyncWorkerPlumbing(db)},
-		{"DBStore/Syncer/Run", testSyncRun(db)},
-		{"DBStore/Syncer/MultipleServices", testSyncer(db)},
-		{"DBStore/Syncer/OrphanedRepos", testOrphanedRepo(db)},
-		{"DBStore/Syncer/UserAddedRepos", testUserAddedRepos(db, userID)},
-		{"DBStore/Syncer/DeleteExternalService", testDeleteExternalService(db)},
-		{"DBStore/Syncer/NameConflictDiscardOld", testNameOnConflictDiscardOld(db)},
-		{"DBStore/Syncer/NameConflictDiscardNew", testNameOnConflictDiscardNew(db)},
-		{"DBStore/Syncer/NameConflictOnRename", testNameOnConflictOnRename(db)},
-		{"DBStore/Syncer/ConflictingSyncers", testConflictingSyncers(db)},
-		{"DBStore/Syncer/SyncRepoMaintainsOtherSources", testSyncRepoMaintainsOtherSources(db)},
+		{"DBStore/Syncer/SyncWorker", testSyncWorkerPlumbing},
+
+		{"DBStore/Syncer/Batch/Sync", testSyncerBatchSync},
+		{"DBStore/Syncer/Streaming/Sync", testSyncerStreamingSync},
+
+		{"DBStore/Syncer/Batch/SyncRepo", testBatchSyncRepo},
+		{"DBStore/Syncer/Streaming/SyncRepo", testStreamingSyncRepo},
+
+		{"DBStore/Syncer/Batch/Run", testBatchSyncRun},
+		{"DBStore/Syncer/Streaming/Run", testStreamingSyncRun},
+
+		{"DBStore/Syncer/Batch/MultipleServices", testBatchSyncerMultipleServices},
+		{"DBStore/Syncer/Streaming/MultipleServices", testStreamingSyncerMultipleServices},
+
+		{"DBStore/Syncer/Batch/OrphanedRepos", testBatchOrphanedRepo},
+		{"DBStore/Syncer/Streaming/OrphanedRepos", testStreamingOrphanedRepo},
+
+		{"DBStore/Syncer/Batch/UserAddedRepos", testBatchUserAddedRepos},
+		{"DBStore/Syncer/Streaming/UserAddedRepos", testStreamingUserAddedRepos},
+
+		{"DBStore/Syncer/Batch/DeleteExternalService", testBatchDeleteExternalService},
+		{"DBStore/Syncer/Batch/DeleteExternalService", testStreamingDeleteExternalService},
+
+		// We don't run streaming versions of these two tests because the behaviour is completely different, and it is
+		// tested by the streaming NameConflictOnRename test. Since we sync one repo at a time, there's no "sorting" by
+		// IDs to pick winners - we always treat the just now sourced repo as the winner, and delete the conflicting one.
+		{"DBStore/Syncer/Batch/NameConflictDiscardOld", testNameOnConflictDiscardOld},
+		{"DBStore/Syncer/Batch/NameConflictDiscardNew", testNameOnConflictDiscardNew},
+
+		{"DBStore/Syncer/Batch/NameConflictOnRename", testBatchNameOnConflictOnRename},
+		{"DBStore/Syncer/Streaming/NameConflictOnRename", testStreamingNameOnConflictOnRename},
+
+		{"DBStore/Syncer/Batch/ConflictingSyncers", testConflictingBatchSyncers},
+		{"DBStore/Syncer/Streaming/ConflictingSyncers", testConflictingStreamingSyncers},
+
+		{"DBStore/Syncer/Batch/SyncRepoMaintainsOtherSources", testBatchSyncRepoMaintainsOtherSources},
+		{"DBStore/Syncer/Streaming/SyncRepoMaintainsOtherSources", testStreamingSyncRepoMaintainsOtherSources},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
-			t.Cleanup(func() {
-				if t.Failed() {
-					return
-				}
-				if _, err := db.Exec(`
-DELETE FROM external_service_sync_jobs;
-DELETE FROM external_service_repos;
-DELETE FROM external_services;
-DELETE FROM repo;
-`); err != nil {
-					t.Fatalf("cleaning up external services failed: %v", err)
-				}
-			})
+			db := dbtest.NewDB(t, *dsn)
+			dbconn.Global = db
 
-			tc.test(t, store)(t)
+			store := repos.NewStore(db, sql.TxOptions{Isolation: sql.LevelReadCommitted})
+
+			lg := log15.New()
+			lg.SetHandler(log15.DiscardHandler())
+
+			store.Log = lg
+			store.Metrics = repos.NewStoreMetrics()
+			store.Tracer = trace.Tracer{Tracer: opentracing.GlobalTracer()}
+
+			t.Cleanup(func() { dbconn.Global = nil })
+
+			tc.test(store)(t)
 		})
 	}
-}
-
-func insertTestUser(t *testing.T, db *sql.DB) (userID int32) {
-	t.Helper()
-
-	err := db.QueryRow("INSERT INTO users (username) VALUES ('bbs-admin') RETURNING id").Scan(&userID)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	return userID
 }

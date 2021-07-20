@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/RoaringBitmap/roaring"
+	"github.com/cockroachdb/errors"
 	"github.com/google/go-cmp/cmp"
 	"github.com/graph-gophers/graphql-go"
 	"github.com/graph-gophers/graphql-go/gqltesting"
@@ -192,13 +193,13 @@ func TestResolver_SetRepositoryPermissionsForUsers(t *testing.T) {
 			edb.Mocks.Perms.SetRepoPermissions = func(_ context.Context, p *authz.RepoPermissions) error {
 				ids := p.UserIDs.ToArray()
 				if diff := cmp.Diff(test.expUserIDs, ids); diff != "" {
-					return fmt.Errorf("p.UserIDs: %v", diff)
+					return errors.Errorf("p.UserIDs: %v", diff)
 				}
 				return nil
 			}
 			edb.Mocks.Perms.SetRepoPendingPermissions = func(_ context.Context, accounts *extsvc.Accounts, _ *authz.RepoPermissions) error {
 				if diff := cmp.Diff(test.expAccounts, accounts); diff != "" {
-					return fmt.Errorf("accounts: %v", diff)
+					return errors.Errorf("accounts: %v", diff)
 				}
 				return nil
 			}
@@ -247,7 +248,7 @@ func TestResolver_ScheduleRepositoryPermissionsSync(t *testing.T) {
 		repoupdaterClient: &fakeRepoupdaterClient{
 			mockSchedulePermsSync: func(ctx context.Context, args protocol.PermsSyncRequest) error {
 				if len(args.RepoIDs) != 1 {
-					return fmt.Errorf("RepoIDs: want 1 id but got %d", len(args.RepoIDs))
+					return errors.Errorf("RepoIDs: want 1 id but got %d", len(args.RepoIDs))
 				}
 				return nil
 			},
@@ -294,7 +295,7 @@ func TestResolver_ScheduleUserPermissionsSync(t *testing.T) {
 		repoupdaterClient: &fakeRepoupdaterClient{
 			mockSchedulePermsSync: func(ctx context.Context, args protocol.PermsSyncRequest) error {
 				if len(args.UserIDs) != 1 {
-					return fmt.Errorf("UserIDs: want 1 id but got %d", len(args.UserIDs))
+					return errors.Errorf("UserIDs: want 1 id but got %d", len(args.UserIDs))
 				}
 				return nil
 			},

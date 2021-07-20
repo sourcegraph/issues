@@ -14,7 +14,6 @@ import { lazyComponent } from '../util/lazyComponent'
 
 import { DashboardsRoutes } from './pages/dashboards/DasbhoardsRoutes'
 import { CreationRoutes } from './pages/insights/creation/CreationRoutes'
-import { getExperimentalFeatures } from './utils/get-experimental-features'
 
 const InsightsLazyPage = lazyComponent(() => import('./pages/insights/insights-page/InsightsPage'), 'InsightsPage')
 const EditInsightLazyPage = lazyComponent(
@@ -48,7 +47,6 @@ export const InsightsRouter = withAuthenticatedUser<InsightsRouterProps>(props =
     const { platformContext, settingsCascade, telemetryService, extensionsController, authenticatedUser } = props
 
     const match = useRouteMatch()
-    const { codeInsightsDashboards } = getExperimentalFeatures(settingsCascade)
 
     return (
         <Switch>
@@ -82,15 +80,13 @@ export const InsightsRouter = withAuthenticatedUser<InsightsRouterProps>(props =
                 )}
             />
 
-            {codeInsightsDashboards && (
-                <DashboardsRoutes
-                    authenticatedUser={authenticatedUser}
-                    telemetryService={telemetryService}
-                    extensionsController={extensionsController}
-                    platformContext={platformContext}
-                    settingsCascade={settingsCascade}
-                />
-            )}
+            <DashboardsRoutes
+                authenticatedUser={authenticatedUser}
+                telemetryService={telemetryService}
+                extensionsController={extensionsController}
+                platformContext={platformContext}
+                settingsCascade={settingsCascade}
+            />
 
             <Route component={NotFoundPage} key="hardcoded-key" />
         </Switch>

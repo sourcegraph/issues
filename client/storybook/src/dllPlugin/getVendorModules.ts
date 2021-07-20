@@ -1,4 +1,4 @@
-import { Stats } from 'webpack'
+import { StatsCompilation } from 'webpack'
 
 import { nodeModulesPath } from '../webpack.config.common'
 
@@ -6,7 +6,7 @@ import { nodeModulesPath } from '../webpack.config.common'
 const SKIP_VENDOR_MODULES = ['webpack']
 
 // Get a list of files to include into a DLL bundle based on Webpack stats provided.
-export function getVendorModules(webpackStats: Stats.ToJsonOutput): Set<string> {
+export function getVendorModules(webpackStats: StatsCompilation): Set<string> {
     const vendorsChunk = webpackStats.chunks?.find(
         chunk => typeof chunk.id === 'string' && chunk.id.includes('vendors')
     )
@@ -16,9 +16,13 @@ export function getVendorModules(webpackStats: Stats.ToJsonOutput): Set<string> 
     }
 
     const vendorModules = vendorsChunk.modules
-        .map(({ identifier }) => {
+        .map(module => {
+            if (!module.identifier) {
+                return ''
+            }
+
             // `identifier` contains loaders prefix, so `path.relative()` doesn't work for all cases.
-            const [relativePathToModule] = identifier.split(`${nodeModulesPath}/`).slice(-1)
+            const [relativePathToModule] = module.identifier.split(`${nodeModulesPath}/`).slice(-1)
 
             // Remove suffix generated for some Storybook modules.
             return relativePathToModule.replace('-generated-other-entry.js', '')

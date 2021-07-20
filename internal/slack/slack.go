@@ -6,7 +6,6 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
-	"fmt"
 	"io"
 	"net/http"
 	"time"
@@ -90,7 +89,7 @@ func (c *Client) Post(ctx context.Context, payload *Payload) error {
 		if err != nil {
 			return err
 		}
-		return fmt.Errorf("slack: %s failed with %d %s", payloadJSON, resp.StatusCode, string(body))
+		return errors.Errorf("slack: %s failed with %d %s", payloadJSON, resp.StatusCode, string(body))
 	}
 	return nil
 }

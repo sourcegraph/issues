@@ -423,6 +423,11 @@ type Mutation {
         """
         cohortID: String
         """
+        An optional referrer parameter for the user's current session.
+        Only captured and stored on Sourcegraph Cloud.
+        """
+        referrer: String
+        """
         The additional argument information.
         """
         argument: String
@@ -2050,6 +2055,7 @@ enum ExternalServiceKind {
     GITHUB
     GITLAB
     GITOLITE
+    JVMPACKAGES
     PERFORCE
     PHABRICATOR
     OTHER
@@ -6319,4 +6325,39 @@ type CodeHostRepository {
     Is the repo private
     """
     private: Boolean!
+}
+
+"""
+A description of a command run inside the executor to during processing of the parent record.
+"""
+type ExecutionLogEntry {
+    """
+    An internal tag used to correlate this log entry with other records.
+    """
+    key: String!
+
+    """
+    The arguments of the command run inside the executor.
+    """
+    command: [String!]!
+
+    """
+    The date when this command started.
+    """
+    startTime: DateTime!
+
+    """
+    The exit code of the command.
+    """
+    exitCode: Int!
+
+    """
+    The combined stdout and stderr logs of the command.
+    """
+    out: String!
+
+    """
+    The duration in milliseconds of the command.
+    """
+    durationMilliseconds: Int!
 }

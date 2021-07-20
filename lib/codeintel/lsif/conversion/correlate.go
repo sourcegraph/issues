@@ -2,7 +2,6 @@ package conversion
 
 import (
 	"context"
-	"fmt"
 	"io"
 	"os"
 	"os/exec"
@@ -112,11 +111,11 @@ func correlateFromReader(ctx context.Context, r io.Reader, root string) (*State,
 		i++
 
 		if pair.Err != nil {
-			return nil, fmt.Errorf("dump malformed on element %d: %s", i, pair.Err)
+			return nil, errors.Errorf("dump malformed on element %d: %s", i, pair.Err)
 		}
 
 		if err := correlateElement(wrappedState, pair.Element); err != nil {
-			return nil, fmt.Errorf("dump malformed on element %d: %s", i, err)
+			return nil, errors.Errorf("dump malformed on element %d: %s", i, err)
 		}
 	}
 
@@ -150,7 +149,7 @@ func correlateElement(state *wrappedState, element Element) error {
 		return correlateEdge(state, element)
 	}
 
-	return fmt.Errorf("unknown element type %s", element.Type)
+	return errors.Errorf("unknown element type %s", element.Type)
 }
 
 var vertexHandlers = map[string]func(state *wrappedState, element Element) error{
@@ -260,7 +259,7 @@ func correlateDocument(state *wrappedState, element Element) error {
 
 	relativeURI, err := filepath.Rel(state.ProjectRoot, payload)
 	if err != nil {
-		return fmt.Errorf("document URI %q is not relative to project root %q (%s)", payload, state.ProjectRoot, err)
+		return errors.Errorf("document URI %q is not relative to project root %q (%s)", payload, state.ProjectRoot, err)
 	}
 
 	state.DocumentData[element.ID] = relativeURI

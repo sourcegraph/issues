@@ -1,9 +1,10 @@
 package processrestart
 
 import (
-	"fmt"
 	"net/rpc"
 	"os"
+
+	"github.com/cockroachdb/errors"
 )
 
 // usingGoremanServer is whether we are running goreman in cmd/server.
@@ -19,7 +20,7 @@ func restartGoremanServer() error {
 	}
 	defer client.Close()
 	if err := client.Call("Goreman.RestartAll", struct{}{}, nil); err != nil {
-		return fmt.Errorf("failed to restart all server processes: %s", err)
+		return errors.Errorf("failed to restart all server processes: %s", err)
 	}
 	return nil
 }

@@ -2,6 +2,7 @@ package lsifstore
 
 import (
 	"context"
+	"sort"
 	"strconv"
 	"strings"
 
@@ -32,6 +33,11 @@ func (s *Store) Clear(ctx context.Context, bundleIDs ...int) (err error) {
 	if len(bundleIDs) == 0 {
 		return nil
 	}
+
+	// Ensure ids are sorted so that we take row locks during the
+	// DELETE query in a determinstic order. This should prevent
+	// deadlocks with other queries that mass update the same table.
+	sort.Ints(bundleIDs)
 
 	var ids []*sqlf.Query
 	for _, bundleID := range bundleIDs {

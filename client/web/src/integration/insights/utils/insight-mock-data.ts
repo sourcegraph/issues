@@ -159,6 +159,7 @@ export const CODE_STATS_INSIGHT_LANG_USAGE: View = {
  * */
 export const BACKEND_INSIGHTS = [
     {
+        id: 'backend_ID_001',
         title: 'Testing Insight',
         description: 'Insight for testing',
         series: [

@@ -2,6 +2,7 @@ import { android } from './Android'
 import { cncf } from './cncf'
 import { golang } from './Golang'
 import { kubernetes } from './Kubernetes'
+import { o3de } from './o3de'
 import { python2To3Metadata } from './Python2To3'
 import { reactHooks } from './ReactHooks'
 import { stackStorm } from './StackStorm'
@@ -14,6 +15,7 @@ export const repogroupList: RepogroupMetadata[] = [
     python2To3Metadata,
     android,
     temporal,
+    o3de,
     stackStorm,
     kubernetes,
     golang,

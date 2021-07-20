@@ -18,6 +18,7 @@ const (
 
 type BatchSpecExecution struct {
 	ID              int64
+	RandID          string
 	State           BatchSpecExecutionState
 	FailureMessage  *string
 	StartedAt       *time.Time

@@ -2,7 +2,6 @@ package openidconnect
 
 import (
 	"context"
-	"fmt"
 	"net/http"
 	"net/url"
 	"path"
@@ -154,7 +153,7 @@ func revokeToken(ctx context.Context, p *provider, accessToken, tokenType string
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode != http.StatusOK {
-		return fmt.Errorf("non-200 HTTP response from token revocation endpoint %s: HTTP %d", p.oidc.RevocationEndpoint, resp.StatusCode)
+		return errors.Errorf("non-200 HTTP response from token revocation endpoint %s: HTTP %d", p.oidc.RevocationEndpoint, resp.StatusCode)
 	}
 	return nil
 }

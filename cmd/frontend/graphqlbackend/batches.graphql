@@ -1212,23 +1212,23 @@ type ChangesetsStats {
     """
     unpublished: Int!
     """
-    The count of externalState: DRAFT changesets.
+    The count of draft changesets.
     """
     draft: Int!
     """
-    The count of externalState: OPEN changesets.
+    The count of open changesets.
     """
     open: Int!
     """
-    The count of externalState: MERGED changesets.
+    The count of merged changesets.
     """
     merged: Int!
     """
-    The count of externalState: CLOSED changesets.
+    The count of closed changesets.
     """
     closed: Int!
     """
-    The count of externalState: DELETED changesets.
+    The count of deleted changesets.
     """
     deleted: Int!
     """
@@ -1251,6 +1251,36 @@ type ChangesetsStats {
     The count of archived changesets.
     """
     archived: Int!
+    """
+    The count of all changesets.
+    """
+    total: Int!
+}
+
+"""
+Stats on all the changesets that have been applied to this repository by batch changes.
+"""
+type RepoChangesetsStats {
+    """
+    The count of unpublished changesets.
+    """
+    unpublished: Int!
+    """
+    The count of draft changesets.
+    """
+    draft: Int!
+    """
+    The count of open changesets.
+    """
+    open: Int!
+    """
+    The count of merged changesets.
+    """
+    merged: Int!
+    """
+    The count of closed changesets.
+    """
+    closed: Int!
     """
     The count of all changesets.
     """
@@ -1958,6 +1988,16 @@ extend type Mutation {
         The batch spec that describes the desired state of the batch change.
         """
         batchSpec: ID!
+
+        """
+        If set, these changeset specs will have their UI publication states set
+        to the given values.
+
+        An error will be returned if the same changeset spec ID is included
+        more than once in the array, or if a changeset spec ID is included with
+        a publication state set in its spec.
+        """
+        publicationStates: [ChangesetSpecPublicationStateInput!]
     ): BatchChange!
 
     """
@@ -2014,8 +2054,8 @@ extend type Mutation {
 
         """
         If set, these changeset specs will have their UI publication states set
-        to the given values. When updating an existing batch change, this will
-        overwrite existing publication states on the changesets.
+        to the given values. This will overwrite any existing UI publication
+        states on the changesets.
 
         An error will be returned if the same changeset spec ID is included
         more than once in the array, or if a changeset spec ID is included with
@@ -2115,6 +2155,14 @@ extend type Mutation {
     Experimental: This API is likely to change in the future.
     """
     closeChangesets(batchChange: ID!, changesets: [ID!]!): BulkOperation!
+
+    """
+    Set the UI publication state for multiple changesets. If draft is true, the
+    changesets are published as drafts, provided the code host supports it.
+
+    Experimental: This API is likely to change in the future.
+    """
+    publishChangesets(batchChange: ID!, changesets: [ID!]!, draft: Boolean = false): BulkOperation!
 
     """
     Creates a new batch spec execution from a given batch spec yaml file input.
@@ -2310,9 +2358,13 @@ type BatchChange implements Node {
         """
         search: String
         """
-        Only return changesets that are archived in this campaign.
+        Only return changesets that are archived in this batch change.
         """
         onlyArchived: Boolean = false
+        """
+        Only include changesets belonging to the given repository.
+        """
+        repo: ID
     ): ChangesetConnection!
 
     """
@@ -2408,6 +2460,10 @@ enum BulkOperationType {
     Bulk close changesets.
     """
     CLOSE
+    """
+    Bulk publish changesets.
+    """
+    PUBLISH
 }
 
 """
@@ -2713,6 +2769,42 @@ extend type User {
     ): BatchChangesCodeHostConnection!
 }
 
+extend type Repository {
+    """
+    Stats on all the changesets that have been created in this repository by batch
+    changes.
+    """
+    changesetsStats: RepoChangesetsStats!
+
+    """
+    A list of batch changes that have applied a changeset to this repository.
+    """
+    batchChanges(
+        """
+        Returns the first n batch changes from the list.
+        """
+        first: Int = 50
+        """
+        Opaque pagination cursor.
+        """
+        after: String
+        """
+        Only return batch changes in this state.
+        """
+        state: BatchChangeState
+        """
+        Only include batch changes that the viewer can administer.
+        """
+        viewerCanAdminister: Boolean
+    ): BatchChangeConnection!
+
+    """
+    A diff stat for all the changesets that have been applied to this repository
+    by batch changes.
+    """
+    batchChangesDiffStat: DiffStat!
+}
+
 """
 A connection of all code hosts usable with batch changes and accessible by the user
 this is requested on.
@@ -2846,7 +2938,13 @@ A batch spec execution describes one server-side run of a batch change yaml inpu
 """
 type BatchSpecExecution implements Node {
     """
-    The unique ID for the batch spec execution.
+    The unique ID for a batch spec execution.
+
+    The ID is unguessable (i.e., long and randomly generated, not sequential).
+    Consider a batch change to fix a security vulnerability: the batch change
+    author may prefer to prepare the batch change in private so that the window
+    between revealing the problem and merging the fixes is as short as
+    possible.
     """
     id: ID!
 
@@ -2881,8 +2979,10 @@ type BatchSpecExecution implements Node {
     """
     failure: String
 
-    ### TODO(eseliger): We want to provide more information here. Take inspiration
-    # steps: IndexSteps!
+    """
+    The configuration and execution summary (if completed or errored) of this execution.
+    """
+    steps: BatchSpecExecutionSteps!
 
     """
     The rank of this execution in the queue. The value of this field is null if the
@@ -2907,6 +3007,27 @@ type BatchSpecExecution implements Node {
     namespace.
     """
     namespace: Namespace!
+}
+
+"""
+Configuration and execution summary of a batch spec execution.
+"""
+type BatchSpecExecutionSteps {
+    """
+    Execution log entries related to setting up the workspace.
+    """
+    setup: [ExecutionLogEntry!]!
+
+    """
+    Execution log entry related to running src batch preview.
+    This field is null, if the step had not been executed.
+    """
+    srcPreview: ExecutionLogEntry
+
+    """
+    Execution log entries related to tearing down the workspace.
+    """
+    teardown: [ExecutionLogEntry!]!
 }
 
 """

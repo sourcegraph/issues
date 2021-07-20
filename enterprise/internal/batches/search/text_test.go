@@ -3,6 +3,7 @@ package search
 import (
 	"testing"
 
+	"github.com/cockroachdb/errors"
 	"github.com/google/go-cmp/cmp"
 	"github.com/hashicorp/go-multierror"
 
@@ -11,47 +12,61 @@ import (
 
 func TestChangesetSearch(t *testing.T) {
 	t.Run("parse error", func(t *testing.T) {
-		if _, err := ParseTextSearch(`:`); err == nil {
-			t.Errorf("unexpected nil error")
+		_, err := ParseTextSearch(`:`)
+		if err == nil {
+			t.Fatalf("unexpected nil error")
 		}
 	})
 
 	t.Run("invalid field", func(t *testing.T) {
-		if _, err := ParseTextSearch(`x:`); err == nil {
-			t.Errorf("unexpected nil error")
-		} else if errs, ok := err.(*multierror.Error); !ok {
-			t.Errorf("unexpected error of type %T: %+v", err, err)
-		} else if diff := cmp.Diff([]error{
+		_, err := ParseTextSearch(`x:`)
+		if err == nil {
+			t.Fatalf("unexpected nil error")
+		}
+
+		expected := []error{
 			ErrUnsupportedField{
 				ErrExpr: ErrExpr{Pos: 0, Input: `x:`},
 				Field:   "x",
 			},
-		}, errs.Errors); diff != "" {
+		}
+
+		var errs *multierror.Error
+		if !errors.As(err, &errs) {
+			t.Errorf("unexpected error of type %T: %+v", err, err)
+		} else if diff := cmp.Diff(expected, errs.Errors); diff != "" {
 			t.Errorf("unexpected error (-want +have):\n%s", diff)
 		}
 	})
 
 	t.Run("invalid value type", func(t *testing.T) {
-		if _, err := ParseTextSearch(`/foo/`); err == nil {
-			t.Errorf("unexpected nil error")
-		} else if errs, ok := err.(*multierror.Error); !ok {
-			t.Errorf("unexpected error of type %T: %+v", err, err)
-		} else if diff := cmp.Diff([]error{
+		_, err := ParseTextSearch(`/foo/`)
+		if err == nil {
+			t.Fatalf("unexpected nil error")
+		}
+
+		expected := []error{
 			ErrUnsupportedValueType{
 				ErrExpr:   ErrExpr{Pos: 1, Input: `/foo/`},
 				ValueType: syntax.TokenPattern,
 			},
-		}, errs.Errors); diff != "" {
+		}
+
+		var errs *multierror.Error
+		if !errors.As(err, &errs) {
+			t.Errorf("unexpected error of type %T: %+v", err, err)
+		} else if diff := cmp.Diff(expected, errs.Errors); diff != "" {
 			t.Errorf("unexpected error (-want +have):\n%s", diff)
 		}
 	})
 
 	t.Run("multiple errors", func(t *testing.T) {
-		if _, err := ParseTextSearch(`x: /foo/`); err == nil {
-			t.Errorf("unexpected nil error")
-		} else if errs, ok := err.(*multierror.Error); !ok {
-			t.Errorf("unexpected error of type %T: %+v", err, err)
-		} else if diff := cmp.Diff([]error{
+		_, err := ParseTextSearch(`x: /foo/`)
+		if err == nil {
+			t.Fatalf("unexpected nil error")
+		}
+
+		expected := []error{
 			ErrUnsupportedField{
 				ErrExpr: ErrExpr{Pos: 0, Input: `x: /foo/`},
 				Field:   "x",
@@ -60,7 +75,12 @@ func TestChangesetSearch(t *testing.T) {
 				ErrExpr:   ErrExpr{Pos: 4, Input: `x: /foo/`},
 				ValueType: syntax.TokenPattern,
 			},
-		}, errs.Errors); diff != "" {
+		}
+
+		var errs *multierror.Error
+		if !errors.As(err, &errs) {
+			t.Errorf("unexpected error of type %T: %+v", err, err)
+		} else if diff := cmp.Diff(expected, errs.Errors); diff != "" {
 			t.Errorf("unexpected error (-want +have):\n%s", diff)
 		}
 	})

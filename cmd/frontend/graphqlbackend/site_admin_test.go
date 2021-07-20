@@ -2,9 +2,9 @@ package graphqlbackend
 
 import (
 	"context"
-	"fmt"
 	"testing"
 
+	"github.com/cockroachdb/errors"
 	"github.com/google/go-cmp/cmp"
 	"github.com/graph-gophers/graphql-go"
 
@@ -92,7 +92,7 @@ func TestDeleteUser(t *testing.T) {
 	}
 	database.Mocks.Authz.RevokeUserPermissions = func(_ context.Context, args *database.RevokeUserPermissionsArgs) error {
 		if args.UserID != 6 {
-			return fmt.Errorf("args.UserID: want 6 but got %v", args.UserID)
+			return errors.Errorf("args.UserID: want 6 but got %v", args.UserID)
 		}
 
 		expAccounts := []*extsvc.Accounts{

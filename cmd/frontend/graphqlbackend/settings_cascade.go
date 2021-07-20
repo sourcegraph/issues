@@ -3,8 +3,9 @@ package graphqlbackend
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"sort"
+
+	"github.com/cockroachdb/errors"
 
 	"github.com/sourcegraph/sourcegraph/internal/database"
 	"github.com/sourcegraph/sourcegraph/internal/database/dbutil"
@@ -141,6 +142,7 @@ var deeplyMergedSettingsFields = map[string]int{
 	"search.savedQueries":     1,
 	"search.repositoryGroups": 1,
 	"insights.dashboards":     1,
+	"insights.allrepos":       1,
 	"quicklinks":              1,
 	"motd":                    1,
 	"extensions":              1,
@@ -169,7 +171,7 @@ func mergeSettings(jsonSettingsStrings []string) ([]byte, error) {
 	if len(errs) == 0 {
 		return out, nil
 	}
-	return out, fmt.Errorf("errors merging settings: %q", errs)
+	return out, errors.Errorf("errors merging settings: %q", errs)
 }
 
 func mergeSettingsValues(dst map[string]interface{}, field string, value interface{}, depth int) {

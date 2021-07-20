@@ -10,59 +10,67 @@ import (
 	"github.com/sourcegraph/sourcegraph/cmd/frontend/graphqlbackend"
 	"github.com/sourcegraph/sourcegraph/enterprise/internal/batches/store"
 	btypes "github.com/sourcegraph/sourcegraph/enterprise/internal/batches/types"
+	"github.com/sourcegraph/sourcegraph/internal/workerutil"
 )
 
 const batchSpecExecutionIDKind = "BatchSpecExecution"
 
-func marshalBatchSpecExecutionID(id int64) graphql.ID {
+func marshalBatchSpecExecutionRandID(id string) graphql.ID {
 	return relay.MarshalID(batchSpecExecutionIDKind, id)
 }
 
-func unmarshalBatchSpecExecutionID(id graphql.ID) (batchSpecExecutionID int64, err error) {
+func unmarshalBatchSpecExecutionRandID(id graphql.ID) (batchSpecExecutionID string, err error) {
 	err = relay.UnmarshalSpec(id, &batchSpecExecutionID)
 	return
 }
 
 type batchSpecExecutionResolver struct {
 	store *store.Store
-	spec  *btypes.BatchSpecExecution
+	exec  *btypes.BatchSpecExecution
 }
 
 // Type guard.
 var _ graphqlbackend.BatchSpecExecutionResolver = &batchSpecExecutionResolver{}
 
 func (r *batchSpecExecutionResolver) ID() graphql.ID {
-	return marshalBatchSpecExecutionID(r.spec.ID)
+	return marshalBatchSpecExecutionRandID(r.exec.RandID)
 }
 
 func (r *batchSpecExecutionResolver) InputSpec() string {
-	return r.spec.BatchSpec
+	return r.exec.BatchSpec
 }
 
 func (r *batchSpecExecutionResolver) State() string {
-	return strings.ToUpper(string(r.spec.State))
+	return strings.ToUpper(string(r.exec.State))
 }
 
 func (r *batchSpecExecutionResolver) CreatedAt() graphqlbackend.DateTime {
-	return graphqlbackend.DateTime{Time: r.spec.CreatedAt}
+	return graphqlbackend.DateTime{Time: r.exec.CreatedAt}
 }
 
 func (r *batchSpecExecutionResolver) StartedAt() *graphqlbackend.DateTime {
-	if r.spec.StartedAt == nil {
+	if r.exec.StartedAt == nil {
 		return nil
 	}
-	return &graphqlbackend.DateTime{Time: *r.spec.StartedAt}
+	return &graphqlbackend.DateTime{Time: *r.exec.StartedAt}
 }
 
 func (r *batchSpecExecutionResolver) FinishedAt() *graphqlbackend.DateTime {
-	if r.spec.FinishedAt == nil {
+	if r.exec.FinishedAt == nil {
 		return nil
 	}
-	return &graphqlbackend.DateTime{Time: *r.spec.FinishedAt}
+	return &graphqlbackend.DateTime{Time: *r.exec.FinishedAt}
 }
 
 func (r *batchSpecExecutionResolver) Failure() *string {
-	return r.spec.FailureMessage
+	return r.exec.FailureMessage
+}
+
+func (r *batchSpecExecutionResolver) Steps() graphqlbackend.BatchSpecExecutionStepsResolver {
+	return &batchSpecExecutionStepsResolver{
+		store: r.store,
+		exec:  r.exec,
+	}
 }
 
 func (r *batchSpecExecutionResolver) PlaceInQueue() *int32 {
@@ -71,10 +79,10 @@ func (r *batchSpecExecutionResolver) PlaceInQueue() *int32 {
 }
 
 func (r *batchSpecExecutionResolver) BatchSpec(ctx context.Context) (graphqlbackend.BatchSpecResolver, error) {
-	if r.spec.BatchSpecID == 0 {
+	if r.exec.BatchSpecID == 0 {
 		return nil, nil
 	}
-	spec, err := r.store.GetBatchSpec(ctx, store.GetBatchSpecOpts{ID: r.spec.BatchSpecID})
+	spec, err := r.store.GetBatchSpec(ctx, store.GetBatchSpecOpts{ID: r.exec.BatchSpecID})
 	if err != nil {
 		return nil, err
 	}
@@ -82,7 +90,7 @@ func (r *batchSpecExecutionResolver) BatchSpec(ctx context.Context) (graphqlback
 }
 
 func (r *batchSpecExecutionResolver) Initiator(ctx context.Context) (*graphqlbackend.UserResolver, error) {
-	return graphqlbackend.UserByIDInt32(ctx, r.store.DB(), r.spec.UserID)
+	return graphqlbackend.UserByIDInt32(ctx, r.store.DB(), r.exec.UserID)
 }
 
 func (r *batchSpecExecutionResolver) Namespace(ctx context.Context) (*graphqlbackend.NamespaceResolver, error) {
@@ -90,18 +98,64 @@ func (r *batchSpecExecutionResolver) Namespace(ctx context.Context) (*graphqlbac
 		namespace graphqlbackend.NamespaceResolver
 		err       error
 	)
-	if r.spec.NamespaceUserID != 0 {
+	if r.exec.NamespaceUserID != 0 {
 		namespace.Namespace, err = graphqlbackend.UserByIDInt32(
 			ctx,
 			r.store.DB(),
-			r.spec.NamespaceUserID,
+			r.exec.NamespaceUserID,
 		)
 		return &namespace, err
 	}
 	namespace.Namespace, err = graphqlbackend.OrgByIDInt32(
 		ctx,
 		r.store.DB(),
-		r.spec.NamespaceOrgID,
+		r.exec.NamespaceOrgID,
 	)
 	return &namespace, err
+}
+
+type batchSpecExecutionStepsResolver struct {
+	store *store.Store
+	exec  *btypes.BatchSpecExecution
+}
+
+var _ graphqlbackend.BatchSpecExecutionStepsResolver = &batchSpecExecutionStepsResolver{}
+
+func (r *batchSpecExecutionStepsResolver) Setup() []graphqlbackend.ExecutionLogEntryResolver {
+	return r.executionLogEntryResolversWithPrefix("setup.")
+}
+
+func (r *batchSpecExecutionStepsResolver) SrcPreview() graphqlbackend.ExecutionLogEntryResolver {
+	if entry, ok := r.findExecutionLogEntry("step.src.0"); ok {
+		return graphqlbackend.NewExecutionLogEntryResolver(r.store.DB(), entry)
+	}
+
+	return nil
+}
+
+func (r *batchSpecExecutionStepsResolver) Teardown() []graphqlbackend.ExecutionLogEntryResolver {
+	return r.executionLogEntryResolversWithPrefix("teardown.")
+}
+
+func (r *batchSpecExecutionStepsResolver) findExecutionLogEntry(key string) (workerutil.ExecutionLogEntry, bool) {
+	for _, entry := range r.exec.ExecutionLogs {
+		if entry.Key == key {
+			return entry, true
+		}
+	}
+
+	return workerutil.ExecutionLogEntry{}, false
+}
+
+func (r *batchSpecExecutionStepsResolver) executionLogEntryResolversWithPrefix(prefix string) []graphqlbackend.ExecutionLogEntryResolver {
+	var resolvers []graphqlbackend.ExecutionLogEntryResolver
+	for _, entry := range r.exec.ExecutionLogs {
+		if !strings.HasPrefix(entry.Key, prefix) {
+			continue
+		}
+		r := graphqlbackend.NewExecutionLogEntryResolver(r.store.DB(), entry)
+		resolvers = append(resolvers, r)
+	}
+
+	return resolvers
 }

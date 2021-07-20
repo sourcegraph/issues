@@ -5,13 +5,14 @@ import (
 	"os"
 	"os/exec"
 
+	"github.com/cockroachdb/errors"
 	"github.com/inconshreveable/log15"
 )
 
 func runCmd(log log15.Logger, errs chan<- error, cmd *exec.Cmd) {
 	log.Info(fmt.Sprintf("running: %+v", cmd.Args))
 	if err := cmd.Run(); err != nil {
-		err := fmt.Errorf("command %+v exited: %w", cmd.Args, err)
+		err := errors.Errorf("command %+v exited: %w", cmd.Args, err)
 		log.Error(err.Error())
 		errs <- err
 	}

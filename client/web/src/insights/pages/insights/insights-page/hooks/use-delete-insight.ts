@@ -1,12 +1,12 @@
-import { useCallback, useContext } from 'react'
+import { useCallback } from 'react'
 
 import { PlatformContextProps } from '@sourcegraph/shared/src/platform/context'
 import { SettingsCascadeProps } from '@sourcegraph/shared/src/settings/settings'
-import { isErrorLike } from '@sourcegraph/shared/src/util/errors'
 
-import { InsightsApiContext } from '../../../../core/backend/api-provider'
-import { removeInsightFromSettings } from '../../../../core/settings-action/insights'
 import { InsightTypePrefix } from '../../../../core/types'
+import { usePersistEditOperations } from '../../../../hooks/use-persist-edit-operations'
+
+import { getDeleteInsightEditOperations } from './delete-helpers'
 
 export interface UseDeleteInsightProps extends SettingsCascadeProps, PlatformContextProps<'updateSettings'> {}
 
@@ -14,18 +14,16 @@ export interface UseDeleteInsightAPI {
     handleDelete: (insightID: string) => Promise<void>
 }
 
+/**
+ * Returns delete handler that deletes insight from all subject settings and from all dashboards
+ * that include this insight.
+ */
 export function useDeleteInsight(props: UseDeleteInsightProps): UseDeleteInsightAPI {
     const { settingsCascade, platformContext } = props
-
-    const { getSubjectSettings, updateSubjectSettings } = useContext(InsightsApiContext)
+    const { persist } = usePersistEditOperations({ platformContext })
 
     const handleDelete = useCallback(
-        async (id: string) => {
-            // According to our naming convention of insight
-            // <type>.<name>.<render view = insight page | directory | home page>
-            const insightID = id.split('.').slice(0, -1).join('.')
-            const subjects = settingsCascade.subjects
-
+        async (insightID: string) => {
             // For backward compatibility with old code stats insight api we have to delete
             // this insight in a special way. See link below for more information.
             // https://github.com/sourcegraph/sourcegraph-code-stats-insights/blob/master/src/code-stats-insights.ts#L33
@@ -36,36 +34,19 @@ export function useDeleteInsight(props: UseDeleteInsightProps): UseDeleteInsight
                   'codeStatsInsights.query'
                 : insightID
 
-            const subjectID = subjects?.find(
-                ({ settings }) => settings && !isErrorLike(settings) && !!settings[keyForSearchInSettings]
-            )?.subject?.id
-
-            if (!subjectID) {
-                console.error("Couldn't find the subject when trying to delete insight. Parameters", {
-                    insightID,
-                    subjects,
-                })
-                return
-            }
-
             try {
-                // Fetch the settings of particular subject which the insight belongs to
-                const settings = await getSubjectSettings(subjectID).toPromise()
-
-                const editedSettings = removeInsightFromSettings({
-                    originalSettings: settings.contents,
-                    insightID,
-                    isOldCodeStatsInsight,
+                const deleteInsightOperations = getDeleteInsightEditOperations({
+                    insightId: keyForSearchInSettings,
+                    settingsCascade,
                 })
 
-                // Update local settings of application with new settings without insight
-                await updateSubjectSettings(platformContext, subjectID, editedSettings).toPromise()
+                await persist(deleteInsightOperations)
             } catch (error) {
                 // TODO [VK] Improve error UI for deleting
                 console.error(error)
             }
         },
-        [platformContext, settingsCascade, getSubjectSettings, updateSubjectSettings]
+        [persist, settingsCascade]
     )
 
     return { handleDelete }

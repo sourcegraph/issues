@@ -63,6 +63,7 @@
 		<br>
 		You need to enable JavaScript to run this app.
 	</noscript>
+	{{if .WebpackDevServer}}<script src="{{.Manifest.AppJSRuntimeBundlePath}}"></script>{{end}}
 	<script src="{{.Manifest.AppJSBundlePath}}"></script>
 	{{.Injected.BodyBottom}}
 </body>

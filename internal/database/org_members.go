@@ -47,10 +47,9 @@ func (m *OrgMemberStore) Create(ctx context.Context, orgID, userID int32) (*type
 		"INSERT INTO org_members(org_id, user_id) VALUES($1, $2) RETURNING id, created_at, updated_at",
 		om.OrgID, om.UserID).Scan(&om.ID, &om.CreatedAt, &om.UpdatedAt)
 	if err != nil {
-		if pgErr, ok := err.(*pgconn.PgError); ok {
-			if pgErr.ConstraintName == "org_members_org_id_user_id_key" {
-				return nil, errors.New("user is already a member of the organization")
-			}
+		var e *pgconn.PgError
+		if errors.As(err, &e) && e.ConstraintName == "org_members_org_id_user_id_key" {
+			return nil, errors.New("user is already a member of the organization")
 		}
 		return nil, err
 	}

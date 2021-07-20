@@ -68,6 +68,7 @@ func TestTransformRecord(t *testing.T) {
 					"batch", "preview",
 					"-f", "spec.yml",
 					"-text-only",
+					"-skip-errors",
 					"-n", "john_namespace",
 				},
 				Dir: ".",

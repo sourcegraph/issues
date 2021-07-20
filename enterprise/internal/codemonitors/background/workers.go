@@ -6,6 +6,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/cockroachdb/errors"
 	"github.com/inconshreveable/log15"
 	"github.com/keegancsmith/sqlf"
 
@@ -107,6 +108,7 @@ func createDBWorkerStoreForTriggerJobs(s *cm.Store) dbworkerstore.Store {
 		TableName:         "cm_trigger_jobs",
 		ColumnExpressions: cm.TriggerJobsColumns,
 		Scan:              cm.ScanTriggerJobs,
+		HeartbeatInterval: 15 * time.Second,
 		StalledMaxAge:     60 * time.Second,
 		RetryAfter:        10 * time.Second,
 		MaxNumRetries:     3,
@@ -120,6 +122,7 @@ func createDBWorkerStoreForActionJobs(s *cm.Store) dbworkerstore.Store {
 		TableName:         "cm_action_jobs",
 		ColumnExpressions: cm.ActionJobsColumns,
 		Scan:              cm.ScanActionJobs,
+		HeartbeatInterval: 15 * time.Second,
 		StalledMaxAge:     60 * time.Second,
 		RetryAfter:        10 * time.Second,
 		MaxNumRetries:     3,
@@ -131,14 +134,18 @@ type queryRunner struct {
 	*cm.Store
 }
 
-func (r *queryRunner) Handle(ctx context.Context, workerStore dbworkerstore.Store, record workerutil.Record) (err error) {
+func (r *queryRunner) Handle(ctx context.Context, record workerutil.Record) (err error) {
 	defer func() {
 		if err != nil {
 			log15.Error("queryRunner.Handle", "error", err)
 		}
 	}()
 
-	s := r.Store.With(workerStore)
+	s, err := r.Store.Transact(ctx)
+	if err != nil {
+		return err
+	}
+	defer func() { err = s.Done(err) }()
 
 	var q *cm.MonitorQuery
 	q, err = s.GetQueryByRecordID(ctx, record.RecordID())
@@ -160,7 +167,7 @@ func (r *queryRunner) Handle(ctx context.Context, workerStore dbworkerstore.Stor
 	if numResults > 0 {
 		err := s.EnqueueActionEmailsForQueryIDInt64(ctx, q.Id, record.RecordID())
 		if err != nil {
-			return fmt.Errorf("store.EnqueueActionEmailsForQueryIDInt64: %w", err)
+			return errors.Errorf("store.EnqueueActionEmailsForQueryIDInt64: %w", err)
 		}
 	}
 	// Log next_run and latest_result to table cm_queries.
@@ -172,7 +179,7 @@ func (r *queryRunner) Handle(ctx context.Context, workerStore dbworkerstore.Stor
 	// Log the actual query we ran and whether we got any new results.
 	err = s.LogSearch(ctx, newQuery, numResults, record.RecordID())
 	if err != nil {
-		return fmt.Errorf("LogSearch: %w", err)
+		return errors.Errorf("LogSearch: %w", err)
 	}
 	return nil
 }
@@ -181,7 +188,7 @@ type actionRunner struct {
 	*cm.Store
 }
 
-func (r *actionRunner) Handle(ctx context.Context, workerStore dbworkerstore.Store, record workerutil.Record) (err error) {
+func (r *actionRunner) Handle(ctx context.Context, record workerutil.Record) (err error) {
 	log15.Info("actionRunner.Handle starting")
 	defer func() {
 		if err != nil {
@@ -189,7 +196,11 @@ func (r *actionRunner) Handle(ctx context.Context, workerStore dbworkerstore.Sto
 		}
 	}()
 
-	s := r.Store.With(workerStore)
+	s, err := r.Store.Transact(ctx)
+	if err != nil {
+		return err
+	}
+	defer func() { err = s.Done(err) }()
 
 	var (
 		j    *cm.ActionJob
@@ -202,27 +213,27 @@ func (r *actionRunner) Handle(ctx context.Context, workerStore dbworkerstore.Sto
 	var ok bool
 	j, ok = record.(*cm.ActionJob)
 	if !ok {
-		return fmt.Errorf("type assertion failed")
+		return errors.Errorf("type assertion failed")
 	}
 
 	m, err = s.GetActionJobMetadata(ctx, record.RecordID())
 	if err != nil {
-		return fmt.Errorf("store.GetActionJobMetadata: %w", err)
+		return errors.Errorf("store.GetActionJobMetadata: %w", err)
 	}
 
 	e, err = s.ActionEmailByIDInt64(ctx, j.Email)
 	if err != nil {
-		return fmt.Errorf("store.ActionEmailByIDInt64: %w", err)
+		return errors.Errorf("store.ActionEmailByIDInt64: %w", err)
 	}
 
 	recs, err = s.AllRecipientsForEmailIDInt64(ctx, j.Email)
 	if err != nil {
-		return fmt.Errorf("store.AllRecipientsForEmailIDInt64: %w", err)
+		return errors.Errorf("store.AllRecipientsForEmailIDInt64: %w", err)
 	}
 
 	data, err = email.NewTemplateDataForNewSearchResults(ctx, m.Description, m.Query, e, zeroOrVal(m.NumResults))
 	if err != nil {
-		return fmt.Errorf("email.NewTemplateDataForNewSearchResults: %w", err)
+		return errors.Errorf("email.NewTemplateDataForNewSearchResults: %w", err)
 	}
 	for _, rec := range recs {
 		if rec.NamespaceOrgID != nil {
@@ -230,7 +241,7 @@ func (r *actionRunner) Handle(ctx context.Context, workerStore dbworkerstore.Sto
 			continue
 		}
 		if rec.NamespaceUserID == nil {
-			return fmt.Errorf("nil recipient")
+			return errors.Errorf("nil recipient")
 		}
 		err = email.SendEmailForNewSearchResult(ctx, *rec.NamespaceUserID, data)
 		if err != nil {

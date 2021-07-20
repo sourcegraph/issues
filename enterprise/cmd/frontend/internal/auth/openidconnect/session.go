@@ -1,7 +1,6 @@
 package openidconnect
 
 import (
-	"fmt"
 	"net/http"
 
 	"github.com/cockroachdb/errors"
@@ -41,7 +40,7 @@ func SignOut(w http.ResponseWriter, r *http.Request) (endSessionEndpoint string,
 	if data != nil {
 		p := getProvider(data.ID.ID)
 		if p == nil {
-			return "", fmt.Errorf("unable to revoke token or end session for OpenID Connect because no provider %q exists", data.ID)
+			return "", errors.Errorf("unable to revoke token or end session for OpenID Connect because no provider %q exists", data.ID)
 		}
 
 		endSessionEndpoint = p.oidc.EndSessionEndpoint

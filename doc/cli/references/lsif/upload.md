@@ -11,6 +11,7 @@
 | `-github-token` | A GitHub access token with 'public_repo' scope that Sourcegraph uses to verify you have access to the repository. |  |
 | `-ignore-upload-failure` | Exit with status code zero on upload failure. | `false` |
 | `-indexer` | The name of the indexer that generated the dump. This will override the 'toolInfo.name' field in the metadata vertex of the LSIF dump file. This must be supplied if the indexer does not set this field (in which case the upload will fail with an explicit message). |  |
+| `-insecure-skip-verify` | Skip validation of TLS certificates against trusted chains | `false` |
 | `-json` | Output relevant state in JSON on success. | `false` |
 | `-max-payload-size` | The maximum upload size (in megabytes). Indexes exceeding this limit will be uploaded over multiple HTTP requests. | `100` |
 | `-no-progress` | Do not display progress updates. | `false` |
@@ -37,6 +38,8 @@ Usage of 'src lsif upload':
     	Exit with status code zero on upload failure.
   -indexer string
     	The name of the indexer that generated the dump. This will override the 'toolInfo.name' field in the metadata vertex of the LSIF dump file. This must be supplied if the indexer does not set this field (in which case the upload will fail with an explicit message).
+  -insecure-skip-verify
+    	Skip validation of TLS certificates against trusted chains
   -json
     	Output relevant state in JSON on success.
   -max-payload-size int

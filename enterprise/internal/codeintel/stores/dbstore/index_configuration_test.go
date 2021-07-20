@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"testing"
+	"time"
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/keegancsmith/sqlf"
@@ -19,17 +20,24 @@ func TestGetRepositoriesWithIndexConfiguration(t *testing.T) {
 	store := testStore(db)
 
 	for _, repositoryID := range []int{42, 43, 44, 45, 46} {
+		var deletedAt *time.Time
+		if repositoryID == 46 {
+			t := time.Now()
+			deletedAt = &t
+		}
+
 		query := sqlf.Sprintf(
-			`INSERT INTO repo (id, name) VALUES (%s, %s)`,
+			`INSERT INTO repo (id, name, deleted_at) VALUES (%s, %s, %s)`,
 			repositoryID,
 			fmt.Sprintf("github.com/baz/honk%2d", repositoryID),
+			deletedAt,
 		)
 		if _, err := db.Exec(query.Query(sqlf.PostgresBindVar), query.Args()...); err != nil {
 			t.Fatalf("unexpected error inserting repo: %s", err)
 		}
 	}
 
-	for i, repositoryID := range []int{42, 44, 45} {
+	for i, repositoryID := range []int{42, 44, 45, 46} {
 		query := sqlf.Sprintf(
 			`INSERT INTO lsif_index_configuration (id, repository_id, data) VALUES (%s, %s, %s)`,
 			i,
@@ -108,10 +116,17 @@ func TestGetRepositoriesWithIndexConfigurationIgnoresDisabledRepos(t *testing.T)
 	store := testStore(db)
 
 	for _, repositoryID := range []int{42, 43, 44, 45, 46} {
+		var deletedAt *time.Time
+		if repositoryID == 46 {
+			t := time.Now()
+			deletedAt = &t
+		}
+
 		query := sqlf.Sprintf(
-			`INSERT INTO repo (id, name) VALUES (%s, %s)`,
+			`INSERT INTO repo (id, name, deleted_at) VALUES (%s, %s, %s)`,
 			repositoryID,
 			fmt.Sprintf("github.com/baz/honk%2d", repositoryID),
+			deletedAt,
 		)
 		if _, err := db.Exec(query.Query(sqlf.PostgresBindVar), query.Args()...); err != nil {
 			t.Fatalf("unexpected error inserting repo: %s", err)
@@ -119,7 +134,7 @@ func TestGetRepositoriesWithIndexConfigurationIgnoresDisabledRepos(t *testing.T)
 	}
 
 	// Only even repos are enabled
-	for i, repositoryID := range []int{42, 44, 45} {
+	for i, repositoryID := range []int{42, 44, 45, 46} {
 		query := sqlf.Sprintf(
 			`INSERT INTO lsif_index_configuration (id, repository_id, autoindex_enabled, data) VALUES (%s, %s, %s, %s)`,
 			i,
@@ -137,7 +152,6 @@ func TestGetRepositoriesWithIndexConfigurationIgnoresDisabledRepos(t *testing.T)
 		t.Fatalf("unexpected error while fetching repositories with index configuration: %s", err)
 	}
 
-	// 45 is not even, so it's disabled
 	expectedRepositoryIDs := []int{
 		42,
 		44,
@@ -148,7 +162,7 @@ func TestGetRepositoriesWithIndexConfigurationIgnoresDisabledRepos(t *testing.T)
 
 	disabledRepositoryIDs, err := store.GetAutoindexDisabledRepositories(context.Background())
 	if err != nil {
-		t.Fatalf("unexped error getting disabled repositories: %s", err)
+		t.Fatalf("unexpected error getting disabled repositories: %s", err)
 	}
 
 	expectedDisabledRepositoryIDs := []int{45}

@@ -4,8 +4,8 @@ import { useHistory } from 'react-router-dom'
 import { Settings } from '@sourcegraph/shared/src/settings/settings'
 
 import { SubmissionErrors } from '../../../../components/form/hooks/useForm'
-import { Organization } from '../../../../components/visibility-picker/VisibilityPicker'
-import { SearchBasedInsight } from '../../../../core/types'
+import { InsightType, SearchBasedInsight } from '../../../../core/types'
+import { SupportedInsightSubject } from '../../../../core/types/subjects'
 import { createDefaultEditSeries } from '../../creation/search-insight/components/search-insight-creation-content/hooks/use-editable-series'
 import { SearchInsightCreationContent } from '../../creation/search-insight/components/search-insight-creation-content/SearchInsightCreationContent'
 import { CreateInsightFormFields, InsightStep } from '../../creation/search-insight/types'
@@ -15,11 +15,11 @@ interface EditSearchBasedInsightProps {
     insight: SearchBasedInsight
     onSubmit: (insight: SearchBasedInsight) => SubmissionErrors | Promise<SubmissionErrors> | void
     finalSettings: Settings
-    organizations: Organization[]
+    subjects: SupportedInsightSubject[]
 }
 
 export const EditSearchBasedInsight: React.FunctionComponent<EditSearchBasedInsightProps> = props => {
-    const { insight, finalSettings = {}, organizations, onSubmit } = props
+    const { insight, finalSettings = {}, subjects, onSubmit } = props
     const history = useHistory()
 
     const insightFormValues = useMemo<CreateInsightFormFields>(
@@ -30,6 +30,7 @@ export const EditSearchBasedInsight: React.FunctionComponent<EditSearchBasedInsi
             series: insight.series.map(line => createDefaultEditSeries({ ...line, valid: true })),
             stepValue: Object.values(insight.step)[0]?.toString() ?? '3',
             step: Object.keys(insight.step)[0] as InsightStep,
+            allRepos: insight.type === InsightType.Backend,
         }),
         [insight]
     )
@@ -42,7 +43,7 @@ export const EditSearchBasedInsight: React.FunctionComponent<EditSearchBasedInsi
     }
 
     const handleCancel = (): void => {
-        history.push('/insights')
+        history.push(`/insights/dashboards/${insight.visibility}`)
     }
 
     return (
@@ -51,7 +52,7 @@ export const EditSearchBasedInsight: React.FunctionComponent<EditSearchBasedInsi
             className="pb-5"
             initialValue={insightFormValues}
             settings={finalSettings}
-            organizations={organizations}
+            subjects={subjects}
             dataTestId="search-insight-edit-page-content"
             onSubmit={handleSubmit}
             onCancel={handleCancel}

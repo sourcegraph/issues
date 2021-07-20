@@ -129,6 +129,19 @@ func (b Basic) GetCount() string {
 	return countStr
 }
 
+// GetTimeout returns the time.Duration value from the `timeout:` field.
+func (b Basic) GetTimeout() *time.Duration {
+	var timeout *time.Duration
+	VisitField(ToNodes(b.Parameters), FieldTimeout, func(value string, _ bool, _ Annotation) {
+		t, err := time.ParseDuration(value)
+		if err != nil {
+			panic(fmt.Sprintf("Value %q for timeout cannot be parsed as an duration: %s", value, err))
+		}
+		timeout = &t
+	})
+	return timeout
+}
+
 // MapCount returns a copy of a basic query with a count parameter set.
 func (b Basic) MapCount(count int) Basic {
 	parameters := MapParameter(ToNodes(b.Parameters), func(field, value string, negated bool, annotation Annotation) Node {

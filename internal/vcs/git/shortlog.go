@@ -8,6 +8,8 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/cockroachdb/errors"
+
 	"github.com/sourcegraph/sourcegraph/internal/api"
 	"github.com/sourcegraph/sourcegraph/internal/gitserver"
 	"github.com/sourcegraph/sourcegraph/internal/trace/ot"
@@ -56,7 +58,7 @@ func ShortLog(ctx context.Context, repo api.RepoName, opt ShortLogOptions) ([]*P
 	cmd.Repo = repo
 	out, err := cmd.Output(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("exec `git shortlog -sne` failed: %v", err)
+		return nil, errors.Errorf("exec `git shortlog -sne` failed: %v", err)
 	}
 	return parseShortLog(out)
 }
@@ -72,7 +74,7 @@ func parseShortLog(out []byte) ([]*PersonCount, error) {
 		// example line: "1125\tJane Doe <jane@sourcegraph.com>"
 		match := logEntryPattern.FindSubmatch(line)
 		if match == nil {
-			return nil, fmt.Errorf("invalid git shortlog line: %q", line)
+			return nil, errors.Errorf("invalid git shortlog line: %q", line)
 		}
 		// example match: ["1125\tJane Doe <jane@sourcegraph.com>" "1125" "Jane Doe <jane@sourcegraph.com>"]
 		count, err := strconv.Atoi(string(match[1]))

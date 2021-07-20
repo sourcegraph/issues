@@ -3,10 +3,10 @@ package usagestatsdeprecated
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"strconv"
 	"time"
 
+	"github.com/cockroachdb/errors"
 	"github.com/inconshreveable/log15"
 
 	"github.com/sourcegraph/sourcegraph/internal/database"
@@ -66,7 +66,7 @@ func LogActivity(isAuthenticated bool, userID int32, userCookieID, event string)
 		return nil
 	}
 
-	return fmt.Errorf("unknown user event %s", event)
+	return errors.Errorf("unknown user event %s", event)
 }
 
 // Custom event handlers

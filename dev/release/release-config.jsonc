@@ -16,6 +16,7 @@
     "previousRelease": "3.29.1",
     "upcomingRelease": "3.30.0",
     // Release dates
+    "oneWorkingDayBeforeRelease": "19 July 2021 10:00 PST",
     "releaseDate": "20 July 2021 10:00 PST",
     "oneWorkingDayAfterRelease": "21 July 2021 10:00 PST",
     // Channel where messages from the tooling are posted

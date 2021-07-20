@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"sort"
 
+	"github.com/cockroachdb/errors"
 	"github.com/peterbourgon/ff/v3/ffcli"
 
 	"github.com/sourcegraph/sourcegraph/dev/depgraph/internal/graph"
@@ -23,7 +24,7 @@ var summaryCommand = &ffcli.Command{
 
 func summary(ctx context.Context, args []string) error {
 	if len(args) != 1 {
-		return fmt.Errorf("expected exactly one package")
+		return errors.Errorf("expected exactly one package")
 	}
 	pkg := args[0]
 

@@ -416,7 +416,8 @@ func (r ProductSubscriptionLicensingResolver) UpdatePaidProductSubscription(ctx 
 				Params: stripe.Params{Context: ctx},
 			})
 		}
-		if e, ok := err.(*stripe.Error); ok && e.Code == stripe.ErrorCodeInvoiceNoSubscriptionLineItems {
+		var e *stripe.Error
+		if errors.As(err, &e) && e.Code == stripe.ErrorCodeInvoiceNoSubscriptionLineItems {
 			// Proceed (with updating subscription and issuing new license key). There was no
 			// payment required and therefore no invoice required.
 		} else if err != nil {

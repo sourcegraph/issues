@@ -1,17 +1,15 @@
-.steps-wrapper {
-    ul,
-    ol {
-        display: flex;
-        gap: 1rem;
-        padding: 0;
-        margin: 0;
-        justify-content: space-between;
-        list-style-position: inside;
-    }
+.list,
+.list-numeric {
+    display: flex;
+    gap: 1rem;
+    padding: 0;
+    margin: 0;
+    justify-content: space-between;
+    list-style-position: inside;
+}
 
-    ul {
-        list-style: none;
-    }
+.list {
+    list-style: none;
 }
 
 .list-item {
@@ -48,6 +46,11 @@
     border-top-color: var(--color-bg);
 }
 
-.cursor-pointer {
-    cursor: pointer;
+.button {
+    background: none;
+    padding: 0;
+    border: none;
+    &:disabled {
+        cursor: not-allowed;
+    }
 }

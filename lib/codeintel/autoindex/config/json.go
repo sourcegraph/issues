@@ -2,9 +2,9 @@ package config
 
 import (
 	"encoding/json"
-	"fmt"
 	"strings"
 
+	"github.com/cockroachdb/errors"
 	"github.com/sourcegraph/jsonx"
 )
 
@@ -46,7 +46,7 @@ func MarshalJSON(config IndexConfiguration) ([]byte, error) {
 func UnmarshalJSON(data []byte) (IndexConfiguration, error) {
 	configuration := IndexConfiguration{}
 	if err := jsonUnmarshal(string(data), &configuration); err != nil {
-		return IndexConfiguration{}, fmt.Errorf("invalid JSON: %v", err)
+		return IndexConfiguration{}, errors.Errorf("invalid JSON: %v", err)
 	}
 	return configuration, nil
 }
@@ -56,7 +56,7 @@ func UnmarshalJSON(data []byte) (IndexConfiguration, error) {
 func jsonUnmarshal(text string, v interface{}) error {
 	data, errs := jsonx.Parse(text, jsonx.ParseOptions{Comments: true, TrailingCommas: true})
 	if len(errs) > 0 {
-		return fmt.Errorf("failed to parse JSON: %v", errs)
+		return errors.Errorf("failed to parse JSON: %v", errs)
 	}
 	if strings.TrimSpace(text) == "" {
 		return nil

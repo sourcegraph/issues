@@ -8,6 +8,7 @@ import (
 	"os"
 	"time"
 
+	"github.com/cockroachdb/errors"
 	amclient "github.com/prometheus/alertmanager/api/v2/client"
 	"github.com/prometheus/alertmanager/api/v2/client/general"
 	amconfig "github.com/prometheus/alertmanager/config"
@@ -25,7 +26,7 @@ func waitForAlertmanager(ctx context.Context, alertmanager *amclient.Alertmanage
 			return err
 		}
 		if resp.Payload == nil || resp.Payload.Config == nil {
-			return fmt.Errorf("ping: malformed health response: %+v", resp)
+			return errors.Errorf("ping: malformed health response: %+v", resp)
 		}
 		return nil
 	}
@@ -35,7 +36,7 @@ func waitForAlertmanager(ctx context.Context, alertmanager *amclient.Alertmanage
 		err := ping(ctx)
 		if err != nil {
 			if ctx.Err() != nil {
-				return fmt.Errorf("alertmanager not reachable: %s (last error: %v)", err, lastErr)
+				return errors.Errorf("alertmanager not reachable: %s (last error: %v)", err, lastErr)
 			}
 
 			// Keep trying.
@@ -53,19 +54,19 @@ func waitForAlertmanager(ctx context.Context, alertmanager *amclient.Alertmanage
 func reloadAlertmanager(ctx context.Context) error {
 	reloadReq, err := http.NewRequest(http.MethodPost, fmt.Sprintf("http://127.0.0.1:%s/%s/-/reload", alertmanagerPort, alertmanagerPathPrefix), nil)
 	if err != nil {
-		return fmt.Errorf("failed to create reload request: %w", err)
+		return errors.Errorf("failed to create reload request: %w", err)
 	}
 	resp, err := http.DefaultClient.Do(reloadReq.WithContext(ctx))
 	if err != nil {
-		return fmt.Errorf("reload request failed: %w", err)
+		return errors.Errorf("reload request failed: %w", err)
 	}
 	if resp.StatusCode >= 300 {
 		defer resp.Body.Close()
 		data, err := io.ReadAll(resp.Body)
 		if err != nil {
-			return fmt.Errorf("reload failed with status %d", resp.StatusCode)
+			return errors.Errorf("reload failed with status %d", resp.StatusCode)
 		}
-		return fmt.Errorf("reload failed with status %d: %s", resp.StatusCode, string(data))
+		return errors.Errorf("reload failed with status %d: %s", resp.StatusCode, string(data))
 	}
 	return nil
 }
@@ -75,7 +76,7 @@ func reloadAlertmanager(ctx context.Context) error {
 func renderConfiguration(cfg *amconfig.Config) ([]byte, error) {
 	data, err := yaml.Marshal(cfg)
 	if err != nil {
-		return nil, fmt.Errorf("failed to marshal: %w", err)
+		return nil, errors.Errorf("failed to marshal: %w", err)
 	}
 	_, err = amconfig.Load(string(data))
 	return data, err
@@ -86,13 +87,13 @@ func renderConfiguration(cfg *amconfig.Config) ([]byte, error) {
 func applyConfiguration(ctx context.Context, cfg *amconfig.Config) error {
 	amConfigData, err := renderConfiguration(cfg)
 	if err != nil {
-		return fmt.Errorf("failed to generate Alertmanager configuration: %w", err)
+		return errors.Errorf("failed to generate Alertmanager configuration: %w", err)
 	}
 	if err := os.WriteFile(alertmanagerConfigPath, amConfigData, os.ModePerm); err != nil {
-		return fmt.Errorf("failed to write Alertmanager configuration: %w", err)
+		return errors.Errorf("failed to write Alertmanager configuration: %w", err)
 	}
 	if err := reloadAlertmanager(ctx); err != nil {
-		return fmt.Errorf("failed to reload Alertmanager configuration: %w", err)
+		return errors.Errorf("failed to reload Alertmanager configuration: %w", err)
 	}
 	return nil
 }

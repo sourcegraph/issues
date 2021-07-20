@@ -90,24 +90,30 @@ func SearchOpts(ctx context.Context, k int, query *search.TextPatternInfo) zoekt
 	return searchOpts
 }
 
-func ResultCountFactor(numRepos int, fileMatchLimit int32) (k int) {
-	// If we're only searching a small number of repositories, return more
-	// comprehensive results. This is arbitrary.
-	switch {
-	case numRepos <= 5:
-		k = 100
-	case numRepos <= 10:
-		k = 10
-	case numRepos <= 25:
-		k = 8
-	case numRepos <= 50:
-		k = 5
-	case numRepos <= 100:
-		k = 3
-	case numRepos <= 500:
-		k = 2
-	default:
+func ResultCountFactor(numRepos int, fileMatchLimit int32, globalSearch bool) (k int) {
+	if globalSearch {
+		// for globalSearch, numRepos = 0, but effectively we are searching over all
+		// indexed repos, hence k should be 1
 		k = 1
+	} else {
+		// If we're only searching a small number of repositories, return more
+		// comprehensive results. This is arbitrary.
+		switch {
+		case numRepos <= 5:
+			k = 100
+		case numRepos <= 10:
+			k = 10
+		case numRepos <= 25:
+			k = 8
+		case numRepos <= 50:
+			k = 5
+		case numRepos <= 100:
+			k = 3
+		case numRepos <= 500:
+			k = 2
+		default:
+			k = 1
+		}
 	}
 	if fileMatchLimit > search.DefaultMaxSearchResults {
 		k = int(float64(k) * 3 * float64(fileMatchLimit) / float64(search.DefaultMaxSearchResults))

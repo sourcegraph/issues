@@ -3,10 +3,10 @@ package codeintel
 import (
 	"context"
 	"database/sql"
-	"fmt"
 	"log"
 	"sync"
 
+	"github.com/cockroachdb/errors"
 	"github.com/inconshreveable/log15"
 	"github.com/opentracing/opentracing-go"
 	"github.com/prometheus/client_golang/prometheus"
@@ -40,7 +40,7 @@ var once sync.Once
 func initServices(ctx context.Context, db dbutil.DB) error {
 	once.Do(func() {
 		if err := config.UploadStoreConfig.Validate(); err != nil {
-			services.err = fmt.Errorf("failed to load config: %s", err)
+			services.err = errors.Errorf("failed to load config: %s", err)
 			return
 		}
 

@@ -58,10 +58,9 @@ RETURNING id
 `,
 		release.RegistryExtensionID, release.CreatorUserID, release.ReleaseVersion, release.ReleaseTag, release.Manifest, release.Bundle, release.SourceMap,
 	).Scan(&id); err != nil {
-		if pgErr, ok := err.(*pgconn.PgError); ok {
-			if pgErr.Message == "invalid input syntax for type json" {
-				return 0, errInvalidJSONInManifest
-			}
+		var e *pgconn.PgError
+		if errors.As(err, &e) && e.Message == "invalid input syntax for type json" {
+			return 0, errInvalidJSONInManifest
 		}
 		return 0, err
 	}

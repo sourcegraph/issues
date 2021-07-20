@@ -67,7 +67,7 @@ func TestResolver_InsightSeries(t *testing.T) {
 		autogold.Want("insights length", int(2)).Equal(t, len(insights))
 
 		autogold.Want("insights[0].length", int(2)).Equal(t, len(insights[0]))
-		autogold.Want("insights[0].series[0].Label", "fmt.Errorf").Equal(t, insights[0][0].Label())
+		autogold.Want("insights[0].series[0].Label", "errors.Errorf").Equal(t, insights[0][0].Label())
 		autogold.Want("insights[0].series[1].Label", "printf").Equal(t, insights[0][1].Label())
 
 		autogold.Want("insights[1].length", int(2)).Equal(t, len(insights[1]))

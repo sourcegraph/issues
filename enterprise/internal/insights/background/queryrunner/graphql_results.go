@@ -2,7 +2,8 @@ package queryrunner
 
 import (
 	"encoding/json"
-	"fmt"
+
+	"github.com/cockroachdb/errors"
 )
 
 // TODO(slimsag): future: It's really nasty that our GraphQL search API is like this:
@@ -102,7 +103,7 @@ func decodeResult(result json.RawMessage) (result, error) {
 		}
 		return &v, nil
 	default:
-		return nil, fmt.Errorf("cannot decode search result: unexpected TypeName: %s", string(result))
+		return nil, errors.Errorf("cannot decode search result: unexpected TypeName: %s", string(result))
 	}
 }
 

@@ -24,7 +24,7 @@ func TestDequeue(t *testing.T) {
 	}
 
 	store := workerstoremocks.NewMockStore()
-	store.DequeueWithIndependentTransactionContextFunc.SetDefaultReturn(testRecord{ID: 42, Payload: "secret"}, store, true, nil)
+	store.DequeueFunc.SetDefaultReturn(testRecord{ID: 42, Payload: "secret"}, func() {}, true, nil)
 	recordTransformer := func(ctx context.Context, record workerutil.Record) (apiclient.Job, error) {
 		if tr, ok := record.(testRecord); !ok {
 			t.Errorf("mismatched record type.")
@@ -87,9 +87,9 @@ func TestDequeueUnknownQueue(t *testing.T) {
 
 func TestDequeueMaxTransactions(t *testing.T) {
 	store := workerstoremocks.NewMockStore()
-	store.DequeueWithIndependentTransactionContextFunc.PushReturn(testRecord{ID: 41}, store, true, nil)
-	store.DequeueWithIndependentTransactionContextFunc.PushReturn(testRecord{ID: 42}, store, true, nil)
-	store.DequeueWithIndependentTransactionContextFunc.PushReturn(testRecord{ID: 43}, store, true, nil)
+	store.DequeueFunc.PushReturn(testRecord{ID: 41}, func() {}, true, nil)
+	store.DequeueFunc.PushReturn(testRecord{ID: 42}, func() {}, true, nil)
+	store.DequeueFunc.PushReturn(testRecord{ID: 43}, func() {}, true, nil)
 	recordTransformer := func(ctx context.Context, record workerutil.Record) (apiclient.Job, error) {
 		return apiclient.Job{}, nil
 	}
@@ -141,7 +141,7 @@ func TestDequeueMaxTransactions(t *testing.T) {
 
 func TestAddExecutionLogEntry(t *testing.T) {
 	store := workerstoremocks.NewMockStore()
-	store.DequeueWithIndependentTransactionContextFunc.SetDefaultReturn(testRecord{ID: 42}, store, true, nil)
+	store.DequeueFunc.SetDefaultReturn(testRecord{ID: 42}, func() {}, true, nil)
 	recordTransformer := func(ctx context.Context, record workerutil.Record) (apiclient.Job, error) {
 		return apiclient.Job{ID: 42}, nil
 	}
@@ -213,8 +213,9 @@ func TestAddExecutionLogEntryUnknownJob(t *testing.T) {
 }
 
 func TestMarkComplete(t *testing.T) {
+	var cancel int
 	store := workerstoremocks.NewMockStore()
-	store.DequeueWithIndependentTransactionContextFunc.SetDefaultReturn(testRecord{ID: 42}, store, true, nil)
+	store.DequeueFunc.SetDefaultReturn(testRecord{ID: 42}, func() { cancel++ }, true, nil)
 	recordTransformer := func(ctx context.Context, record workerutil.Record) (apiclient.Job, error) {
 		return apiclient.Job{ID: 42}, nil
 	}
@@ -246,6 +247,10 @@ func TestMarkComplete(t *testing.T) {
 	if call.Arg1 != 42 {
 		t.Errorf("unexpected job identifier. want=%d have=%d", 42, call.Arg1)
 	}
+
+	if cancel != 1 {
+		t.Errorf("unexpected cancel call count. want=%d have=%d", 1, cancel)
+	}
 }
 
 func TestMarkCompleteUnknownJob(t *testing.T) {
@@ -271,8 +276,9 @@ func TestMarkCompleteUnknownQueue(t *testing.T) {
 }
 
 func TestMarkErrored(t *testing.T) {
+	var cancel int
 	store := workerstoremocks.NewMockStore()
-	store.DequeueWithIndependentTransactionContextFunc.SetDefaultReturn(testRecord{ID: 42}, store, true, nil)
+	store.DequeueFunc.SetDefaultReturn(testRecord{ID: 42}, func() { cancel++ }, true, nil)
 	recordTransformer := func(ctx context.Context, record workerutil.Record) (apiclient.Job, error) {
 		return apiclient.Job{ID: 42}, nil
 	}
@@ -307,6 +313,10 @@ func TestMarkErrored(t *testing.T) {
 	if call.Arg2 != "OH NO" {
 		t.Errorf("unexpected job error. want=%s have=%s", "OH NO", call.Arg2)
 	}
+
+	if cancel != 1 {
+		t.Errorf("unexpected cancel call count. want=%d have=%d", 1, cancel)
+	}
 }
 
 func TestMarkErroredUnknownJob(t *testing.T) {
@@ -332,8 +342,9 @@ func TestMarkErroredUnknownQueue(t *testing.T) {
 }
 
 func TestMarkFailed(t *testing.T) {
+	var cancel int
 	store := workerstoremocks.NewMockStore()
-	store.DequeueWithIndependentTransactionContextFunc.SetDefaultReturn(testRecord{ID: 42}, store, true, nil)
+	store.DequeueFunc.SetDefaultReturn(testRecord{ID: 42}, func() { cancel++ }, true, nil)
 	recordTransformer := func(ctx context.Context, record workerutil.Record) (apiclient.Job, error) {
 		return apiclient.Job{ID: 42}, nil
 	}
@@ -367,6 +378,10 @@ func TestMarkFailed(t *testing.T) {
 	}
 	if call.Arg2 != "OH NO" {
 		t.Errorf("unexpected job error. want=%s have=%s", "OH NO", call.Arg2)
+	}
+
+	if cancel != 1 {
+		t.Errorf("unexpected cancel call count. want=%d have=%d", 1, cancel)
 	}
 }
 

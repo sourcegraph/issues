@@ -14,6 +14,7 @@ import (
 	"github.com/sourcegraph/sourcegraph/internal/extsvc/github"
 	"github.com/sourcegraph/sourcegraph/internal/extsvc/gitlab"
 	"github.com/sourcegraph/sourcegraph/internal/extsvc/gitolite"
+	"github.com/sourcegraph/sourcegraph/internal/extsvc/jvmpackages"
 	"github.com/sourcegraph/sourcegraph/internal/extsvc/perforce"
 	"github.com/sourcegraph/sourcegraph/internal/extsvc/phabricator"
 	"github.com/sourcegraph/sourcegraph/internal/types"
@@ -65,6 +66,10 @@ func CloneURL(kind, config string, repo *types.Repo) (string, error) {
 	case *schema.OtherExternalServiceConnection:
 		if r, ok := repo.Metadata.(*extsvc.OtherRepoMetadata); ok {
 			return otherCloneURL(repo, r), nil
+		}
+	case *schema.JVMPackagesConnection:
+		if r, ok := repo.Metadata.(*jvmpackages.Metadata); ok {
+			return r.Module.CloneURL(), nil
 		}
 	default:
 		return "", errors.Errorf("unknown external service kind %q for repo %d", kind, repo.ID)

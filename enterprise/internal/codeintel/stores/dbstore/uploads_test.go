@@ -13,6 +13,7 @@ import (
 	"github.com/sourcegraph/sourcegraph/cmd/frontend/globals"
 	"github.com/sourcegraph/sourcegraph/internal/database/basestore"
 	"github.com/sourcegraph/sourcegraph/internal/database/dbtesting"
+	"github.com/sourcegraph/sourcegraph/lib/codeintel/semantic"
 	"github.com/sourcegraph/sourcegraph/schema"
 )
 
@@ -827,42 +828,84 @@ func TestSoftDeleteOldUploads(t *testing.T) {
 	t3 := t1.Add(time.Minute * 4)
 	t4 := t1.Add(time.Minute * 6)
 
-	insertUploads(t, db,
-		Upload{ID: 1, State: "completed", FinishedAt: &t1},
-		Upload{ID: 2, State: "completed", FinishedAt: &t2}, // visible
-		Upload{ID: 3, State: "errored", FinishedAt: &t2},
-		Upload{ID: 4, State: "completed", FinishedAt: &t3}, // visible
-		Upload{ID: 5, State: "completed", FinishedAt: &t3},
-		Upload{ID: 6, State: "completed", FinishedAt: &t4}, // too new
-		Upload{ID: 7, State: "errored", FinishedAt: &t4},   // too new
-		Upload{ID: 8, State: "uploaded", UploadedAt: t3},
-		Upload{ID: 9, State: "uploaded", UploadedAt: t4},    // too new
-		Upload{ID: 10, State: "completed", FinishedAt: &t2}, // protected on non-default branch
-	)
-	insertVisibleAtTip(t, db, 50, 2, 4)
-	insertVisibleAtTipNonDefaultBranch(t, db, 50, 10)
+	tests := []struct {
+		upload        Upload
+		expectedState string
+	}{
+		// too new
+		{upload: Upload{ID: 11, State: "uploaded", UploadedAt: t4}, expectedState: "uploaded"},
+		{upload: Upload{ID: 12, State: "errored", FinishedAt: &t4}, expectedState: "errored"},
+		{upload: Upload{ID: 13, State: "completed", FinishedAt: &t4}, expectedState: "completed"},
+
+		// protected on a branch
+		{upload: Upload{ID: 14, State: "completed", FinishedAt: &t2}, expectedState: "completed"},
+		{upload: Upload{ID: 15, State: "completed", FinishedAt: &t3}, expectedState: "completed"},
+		{upload: Upload{ID: 16, State: "completed", FinishedAt: &t2}, expectedState: "completed"},
+
+		// old and only reachable from other deletion candidates
+		{upload: Upload{ID: 17, State: "uploaded", UploadedAt: t3}, expectedState: "deleted"},
+		{upload: Upload{ID: 18, State: "errored", FinishedAt: &t2}, expectedState: "deleted"},
+		{upload: Upload{ID: 19, State: "completed", FinishedAt: &t1}, expectedState: "deleted"},
+		{upload: Upload{ID: 20, State: "completed", FinishedAt: &t3}, expectedState: "deleted"}, // dependency of 19
+
+		// old, but dependency of a non-deletion candidate
+		{upload: Upload{ID: 21, State: "completed", FinishedAt: &t1}, expectedState: "completed"}, // dependency of 13
+		{upload: Upload{ID: 22, State: "completed", FinishedAt: &t1}, expectedState: "completed"}, // dependency of 14
+		{upload: Upload{ID: 23, State: "completed", FinishedAt: &t1}, expectedState: "completed"}, // dependency of 16
+		{upload: Upload{ID: 24, State: "completed", FinishedAt: &t1}, expectedState: "completed"}, // dependency of 16 (via 23)
+	}
+
+	var uploads []Upload
+	for _, test := range tests {
+		uploads = append(uploads, test.upload)
+	}
+
+	insertUploads(t, db, uploads...)
+	insertVisibleAtTip(t, db, 50, 14, 15)
+	insertVisibleAtTipNonDefaultBranch(t, db, 50, 16)
+
+	packages := map[int][]semantic.Package{
+		20: {{Scheme: "s0", Name: "n0", Version: "v0"}},
+		21: {{Scheme: "s1", Name: "n1", Version: "v1"}},
+		22: {{Scheme: "s2", Name: "n2", Version: "v2"}},
+		23: {{Scheme: "s3", Name: "n3", Version: "v3"}},
+		24: {{Scheme: "s4", Name: "n4", Version: "v4"}},
+	}
+	references := map[int][]semantic.PackageReference{
+		13: {{Package: semantic.Package{Scheme: "s1", Name: "n1", Version: "v1"}}},
+		14: {{Package: semantic.Package{Scheme: "s2", Name: "n2", Version: "v2"}}},
+		16: {{Package: semantic.Package{Scheme: "s3", Name: "n3", Version: "v3"}}},
+		19: {{Package: semantic.Package{Scheme: "s0", Name: "n0", Version: "v0"}}},
+		23: {{Package: semantic.Package{Scheme: "s4", Name: "n4", Version: "v4"}}},
+	}
+
+	for id, packages := range packages {
+		if err := store.UpdatePackages(context.Background(), id, packages); err != nil {
+			t.Fatalf("unexpected error updating packages: %s", err)
+		}
+	}
+	for id, references := range references {
+		if err := store.UpdatePackageReferences(context.Background(), id, references); err != nil {
+			t.Fatalf("unexpected error updating package references: %s", err)
+		}
+	}
 
 	if count, err := store.SoftDeleteOldUploads(context.Background(), time.Minute, t1.Add(time.Minute*6)); err != nil {
-		t.Fatalf("unexpected error pruning uploads: %s", err)
+		t.Fatalf("unexpected error soft deleting uploads: %s", err)
 	} else if count != 4 {
 		t.Fatalf("unexpected number of uploads deleted: want=%d have=%d", 4, count)
 	}
 
-	expectedStates := map[int]string{
-		1:  "deleted",
-		2:  "completed",
-		3:  "deleted",
-		4:  "completed",
-		5:  "deleted",
-		6:  "completed",
-		7:  "errored",
-		8:  "deleted",
-		9:  "uploaded",
-		10: "completed",
+	var uploadIDs []int
+	expectedStates := map[int]string{}
+	for _, test := range tests {
+		id := test.upload.ID
+		uploadIDs = append(uploadIDs, id)
+		expectedStates[id] = test.expectedState
 	}
 
 	// Ensure record was deleted
-	if states, err := getUploadStates(db, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10); err != nil {
+	if states, err := getUploadStates(db, uploadIDs...); err != nil {
 		t.Fatalf("unexpected error getting states: %s", err)
 	} else if diff := cmp.Diff(expectedStates, states); diff != "" {
 		t.Errorf("unexpected upload states (-want +got):\n%s", diff)

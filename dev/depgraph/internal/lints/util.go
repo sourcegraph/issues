@@ -63,14 +63,14 @@ func isMain(packageNames map[string][]string, pkg string) bool {
 // mapPackageErrors aggregates errors from the given function invoked on each package in
 // the given graph.
 func mapPackageErrors(graph *graph.DependencyGraph, fn func(pkg string) (lintError, bool)) []lintError {
-	var errors []lintError
+	var errs []lintError
 	for _, pkg := range graph.Packages {
 		if err, ok := fn(pkg); ok {
-			errors = append(errors, err)
+			errs = append(errs, err)
 		}
 	}
 
-	return errors
+	return errs
 }
 
 // allDependencies returns an ordered list of transitive dependencies of the given package.

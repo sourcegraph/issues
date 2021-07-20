@@ -171,6 +171,16 @@ type DocumentationPathInfoData struct {
 	Children []string `json:"children,omitempty"`
 }
 
+// DocumentationMapping maps a documentationResult vertex ID to its path IDs, which are unique in
+// the context of a bundle.
+type DocumentationMapping struct {
+	// ResultID is the documentationResult vertex ID.
+	ResultID uint64 `json:"resultID"`
+
+	// PathID is the path ID corresponding to the documentationResult vertex ID.
+	PathID string `json:"pathID"`
+}
+
 // Package pairs a package name and the dump that provides it.
 type Package struct {
 	Scheme  string
@@ -199,6 +209,7 @@ type GroupedBundleDataChans struct {
 	PackageReferences     []PackageReference
 	DocumentationPages    chan *DocumentationPageData
 	DocumentationPathInfo chan *DocumentationPathInfoData
+	DocumentationMappings chan DocumentationMapping
 }
 
 type GroupedBundleDataMaps struct {

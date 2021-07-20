@@ -2,7 +2,6 @@ package sources
 
 import (
 	"context"
-	"fmt"
 	"strconv"
 
 	"github.com/cockroachdb/errors"
@@ -28,7 +27,7 @@ type BitbucketServerSource struct {
 func NewBitbucketServerSource(svc *types.ExternalService, cf *httpcli.Factory) (*BitbucketServerSource, error) {
 	var c schema.BitbucketServerConnection
 	if err := jsonc.Unmarshal(svc.Config, &c); err != nil {
-		return nil, fmt.Errorf("external service id=%d config error: %s", svc.ID, err)
+		return nil, errors.Errorf("external service id=%d config error: %s", svc.ID, err)
 	}
 	return newBitbucketServerSource(&c, cf, nil)
 }
@@ -118,12 +117,13 @@ func (s BitbucketServerSource) CreateChangeset(ctx context.Context, c *Changeset
 
 	err := s.client.CreatePullRequest(ctx, pr)
 	if err != nil {
-		if ae, ok := err.(*bitbucketserver.ErrAlreadyExists); ok && ae != nil {
-			if ae.Existing == nil {
-				return exists, fmt.Errorf("existing PR is nil")
+		var e *bitbucketserver.ErrAlreadyExists
+		if errors.As(err, &e) {
+			if e.Existing == nil {
+				return exists, errors.Errorf("existing PR is nil")
 			}
-			log15.Info("Existing PR extracted", "ID", ae.Existing.ID)
-			pr = ae.Existing
+			log15.Info("Existing PR extracted", "ID", e.Existing.ID)
+			pr = e.Existing
 			exists = true
 		} else {
 			return exists, err

@@ -17,9 +17,9 @@ const compiler = webpack(config)
 signale.await('Webpack compilation')
 
 compiler.run((error, stats) => {
-    console.log(stats.toString(tasks.WEBPACK_STATS_OPTIONS))
+    console.log(stats?.toString(tasks.WEBPACK_STATS_OPTIONS))
 
-    if (stats.hasErrors()) {
+    if (stats?.hasErrors()) {
         signale.error('Webpack compilation error')
         process.exit(1)
     }

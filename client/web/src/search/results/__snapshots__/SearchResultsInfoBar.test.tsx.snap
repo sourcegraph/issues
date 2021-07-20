@@ -50,10 +50,10 @@ exports[`SearchResultsInfoBar code monitoring feature flag disabled 1`] = `
         className="search-results-info-bar__divider"
       />
       <li
-        className="nav-item mr-2"
+        className="mr-2"
       >
         <a
-          className="btn btn-sm btn-outline-secondary nav-link text-decoration-none test-save-search-link"
+          className="btn btn-sm btn-outline-secondary text-decoration-none test-save-search-link"
           href=""
           onAuxClick={[Function]}
           onClick={[Function]}
@@ -83,7 +83,7 @@ exports[`SearchResultsInfoBar code monitoring feature flag disabled 1`] = `
         className="nav-item"
       >
         <button
-          className="btn btn-sm btn-outline-secondary nav-link text-decoration-none"
+          className="btn btn-sm btn-outline-secondary text-decoration-none"
           data-tooltip="Hide more matches on all results"
           onClick={[Function]}
           type="button"
@@ -156,10 +156,10 @@ exports[`SearchResultsInfoBar code monitoring feature flag enabled, can create m
         className="search-results-info-bar__divider"
       />
       <li
-        className="nav-item mr-2"
+        className="mr-2"
       >
         <a
-          className="btn btn-sm btn-outline-secondary nav-link text-decoration-none create-code-monitor-button"
+          className="btn btn-sm btn-outline-secondary text-decoration-none create-code-monitor-button"
           href="/code-monitoring/new?trigger-query=foo+type%3Adiff+patterntype%3Aliteral"
           onClick={[Function]}
           onKeyPress={[Function]}
@@ -183,10 +183,10 @@ exports[`SearchResultsInfoBar code monitoring feature flag enabled, can create m
         </a>
       </li>
       <li
-        className="nav-item mr-2"
+        className="mr-2"
       >
         <a
-          className="btn btn-sm btn-outline-secondary nav-link text-decoration-none test-save-search-link"
+          className="btn btn-sm btn-outline-secondary text-decoration-none test-save-search-link"
           href=""
           onAuxClick={[Function]}
           onClick={[Function]}
@@ -216,7 +216,7 @@ exports[`SearchResultsInfoBar code monitoring feature flag enabled, can create m
         className="nav-item"
       >
         <button
-          className="btn btn-sm btn-outline-secondary nav-link text-decoration-none"
+          className="btn btn-sm btn-outline-secondary text-decoration-none"
           data-tooltip="Hide more matches on all results"
           onClick={[Function]}
           type="button"
@@ -296,7 +296,7 @@ exports[`SearchResultsInfoBar code monitoring feature flag enabled, can create m
         className="nav-item"
       >
         <button
-          className="btn btn-sm btn-outline-secondary nav-link text-decoration-none"
+          className="btn btn-sm btn-outline-secondary text-decoration-none"
           data-tooltip="Hide more matches on all results"
           onClick={[Function]}
           type="button"
@@ -369,11 +369,11 @@ exports[`SearchResultsInfoBar code monitoring feature flag enabled, cannot creat
         className="search-results-info-bar__divider"
       />
       <li
-        className="nav-item mr-2"
+        className="mr-2"
         data-tooltip="Code monitors only support type:diff or type:commit searches."
       >
         <a
-          className="btn btn-sm btn-outline-secondary nav-link text-decoration-none create-code-monitor-button disabled"
+          className="btn btn-sm btn-outline-secondary text-decoration-none create-code-monitor-button disabled"
           href=""
           onAuxClick={[Function]}
           onClick={[Function]}
@@ -399,10 +399,10 @@ exports[`SearchResultsInfoBar code monitoring feature flag enabled, cannot creat
         </a>
       </li>
       <li
-        className="nav-item mr-2"
+        className="mr-2"
       >
         <a
-          className="btn btn-sm btn-outline-secondary nav-link text-decoration-none test-save-search-link"
+          className="btn btn-sm btn-outline-secondary text-decoration-none test-save-search-link"
           href=""
           onAuxClick={[Function]}
           onClick={[Function]}
@@ -432,7 +432,7 @@ exports[`SearchResultsInfoBar code monitoring feature flag enabled, cannot creat
         className="nav-item"
       >
         <button
-          className="btn btn-sm btn-outline-secondary nav-link text-decoration-none"
+          className="btn btn-sm btn-outline-secondary text-decoration-none"
           data-tooltip="Hide more matches on all results"
           onClick={[Function]}
           type="button"
@@ -501,7 +501,7 @@ exports[`SearchResultsInfoBar feature flag enabled, unauthenticated user 1`] = `
       className="nav align-items-center"
     >
       <li
-        className="nav-item mr-2"
+        className="mr-2"
       >
         <div
           className="menu-nav-item btn-group"
@@ -510,7 +510,7 @@ exports[`SearchResultsInfoBar feature flag enabled, unauthenticated user 1`] = `
           <a
             aria-expanded={false}
             aria-haspopup={true}
-            className="btn btn-sm btn-outline-secondary nav-link text-decoration-none toggle nav-link"
+            className="btn btn-sm btn-outline-secondary text-decoration-none toggle nav-link"
             href="#"
             onClick={[Function]}
           >
@@ -609,7 +609,7 @@ exports[`SearchResultsInfoBar feature flag enabled, unauthenticated user 1`] = `
         className="search-results-info-bar__divider"
       />
       <li
-        className="nav-item mr-2"
+        className="mr-2"
       >
         <div
           className="menu-nav-item btn-group"
@@ -618,7 +618,7 @@ exports[`SearchResultsInfoBar feature flag enabled, unauthenticated user 1`] = `
           <a
             aria-expanded={false}
             aria-haspopup={true}
-            className="btn btn-sm btn-outline-secondary nav-link text-decoration-none create-code-monitor-button toggle nav-link"
+            className="btn btn-sm btn-outline-secondary text-decoration-none create-code-monitor-button toggle nav-link"
             href="#"
             onClick={[Function]}
           >
@@ -720,7 +720,7 @@ exports[`SearchResultsInfoBar feature flag enabled, unauthenticated user 1`] = `
         </div>
       </li>
       <li
-        className="nav-item mr-2"
+        className="mr-2"
       >
         <div
           className="menu-nav-item btn-group"
@@ -729,7 +729,7 @@ exports[`SearchResultsInfoBar feature flag enabled, unauthenticated user 1`] = `
           <a
             aria-expanded={false}
             aria-haspopup={true}
-            className="btn btn-sm btn-outline-secondary nav-link text-decoration-none test-save-search-link toggle nav-link"
+            className="btn btn-sm btn-outline-secondary text-decoration-none test-save-search-link toggle nav-link"
             href="#"
             onClick={[Function]}
           >
@@ -831,7 +831,7 @@ exports[`SearchResultsInfoBar feature flag enabled, unauthenticated user 1`] = `
         className="nav-item"
       >
         <button
-          className="btn btn-sm btn-outline-secondary nav-link text-decoration-none"
+          className="btn btn-sm btn-outline-secondary text-decoration-none"
           data-tooltip="Hide more matches on all results"
           onClick={[Function]}
           type="button"

@@ -2,7 +2,6 @@ package productsubscription
 
 import (
 	"context"
-	"fmt"
 	"time"
 
 	"github.com/cockroachdb/errors"
@@ -42,7 +41,7 @@ func isDowngradeRequiringManualIntervention(beforeUserCount int32, beforePlanPri
 }
 
 func userCountExceedsPlanMaxError(userCount, max int32) error {
-	return fmt.Errorf("user count (%d) exceeds maximum allowed in this plan (%d)", userCount, max)
+	return errors.Errorf("user count (%d) exceeds maximum allowed in this plan (%d)", userCount, max)
 }
 
 func (r *productSubscriptionPreviewInvoice) BeforeInvoiceItem() graphqlbackend.ProductSubscriptionInvoiceItem {

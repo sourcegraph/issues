@@ -4,7 +4,6 @@ package bitbucketserver
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"strconv"
 	"time"
 
@@ -135,7 +134,7 @@ func (p *Provider) FetchUserPerms(ctx context.Context, account *extsvc.Account) 
 	case account.Data == nil:
 		return nil, errors.New("no account data provided")
 	case !extsvc.IsHostOfAccount(p.codeHost, account):
-		return nil, fmt.Errorf("not a code host of the account: want %q but have %q",
+		return nil, errors.Errorf("not a code host of the account: want %q but have %q",
 			p.codeHost.ServiceID, account.AccountSpec.ServiceID)
 	}
 
@@ -170,7 +169,7 @@ func (p *Provider) FetchRepoPerms(ctx context.Context, repo *extsvc.Repository) 
 	case repo == nil:
 		return nil, errors.New("no repo provided")
 	case !extsvc.IsHostOfRepo(p.codeHost, &repo.ExternalRepoSpec):
-		return nil, fmt.Errorf("not a code host of the repo: want %q but have %q",
+		return nil, errors.Errorf("not a code host of the repo: want %q but have %q",
 			p.codeHost.ServiceID, repo.ServiceID)
 	}
 

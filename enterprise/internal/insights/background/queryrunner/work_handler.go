@@ -16,11 +16,9 @@ import (
 	"github.com/sourcegraph/sourcegraph/internal/database"
 	"github.com/sourcegraph/sourcegraph/internal/database/basestore"
 	"github.com/sourcegraph/sourcegraph/internal/workerutil"
-	"github.com/sourcegraph/sourcegraph/internal/workerutil/dbworker"
-	dbworkerstore "github.com/sourcegraph/sourcegraph/internal/workerutil/dbworker/store"
 )
 
-var _ dbworker.Handler = &workHandler{}
+var _ workerutil.Handler = &workHandler{}
 
 // workHandler implements the dbworker.Handler interface by executing search queries and
 // inserting insights about them to the insights Timescale database.
@@ -30,7 +28,7 @@ type workHandler struct {
 	limiter         *rate.Limiter
 }
 
-func (r *workHandler) Handle(ctx context.Context, workerStore dbworkerstore.Store, record workerutil.Record) (err error) {
+func (r *workHandler) Handle(ctx context.Context, record workerutil.Record) (err error) {
 	defer func() {
 		if err != nil {
 			log15.Error("insights.queryrunner.workHandler", "error", err)
@@ -62,7 +60,7 @@ func (r *workHandler) Handle(ctx context.Context, workerStore dbworkerstore.Stor
 
 	// TODO(slimsag): future: Logs are not a good way to surface these errors to users.
 	if len(results.Errors) > 0 {
-		return fmt.Errorf("GraphQL errors: %v", results.Errors)
+		return errors.Errorf("GraphQL errors: %v", results.Errors)
 	}
 	if alert := results.Data.Search.Results.Alert; alert != nil {
 		if alert.Title == "No repositories satisfied your repo: filter" {
@@ -79,7 +77,7 @@ func (r *workHandler) Handle(ctx context.Context, workerStore dbworkerstore.Stor
 			// general.
 		} else {
 			// Maybe the user's search query is actually wrong.
-			return fmt.Errorf("insights query issue: alert: %v query=%q", alert, job.SearchQuery)
+			return errors.Errorf("insights query issue: alert: %v query=%q", alert, job.SearchQuery)
 		}
 	}
 	if results.Data.Search.Results.LimitHit {

@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
-	"fmt"
 	"net/url"
 
 	"github.com/sourcegraph/sourcegraph/internal/api"
@@ -121,7 +120,7 @@ func search(ctx context.Context, query string) (*gqlSearchResponse, error) {
 		return nil, errors.Wrap(err, "Decode")
 	}
 	if len(res.Errors) > 0 {
-		return res, fmt.Errorf("graphql: errors: %v", res.Errors)
+		return res, errors.Errorf("graphql: errors: %v", res.Errors)
 	}
 	return res, nil
 }

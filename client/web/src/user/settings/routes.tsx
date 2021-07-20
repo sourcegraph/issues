@@ -39,23 +39,32 @@ export const userSettingsAreaRoutes: readonly UserSettingsAreaRoute[] = [
     {
         path: '',
         exact: true,
-        render: props => (
-            <SettingsArea
-                {...props}
-                subject={props.user}
-                isLightTheme={props.isLightTheme}
-                extraHeader={
-                    <>
-                        {props.authenticatedUser && props.user.id !== props.authenticatedUser.id && (
-                            <SiteAdminAlert className="sidebar__alert">
-                                Viewing settings for <strong>{props.user.username}</strong>
-                            </SiteAdminAlert>
-                        )}
-                        <p>User settings override global and organization settings.</p>
-                    </>
-                }
-            />
-        ),
+        render: props => {
+            if (props.isSourcegraphDotCom && props.authenticatedUser && props.user.id !== props.authenticatedUser.id) {
+                return (
+                    <SiteAdminAlert className="sidebar__alert alert-danger">
+                        Only the user may access their individual settings.
+                    </SiteAdminAlert>
+                )
+            }
+            return (
+                <SettingsArea
+                    {...props}
+                    subject={props.user}
+                    isLightTheme={props.isLightTheme}
+                    extraHeader={
+                        <>
+                            {props.authenticatedUser && props.user.id !== props.authenticatedUser.id && (
+                                <SiteAdminAlert className="sidebar__alert">
+                                    Viewing settings for <strong>{props.user.username}</strong>
+                                </SiteAdminAlert>
+                            )}
+                            <p>User settings override global and organization settings.</p>
+                        </>
+                    }
+                />
+            )
+        },
     },
     {
         path: '/profile',

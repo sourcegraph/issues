@@ -193,14 +193,15 @@ func (o *OrgStore) Create(ctx context.Context, name string, displayName *string)
 		"INSERT INTO orgs(name, display_name, created_at, updated_at) VALUES($1, $2, $3, $4) RETURNING id",
 		newOrg.Name, newOrg.DisplayName, newOrg.CreatedAt, newOrg.UpdatedAt).Scan(&newOrg.ID)
 	if err != nil {
-		if pgErr, ok := err.(*pgconn.PgError); ok {
-			switch pgErr.ConstraintName {
+		var e *pgconn.PgError
+		if errors.As(err, &e) {
+			switch e.ConstraintName {
 			case "orgs_name":
 				return nil, errOrgNameAlreadyExists
 			case "orgs_name_max_length", "orgs_name_valid_chars":
-				return nil, fmt.Errorf("org name invalid: %s", pgErr.ConstraintName)
+				return nil, errors.Errorf("org name invalid: %s", e.ConstraintName)
 			case "orgs_display_name_max_length":
-				return nil, fmt.Errorf("org display name invalid: %s", pgErr.ConstraintName)
+				return nil, errors.Errorf("org display name invalid: %s", e.ConstraintName)
 			}
 		}
 

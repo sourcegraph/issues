@@ -349,7 +349,7 @@ func TestGitLabSource_ChangesetSource(t *testing.T) {
 			if err := p.source.LoadChangeset(p.ctx, p.changeset); err == nil {
 				t.Fatal("unexpectedly no error for not found changeset")
 			} else if !errors.Is(err, expected) {
-				t.Fatalf("unexpected error: %+v", errors.UnwrapAll(err))
+				t.Fatalf("unexpected error: %+v", err)
 			}
 		})
 
@@ -1062,7 +1062,7 @@ func TestGitLabSource_WithAuthenticator(t *testing.T) {
 				src, err = src.WithAuthenticator(tc)
 				if err == nil {
 					t.Error("unexpected nil error")
-				} else if _, ok := err.(UnsupportedAuthenticatorError); !ok {
+				} else if !errors.HasType(err, UnsupportedAuthenticatorError{}) {
 					t.Errorf("unexpected error of type %T: %v", err, err)
 				}
 				if src != nil {

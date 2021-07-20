@@ -2,6 +2,7 @@ import { Omit } from 'utility-types'
 
 import { SearchSuggestion } from '../suggestions'
 
+import { languageCompletion } from './languageFilter'
 import { predicateCompletion } from './predicates'
 import { selectorCompletion } from './selectFilter'
 import { Filter, Literal } from './token'
@@ -152,45 +153,6 @@ interface NegatableFilterDefinition extends Omit<BaseFilterDefinition, 'descript
 
 export type FilterDefinition = BaseFilterDefinition | NegatableFilterDefinition
 
-export const LANGUAGES: string[] = [
-    'Assembly',
-    'Bash',
-    'C',
-    'C++',
-    'C#',
-    'CSS',
-    'Dart',
-    'Elixir',
-    'Erlang',
-    'Go',
-    'GraphQL',
-    'Haskell',
-    'HTML',
-    'Java',
-    'JavaScript',
-    'Kotlin',
-    'JSON',
-    'Julia',
-    'Lua',
-    'Markdown',
-    'Objective-C',
-    'OCaml',
-    'PHP',
-    'PowerShell',
-    'Python',
-    'R',
-    'Ruby',
-    'Rust',
-    'Sass',
-    'Scala',
-    'SQL',
-    'Swift',
-    'TypeScript',
-    'VBA',
-    'XML',
-    'Zig',
-]
-
 const SOURCEGRAPH_DOT_COM_REPO_COMPLETION: Completion[] = [
     {
         label: 'Search a GitHub organization',
@@ -271,7 +233,7 @@ export const FILTERS: Record<NegatableFilter, NegatableFilterDefinition> &
     },
     [FilterType.lang]: {
         alias: 'l',
-        discreteValues: () => LANGUAGES.map(value => ({ label: value })),
+        discreteValues: value => languageCompletion(value).map(toCompletionItem),
         negatable: true,
         description: negated => `${negated ? 'Exclude' : 'Include only'} results from the given language`,
     },
@@ -493,4 +455,16 @@ export const escapeSpaces = (value: string): string => {
         }
     }
     return escaped.join('')
+}
+
+/**
+ * Helper function to convert a string to a completion item. It quotes the
+ * string as necessary.
+ */
+function toCompletionItem(value: string): Completion {
+    const item: Completion = { label: value }
+    if (/\s/.test(value)) {
+        item.insertText = `"${value}"`
+    }
+    return item
 }

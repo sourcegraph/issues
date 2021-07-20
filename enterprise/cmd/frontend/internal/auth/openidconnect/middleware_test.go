@@ -14,6 +14,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/cockroachdb/errors"
 	"github.com/coreos/go-oidc"
 
 	"github.com/sourcegraph/sourcegraph/cmd/frontend/auth"
@@ -108,7 +109,7 @@ func newOIDCIDServer(t *testing.T, code string, oidcProvider *schema.OpenIDConne
 		if op.ExternalAccount.ServiceType == "openidconnect" && op.ExternalAccount.ServiceID == oidcProvider.Issuer && op.ExternalAccount.ClientID == testClientID && op.ExternalAccount.AccountID == testOIDCUser {
 			return 123, "", nil
 		}
-		return 0, "safeErr", fmt.Errorf("account %v not found in mock", op.ExternalAccount)
+		return 0, "safeErr", errors.Errorf("account %v not found in mock", op.ExternalAccount)
 	}
 
 	return srv, &email

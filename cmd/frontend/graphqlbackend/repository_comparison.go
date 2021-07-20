@@ -11,6 +11,7 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/cockroachdb/errors"
 	"github.com/inconshreveable/log15"
 	"github.com/sourcegraph/go-diff/diff"
 
@@ -588,7 +589,7 @@ func (r *DiffHunk) Highlight(ctx context.Context, args *HighlightArgs) (*highlig
 			highlightedDiffHunkLineResolver.html = safeIndex(highlightedBase, baseLine)
 			baseLine++
 		} else {
-			return nil, fmt.Errorf("expected patch lines to start with ' ', '-', '+', but found %q", hunkLine[0])
+			return nil, errors.Errorf("expected patch lines to start with ' ', '-', '+', but found %q", hunkLine[0])
 		}
 
 		highlightedDiffHunkLineResolvers[i] = &highlightedDiffHunkLineResolver

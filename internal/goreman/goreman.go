@@ -2,7 +2,6 @@
 package goreman
 
 import (
-	"fmt"
 	"os"
 	"os/exec"
 	"runtime"
@@ -91,7 +90,7 @@ func Start(contents []byte, opts Options) error {
 		return err
 	}
 	if opts.ProcDiedAction > Ignore {
-		return fmt.Errorf("invalid ProcDiedAction %v", opts.ProcDiedAction)
+		return errors.Errorf("invalid ProcDiedAction %v", opts.ProcDiedAction)
 	}
 	procDiedAction = opts.ProcDiedAction
 	if opts.RPCAddr != "" {

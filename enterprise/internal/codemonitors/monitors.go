@@ -3,9 +3,9 @@ package codemonitors
 import (
 	"context"
 	"database/sql"
-	"fmt"
 	"time"
 
+	"github.com/cockroachdb/errors"
 	"github.com/graph-gophers/graphql-go/relay"
 	"github.com/keegancsmith/sqlf"
 
@@ -282,7 +282,7 @@ func (s *Store) runMonitorQuery(ctx context.Context, q *sqlf.Query) (*Monitor, e
 		return nil, err
 	}
 	if len(ms) == 0 {
-		return nil, fmt.Errorf("operation failed. Query should have returned 1 row")
+		return nil, errors.Errorf("operation failed. Query should have returned 1 row")
 	}
 	return ms[0], nil
 }

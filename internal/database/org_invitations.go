@@ -83,11 +83,9 @@ func (s *OrgInvitationStore) Create(ctx context.Context, orgID, senderUserID, re
 		"INSERT INTO org_invitations(org_id, sender_user_id, recipient_user_id) VALUES($1, $2, $3) RETURNING id, created_at",
 		orgID, senderUserID, recipientUserID,
 	).Scan(&t.ID, &t.CreatedAt); err != nil {
-		if pgErr, ok := err.(*pgconn.PgError); ok {
-			switch pgErr.ConstraintName {
-			case "org_invitations_singleflight":
-				return nil, errors.New("user was already invited to organization (and has not responded yet)")
-			}
+		var e *pgconn.PgError
+		if errors.As(err, &e) && e.ConstraintName == "org_invitations_singleflight" {
+			return nil, errors.New("user was already invited to organization (and has not responded yet)")
 		}
 		return nil, err
 	}

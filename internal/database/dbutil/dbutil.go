@@ -68,8 +68,8 @@ type TxBeginner interface {
 }
 
 func IsPostgresError(err error, codename string) bool {
-	e, ok := errors.Cause(err).(*pgconn.PgError)
-	return ok && e.Code == codename
+	var e *pgconn.PgError
+	return errors.As(err, &e) && e.Code == codename
 }
 
 // NullTime represents a time.Time that may be null. nullTime implements the
@@ -138,7 +138,7 @@ func (n *NullInt32) Scan(value interface{}) error {
 	case nil:
 		return nil
 	default:
-		return fmt.Errorf("value is not int64: %T", value)
+		return errors.Errorf("value is not int64: %T", value)
 	}
 	return nil
 }
@@ -174,7 +174,7 @@ func (n *NullInt64) Scan(value interface{}) error {
 	case nil:
 		return nil
 	default:
-		return fmt.Errorf("value is not int64: %T", value)
+		return errors.Errorf("value is not int64: %T", value)
 	}
 	return nil
 }
@@ -210,7 +210,7 @@ func (n *NullInt) Scan(value interface{}) error {
 	case nil:
 		return nil
 	default:
-		return fmt.Errorf("value is not int: %T", value)
+		return errors.Errorf("value is not int: %T", value)
 	}
 	return nil
 }
@@ -240,7 +240,7 @@ func (n *JSONInt64Set) Scan(value interface{}) error {
 			return err
 		}
 	default:
-		return fmt.Errorf("value is not []byte: %T", value)
+		return errors.Errorf("value is not []byte: %T", value)
 	}
 
 	if *n.Set == nil {
@@ -281,7 +281,7 @@ func (n *NullJSONRawMessage) Scan(value interface{}) error {
 		n.Raw = make([]byte, len(value))
 		copy(n.Raw, value)
 	default:
-		return fmt.Errorf("value is not []byte: %T", value)
+		return errors.Errorf("value is not []byte: %T", value)
 	}
 
 	return nil
@@ -303,7 +303,7 @@ func (c *CommitBytea) Scan(value interface{}) error {
 	case []byte:
 		*c = CommitBytea(hex.EncodeToString(value))
 	default:
-		return fmt.Errorf("value is not []byte: %T", value)
+		return errors.Errorf("value is not []byte: %T", value)
 	}
 
 	return nil

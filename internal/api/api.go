@@ -3,6 +3,7 @@ package api
 
 import (
 	"fmt"
+	"strings"
 	"time"
 )
 
@@ -13,6 +14,10 @@ type RepoID int32
 //
 // Previously, this was called RepoURI.
 type RepoName string
+
+func (r RepoName) Equal(o RepoName) bool {
+	return strings.EqualFold(string(r), string(o))
+}
 
 // CommitID is the 40-character SHA-1 hash for a Git commit.
 type CommitID string

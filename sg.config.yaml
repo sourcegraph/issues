@@ -99,6 +99,7 @@ env:
   DB_STARTUP_TIMEOUT: 120s # codeinsights-db needs more time to start in some instances.
   DISABLE_CODE_INSIGHTS_HISTORICAL: true
   DISABLE_CODE_INSIGHTS: true
+  ENABLE_STREAMING_REPOS_SYNCER: true
 
 commands:
   frontend:
@@ -498,7 +499,7 @@ checks:
 commandsets:
   # TODO: Should we be able to define "env" vars _per set_?
 
-  default:
+  oss:
     - frontend
     - worker
     - repo-updater
@@ -516,7 +517,7 @@ commandsets:
     - zoekt-webserver-0
     - zoekt-webserver-1
 
-  enterprise:
+  enterprise: &enterprise_set
     - enterprise-frontend
     - enterprise-worker
     - enterprise-repo-updater
@@ -534,6 +535,8 @@ commandsets:
     - zoekt-webserver-0
     - zoekt-webserver-1
     - executor-queue
+
+  default: *enterprise_set
 
   enterprise-codeintel:
     - enterprise-frontend

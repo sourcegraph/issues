@@ -32,7 +32,8 @@ Batch Changes makes it possible to create changesets in tens, hundreds, or thous
 ## Requirements for batch change creators
 
 * Latest version of the [Sourcegraph CLI `src`](../../cli/index.md)
-  * `src` is supported on Linux or Intel macOS; Windows and ARM (eg M1) macOS support is experimental
+  * `src` is supported on Linux or Intel macOS
+  * <span class="badge badge-experimental">Experimental</span> Windows and ARM (eg. M1) macOS support are experimental
 * Docker
   * MacOS:
       * If using Docker 3.x, ensure your version is at least 3.0.1

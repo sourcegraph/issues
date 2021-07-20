@@ -2,8 +2,9 @@ package graphqlbackend
 
 import (
 	"encoding/json"
-	"fmt"
 	"time"
+
+	"github.com/cockroachdb/errors"
 )
 
 // DateTime implements the DateTime GraphQL scalar type.
@@ -29,7 +30,7 @@ func (v DateTime) MarshalJSON() ([]byte, error) {
 func (v *DateTime) UnmarshalGraphQL(input interface{}) error {
 	s, ok := input.(string)
 	if !ok {
-		return fmt.Errorf("invalid GraphQL DateTime scalar value input (got %T, expected string)", input)
+		return errors.Errorf("invalid GraphQL DateTime scalar value input (got %T, expected string)", input)
 	}
 	t, err := time.Parse(time.RFC3339, s)
 	if err != nil {

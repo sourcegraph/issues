@@ -2,7 +2,6 @@ package graphqlbackend
 
 import (
 	"context"
-	"fmt"
 	"net/url"
 	"strings"
 
@@ -96,7 +95,7 @@ func getRepo(ctx context.Context, repoStore *database.RepoStore, repoURI string)
 	// note: if the user provides the URL without a scheme (eg just 'github.com/foo/bar')
 	// the host is '', but the path contains the host instead, so this works both ways 😅
 	repo, err = repoStore.GetByName(ctx, repoName)
-	if err != nil && !database.IsRepoNotFoundErr(err) {
+	if err != nil && !errors.HasType(err, &database.RepoNotFoundErr{}) {
 		return nil, errors.Wrap(err, "Error checking if repo exists already")
 	} else if repo != nil {
 		// repo already exists, nice.
@@ -112,7 +111,7 @@ func getRepo(ctx context.Context, repoStore *database.RepoStore, repoURI string)
 		return nil, errors.Wrap(err, "looking up repo on remote host")
 	}
 	if res.Repo == nil {
-		return nil, fmt.Errorf("unable to find repo %s", repoURI)
+		return nil, errors.Errorf("unable to find repo %s", repoURI)
 	}
 
 	repoName = res.Repo.Name

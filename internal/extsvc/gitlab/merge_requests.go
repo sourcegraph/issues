@@ -136,7 +136,8 @@ func (c *Client) GetMergeRequest(ctx context.Context, project *Project, iid ID) 
 
 	resp := &MergeRequest{}
 	if _, _, err := c.do(ctx, req, resp); err != nil {
-		if e, ok := errors.Cause(err).(HTTPError); ok && e.Code() == http.StatusNotFound {
+		var e HTTPError
+		if errors.As(err, &e) && e.Code() == http.StatusNotFound {
 			if strings.Contains(e.Message(), "Project Not Found") {
 				err = ErrProjectNotFound
 			} else {
@@ -272,7 +273,8 @@ func (c *Client) MergeMergeRequest(ctx context.Context, project *Project, mr *Me
 
 	resp := &MergeRequest{}
 	if _, _, err := c.do(ctx, req, resp); err != nil {
-		if e, ok := errors.Cause(err).(HTTPError); ok && e.Code() == http.StatusMethodNotAllowed {
+		var e HTTPError
+		if errors.As(err, &e) && e.Code() == http.StatusMethodNotAllowed {
 			return nil, errors.Wrap(ErrNotMergeable, err.Error())
 		}
 		return nil, errors.Wrap(err, "sending request to merge a merge request")

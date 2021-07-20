@@ -2,8 +2,9 @@ package graphqlbackend
 
 import (
 	"encoding/json"
-	"fmt"
 	"strconv"
+
+	"github.com/cockroachdb/errors"
 )
 
 // BigInt implements the BigInt GraphQL scalar type.
@@ -29,7 +30,7 @@ func (v BigInt) MarshalJSON() ([]byte, error) {
 func (v *BigInt) UnmarshalGraphQL(input interface{}) error {
 	s, ok := input.(string)
 	if !ok {
-		return fmt.Errorf("invalid GraphQL BigInt scalar value input (got %T, expected string)", input)
+		return errors.Errorf("invalid GraphQL BigInt scalar value input (got %T, expected string)", input)
 	}
 	n, err := strconv.ParseInt(s, 10, 64)
 	if err != nil {

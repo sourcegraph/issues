@@ -352,15 +352,11 @@ func (err HTTPError) Forbidden() bool {
 // HTTPErrorCode returns err's HTTP status code, if it is an HTTP error from
 // this package. Otherwise it returns 0.
 func HTTPErrorCode(err error) int {
-	e, ok := err.(HTTPError)
-	if !ok {
-		// Try one level deeper.
-		err = errors.Cause(err)
-		e, ok = err.(HTTPError)
-	}
-	if ok {
+	var e HTTPError
+	if errors.As(err, &e) {
 		return e.Code()
 	}
+
 	return 0
 }
 
@@ -373,14 +369,5 @@ var ErrMergeRequestNotFound = errors.New("GitLab merge request not found")
 // IsNotFound reports whether err is a GitLab API error of type NOT_FOUND, the equivalent cached
 // response error, or HTTP 404.
 func IsNotFound(err error) bool {
-	if err == ErrProjectNotFound || errors.Cause(err) == ErrProjectNotFound {
-		return true
-	}
-	if err == ErrMergeRequestNotFound || errors.Cause(err) == ErrMergeRequestNotFound {
-		return true
-	}
-	if HTTPErrorCode(err) == http.StatusNotFound {
-		return true
-	}
-	return false
+	return errors.IsAny(err, ErrProjectNotFound, ErrMergeRequestNotFound) || HTTPErrorCode(err) == http.StatusNotFound
 }

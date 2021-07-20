@@ -114,7 +114,7 @@ const ExperimentalActionButton: React.FunctionComponent<ExperimentalActionButton
     }
     return (
         <ButtonLink
-            className={classNames('btn btn-sm btn-outline-secondary nav-link text-decoration-none', props.className)}
+            className={classNames('btn btn-sm btn-outline-secondary text-decoration-none', props.className)}
             to={props.nonExperimentalLinkTo}
             onSelect={props.onNonExperimentalLinkClick}
             disabled={props.isNonExperimentalLinkDisabled}
@@ -213,7 +213,7 @@ export const SearchResultsInfoBar: React.FunctionComponent<SearchResultsInfoBarP
         const toURL = `/code-monitoring/new?${searchParameters.toString()}`
         return (
             <li
-                className="nav-item mr-2"
+                className="mr-2"
                 data-tooltip={
                     props.authenticatedUser && !canCreateMonitorFromQuery
                         ? 'Code monitors only support type:diff or type:commit searches.'
@@ -261,7 +261,7 @@ export const SearchResultsInfoBar: React.FunctionComponent<SearchResultsInfoBarP
             return null
         }
         return (
-            <li className="nav-item mr-2">
+            <li className="mr-2">
                 <ExperimentalActionButton
                     showExperimentalVersion={showActionButtonExperimentalVersion}
                     onNonExperimentalLinkClick={props.onSaveQueryClick}
@@ -294,7 +294,7 @@ export const SearchResultsInfoBar: React.FunctionComponent<SearchResultsInfoBarP
         () =>
             // Only show extend button to signed out users that have the feature flag enabled
             showActionButtonExperimentalVersion ? (
-                <li className="nav-item mr-2">
+                <li className="mr-2">
                     <ExperimentalActionButton
                         showExperimentalVersion={showActionButtonExperimentalVersion}
                         nonExperimentalLinkTo="/extensions"
@@ -359,7 +359,7 @@ export const SearchResultsInfoBar: React.FunctionComponent<SearchResultsInfoBarP
                         menu={ContributableMenu.SearchResultsToolbar}
                         wrapInList={false}
                         showLoadingSpinnerDuringExecution={true}
-                        actionItemClass="btn nav-link btn-outline-secondary mr-2 text-decoration-none btn-sm"
+                        actionItemClass="btn btn-outline-secondary mr-2 text-decoration-none btn-sm"
                     />
 
                     {extendButton}
@@ -379,7 +379,7 @@ export const SearchResultsInfoBar: React.FunctionComponent<SearchResultsInfoBarP
                                 <button
                                     type="button"
                                     onClick={props.onExpandAllResultsToggle}
-                                    className="btn btn-sm btn-outline-secondary nav-link text-decoration-none"
+                                    className="btn btn-sm btn-outline-secondary text-decoration-none"
                                     data-tooltip={`${props.allExpanded ? 'Hide' : 'Show'} more matches on all results`}
                                 >
                                     {props.allExpanded ? (

@@ -112,7 +112,7 @@ func commitParametersToDiffParameters(ctx context.Context, db dbutil.DB, op *sea
 				// against a allowlist, but it could cause unexpected errors by (e.g.)
 				// changing the format of `git log` to a format that our parser doesn't
 				// expect.
-				return nil, fmt.Errorf("invalid revspec: %q", rev.RevSpec)
+				return nil, errors.Errorf("invalid revspec: %q", rev.RevSpec)
 			}
 			args = append(args, rev.RevSpec)
 

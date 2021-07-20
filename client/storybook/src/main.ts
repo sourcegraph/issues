@@ -6,7 +6,15 @@ import { remove } from 'lodash'
 import signale from 'signale'
 import SpeedMeasurePlugin from 'speed-measure-webpack-plugin'
 import TerserPlugin from 'terser-webpack-plugin'
-import { DllReferencePlugin, Configuration, DefinePlugin, ProgressPlugin, RuleSetUseItem, RuleSetUse } from 'webpack'
+import webpack, {
+    DllReferencePlugin,
+    Configuration,
+    DefinePlugin,
+    ProgressPlugin,
+    RuleSetUseItem,
+    RuleSetUse,
+    RuleSetRule,
+} from 'webpack'
 import { BundleAnalyzerPlugin } from 'webpack-bundle-analyzer'
 
 import { ensureDllBundleIsReady } from './dllPlugin'
@@ -22,6 +30,7 @@ import {
     nodeModulesPath,
     getBasicCSSLoader,
     readJsonFile,
+    storybookWorkspacePath,
 } from './webpack.config.common'
 
 const getStoriesGlob = (): string[] => {
@@ -79,6 +88,10 @@ const config = {
         '@storybook/addon-toolbars',
     ],
 
+    core: {
+        builder: 'webpack5',
+    },
+
     features: {
         // Explicitly disable the deprecated, not used postCSS support,
         // so no warning is rendered on each start of storybook.
@@ -101,7 +114,7 @@ const config = {
         config.mode = environment.shouldMinify ? 'production' : 'development'
 
         // Check the default config is in an expected shape.
-        if (!config.module || !config.plugins) {
+        if (!config.module?.rules || !config.plugins) {
             throw new Error(
                 'The format of the default storybook webpack config changed, please check if the config in ./src/main.ts is still valid'
             )
@@ -111,6 +124,11 @@ const config = {
             new DefinePlugin({
                 NODE_ENV: JSON.stringify(config.mode),
                 'process.env.NODE_ENV': JSON.stringify(config.mode),
+            }),
+            new webpack.ProvidePlugin({
+                process: 'process/browser',
+                // Based on the issue: https://github.com/webpack/changelog-v5/issues/10
+                Buffer: ['buffer', 'Buffer'],
             })
         )
 
@@ -118,12 +136,10 @@ const config = {
             if (!config.optimization) {
                 throw new Error('The structure of the config changed, expected config.optimization to be not-null')
             }
-            config.optimization.namedModules = false
             config.optimization.minimize = true
             config.optimization.minimizer = [
                 new TerserPlugin({
                     terserOptions: {
-                        sourceMap: true,
                         compress: {
                             // Don't inline functions, which causes name collisions with uglify-es:
                             // https://github.com/mishoo/UglifyJS2/issues/2842
@@ -132,6 +148,21 @@ const config = {
                     },
                 }),
             ]
+        } else {
+            // Use cache only in `development` mode to speed up production build.
+            config.cache = {
+                type: 'filesystem',
+                buildDependencies: {
+                    // Invalidate cache on config change.
+                    config: [
+                        __filename,
+                        path.resolve(storybookWorkspacePath, 'babel.config.js'),
+                        path.resolve(rootPath, 'babel.config.js'),
+                        path.resolve(rootPath, 'postcss.config.js'),
+                        path.resolve(__dirname, './webpack.config.dll.ts'),
+                    ],
+                },
+            }
         }
 
         // We don't use Storybook's default Babel config for our repo, it doesn't include everything we need.
@@ -174,7 +205,9 @@ const config = {
         })
 
         // Make sure Storybook style loaders are only evaluated for Storybook styles.
-        const cssRule = config.module.rules.find(rule => rule.test?.toString() === /\.css$/.toString())
+        const cssRule = config.module.rules.find(
+            (rule): rule is RuleSetRule => typeof rule !== 'string' && rule.test?.toString() === /\.css$/.toString()
+        )
         if (!cssRule) {
             throw new Error('Cannot find original CSS rule')
         }
@@ -190,7 +223,7 @@ const config = {
 
         config.module.rules.push({
             test: /\.ya?ml$/,
-            use: ['raw-loader'],
+            type: 'asset/source',
         })
 
         // Disable `CaseSensitivePathsPlugin` by default to speed up development build.

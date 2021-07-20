@@ -39,7 +39,7 @@ To get started, you should read:
 ### Set up an observable
 
 Monitoring is build around "observables" - something you wish to observe.
-The generator API exposes this concept through the [`Observable` type](https://sourcegraph.com/github.com/sourcegraph/sourcegraph/-/blob/monitoring/monitoring/README.md#type-observable).
+The generator API exposes this concept through the [`Observable` type](https://sourcegraph.com/github.com/sourcegraph/sourcegraph/-/docs/monitoring/monitoring#Observable).
 
 You can decide where to put your new observable by looking for an existing dashboard that your information should go in.
 Think "when this number shows something bad, which service logs are likely to be most relevant?".
@@ -98,9 +98,9 @@ The primary thing you'll use is to change the Grafana display from plain numbers
 }
 ```
 
-The default `monitoring.Panel()` configures a panel for your observable using recommended defaults, and provides a set of recommended customization options through [`ObservablePanel`](https://sourcegraph.com/github.com/sourcegraph/sourcegraph/-/blob/monitoring/monitoring/README.md#type-observablepanel).
+The default `monitoring.Panel()` configures a panel for your observable using recommended defaults, and provides a set of recommended customization options through [`ObservablePanel`](https://sourcegraph.com/github.com/sourcegraph/sourcegraph/-/docs/monitoring/monitoring#ObservablePanel).
 
-Additional customizations can be made to your observable's panel using `ObservablePanel.With()` and [`ObservablePanelOption`](https://sourcegraph.com/github.com/sourcegraph/sourcegraph/-/blob/monitoring/monitoring/README.md#type-observablepaneloption).
+Additional customizations can be made to your observable's panel using [`ObservablePanel.With()`](https://sourcegraph.com/github.com/sourcegraph/sourcegraph/-/docs/monitoring/monitoring#ObservablePanel.With) and [`ObservablePanelOption`](https://sourcegraph.com/github.com/sourcegraph/sourcegraph/-/docs/monitoring/monitoring#ObservablePanelOption).
 
 ### Add an alert
 
@@ -111,7 +111,7 @@ If you opt not to include an alert, you must explicitly set `NoAlert: true` and 
 
 To get started, refer to [understanding alerts](../../admin/observability/alerting.md#understanding-alerts) for what your alert should indicate.
 Then make a guess about what a good or bad value for your query is - it's OK if this isn't perfect, just do your best.
-You can then use the [ObservableAlertDefinition](https://sourcegraph.com/github.com/sourcegraph/sourcegraph/-/blob/monitoring/monitoring/README.md#type-observablealertdefinition) to add an alert to your Observable, for example:
+You can then use the [ObservableAlertDefinition](https://sourcegraph.com/github.com/sourcegraph/sourcegraph/-/docs/monitoring/monitoring#ObservableAlertDefinition) to add an alert to your Observable, for example:
 
 ```diff
 {
@@ -123,7 +123,7 @@ You can then use the [ObservableAlertDefinition](https://sourcegraph.com/github.
 }
 ```
 
-Options like only alerting after a certain duration (`.For(time.Duration)`) are also available - refer to the [monitoring library reference](https://sourcegraph.com/github.com/sourcegraph/sourcegraph/-/blob/monitoring/monitoring/README.md#type-observablealertdefinition).
+Options like only alerting after a certain duration (`.For(time.Duration)`) are also available - refer to the [monitoring library reference](https://sourcegraph.com/github.com/sourcegraph/sourcegraph/-/docs/monitoring/monitoring#ObservableAlertDefinition).
 
 ### Add documentation
 

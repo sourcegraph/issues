@@ -36,7 +36,7 @@ func ensureAbsoluteCommit(commitID api.CommitID) error {
 	// commit IDs if we can avoid it, because we can't cache the
 	// expensive part of those computations.
 	if !IsAbsoluteRevision(string(commitID)) {
-		return fmt.Errorf("non-absolute commit ID: %q", commitID)
+		return errors.Errorf("non-absolute commit ID: %q", commitID)
 	}
 	return nil
 }

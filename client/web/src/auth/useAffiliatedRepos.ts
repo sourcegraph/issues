@@ -1,6 +1,6 @@
-import { ApolloError, ApolloQueryResult, QueryLazyOptions } from '@apollo/client'
+import { ApolloError, ApolloQueryResult } from '@apollo/client'
 
-import { useLazyQuery, gql } from '@sourcegraph/shared/src/graphql/graphql'
+import { gql, useQuery } from '@sourcegraph/shared/src/graphql/graphql'
 
 import { Maybe, AffiliatedRepositoriesResult, AffiliatedRepositoriesVariables, Exact } from '../graphql-operations'
 
@@ -21,17 +21,6 @@ interface UseAffiliatedReposResult {
                   | undefined
           ) => Promise<ApolloQueryResult<AffiliatedRepositoriesResult>>)
         | undefined
-    fetchAffiliatedRepos: (
-        options?:
-            | QueryLazyOptions<
-                  Exact<{
-                      user: string
-                      codeHost: Maybe<string>
-                      query: Maybe<string>
-                  }>
-              >
-            | undefined
-    ) => void
 }
 
 const AFFILIATED_REPOS = gql`
@@ -51,22 +40,21 @@ const AFFILIATED_REPOS = gql`
 `
 
 export const useAffiliatedRepos = (userId: string): UseAffiliatedReposResult => {
-    const [trigger, { data, loading, error, refetch }] = useLazyQuery<
-        AffiliatedRepositoriesResult,
-        AffiliatedRepositoriesVariables
-    >(AFFILIATED_REPOS, {
-        variables: {
-            user: userId,
-            codeHost: null,
-            query: null,
-        },
-    })
+    const { data, loading, error, refetch } = useQuery<AffiliatedRepositoriesResult, AffiliatedRepositoriesVariables>(
+        AFFILIATED_REPOS,
+        {
+            variables: {
+                user: userId,
+                codeHost: null,
+                query: null,
+            },
+        }
+    )
 
     return {
         affiliatedRepos: data?.affiliatedRepositories.nodes,
         loadingAffiliatedRepos: loading,
         errorAffiliatedRepos: error,
         refetchAffiliatedRepos: refetch,
-        fetchAffiliatedRepos: trigger,
     }
 }

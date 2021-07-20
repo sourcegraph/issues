@@ -1,11 +1,12 @@
 package graph
 
 import (
-	"fmt"
 	"os"
 	"path/filepath"
 	"sort"
 	"strings"
+
+	"github.com/cockroachdb/errors"
 )
 
 // DependencyGraph encodes the import relationships between packages within
@@ -97,7 +98,7 @@ func findRoot() (string, error) {
 			continue
 		}
 
-		return "", fmt.Errorf("not running inside sourcegraph/sourcegraph")
+		return "", errors.Errorf("not running inside sourcegraph/sourcegraph")
 	}
 }
 

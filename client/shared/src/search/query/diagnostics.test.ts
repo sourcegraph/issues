@@ -43,19 +43,4 @@ describe('getDiagnostics()', () => {
             getDiagnostics(toSuccess(scanSearchQuery('repo:a (file:b and c)')), SearchPatternType.regexp)
         ).toStrictEqual([])
     })
-
-    test('search query containing quoted token, literal pattern type', () => {
-        expect(
-            getDiagnostics(toSuccess(scanSearchQuery('"Configuration::doStuff(...)"')), SearchPatternType.literal)
-        ).toStrictEqual([
-            {
-                endColumn: 30,
-                endLineNumber: 1,
-                message: 'Your search is interpreted literally and contains quotes. Did you mean to search for quotes?',
-                severity: 4,
-                startColumn: 1,
-                startLineNumber: 1,
-            },
-        ])
-    })
 })

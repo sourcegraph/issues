@@ -129,7 +129,7 @@ func getCommit(ctx context.Context, repo api.RepoName, id api.CommitID, opt Reso
 	}
 
 	if len(commits) != 1 {
-		return nil, fmt.Errorf("git log: expected 1 commit, got %d", len(commits))
+		return nil, errors.Errorf("git log: expected 1 commit, got %d", len(commits))
 	}
 
 	return commits[0], nil
@@ -413,7 +413,7 @@ const (
 func parseCommitFromLog(data []byte) (commit *Commit, refs []string, rest []byte, err error) {
 	parts := bytes.SplitN(data, []byte{'\x00'}, partsPerCommit+1)
 	if len(parts) < partsPerCommit {
-		return nil, nil, nil, fmt.Errorf("invalid commit log entry: %q", parts)
+		return nil, nil, nil, errors.Errorf("invalid commit log entry: %q", parts)
 	}
 
 	// log outputs are newline separated, so all but the 1st commit ID part
@@ -423,11 +423,11 @@ func parseCommitFromLog(data []byte) (commit *Commit, refs []string, rest []byte
 
 	authorTime, err := strconv.ParseInt(string(parts[4]), 10, 64)
 	if err != nil {
-		return nil, nil, nil, fmt.Errorf("parsing git commit author time: %s", err)
+		return nil, nil, nil, errors.Errorf("parsing git commit author time: %s", err)
 	}
 	committerTime, err := strconv.ParseInt(string(parts[7]), 10, 64)
 	if err != nil {
-		return nil, nil, nil, fmt.Errorf("parsing git commit committer time: %s", err)
+		return nil, nil, nil, errors.Errorf("parsing git commit committer time: %s", err)
 	}
 
 	var parents []api.CommitID
@@ -614,11 +614,11 @@ func logOnelineScanner(r io.Reader) func() (*onelineCommit, error) {
 
 		// Format: (40-char SHA) (source ref)
 		if len(e) <= 42 {
-			return nil, fmt.Errorf("parsing git oneline commit: short entry: %q", e)
+			return nil, errors.Errorf("parsing git oneline commit: short entry: %q", e)
 		}
 		sha1 := e[:40]
 		if e[40] != ' ' {
-			return nil, fmt.Errorf("parsing git oneline commit: no ' ': %q", e)
+			return nil, errors.Errorf("parsing git oneline commit: no ' ': %q", e)
 		}
 		sourceRef := e[41:]
 		return &onelineCommit{

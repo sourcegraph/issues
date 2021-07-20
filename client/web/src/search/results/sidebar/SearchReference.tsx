@@ -158,18 +158,9 @@ const searchReferenceInfo: SearchReferenceInfo[] = [
             'Shows only query results for a given type. For example, `select:repo` displays only distinct reopsitory paths from search results. See [language definition](https://docs.sourcegraph.com/code_search/reference/language#select) for possible values.',
         examples: ['fmt.Errorf select:repo'],
     },
-    /*
-     * FIXME: Doesn't exist as filter type?
-    {
-        type: FilterType.stable,
-        placeholder: parsePlaceholder('{yes}'),
-        description:
-            'Ensures a deterministic result order. Applies only to file contents. Limited to at max `count:5000` results. Note this field should be removed if you’re using the pagination API, which already ensures deterministic results.',
-    },
-    */
     {
         type: FilterType.type,
-        placeholder: parsePlaceholder('{diff//commit/...}'),
+        placeholder: parsePlaceholder('{diff/commit/...}'),
         commonRank: 90,
         description:
             'Specifies the type of search. By default, searches are executed on all code at a given point in time (a branch or a commit). Specify the `type:` if you want to search over changes to code or commit messages instead (diffs or commits).',

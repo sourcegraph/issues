@@ -1,13 +1,10 @@
 import classNames from 'classnames'
-import { isPlainObject } from 'lodash'
+import { isPlainObject, noop } from 'lodash'
 import * as Monaco from 'monaco-editor'
-import React, { useCallback, useEffect, useLayoutEffect, useMemo, useState } from 'react'
-import { Subscription, Observable, Unsubscribable, ReplaySubject } from 'rxjs'
+import React, { useCallback, useEffect, useLayoutEffect, useState } from 'react'
 
 import { KeyboardShortcut } from '@sourcegraph/shared/src/keyboardShortcuts'
-import { getProviders } from '@sourcegraph/shared/src/search/query/providers'
 import { appendContextFilter } from '@sourcegraph/shared/src/search/query/transformer'
-import { SearchSuggestion } from '@sourcegraph/shared/src/search/suggestions'
 import { VersionContextProps } from '@sourcegraph/shared/src/search/util'
 import { SettingsCascadeProps } from '@sourcegraph/shared/src/settings/settings'
 import { ThemeProps } from '@sourcegraph/shared/src/theme'
@@ -16,11 +13,11 @@ import { hasProperty } from '@sourcegraph/shared/src/util/types'
 
 import { CaseSensitivityProps, PatternTypeProps, SearchContextProps } from '..'
 import { MonacoEditor } from '../../components/MonacoEditor'
-import { SearchPatternType } from '../../graphql-operations'
 import { KEYBOARD_SHORTCUT_FOCUS_SEARCHBAR } from '../../keyboardShortcuts/keyboardShortcuts'
 import { observeResize } from '../../util/dom'
 import { fetchSuggestions } from '../backend'
 import { QueryChangeSource, QueryState } from '../helpers'
+import { SOURCEGRAPH_SEARCH, useQueryIntelligence, useQueryDiagnostics } from '../useQueryIntelligence'
 
 export interface MonacoQueryInputProps
     extends ThemeProps,
@@ -46,53 +43,6 @@ export interface MonacoQueryInputProps
     interpretComments?: boolean
 
     className?: string
-}
-
-const SOURCEGRAPH_SEARCH = 'sourcegraphSearch' as const
-
-/**
- * Maps a Monaco IDisposable to an rxjs Unsubscribable.
- */
-const toUnsubscribable = (disposable: Monaco.IDisposable): Unsubscribable => ({
-    unsubscribe: () => disposable.dispose(),
-})
-
-/**
- * Adds code intelligence for the Sourcegraph search syntax to Monaco.
- *
- * @returns Subscription
- */
-export function addSourcegraphSearchCodeIntelligence(
-    monaco: typeof Monaco,
-    searchQueries: Observable<string>,
-    fetchSuggestions: (query: string) => Observable<SearchSuggestion[]>,
-    options: {
-        patternType: SearchPatternType
-        globbing: boolean
-        interpretComments?: boolean
-        isSourcegraphDotCom?: boolean
-    }
-): Subscription {
-    const subscriptions = new Subscription()
-
-    // Register language ID
-    monaco.languages.register({ id: SOURCEGRAPH_SEARCH })
-
-    // Register providers
-    const providers = getProviders(searchQueries, fetchSuggestions, options)
-    subscriptions.add(toUnsubscribable(monaco.languages.setTokensProvider(SOURCEGRAPH_SEARCH, providers.tokens)))
-    subscriptions.add(toUnsubscribable(monaco.languages.registerHoverProvider(SOURCEGRAPH_SEARCH, providers.hover)))
-    subscriptions.add(
-        toUnsubscribable(monaco.languages.registerCompletionItemProvider(SOURCEGRAPH_SEARCH, providers.completion))
-    )
-
-    subscriptions.add(
-        providers.diagnostics.subscribe(markers => {
-            monaco.editor.setModelMarkers(monaco.editor.getModels()[0], 'diagnostics', markers)
-        })
-    )
-
-    return subscriptions
 }
 
 /**
@@ -183,44 +133,13 @@ export const MonacoQueryInput: React.FunctionComponent<MonacoQueryInputProps> = 
         [selectedSearchContextSpec, versionContext]
     )
 
-    // Register themes and code intelligence providers. The providers are passed
-    // a ReplaySubject of search queries to avoid registering new providers on
-    // every query change. The ReplaySubject is updated with useLayoutEffect
-    // so that the update is synchronous, otherwise providers run off
-    // an outdated query.
-    //
-    // TODO: use a ref instead and get rid of RxJS usage here altogether?
-    const [monacoInstance, setMonacoInstance] = useState<typeof Monaco>()
-    const searchQueries = useMemo(() => new ReplaySubject<string>(1), [])
-    useLayoutEffect(() => {
-        searchQueries.next(queryState.query)
-    }, [queryState.query, searchQueries])
-
-    useEffect(() => {
-        if (!monacoInstance) {
-            return
-        }
-        const subscription = addSourcegraphSearchCodeIntelligence(
-            monacoInstance,
-            searchQueries,
-            fetchSuggestionsWithContext,
-            {
-                patternType,
-                globbing,
-                interpretComments,
-                isSourcegraphDotCom,
-            }
-        )
-        return () => subscription.unsubscribe()
-    }, [
-        monacoInstance,
-        searchQueries,
-        fetchSuggestionsWithContext,
+    useQueryIntelligence(fetchSuggestionsWithContext, {
         patternType,
         globbing,
         interpretComments,
         isSourcegraphDotCom,
-    ])
+    })
+    useQueryDiagnostics(editor, { patternType, interpretComments })
 
     // Register suggestions handle
     useEffect(() => {
@@ -431,7 +350,7 @@ export const MonacoQueryInput: React.FunctionComponent<MonacoQueryInputProps> = 
                 value={queryState.query}
                 height={17}
                 isLightTheme={isLightTheme}
-                editorWillMount={setMonacoInstance}
+                editorWillMount={noop}
                 onEditorCreated={setEditor}
                 options={options}
                 border={false}

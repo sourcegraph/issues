@@ -134,11 +134,11 @@ func checkVersion(db *sql.DB) error {
 
 	match := versionPattern.FindStringSubmatch(version)
 	if len(match) == 0 {
-		return fmt.Errorf("unexpected version string: %q", version)
+		return errors.Errorf("unexpected version string: %q", version)
 	}
 
 	if majorVersion, _ := strconv.Atoi(match[1]); majorVersion < 12 {
-		return fmt.Errorf("Sourcegraph requires PostgreSQL 12+")
+		return errors.Errorf("Sourcegraph requires PostgreSQL 12+")
 	}
 
 	return nil
@@ -216,7 +216,7 @@ func openDBWithStartupWait(cfg *pgx.ConnConfig) (db *sql.DB, err error) {
 	startupDeadline := time.Now().Add(startupTimeout)
 	for {
 		if time.Now().After(startupDeadline) {
-			return nil, fmt.Errorf("database did not start up within %s (%v)", startupTimeout, err)
+			return nil, errors.Errorf("database did not start up within %s (%v)", startupTimeout, err)
 		}
 		db, err = open(cfg)
 		if err == nil {
@@ -233,14 +233,19 @@ func openDBWithStartupWait(cfg *pgx.ConnConfig) (db *sql.DB, err error) {
 // isDatabaseLikelyStartingUp returns whether the err likely just means the PostgreSQL database is
 // starting up, and it should not be treated as a fatal error during program initialization.
 func isDatabaseLikelyStartingUp(err error) bool {
-	msg := err.Error()
-	if strings.Contains(msg, "the database system is starting up") {
+	substrings := []string{
 		// Wait for DB to start up.
-		return true
-	}
-	if strings.Contains(msg, "connection refused") || strings.Contains(msg, "failed to receive message") {
+		"the database system is starting up",
 		// Wait for DB to start listening.
-		return true
+		"connection refused",
+		"failed to receive message",
+	}
+
+	msg := err.Error()
+	for _, substring := range substrings {
+		if strings.Contains(msg, substring) {
+			return true
+		}
 	}
 
 	return false

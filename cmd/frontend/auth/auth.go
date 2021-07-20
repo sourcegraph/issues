@@ -2,9 +2,10 @@
 package auth
 
 import (
-	"fmt"
 	"net/http"
 	"strings"
+
+	"github.com/cockroachdb/errors"
 
 	"github.com/sourcegraph/sourcegraph/cmd/frontend/internal/suspiciousnames"
 	"github.com/sourcegraph/sourcegraph/internal/lazyregexp"
@@ -79,7 +80,7 @@ func NormalizeUsername(name string) (string, error) {
 
 	name = disallowedCharacter.ReplaceAllString(name, "-")
 	if disallowedSymbols.MatchString(name) {
-		return "", fmt.Errorf("username %q could not be normalized to acceptable format", origName)
+		return "", errors.Errorf("username %q could not be normalized to acceptable format", origName)
 	}
 
 	if err := suspiciousnames.CheckNameAllowedForUserOrOrganization(name); err != nil {

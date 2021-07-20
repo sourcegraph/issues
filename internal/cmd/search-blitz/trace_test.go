@@ -4,13 +4,14 @@ import (
 	"bytes"
 	"compress/gzip"
 	"context"
-	"fmt"
 	"io"
 	"net/http"
 	"net/http/httptest"
 	"os"
 	"path/filepath"
 	"testing"
+
+	"github.com/cockroachdb/errors"
 )
 
 func TestTraceStore(t *testing.T) {
@@ -50,7 +51,7 @@ func TestTraceStore(t *testing.T) {
 			return err
 		}
 		if !bytes.Equal(payload, got) {
-			return fmt.Errorf("unexpected payload on disk:\nwant: %s\ngot:  %s", payload, got)
+			return errors.Errorf("unexpected payload on disk:\nwant: %s\ngot:  %s", payload, got)
 		}
 		return nil
 	}

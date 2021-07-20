@@ -1,24 +1,63 @@
-import { storiesOf } from '@storybook/react'
-import React, { useState } from 'react'
+import { Meta, Story } from '@storybook/react'
+import React from 'react'
 
 import { BrandedStory } from '@sourcegraph/branded/src/components/BrandedStory'
 import webStyles from '@sourcegraph/web/src/SourcegraphWebApp.scss'
 
-import { Container } from '../Container'
+import { Container } from '..'
 
-import { Steps, Step } from './Steps'
+import { Steps, Step, StepList, StepPanels, StepPanel, StepActions, useSteps } from '.'
 
-const { add } = storiesOf('wildcard/Steps', module).addDecorator(story => (
-    <BrandedStory styles={webStyles}>{() => <Container>{story()}</Container>}</BrandedStory>
-))
-
-add('Generic', () => {
-    const [step, setStep] = useState(1)
+const Actions = () => {
+    const { setStep, currentIndex, currentStep } = useSteps()
     return (
-        <Steps current={step} onChange={setStep} initial={1}>
-            <Step title="Connect with code hosts" />
-            <Step title="Add Repositories" />
-            <Step title="Start Searching" />
-        </Steps>
+        <>
+            <button
+                disabled={currentStep.isFirstStep}
+                className="btn btn-primary"
+                onClick={() => setStep(currentIndex - 1)}
+            >
+                Previous
+            </button>
+            <button
+                disabled={currentStep.isLastStep}
+                className="btn btn-primary"
+                onClick={() => setStep(currentIndex + 1)}
+            >
+                Next
+            </button>
+        </>
     )
-})
+}
+
+export const Stepper: Story = () => (
+    <BrandedStory styles={webStyles}>
+        {() => (
+            <Container>
+                <Steps initialStep={2}>
+                    <StepList numeric={true}>
+                        <Step borderColor="blue">Panel 1 title</Step>
+                        <Step borderColor="orange">Panel 2 Title</Step>
+                        <Step borderColor="purple">Panel 3 Title</Step>
+                    </StepList>
+                    <StepPanels>
+                        <StepPanel>Panel 1</StepPanel>
+                        <StepPanel>Panel 2</StepPanel>
+                        <StepPanel>Panel 3</StepPanel>
+                    </StepPanels>
+                    <StepActions>
+                        <Actions />
+                    </StepActions>
+                </Steps>
+            </Container>
+        )}
+    </BrandedStory>
+)
+
+Stepper.storyName = 'Steps component top navigation'
+
+// eslint-disable-next-line import/no-default-export
+export default {
+    title: 'wildcard/Steps',
+    component: Stepper,
+} as Meta

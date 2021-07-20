@@ -8,6 +8,8 @@ import (
 	"io"
 	"log"
 	"net/http"
+
+	"github.com/cockroachdb/errors"
 )
 
 // see https://api.slack.com/reference/block-kit/blocks
@@ -90,23 +92,23 @@ func reportError(ctx context.Context, opts options, err error, scope string) {
 func sendSlackBlocks(ctx context.Context, webhook string, blocks []slackBlock) error {
 	b, err := json.Marshal(&slackMessage{blocks})
 	if err != nil {
-		return fmt.Errorf("failed to post report to slack: %w", err)
+		return errors.Errorf("failed to post report to slack: %w", err)
 	}
 	req, err := http.NewRequest(http.MethodPost, webhook, bytes.NewReader(b))
 	if err != nil {
-		return fmt.Errorf("failed to post report to slack: %w", err)
+		return errors.Errorf("failed to post report to slack: %w", err)
 	}
 	resp, err := http.DefaultClient.Do(req.WithContext(ctx))
 	if err != nil {
-		return fmt.Errorf("failed to post report to slack: %w", err)
+		return errors.Errorf("failed to post report to slack: %w", err)
 	}
 	if resp.StatusCode != 200 {
 		defer resp.Body.Close()
 		message, err := io.ReadAll(resp.Body)
 		if err != nil {
-			return fmt.Errorf("failed to post report to slack: %s", resp.Status)
+			return errors.Errorf("failed to post report to slack: %s", resp.Status)
 		}
-		return fmt.Errorf("failed to post report to slack: %s", string(message))
+		return errors.Errorf("failed to post report to slack: %s", string(message))
 	}
 	return nil
 }

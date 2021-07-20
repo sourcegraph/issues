@@ -15,6 +15,7 @@ import (
 
 	"github.com/sourcegraph/sourcegraph/internal/api"
 	"github.com/sourcegraph/sourcegraph/internal/database"
+	"github.com/sourcegraph/sourcegraph/internal/errcode"
 	"github.com/sourcegraph/sourcegraph/internal/extsvc"
 	"github.com/sourcegraph/sourcegraph/internal/extsvc/awscodecommit"
 	"github.com/sourcegraph/sourcegraph/internal/extsvc/bitbucketserver"
@@ -37,6 +38,9 @@ type Server struct {
 	}
 	GitLabDotComSource interface {
 		GetRepo(ctx context.Context, projectWithNamespace string) (*types.Repo, error)
+	}
+	JVMPackagesSource interface {
+		GetRepo(ctx context.Context, artifactName string) (*types.Repo, error)
 	}
 	Scheduler interface {
 		UpdateOnce(id api.RepoID, name api.RepoName)
@@ -433,6 +437,23 @@ func (s *Server) remoteRepoSync(ctx context.Context, codehost *extsvc.CodeHost, 
 			}
 			return nil, err
 		}
+	case extsvc.JVMPackages:
+		artifactPath := strings.TrimPrefix(remoteName, "maven/")
+		if s.JVMPackagesSource != nil {
+			repo, err = s.JVMPackagesSource.GetRepo(ctx, artifactPath)
+			if err != nil {
+				if errcode.IsNotFound(err) {
+					return &protocol.RepoLookupResult{
+						ErrorNotFound: true,
+					}, nil
+				}
+				return nil, err
+			}
+		} else {
+			log15.Error(
+				"JVMPackagesSource is nil: doing nothing. To fix this problem, make sure that cloud_default is true for the JVM Dependencies external service type.",
+				"remoteName", remoteName)
+		}
 	}
 
 	if repo.Private {
@@ -506,7 +527,7 @@ func (s *Server) handleSchedulePermsSync(w http.ResponseWriter, r *http.Request)
 func newRepoInfo(r *types.Repo) (*protocol.RepoInfo, error) {
 	urls := r.CloneURLs()
 	if len(urls) == 0 {
-		return nil, fmt.Errorf("no clone urls for repo id=%q name=%q", r.ID, r.Name)
+		return nil, errors.Errorf("no clone urls for repo id=%q name=%q", r.ID, r.Name)
 	}
 
 	info := protocol.RepoInfo{

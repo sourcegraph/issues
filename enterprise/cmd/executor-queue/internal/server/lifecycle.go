@@ -2,14 +2,9 @@ package server
 
 import (
 	"context"
-	"fmt"
 
-	"github.com/cockroachdb/errors"
 	"github.com/hashicorp/go-multierror"
-	"github.com/inconshreveable/log15"
 )
-
-var shutdownErr = errors.New("server shutting down")
 
 // heartbeat will release the transaction for any job that is not confirmed to be in-progress
 // by the given executor. This method is called when the executor POSTs its in-progress job
@@ -35,9 +30,7 @@ func (h *handler) shutdown() {
 
 	for _, executor := range h.executors {
 		for _, job := range executor.jobs {
-			if err := job.tx.Done(shutdownErr); err != nil && err != shutdownErr {
-				log15.Error(fmt.Sprintf("Failed to close transaction holding job %d", job.record.RecordID()), "err", err)
-			}
+			job.cancel()
 		}
 	}
 }
@@ -135,8 +128,12 @@ func (h *handler) requeueJobs(ctx context.Context, jobs []jobMeta) (errs error) 
 
 // requeueJob requeues the given job and releases the associated transaction.
 func (h *handler) requeueJob(ctx context.Context, job jobMeta) error {
-	defer func() { h.dequeueSemaphore <- struct{}{} }()
+	queueOptions, ok := h.options.QueueOptions[job.queueName]
+	if !ok {
+		return ErrUnknownQueue
+	}
 
-	err := job.tx.Requeue(ctx, job.record.RecordID(), h.clock.Now().Add(h.options.RequeueDelay))
-	return job.tx.Done(err)
+	defer func() { h.dequeueSemaphore <- struct{}{} }()
+	defer job.cancel()
+	return queueOptions.Store.Requeue(ctx, job.record.RecordID(), h.clock.Now().Add(h.options.RequeueDelay))
 }

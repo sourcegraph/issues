@@ -117,7 +117,9 @@ func (s *HorizontalSearcher) List(ctx context.Context, q query.Q, opts *zoekt.Li
 	// PERF: We don't deduplicate Repos since the only user of List already
 	// does deduplication.
 
-	var aggregate zoekt.RepoList
+	aggregate := zoekt.RepoList{
+		Minimal: make(map[uint32]*zoekt.MinimalRepoListEntry),
+	}
 	for range clients {
 		r := <-results
 		if r.err != nil {
@@ -126,6 +128,10 @@ func (s *HorizontalSearcher) List(ctx context.Context, q query.Q, opts *zoekt.Li
 
 		aggregate.Repos = append(aggregate.Repos, r.rl.Repos...)
 		aggregate.Crashes += r.rl.Crashes
+
+		for k, v := range r.rl.Minimal {
+			aggregate.Minimal[k] = v
+		}
 	}
 
 	return &aggregate, nil

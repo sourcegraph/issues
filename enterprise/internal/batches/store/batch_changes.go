@@ -9,6 +9,7 @@ import (
 	"github.com/sourcegraph/go-diff/diff"
 
 	btypes "github.com/sourcegraph/sourcegraph/enterprise/internal/batches/types"
+	"github.com/sourcegraph/sourcegraph/internal/api"
 	"github.com/sourcegraph/sourcegraph/internal/database"
 	"github.com/sourcegraph/sourcegraph/internal/database/dbutil"
 )
@@ -320,6 +321,43 @@ func getBatchChangeDiffStatQuery(opts GetBatchChangeDiffStatOpts, authzConds *sq
 	return sqlf.Sprintf(getBatchChangeDiffStatQueryFmtstr, strconv.Itoa(int(opts.BatchChangeID)), authzConds)
 }
 
+func (s *Store) GetRepoDiffStat(ctx context.Context, repoID api.RepoID) (*diff.Stat, error) {
+	authzConds, err := database.AuthzQueryConds(ctx, s.Handle().DB())
+	if err != nil {
+		return nil, errors.Wrap(err, "GetRepoDiffStat generating authz query conds")
+	}
+	q := getRepoDiffStatQuery(int64(repoID), authzConds)
+
+	var diffStat diff.Stat
+	err = s.query(ctx, q, func(sc scanner) error {
+		return sc.Scan(&diffStat.Added, &diffStat.Changed, &diffStat.Deleted)
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return &diffStat, nil
+}
+
+var getRepoDiffStatQueryFmtstr = `
+-- source: enterprise/internal/batches/store.go:GetRepoDiffStat
+SELECT
+	COALESCE(SUM(diff_stat_added), 0) AS added,
+	COALESCE(SUM(diff_stat_changed), 0) AS changed,
+	COALESCE(SUM(diff_stat_deleted), 0) AS deleted
+FROM changesets
+INNER JOIN repo ON changesets.repo_id = repo.id
+WHERE
+	changesets.repo_id = %s AND
+	repo.deleted_at IS NULL AND
+	-- authz conditions:
+	%s
+`
+
+func getRepoDiffStatQuery(repoID int64, authzConds *sqlf.Query) *sqlf.Query {
+	return sqlf.Sprintf(getRepoDiffStatQueryFmtstr, repoID, authzConds)
+}
+
 // ListBatchChangesOpts captures the query options needed for
 // listing batches.
 type ListBatchChangesOpts struct {
@@ -332,11 +370,17 @@ type ListBatchChangesOpts struct {
 
 	NamespaceUserID int32
 	NamespaceOrgID  int32
+
+	RepoID api.RepoID
 }
 
 // ListBatchChanges lists batch changes with the given filters.
 func (s *Store) ListBatchChanges(ctx context.Context, opts ListBatchChangesOpts) (cs []*btypes.BatchChange, next int64, err error) {
-	q := listBatchChangesQuery(&opts)
+	repoAuthzConds, err := database.AuthzQueryConds(ctx, s.Handle().DB())
+	if err != nil {
+		return nil, 0, errors.Wrap(err, "ListBatchChanges generating authz query conds")
+	}
+	q := listBatchChangesQuery(&opts, repoAuthzConds)
 
 	cs = make([]*btypes.BatchChange, 0, opts.DBLimit())
 	err = s.query(ctx, q, func(sc scanner) error {
@@ -364,7 +408,7 @@ WHERE %s
 ORDER BY id DESC
 `
 
-func listBatchChangesQuery(opts *ListBatchChangesOpts) *sqlf.Query {
+func listBatchChangesQuery(opts *ListBatchChangesOpts, repoAuthzConds *sqlf.Query) *sqlf.Query {
 	joins := []*sqlf.Query{
 		sqlf.Sprintf("LEFT JOIN users namespace_user ON batch_changes.namespace_user_id = namespace_user.id"),
 		sqlf.Sprintf("LEFT JOIN orgs namespace_org ON batch_changes.namespace_org_id = namespace_org.id"),
@@ -400,6 +444,19 @@ func listBatchChangesQuery(opts *ListBatchChangesOpts) *sqlf.Query {
 
 	if opts.NamespaceOrgID != 0 {
 		preds = append(preds, sqlf.Sprintf("batch_changes.namespace_org_id = %s", opts.NamespaceOrgID))
+	}
+
+	if opts.RepoID != 0 {
+		preds = append(preds, sqlf.Sprintf(`EXISTS(
+			SELECT * FROM changesets
+			INNER JOIN repo ON changesets.repo_id = repo.id
+			WHERE
+				changesets.batch_change_ids ? batch_changes.id::TEXT AND
+				changesets.repo_id = %s AND
+				repo.deleted_at IS NULL AND
+				-- authz conditions:
+				%s
+		)`, opts.RepoID, repoAuthzConds))
 	}
 
 	if len(preds) == 0 {

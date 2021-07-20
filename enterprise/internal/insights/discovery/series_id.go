@@ -4,6 +4,8 @@ import (
 	"crypto/sha256"
 	"fmt"
 
+	"github.com/cockroachdb/errors"
+
 	"github.com/sourcegraph/sourcegraph/internal/insights"
 
 	"github.com/sourcegraph/sourcegraph/schema"
@@ -23,7 +25,7 @@ func EncodeSeriesID(series *schema.InsightSeries) (string, error) {
 	case series.Webhook != "":
 		return fmt.Sprintf("w:%s", sha256String(series.Webhook)), nil
 	default:
-		return "", fmt.Errorf("invalid series %+v", series)
+		return "", errors.Errorf("invalid series %+v", series)
 	}
 }
 

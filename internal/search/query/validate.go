@@ -1,7 +1,6 @@
 package query
 
 import (
-	"fmt"
 	"regexp"
 	"strconv"
 	"strings"
@@ -184,7 +183,7 @@ func parseBool(s string) (bool, error) {
 	default:
 		b, err := strconv.ParseBool(s)
 		if err != nil {
-			err = fmt.Errorf("invalid boolean %q", s)
+			err = errors.Errorf("invalid boolean %q", s)
 		}
 		return b, err
 	}
@@ -193,14 +192,14 @@ func parseBool(s string) (bool, error) {
 func validateField(field, value string, negated bool, seen map[string]struct{}) error {
 	isNotNegated := func() error {
 		if negated {
-			return fmt.Errorf("field %q does not support negation", field)
+			return errors.Errorf("field %q does not support negation", field)
 		}
 		return nil
 	}
 
 	isSingular := func() error {
 		if _, notSingular := seen[field]; notSingular {
-			return fmt.Errorf("field %q may not be used more than once", field)
+			return errors.Errorf("field %q may not be used more than once", field)
 		}
 		return nil
 	}
@@ -222,13 +221,13 @@ func validateField(field, value string, negated bool, seen map[string]struct{}) 
 	isNumber := func() error {
 		count, err := strconv.ParseInt(value, 10, 32)
 		if err != nil {
-			if err.(*strconv.NumError).Err == strconv.ErrRange {
-				return fmt.Errorf("field %s has a value that is out of range, try making it smaller", field)
+			if errors.Is(err, strconv.ErrRange) {
+				return errors.Errorf("field %s has a value that is out of range, try making it smaller", field)
 			}
-			return fmt.Errorf("field %s has value %[2]s, %[2]s is not a number", field, value)
+			return errors.Errorf("field %s has value %[2]s, %[2]s is not a number", field, value)
 		}
 		if count <= 0 {
-			return fmt.Errorf("field %s requires a positive number", field)
+			return errors.Errorf("field %s requires a positive number", field)
 		}
 		return nil
 	}
@@ -244,7 +243,7 @@ func validateField(field, value string, negated bool, seen map[string]struct{}) 
 	isLanguage := func() error {
 		_, ok := enry.GetLanguageByAlias(value)
 		if !ok {
-			return fmt.Errorf("unknown language: %q", value)
+			return errors.Errorf("unknown language: %q", value)
 		}
 		return nil
 	}
@@ -252,13 +251,13 @@ func validateField(field, value string, negated bool, seen map[string]struct{}) 
 	isYesNoOnly := func() error {
 		v := ParseYesNoOnly(value)
 		if v == Invalid {
-			return fmt.Errorf("invalid value %q for field %q. Valid values are: yes, only, no", value, field)
+			return errors.Errorf("invalid value %q for field %q. Valid values are: yes, only, no", value, field)
 		}
 		return nil
 	}
 
 	isUnrecognizedField := func() error {
-		return fmt.Errorf("unrecognized field %q", field)
+		return errors.Errorf("unrecognized field %q", field)
 	}
 
 	isValidSelect := func() error {
@@ -344,10 +343,17 @@ func validateField(field, value string, negated bool, seen map[string]struct{}) 
 	return nil
 }
 
-// A query is invalid if it contains a rev: filter and a repo is specified with @.
+// A query with a rev: filter is invalid if:
+// (1) a repo is specified with @, OR
+// (2) no repo is specified, OR
+// (3) an empty repo value is specified (i.e., repo:"").
 func validateRepoRevPair(nodes []Node) error {
 	var seenRepoWithCommit bool
+	var seenRepo bool
+	var seenEmptyRepo bool
 	VisitField(nodes, FieldRepo, func(value string, negated bool, _ Annotation) {
+		seenRepo = true
+		seenEmptyRepo = value == ""
 		if !negated && strings.ContainsRune(value, '@') {
 			seenRepoWithCommit = true
 		}
@@ -362,6 +368,12 @@ func validateRepoRevPair(nodes []Node) error {
 	if seenRepoWithCommit && revSpecified {
 		return errors.New("invalid syntax. You specified both @ and rev: for a" +
 			" repo: filter and I don't know how to interpret this. Remove either @ or rev: and try again")
+	}
+	if !seenRepo && revSpecified {
+		return errors.New("invalid syntax. The query contains `rev:` without `repo:`. Add a `repo:` filter and try again")
+	}
+	if seenEmptyRepo && revSpecified {
+		return errors.New("invalid syntax. The query contains `rev:` but `repo:` is empty. Add a non-empty `repo:` filter and try again")
 	}
 	return nil
 }
@@ -380,7 +392,7 @@ func validateCommitParameters(nodes []Node) error {
 		}
 	})
 	if seenCommitParam != "" && !typeCommitExists {
-		return fmt.Errorf(`your query contains the field '%s', which requires type:commit or type:diff in the query`, seenCommitParam)
+		return errors.Errorf(`your query contains the field '%s', which requires type:commit or type:diff in the query`, seenCommitParam)
 	}
 	return nil
 }
@@ -424,7 +436,7 @@ func validatePredicates(nodes []Node) error {
 			name, params := ParseAsPredicate(value)                // guaranteed to succeed
 			predicate := DefaultPredicateRegistry.Get(field, name) // guaranteed to succeed
 			if parseErr := predicate.ParseParams(params); parseErr != nil {
-				err = fmt.Errorf("invalid predicate value: %s", parseErr)
+				err = errors.Errorf("invalid predicate value: %s", parseErr)
 			}
 		}
 	})
@@ -489,16 +501,13 @@ func validateParameters(nodes []Node) error {
 func validatePattern(nodes []Node) error {
 	var err error
 	VisitPattern(nodes, func(value string, negated bool, annotation Annotation) {
+		if err != nil {
+			return
+		}
 		if annotation.Labels.IsSet(Regexp) {
-			if err != nil {
-				return
-			}
 			_, err = regexp.Compile(value)
 		}
 		if annotation.Labels.IsSet(Structural) && negated {
-			if err != nil {
-				return
-			}
 			err = errors.New("the query contains a negated search pattern. Structural search does not support negated search patterns at the moment")
 		}
 	})

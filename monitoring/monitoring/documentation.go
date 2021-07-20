@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"io"
 	"strings"
+
+	"github.com/cockroachdb/errors"
 )
 
 const (
@@ -86,11 +88,11 @@ func renderDocumentation(containers []*Container) (*documentation, error) {
 			for _, r := range g.Rows {
 				for _, o := range r {
 					if err := docs.renderAlertSolutionEntry(c, o); err != nil {
-						return nil, fmt.Errorf("error rendering alert solution entry %q %q: %w",
+						return nil, errors.Errorf("error rendering alert solution entry %q %q: %w",
 							c.Name, o.Name, err)
 					}
 					if err := docs.renderDashboardPanelEntry(c, o); err != nil {
-						return nil, fmt.Errorf("error rendering dashboard panel entry  %q %q: %w",
+						return nil, errors.Errorf("error rendering dashboard panel entry  %q %q: %w",
 							c.Name, o.Name, err)
 					}
 				}

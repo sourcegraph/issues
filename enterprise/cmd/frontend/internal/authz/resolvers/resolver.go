@@ -2,7 +2,6 @@ package resolvers
 
 import (
 	"context"
-	"fmt"
 	"strings"
 	"time"
 
@@ -131,7 +130,7 @@ func (r *Resolver) SetRepositoryPermissionsForUsers(ctx context.Context, args *g
 		}
 
 	default:
-		return nil, fmt.Errorf("unrecognized user mapping bind ID type %q", cfg.BindID)
+		return nil, errors.Errorf("unrecognized user mapping bind ID type %q", cfg.BindID)
 	}
 
 	pendingBindIDs := make([]string, 0, len(bindIDSet))

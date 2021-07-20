@@ -17,6 +17,7 @@ export interface UserCodeHosts {
     externalServices: ListExternalServiceFields[]
     onDidError: (error: ErrorLike) => void
     onDidRemove: () => void
+    onNavigation?: (called: boolean) => void
     context: Pick<SourcegraphContext, 'authProviders'>
 }
 
@@ -35,6 +36,7 @@ export const UserCodeHosts: React.FunctionComponent<UserCodeHosts> = ({
     context,
     onDidError,
     onDidRemove,
+    onNavigation,
 }) => {
     const { scopes, setScope } = useCodeHostScopeContext()
 
@@ -62,6 +64,7 @@ export const UserCodeHosts: React.FunctionComponent<UserCodeHosts> = ({
             const authProvider = authProvidersByKind[kind]
 
             if (authProvider) {
+                onNavigation?.(true)
                 eventLogger.log('UserAttemptConnectCodeHost', { kind })
                 window.location.assign(
                     `${authProvider.authenticationURL as string}&redirect=${
@@ -70,7 +73,7 @@ export const UserCodeHosts: React.FunctionComponent<UserCodeHosts> = ({
                 )
             }
         },
-        [authProvidersByKind]
+        [authProvidersByKind, onNavigation]
     )
 
     const removeService = (kind: ExternalServiceKind) => (): void => {
@@ -97,7 +100,6 @@ export const UserCodeHosts: React.FunctionComponent<UserCodeHosts> = ({
                                 isTokenUpdateRequired={isTokenUpdateRequired[kind]}
                                 navigateToAuthProvider={navigateToAuthProvider}
                                 icon={icon}
-                                // onDidAdd={addNewService}
                                 onDidRemove={removeService(kind)}
                                 onDidError={onDidError}
                             />

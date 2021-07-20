@@ -1,7 +1,6 @@
 package licensing
 
 import (
-	"fmt"
 	"log"
 	"sync"
 
@@ -166,7 +165,7 @@ func GenerateProductLicenseKey(info license.Info) (string, error) {
 		const msg = "no product license generation private key was configured"
 		if env.InsecureDev {
 			// Show more helpful error message in local dev.
-			return "", fmt.Errorf("%s (for testing by Sourcegraph staff: set the SOURCEGRAPH_LICENSE_GENERATION_KEY env var to the key obtained at %s)", msg, licenseGenerationPrivateKeyURL)
+			return "", errors.Errorf("%s (for testing by Sourcegraph staff: set the SOURCEGRAPH_LICENSE_GENERATION_KEY env var to the key obtained at %s)", msg, licenseGenerationPrivateKeyURL)
 		}
 		return "", errors.New(msg)
 	}

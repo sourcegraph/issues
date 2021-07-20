@@ -1,7 +1,7 @@
 import { camelCase } from 'lodash'
 
 import { DataSeries } from '../../../../../core/backend/types'
-import { InsightTypePrefix, SearchBasedInsight } from '../../../../../core/types'
+import { InsightType, InsightTypePrefix, SearchBasedInsight } from '../../../../../core/types'
 import { CreateInsightFormFields, EditableDataSeries } from '../types'
 
 export function getSanitizedRepositories(rawRepositories: string): string[] {
@@ -33,6 +33,8 @@ export function getSanitizedSeries(rawSeries: EditableDataSeries[]): DataSeries[
  */
 export function getSanitizedSearchInsight(rawInsight: CreateInsightFormFields): SearchBasedInsight {
     return {
+        type: rawInsight.allRepos ? InsightType.Backend : InsightType.Extension,
+
         // ID generated according to our naming insight convention
         // <Type of insight>.insight.<name of insight>
         id: `${InsightTypePrefix.search}.${camelCase(rawInsight.title)}`,

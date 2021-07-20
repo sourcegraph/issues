@@ -8,6 +8,8 @@ import (
 	"path"
 	"strconv"
 
+	"github.com/cockroachdb/errors"
+
 	"github.com/sourcegraph/sourcegraph/internal/conf"
 	"github.com/sourcegraph/sourcegraph/internal/errcode"
 	"github.com/sourcegraph/sourcegraph/internal/jsonc"
@@ -36,7 +38,7 @@ func getLatestRelease(ctx context.Context, extensionID string, registryExtension
 	}
 
 	if err := prepReleaseManifest(extensionID, release); err != nil {
-		return nil, fmt.Errorf("parsing extension manifest for extension with ID %d (release tag %q): %s", registryExtensionID, releaseTag, err)
+		return nil, errors.Errorf("parsing extension manifest for extension with ID %d (release tag %q): %s", registryExtensionID, releaseTag, err)
 	}
 
 	return release, nil
@@ -66,7 +68,7 @@ func getLatestForBatch(ctx context.Context, vs []*dbExtension) (map[int32]*dbRel
 
 	for _, r := range releases {
 		if err := prepReleaseManifest(extensionIDMap[r.RegistryExtensionID], r); err != nil {
-			return nil, fmt.Errorf("parsing extension manifest for extension with ID %d (release tag %q): %s", r.RegistryExtensionID, "release", err)
+			return nil, errors.Errorf("parsing extension manifest for extension with ID %d (release tag %q): %s", r.RegistryExtensionID, "release", err)
 		}
 	}
 

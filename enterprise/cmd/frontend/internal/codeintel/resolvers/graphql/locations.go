@@ -4,6 +4,8 @@ import (
 	"context"
 	"sync"
 
+	"github.com/cockroachdb/errors"
+
 	"github.com/sourcegraph/sourcegraph/cmd/frontend/backend"
 	gql "github.com/sourcegraph/sourcegraph/cmd/frontend/graphqlbackend"
 	"github.com/sourcegraph/sourcegraph/enterprise/cmd/frontend/internal/codeintel/resolvers"
@@ -225,7 +227,7 @@ func (r *CachedLocationResolver) resolveCommit(ctx context.Context, repositoryRe
 
 	commitID, err := git.ResolveRevision(ctx, repo.Name, commit, git.ResolveRevisionOptions{NoEnsureRevision: true})
 	if err != nil {
-		if gitserver.IsRevisionNotFound(err) {
+		if errors.HasType(err, &gitserver.RevisionNotFoundError{}) {
 			return nil, nil
 		}
 		return nil, err

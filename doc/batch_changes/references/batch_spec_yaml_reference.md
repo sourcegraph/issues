@@ -540,7 +540,7 @@ changesetTemplate:
 
 ## [`changesetTemplate.published`](#changesettemplate-published)
 
-Whether to publish the changeset. This may be a boolean value (ie `true` or `false`), `'draft'`, or [an array to only publish some changesets within the batch change](#publishing-only-specific-changesets).
+Whether to publish the changeset. This may be a boolean value (ie `true` or `false`), `'draft'`, or [an array to only publish some changesets within the batch change](#publishing-only-specific-changesets). This may also be omitted, in which case the publication state will be controlled through the Sourcegraph UI, and will default to unpublished (that is, the same as specifying `false`).
 
 An unpublished changeset can be previewed on Sourcegraph by any person who can view the batch change, but its commit, branch, and pull request aren't created on the code host.
 

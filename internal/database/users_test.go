@@ -9,6 +9,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/cockroachdb/errors"
 	"github.com/google/go-cmp/cmp"
 
 	"github.com/sourcegraph/sourcegraph/internal/actor"
@@ -82,8 +83,8 @@ func TestUsers_ValidUsernames(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			valid := true
 			if _, err := Users(db).Create(ctx, NewUser{Username: test.name}); err != nil {
-				e, ok := err.(errCannotCreateUser)
-				if ok && (e.Code() == "users_username_max_length" || e.Code() == "users_username_valid_chars") {
+				var e errCannotCreateUser
+				if errors.As(err, &e) && (e.Code() == "users_username_max_length" || e.Code() == "users_username_valid_chars") {
 					valid = false
 				} else {
 					t.Fatal(err)

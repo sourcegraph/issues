@@ -654,7 +654,7 @@ func (m *mocks) AssociateUserAndSave(userID int32, spec extsvc.AccountSpec, data
 	for _, u := range m.userInfos {
 		for _, a := range u.extAccts {
 			if a == spec && u.user.ID != userID {
-				return fmt.Errorf("unable to change association of external account from user %d to user %d (delete the external account and then try again)", u.user.ID, userID)
+				return errors.Errorf("unable to change association of external account from user %d to user %d (delete the external account and then try again)", u.user.ID, userID)
 			}
 		}
 	}

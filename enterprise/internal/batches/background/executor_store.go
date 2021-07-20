@@ -78,20 +78,7 @@ func (s *executorStore) MarkComplete(ctx context.Context, id int) (_ bool, err e
 	}
 
 	_, ok, err := basestore.ScanFirstInt(batchesStore.Query(ctx, sqlf.Sprintf(markCompleteQuery, batchSpecRandID, id)))
-
 	return ok, err
-}
-
-func (s *executorStore) DequeueWithIndependentTransactionContext(ctx context.Context, workerHostname string, conditions []*sqlf.Query) (workerutil.Record, dbworkerstore.Store, bool, error) {
-	r, wrapped, b, err := s.Store.DequeueWithIndependentTransactionContext(ctx, workerHostname, conditions)
-
-	return r, &executorStore{Store: wrapped}, b, err
-}
-
-func (s *executorStore) Dequeue(ctx context.Context, workerHostname string, conditions []*sqlf.Query) (workerutil.Record, dbworkerstore.Store, bool, error) {
-	r, wrapped, b, err := s.Store.Dequeue(ctx, workerHostname, conditions)
-
-	return r, &executorStore{Store: wrapped}, b, err
 }
 
 func loadAndExtractBatchSpecRandID(ctx context.Context, s *store.Store, id int64) (string, error) {
@@ -138,7 +125,8 @@ func extractBatchSpecRandID(logs []workerutil.ExecutionLogEntry) (string, error)
 
 		var e srcCLILogLine
 		if err := json.Unmarshal([]byte(jsonPart), &e); err != nil {
-			return "", ErrNoBatchSpecRandID
+			// If we can't unmarshal the line as JSON we skip it
+			continue
 		}
 
 		if e.Operation == operationCreatingBatchSpec && e.Status == "SUCCESS" {

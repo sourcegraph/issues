@@ -25,8 +25,7 @@ Bulk operations allow a single action to be performed across many changesets in 
 - Re-enqueue: Only available if filtering by state `failed`. Re-enqueues the pending changes for all selected changesets that failed.
 - <span class="badge badge-experimental">Experimental</span> Merge: Only available if filtering by state `open`. Tries to merge the selected changesets on the code hosts. Due to the nature of changesets, there are many states in which a changeset is not mergeable. This won't break the entire bulk operation, but single changesets may not be merged after the run for this reason. The bulk operations tab lists those where merging failed below the bulk operation in that case. In the confirmation modal, you can select to merge using the squash merge strategy. This is supported on both GitHub and GitLab, but not on Bitbucket Server. In this case, regular merges are always used for merging the changesets.
 - Close: Only available if filtering by state `open` or `draft`. Tries to close the selected changesets on the code hosts.
-
-_More types coming soon._
+- Publish: Publishes the selected changesets, provided they don't have a [`published` field](../references/batch_spec_yaml_reference.md#changesettemplate-published) in the batch spec. You can choose between draft and normal changesets in the confirmation modal.
 
 ## Monitoring bulk operations
 

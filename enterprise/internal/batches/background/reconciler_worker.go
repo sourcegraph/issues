@@ -79,8 +79,9 @@ func createReconcilerDBWorkerStore(s *store.Store) dbworkerstore.Store {
 		// If state is equal, prefer the newer ones.
 		OrderByExpression: sqlf.Sprintf("changesets.reconciler_state = 'errored', changesets.updated_at DESC"),
 
-		StalledMaxAge: 60 * time.Second,
-		MaxNumResets:  reconcilerMaxNumResets,
+		HeartbeatInterval: 15 * time.Second,
+		StalledMaxAge:     60 * time.Second,
+		MaxNumResets:      reconcilerMaxNumResets,
 
 		RetryAfter:    5 * time.Second,
 		MaxNumRetries: reconcilerMaxNumRetries,

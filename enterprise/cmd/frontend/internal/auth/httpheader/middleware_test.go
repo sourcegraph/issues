@@ -7,6 +7,8 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"github.com/cockroachdb/errors"
+
 	"github.com/sourcegraph/sourcegraph/cmd/frontend/auth"
 	"github.com/sourcegraph/sourcegraph/enterprise/internal/licensing"
 	"github.com/sourcegraph/sourcegraph/internal/actor"
@@ -65,7 +67,7 @@ func TestMiddleware(t *testing.T) {
 			if op.ExternalAccount.ServiceType == "http-header" && op.ExternalAccount.ServiceID == "" && op.ExternalAccount.ClientID == "" && op.ExternalAccount.AccountID == "alice" {
 				return 1, "", nil
 			}
-			return 0, "safeErr", fmt.Errorf("account %v not found in mock", op.ExternalAccount)
+			return 0, "safeErr", errors.Errorf("account %v not found in mock", op.ExternalAccount)
 		}
 		defer func() { auth.MockGetAndSaveUser = nil }()
 		handler.ServeHTTP(rr, req)
@@ -102,7 +104,7 @@ func TestMiddleware(t *testing.T) {
 			if op.ExternalAccount.ServiceType == "http-header" && op.ExternalAccount.ServiceID == "" && op.ExternalAccount.ClientID == "" && op.ExternalAccount.AccountID == "alice_zhao" {
 				return 1, "", nil
 			}
-			return 0, "safeErr", fmt.Errorf("account %v not found in mock", op.ExternalAccount)
+			return 0, "safeErr", errors.Errorf("account %v not found in mock", op.ExternalAccount)
 		}
 		defer func() { auth.MockGetAndSaveUser = nil }()
 		handler.ServeHTTP(rr, req)
@@ -134,7 +136,7 @@ func TestMiddleware(t *testing.T) {
 				return 1, "", nil
 			}
 			t.Log(op.ExternalAccount)
-			return 0, "safeErr", fmt.Errorf("account %v not found in mock", op.ExternalAccount)
+			return 0, "safeErr", errors.Errorf("account %v not found in mock", op.ExternalAccount)
 		}
 		defer func() { auth.MockGetAndSaveUser = nil }()
 		handler.ServeHTTP(rr, req)
@@ -166,7 +168,7 @@ func TestMiddleware(t *testing.T) {
 			if op.ExternalAccount.ServiceType == "http-header" && op.ExternalAccount.ServiceID == "" && op.ExternalAccount.ClientID == "" && op.ExternalAccount.AccountID == "alice@example.com" {
 				return 1, "", nil
 			}
-			return 0, "safeErr", fmt.Errorf("account %v not found in mock", op.ExternalAccount)
+			return 0, "safeErr", errors.Errorf("account %v not found in mock", op.ExternalAccount)
 		}
 		defer func() { auth.MockGetAndSaveUser = nil }()
 		handler.ServeHTTP(rr, req)
@@ -216,7 +218,7 @@ func TestMiddleware_stripPrefix(t *testing.T) {
 			if op.ExternalAccount.ServiceType == "http-header" && op.ExternalAccount.ServiceID == "" && op.ExternalAccount.ClientID == "" && op.ExternalAccount.AccountID == "alice" {
 				return 1, "", nil
 			}
-			return 0, "safeErr", fmt.Errorf("account %v not found in mock", op.ExternalAccount)
+			return 0, "safeErr", errors.Errorf("account %v not found in mock", op.ExternalAccount)
 		}
 		defer func() { auth.MockGetAndSaveUser = nil }()
 		handler.ServeHTTP(rr, req)

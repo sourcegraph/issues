@@ -3,7 +3,6 @@ package graphqlbackend
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"strconv"
 
 	"github.com/cockroachdb/errors"
@@ -102,7 +101,7 @@ func toKeyPath(gqlKeyPath []*keyPathSegment) (jsonx.Path, error) {
 	keyPath := make(jsonx.Path, len(gqlKeyPath))
 	for i, s := range gqlKeyPath {
 		if (s.Property == nil) == (s.Index == nil) {
-			return nil, fmt.Errorf("invalid key path segment at index %d: exactly 1 of property and index must be non-null", i)
+			return nil, errors.Errorf("invalid key path segment at index %d: exactly 1 of property and index must be non-null", i)
 		}
 
 		var segment jsonx.Segment
@@ -218,7 +217,7 @@ func (r *settingsMutation) getCurrentSettings(ctx context.Context) (string, erro
 		if settings != nil {
 			lastID = &settings.ID
 		}
-		return "", fmt.Errorf("update settings version mismatch: last ID is %s (mutation wanted %s)", intOrNull(lastID), intOrNull(r.input.LastID))
+		return "", errors.Errorf("update settings version mismatch: last ID is %s (mutation wanted %s)", intOrNull(lastID), intOrNull(r.input.LastID))
 	}
 
 	return data, nil

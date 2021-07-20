@@ -268,11 +268,13 @@ func (r *searchResolver) Suggestions(ctx context.Context, args *searchSuggestion
 		effectiveRepoFieldValues = effectiveRepoFieldValues[:i]
 
 		if len(effectiveRepoFieldValues) > 0 || hasSingleContextField {
-			resolved, err := r.resolveRepositories(ctx, r.Query, resolveRepositoriesOpts{
-				effectiveRepoFieldValues: effectiveRepoFieldValues,
-				limit:                    maxSearchSuggestions,
-			})
+			repoOptions := r.toRepoOptions(r.Query,
+				resolveRepositoriesOpts{
+					effectiveRepoFieldValues: effectiveRepoFieldValues,
+					limit:                    maxSearchSuggestions,
+				})
 
+			resolved, err := r.resolveRepositories(ctx, repoOptions)
 			resolvers := make([]SearchSuggestionResolver, 0, len(resolved.RepoRevs))
 			for i, rev := range resolved.RepoRevs {
 				resolvers = append(resolvers, repositorySuggestionResolver{
@@ -378,7 +380,8 @@ func (r *searchResolver) Suggestions(ctx context.Context, args *searchSuggestion
 			return mockShowSymbolMatches()
 		}
 
-		resolved, err := r.resolveRepositories(ctx, r.Query, resolveRepositoriesOpts{})
+		repoOptions := r.toRepoOptions(r.Query, resolveRepositoriesOpts{})
+		resolved, err := r.resolveRepositories(ctx, repoOptions)
 		if err != nil {
 			return nil, err
 		}
@@ -559,7 +562,7 @@ func (r *searchResolver) Suggestions(ctx context.Context, args *searchSuggestion
 				allSuggestions = append(allSuggestions, suggestions...)
 				mu.Unlock()
 			} else {
-				if errors.Cause(err) == context.DeadlineExceeded || errors.Cause(err) == context.Canceled {
+				if errors.IsAny(err, context.DeadlineExceeded, context.Canceled) {
 					log15.Warn("search suggestions exceeded deadline (skipping)", "query", r.rawQuery())
 				} else if !errcode.IsBadRequest(err) {
 					// We exclude bad user input. Note that this means that we

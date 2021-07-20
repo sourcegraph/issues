@@ -28,14 +28,6 @@ func NewStoreWithClock(db dbutil.DB, clock func() time.Time) *Store {
 	return &Store{Store: basestore.NewWithDB(db, sql.TxOptions{}), now: clock}
 }
 
-// With creates a new store with the underlying database handle from the given store.
-func (s *Store) With(other basestore.ShareableStore) *Store {
-	return &Store{
-		Store: s.Store.With(other),
-		now:   timeutil.Now,
-	}
-}
-
 // Clock returns the clock of the underlying store.
 func (s *Store) Clock() func() time.Time {
 	return s.now

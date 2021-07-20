@@ -22,7 +22,6 @@ import (
 	"github.com/sourcegraph/sourcegraph/internal/trace"
 	"github.com/sourcegraph/sourcegraph/internal/vcs"
 	"github.com/sourcegraph/sourcegraph/internal/workerutil"
-	"github.com/sourcegraph/sourcegraph/internal/workerutil/dbworker"
 	dbworkerstore "github.com/sourcegraph/sourcegraph/internal/workerutil/dbworker/store"
 	"github.com/sourcegraph/sourcegraph/lib/codeintel/lsif/conversion"
 	"github.com/sourcegraph/sourcegraph/lib/codeintel/semantic"
@@ -30,6 +29,7 @@ import (
 
 type handler struct {
 	dbStore         DBStore
+	workerStore     dbworkerstore.Store
 	lsifStore       LSIFStore
 	uploadStore     uploadstore.Store
 	gitserverClient GitserverClient
@@ -37,12 +37,12 @@ type handler struct {
 	budgetRemaining int64
 }
 
-var _ dbworker.Handler = &handler{}
+var _ workerutil.Handler = &handler{}
 var _ workerutil.WithPreDequeue = &handler{}
 var _ workerutil.WithHooks = &handler{}
 
-func (h *handler) Handle(ctx context.Context, tx dbworkerstore.Store, record workerutil.Record) error {
-	_, err := h.handle(ctx, tx, h.dbStore.With(tx), record.(store.Upload))
+func (h *handler) Handle(ctx context.Context, record workerutil.Record) error {
+	_, err := h.handle(ctx, record.(store.Upload))
 	return err
 }
 
@@ -77,7 +77,7 @@ func (h *handler) getSize(record workerutil.Record) int64 {
 
 // handle converts a raw upload into a dump within the given transaction context. Returns true if the
 // upload record was requeued and false otherwise.
-func (h *handler) handle(ctx context.Context, workerStore dbworkerstore.Store, dbStore DBStore, upload store.Upload) (requeued bool, err error) {
+func (h *handler) handle(ctx context.Context, upload store.Upload) (requeued bool, err error) {
 	start := time.Now()
 	defer func() {
 		if honey.Enabled() {
@@ -85,7 +85,7 @@ func (h *handler) handle(ctx context.Context, workerStore dbworkerstore.Store, d
 		}
 	}()
 
-	if requeued, err := requeueIfCloning(ctx, workerStore, upload); err != nil || requeued {
+	if requeued, err := requeueIfCloning(ctx, h.workerStore, upload); err != nil || requeued {
 		return requeued, err
 	}
 
@@ -121,7 +121,7 @@ func (h *handler) handle(ctx context.Context, workerStore dbworkerstore.Store, d
 		// point fails, we want to update the upload record with an error message but do not want to
 		// alter any other data in the database. Rolling back to this savepoint will allow us to discard
 		// any other changes but still commit the transaction as a whole.
-		if err := inTransaction(ctx, dbStore, func(tx DBStore) error {
+		return inTransaction(ctx, h.dbStore, func(tx DBStore) error {
 			// Find the date of the commit and store that in the upload record. We do this now as we
 			// will need to find the _oldest_ commit with code intelligence data to efficiently update
 			// the commit graph for the repository.
@@ -166,11 +166,7 @@ func (h *handler) handle(ctx context.Context, workerStore dbworkerstore.Store, d
 			}
 
 			return nil
-		}); err != nil {
-			return err
-		}
-
-		return nil
+		})
 	})
 }
 
@@ -271,17 +267,16 @@ func writeData(ctx context.Context, lsifStore LSIFStore, id int, groupedBundleDa
 	if err := tx.WriteDocumentationPathInfo(ctx, id, groupedBundleData.DocumentationPathInfo); err != nil {
 		return errors.Wrap(err, "store.WriteDocumentationPathInfo")
 	}
+	if err := tx.WriteDocumentationMappings(ctx, id, groupedBundleData.DocumentationMappings); err != nil {
+		return errors.Wrap(err, "store.WriteDocumentationMappings")
+	}
 
 	return nil
 }
 
 func isUniqueConstraintViolation(err error) bool {
-	var pgErr *pgconn.PgError
-	if errors.As(err, &pgErr) {
-		return pgErr.Code == "23505"
-	}
-
-	return false
+	var e *pgconn.PgError
+	return errors.As(err, &e) && e.Code == "23505"
 }
 
 func createHoneyEvent(ctx context.Context, upload store.Upload, err error, duration time.Duration) *libhoney.Event {

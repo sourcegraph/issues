@@ -3,6 +3,8 @@ package gitserver
 import (
 	"fmt"
 
+	"github.com/cockroachdb/errors"
+
 	"github.com/sourcegraph/sourcegraph/internal/gitserver"
 	"github.com/sourcegraph/sourcegraph/internal/metrics"
 	"github.com/sourcegraph/sourcegraph/internal/observation"
@@ -34,7 +36,9 @@ func newOperations(observationContext *observation.Context) *operations {
 			Name:         fmt.Sprintf("codeintel.gitserver.%s", name),
 			MetricLabels: []string{name},
 			Metrics:      metrics,
-			ErrorFilter:  gitserver.IsRevisionNotFound,
+			ErrorFilter: func(err error) bool {
+				return errors.HasType(err, &gitserver.RevisionNotFoundError{})
+			},
 		})
 	}
 

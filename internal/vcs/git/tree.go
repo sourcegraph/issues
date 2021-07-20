@@ -242,7 +242,7 @@ func lsTreeUncached(ctx context.Context, repo api.RepoName, commit api.CommitID,
 
 		tabPos := strings.IndexByte(line, '\t')
 		if tabPos == -1 {
-			return nil, fmt.Errorf("invalid `git ls-tree` output: %q", out)
+			return nil, errors.Errorf("invalid `git ls-tree` output: %q", out)
 		}
 		info := strings.SplitN(line[:tabPos], " ", 4)
 		name := line[tabPos+1:]
@@ -253,12 +253,12 @@ func lsTreeUncached(ctx context.Context, repo api.RepoName, commit api.CommitID,
 		}
 
 		if len(info) != 4 {
-			return nil, fmt.Errorf("invalid `git ls-tree` output: %q", out)
+			return nil, errors.Errorf("invalid `git ls-tree` output: %q", out)
 		}
 		typ := info[1]
 		sha := info[2]
 		if !IsAbsoluteRevision(sha) {
-			return nil, fmt.Errorf("invalid `git ls-tree` SHA output: %q", sha)
+			return nil, errors.Errorf("invalid `git ls-tree` SHA output: %q", sha)
 		}
 		oid, err := decodeOID(sha)
 		if err != nil {
@@ -271,7 +271,7 @@ func lsTreeUncached(ctx context.Context, repo api.RepoName, commit api.CommitID,
 			// Size of "-" indicates a dir or submodule.
 			size, err = strconv.ParseInt(sizeStr, 10, 64)
 			if err != nil || size < 0 {
-				return nil, fmt.Errorf("invalid `git ls-tree` size output: %q (error: %s)", sizeStr, err)
+				return nil, errors.Errorf("invalid `git ls-tree` size output: %q (error: %s)", sizeStr, err)
 			}
 		}
 
@@ -300,7 +300,7 @@ func lsTreeUncached(ctx context.Context, repo api.RepoName, commit api.CommitID,
 				var cfg config.Config
 				err := config.NewDecoder(bytes.NewBuffer(out)).Decode(&cfg)
 				if err != nil {
-					return nil, fmt.Errorf("error parsing .gitmodules: %s", err)
+					return nil, errors.Errorf("error parsing .gitmodules: %s", err)
 				}
 
 				submodule.Path = cfg.Section("submodule").Subsection(name).Option("path")

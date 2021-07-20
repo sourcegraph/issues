@@ -4,6 +4,8 @@ import (
 	"context"
 	"testing"
 
+	"github.com/cockroachdb/errors"
+
 	"github.com/sourcegraph/sourcegraph/internal/api"
 	"github.com/sourcegraph/sourcegraph/internal/gitserver"
 )
@@ -68,7 +70,7 @@ func TestRepository_ResolveBranch_error(t *testing.T) {
 		"git cmd": {
 			repo:    MakeGitRepository(t, gitCommands...),
 			branch:  "doesntexist",
-			wantErr: gitserver.IsRevisionNotFound,
+			wantErr: func(err error) bool { return errors.HasType(err, &gitserver.RevisionNotFoundError{}) },
 		},
 	}
 
@@ -131,7 +133,7 @@ func TestRepository_ResolveTag_error(t *testing.T) {
 		"git cmd": {
 			repo:    MakeGitRepository(t, gitCommands...),
 			tag:     "doesntexist",
-			wantErr: gitserver.IsRevisionNotFound,
+			wantErr: func(err error) bool { return errors.HasType(err, &gitserver.RevisionNotFoundError{}) },
 		},
 	}
 

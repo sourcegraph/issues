@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"net/url"
 
+	"github.com/cockroachdb/errors"
+
 	"github.com/sourcegraph/sourcegraph/internal/authz"
 	"github.com/sourcegraph/sourcegraph/internal/types"
 	"github.com/sourcegraph/sourcegraph/schema"
@@ -42,7 +44,7 @@ func newAuthzProvider(urn string, a *schema.GitHubAuthorization, instanceURL, to
 
 	ghURL, err := url.Parse(instanceURL)
 	if err != nil {
-		return nil, fmt.Errorf("Could not parse URL for GitHub instance %q: %s", instanceURL, err)
+		return nil, errors.Errorf("Could not parse URL for GitHub instance %q: %s", instanceURL, err)
 	}
 
 	return NewProvider(urn, ghURL, token, nil), nil

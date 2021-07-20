@@ -89,7 +89,8 @@ func (s *Store) StaleSourcedCommits(ctx context.Context, minimumTimeSinceLastChe
 
 const staleSourcedCommitsQuery = `
 -- source: enterprise/internal/codeintel/stores/dbstore/janitor.go:StaleSourcedCommits
-WITH candidates AS (%s UNION %s)
+WITH
+candidates AS (%s UNION %s)
 SELECT r.id, r.name, c.commit
 FROM candidates c
 JOIN repo r ON r.id = c.repository_id
@@ -141,8 +142,8 @@ func (s *Store) RefreshCommitResolvability(ctx context.Context, repositoryID int
 
 	rows, err := s.Query(ctx, sqlf.Sprintf(
 		refreshCommitResolvabilityQuery,
-		assignmentExpression, repositoryID, commit,
-		assignmentExpression, repositoryID, commit,
+		repositoryID, commit, assignmentExpression,
+		repositoryID, commit, assignmentExpression,
 	))
 	if err != nil {
 		return 0, 0, err
@@ -167,8 +168,36 @@ func (s *Store) RefreshCommitResolvability(ctx context.Context, repositoryID int
 const refreshCommitResolvabilityQuery = `
 -- source: enterprise/internal/codeintel/stores/dbstore/janitor.go:RefreshCommitResolvability
 WITH
-	update_uploads AS (UPDATE lsif_uploads SET %s WHERE repository_id = %s AND commit = %s RETURNING 1),
-	update_indexes AS (UPDATE lsif_indexes SET %s WHERE repository_id = %s AND commit = %s RETURNING 1)
+candidate_uploads AS (
+	SELECT u.id
+	FROM lsif_uploads u
+	WHERE u.repository_id = %s AND u.commit = %s
+
+	-- Lock these rows in a deterministic order so that we don't
+	-- deadlock with other processes updating the lsif_uploads table.
+	ORDER BY u.id FOR UPDATE
+),
+update_uploads AS (
+	UPDATE lsif_uploads u
+	SET %s
+	WHERE id IN (SELECT id FROM candidate_uploads)
+	RETURNING 1
+),
+candidate_indexes AS (
+	SELECT u.id
+	FROM lsif_indexes u
+	WHERE u.repository_id = %s AND u.commit = %s
+
+	-- Lock these rows in a deterministic order so that we don't
+	-- deadlock with other processes updating the lsif_indexes table.
+	ORDER BY u.id FOR UPDATE
+),
+update_indexes AS (
+	UPDATE lsif_indexes u
+	SET %s
+	WHERE id IN (SELECT id FROM candidate_indexes)
+	RETURNING 1
+)
 SELECT
 	(SELECT COUNT(*) FROM update_uploads) AS num_uploads,
 	(SELECT COUNT(*) FROM update_indexes) AS num_indexes

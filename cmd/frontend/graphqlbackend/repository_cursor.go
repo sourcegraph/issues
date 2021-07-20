@@ -1,8 +1,7 @@
 package graphqlbackend
 
 import (
-	"fmt"
-
+	"github.com/cockroachdb/errors"
 	"github.com/graph-gophers/graphql-go"
 	"github.com/graph-gophers/graphql-go/relay"
 )
@@ -30,7 +29,7 @@ func unmarshalRepositoryCursor(cursor *string) (*repositoryCursor, error) {
 		return nil, nil
 	}
 	if kind := relay.UnmarshalKind(graphql.ID(*cursor)); kind != repositoryCursorKind {
-		return nil, fmt.Errorf("cannot unmarshal repository cursor type: %q", kind)
+		return nil, errors.Errorf("cannot unmarshal repository cursor type: %q", kind)
 	}
 	var spec *repositoryCursor
 	if err := relay.UnmarshalSpec(graphql.ID(*cursor), &spec); err != nil {

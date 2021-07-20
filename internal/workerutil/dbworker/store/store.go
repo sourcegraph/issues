@@ -9,6 +9,9 @@ import (
 	"strings"
 	"time"
 
+	"github.com/cockroachdb/errors"
+	"github.com/derision-test/glock"
+	"github.com/inconshreveable/log15"
 	"github.com/keegancsmith/sqlf"
 	"github.com/opentracing/opentracing-go/log"
 
@@ -22,27 +25,19 @@ import (
 type Store interface {
 	basestore.ShareableStore
 
-	// Done performs a commit or rollback of the underlying transaction/savepoint depending
-	// returned from the Dequeue method. See basestore.Store#Done for additional documentation.
-	Done(err error) error
-
 	// QueuedCount returns the number of records in the queued state matching the given conditions.
 	QueuedCount(ctx context.Context, conditions []*sqlf.Query) (int, error)
 
-	// Dequeue selects the first unlocked record matching the given conditions and locks it in a new transaction that
-	// should be held by the worker process. If there is such a record, it is returned along with a new store instance
-	// that wraps the transaction. The resulting transaction must be closed by the caller, and the transaction should
-	// include a state transition of the record into a terminal state. If there is no such unlocked record, a nil record
-	// and a nil store will be returned along with a false-valued flag. This method must not be called from within a
-	// transaction.
+	// Dequeue selects the first queued record matching the given conditions and updates the state to processing. If there
+	// is such a record, it is returned. If there is no such unclaimed record, a nil record and and a nil cancel function
+	// will be returned along with a false-valued flag. This method must not be called from within a transaction.
+	//
+	// A background goroutine that continuously updates the record's last modified time will be started. The returned cancel
+	// function should be called once the record no longer needs to be locked from selection or reset by another process.
+	// Most often, this will be when the handler moves the record into a terminal state.
 	//
 	// The supplied conditions may use the alias provided in `ViewName`, if one was supplied.
-	Dequeue(ctx context.Context, workerHostname string, conditions []*sqlf.Query) (record workerutil.Record, tx Store, exists bool, err error)
-
-	// DequeueWithIndependentTransactionContext is like Dequeue, but will use a context.Background() for the underlying
-	// transaction context. This method allows the transaction to lexically outlive the code in which it was created. This
-	// is useful if a longer-running transaction is managed explicitly between multiple goroutines.
-	DequeueWithIndependentTransactionContext(ctx context.Context, workerHostname string, conditions []*sqlf.Query) (workerutil.Record, Store, bool, error)
+	Dequeue(ctx context.Context, workerHostname string, conditions []*sqlf.Query) (workerutil.Record, context.CancelFunc, bool, error)
 
 	// Requeue updates the state of the record with the given identifier to queued and adds a processing delay before
 	// the next dequeue of this record can be performed.
@@ -66,10 +61,10 @@ type Store interface {
 	// with an error will not be updated. This method returns a boolean flag indicating if the record was updated.
 	MarkFailed(ctx context.Context, id int, failureMessage string) (bool, error)
 
-	// ResetStalled moves all unlocked records in the processing state for more than `StalledMaxAge` back to the queued
-	// state. In order to prevent input that continually crashes worker instances, records that have been reset more
-	// than `MaxNumResets` times will be marked as errored. This method returns a list of record identifiers that have
-	// been reset and a list of record identifiers that have been marked as errored.
+	// ResetStalled moves all processing records that have not received a heartbeat within `StalledMaxAge` back to the
+	// queued state. In order to prevent input that continually crashes worker instances, records that have been reset
+	// more than `MaxNumResets` times will be marked as errored. This method returns a list of record identifiers that
+	// have been reset and a list of record identifiers that have been marked as errored.
 	ResetStalled(ctx context.Context) (resetIDs, erroredIDs []int, err error)
 }
 
@@ -78,7 +73,7 @@ type ExecutionLogEntry workerutil.ExecutionLogEntry
 func (e *ExecutionLogEntry) Scan(value interface{}) error {
 	b, ok := value.([]byte)
 	if !ok {
-		return fmt.Errorf("value is not []byte: %T", value)
+		return errors.Errorf("value is not []byte: %T", value)
 	}
 
 	return json.Unmarshal(b, &e)
@@ -120,6 +115,7 @@ type Options struct {
 	//   - state: text (may be updated to `queued`, `processing`, `errored`, or `failed`)
 	//   - failure_message: text
 	//   - started_at: timestamp with time zone
+	//   - last_heartbeat_at: timestamp with time zone
 	//   - finished_at: timestamp with time zone
 	//   - process_after: timestamp with time zone
 	//   - num_resets: integer not null
@@ -139,10 +135,9 @@ type Options struct {
 	AlternateColumnNames map[string]string
 
 	// ViewName is an optional name of a view on top of the table containing work records to query when
-	// selecting a candidate and when selecting the record after it has been locked. If this value is
-	// not supplied, `TableName` will be used. The value supplied may also indicate a table alias, which
-	// can be referenced in `OrderByExpression`, `ColumnExpressions`, and the conditions supplied to
-	// `Dequeue`.
+	// selecting a candidate. If this value is not supplied, `TableName` will be used. The value supplied
+	// may also indicate a table alias, which can be referenced in `OrderByExpression`, `ColumnExpressions`,
+	// and the conditions supplied to `Dequeue`.
 	//
 	// The target of this column must be a view on top of the configured table with the same column
 	// requirements as the base table described above.
@@ -162,14 +157,18 @@ type Options struct {
 	// supplied.
 	OrderByExpression *sqlf.Query
 
-	// ColumnExpressions are the target columns provided to the query when selecting a locked record.
-	// These expressions may use the alias provided in `ViewName`, if one was supplied.
+	// ColumnExpressions are the target columns provided to the query when selecting a job record. These
+	// expressions may use the alias provided in `ViewName`, if one was supplied.
 	ColumnExpressions []*sqlf.Query
 
-	// StalledMaxAge is the maximum allow duration between updating the state of a record as "processing"
-	// and locking the record row during processing. An unlocked row that is marked as processing likely
-	// indicates that the worker that dequeued the record has died. There should be a nearly-zero delay
-	// between these states during normal operation.
+	// HeartbeatInterval is the interval between heartbeat updates to a job's last_heartbeat_at field. This
+	// field is periodically updated while being actively processed to signal to other workers that the
+	// record is neither pending nor abandoned.
+	HeartbeatInterval time.Duration
+
+	// StalledMaxAge is the maximum allowed duration between heartbeat updates of a job's last_heartbeat_at
+	// field. An unmodified row that is marked as processing likely indicates that the worker that dequeued
+	// the record has died.
 	StalledMaxAge time.Duration
 
 	// MaxNumResets is the maximum number of times a record can be implicitly reset back to the queued
@@ -191,6 +190,9 @@ type Options struct {
 	// MaxNumRetries is the maximum number of times a record can be retried after an explicit failure.
 	// Setting this value to zero will disable retries entirely.
 	MaxNumRetries int
+
+	// clock is used to mock out the wall clock used for heartbeat updates.
+	clock glock.Clock
 }
 
 // RecordScanFn is a function that interprets row values as a particular record. This function should
@@ -218,9 +220,13 @@ func newStore(handle *basestore.TransactableHandle, options Options, observation
 		options.ViewName = options.TableName
 	}
 
+	if options.clock == nil {
+		options.clock = glock.NewRealClock()
+	}
+
 	alternateColumnNames := map[string]string{}
-	for _, name := range columnNames {
-		alternateColumnNames[name] = name
+	for _, column := range columns {
+		alternateColumnNames[column.name] = column.name
 	}
 	for k, v := range options.AlternateColumnNames {
 		alternateColumnNames[k] = v
@@ -239,41 +245,34 @@ func newStore(handle *basestore.TransactableHandle, options Options, observation
 	}
 }
 
-// ColumnNames are the names of the columns expected to be defined by the target table.
-var columnNames = []string{
-	"id",
-	"state",
-	"failure_message",
-	"started_at",
-	"finished_at",
-	"process_after",
-	"num_resets",
-	"num_failures",
-	"execution_logs",
-	"worker_hostname",
+// columns contain the names of the columns expected to be defined by the target table.
+var columns = []struct {
+	name              string
+	defaultExpression bool
+}{
+	{"id", true},
+	{"state", true},
+	{"failure_message", true},
+	{"started_at", true},
+	{"last_heartbeat_at", false},
+	{"finished_at", true},
+	{"process_after", true},
+	{"num_resets", true},
+	{"num_failures", true},
+	{"execution_logs", true},
+	{"worker_hostname", true},
 }
 
 // DefaultColumnExpressions returns a slice of expressions for the default column name we expect.
 func DefaultColumnExpressions() []*sqlf.Query {
-	expressions := make([]*sqlf.Query, len(columnNames))
-	for i := range columnNames {
-		expressions[i] = sqlf.Sprintf(columnNames[i])
+	expressions := make([]*sqlf.Query, 0, len(columns))
+	for _, column := range columns {
+		if column.defaultExpression {
+			expressions = append(expressions, sqlf.Sprintf(column.name))
+		}
 	}
+
 	return expressions
-}
-
-func (s *store) Transact(ctx context.Context) (*store, error) {
-	txBase, err := s.Store.Transact(ctx)
-	if err != nil {
-		return nil, err
-	}
-
-	return &store{
-		Store:          txBase,
-		options:        s.options,
-		columnReplacer: s.columnReplacer,
-		operations:     s.operations,
-	}, nil
 }
 
 // QueuedCount returns the number of records in the queued state matching the given conditions.
@@ -299,26 +298,16 @@ SELECT COUNT(*) FROM %s WHERE (
 ) %s
 `
 
-// Dequeue selects the first unlocked record matching the given conditions and locks it in a new transaction that
-// should be held by the worker process. If there is such a record, it is returned along with a new store instance
-// that wraps the transaction. The resulting transaction must be closed by the caller, and the transaction should
-// include a state transition of the record into a terminal state. If there is no such unlocked record, a nil record
-// and a nil store will be returned along with a false-valued flag. This method must not be called from within a
-// transaction.
+// Dequeue selects the first queued record matching the given conditions and updates the state to processing. If there
+// is such a record, it is returned. If there is no such unclaimed record, a nil record and and a nil cancel function
+// will be returned along with a false-valued flag. This method must not be called from within a transaction.
+//
+// A background goroutine that continuously updates the record's last modified time will be started. The returned cancel
+// function should be called once the record no longer needs to be locked from selection or reset by another process.
+// Most often, this will be when the handler moves the record into a terminal state.
 //
 // The supplied conditions may use the alias provided in `ViewName`, if one was supplied.
-func (s *store) Dequeue(ctx context.Context, workerHostname string, conditions []*sqlf.Query) (record workerutil.Record, _ Store, exists bool, err error) {
-	return s.dequeue(ctx, workerHostname, conditions, false)
-}
-
-// DequeueWithIndependentTransactionContext is like Dequeue, but will use a context.Background() for the underlying
-// transaction context. This method allows the transaction to lexically outlive the code in which it was created. This
-// is useful if a longer-running transaction is managed explicitly between multiple goroutines.
-func (s *store) DequeueWithIndependentTransactionContext(ctx context.Context, workerHostname string, conditions []*sqlf.Query) (workerutil.Record, Store, bool, error) {
-	return s.dequeue(ctx, workerHostname, conditions, true)
-}
-
-func (s *store) dequeue(ctx context.Context, workerHostname string, conditions []*sqlf.Query, independentTxCtx bool) (record workerutil.Record, _ Store, exists bool, err error) {
+func (s *store) Dequeue(ctx context.Context, workerHostname string, conditions []*sqlf.Query) (_ workerutil.Record, _ context.CancelFunc, _ bool, err error) {
 	ctx, traceLog, endObservation := s.operations.dequeue.WithAndLogger(ctx, &err, observation.Args{})
 	defer endObservation(1, observation.Args{})
 
@@ -326,88 +315,68 @@ func (s *store) dequeue(ctx context.Context, workerHostname string, conditions [
 		return nil, nil, false, ErrDequeueTransaction
 	}
 
-	txCtx := ctx
-	if independentTxCtx {
-		txCtx = context.Background()
-	}
+	now := s.now()
 
-	query := s.formatQuery(
+	// Select and "lock" candidate record
+	id, exists, err := basestore.ScanFirstInt(s.Query(ctx, s.formatQuery(
 		selectCandidateQuery,
 		quote(s.options.ViewName),
+		now,
 		int(s.options.RetryAfter/time.Second),
+		now,
 		int(s.options.RetryAfter/time.Second),
 		s.options.MaxNumRetries,
 		makeConditionSuffix(conditions),
 		s.options.OrderByExpression,
 		quote(s.options.TableName),
+		now,
+		now,
 		workerHostname,
-	)
+	)))
+	if err != nil {
+		return nil, nil, false, err
+	}
+	if !exists {
+		return nil, nil, false, nil
+	}
+	traceLog(log.Int("id", id))
 
-	for {
-		// First, we try to select an eligible record outside of a transaction. This will skip
-		// any rows that are currently locked inside of a transaction of another dequeue process.
-		id, ok, err := basestore.ScanFirstInt(s.Query(ctx, query))
-		if err != nil {
-			return nil, nil, false, err
-		}
-		if !ok {
-			return nil, nil, false, nil
-		}
-		traceLog(log.Int("id", id))
+	// Scan the actual record after updating its state
+	record, exists, err := s.options.Scan(s.Query(ctx, s.formatQuery(
+		selectRecordQuery,
+		sqlf.Join(s.options.ColumnExpressions, ", "),
+		quote(s.options.ViewName),
+		id,
+	)))
+	if err != nil {
+		return nil, nil, false, err
+	}
+	if !exists {
+		return nil, nil, false, nil
+	}
 
-		// Once we have an eligible identifier, we try to create a transaction and select the
-		// record in a way that takes a row lock for the duration of the transaction.
-		tx, err := s.Transact(txCtx)
-		if err != nil {
-			return nil, nil, false, err
-		}
+	// Create a background routine that periodically writes the current time to the record.
+	// This will keep a record claimed by an active worker for a small amount of time so that
+	// it will not be processed by a second worker concurrently.
 
-		// Select the candidate record within the transaction to lock it from other processes. Note
-		// that SKIP LOCKED here is necessary, otherwise this query would block on race conditions
-		// until the other process has finished with the record.
-		_, exists, err = basestore.ScanFirstInt(tx.Query(ctx, s.formatQuery(
-			lockQuery,
-			quote(s.options.TableName),
-			id,
-		)))
-		if err != nil {
-			return nil, nil, false, tx.Done(err)
-		}
-		if !exists {
-			// Due to SKIP LOCKED, This query will return a sql.ErrNoRows error if the record has
-			// already been locked in another process's transaction. We'll return a special error
-			// that is checked by the caller to try to select a different record.
-			if err := tx.Done(ErrDequeueRace); err != ErrDequeueRace {
-				return nil, nil, false, err
+	heartbeatCtx, cancel := context.WithCancel(ctx)
+	go func() {
+		for {
+			select {
+			case <-heartbeatCtx.Done():
+				return
+			case <-s.options.clock.After(s.options.HeartbeatInterval):
 			}
 
-			// This will occur if we selected a candidate record that raced with another dequeue
-			// process. If both dequeue processes select the same record and the other process
-			// begins its transaction first, this condition will occur. We'll re-try the process
-			// by selecting another identifier - this one will be skipped on a second attempt as
-			// it is now locked.
-			continue
+			if err = s.Exec(heartbeatCtx, s.formatQuery(updateCandidateQuery, quote(s.options.TableName), s.now(), record.RecordID())); err != nil {
+				if err != heartbeatCtx.Err() {
+					log15.Error("Failed to refresh last_heartbeat_at", "name", s.options.Name, "id", id, "error", err)
+				}
+			}
 		}
+	}()
 
-		// The record is now locked in this transaction. As `TableName` and `ViewName` may have distinct
-		// values, we need to perform a second select in order to pass the correct data to the scan
-		// function.
-		record, exists, err = s.options.Scan(tx.Query(ctx, s.formatQuery(
-			selectRecordQuery,
-			sqlf.Join(s.options.ColumnExpressions, ", "),
-			quote(s.options.ViewName),
-			id,
-		)))
-		if err != nil {
-			return nil, nil, false, tx.Done(err)
-		}
-		if !exists {
-			// This only happens on a programming error (mismatch between `TableName` and `ViewName`).
-			return nil, nil, false, tx.Done(ErrNoRecord)
-		}
-
-		return record, tx, true, nil
-	}
+	return record, cancel, true, nil
 }
 
 const selectCandidateQuery = `
@@ -418,11 +387,11 @@ WITH candidate AS (
 		(
 			(
 				{state} = 'queued' AND
-				({process_after} IS NULL OR {process_after} <= NOW())
+				({process_after} IS NULL OR {process_after} <= %s)
 			) OR (
 				%s > 0 AND
 				{state} = 'errored' AND
-				NOW() - {finished_at} > (%s * '1 second'::interval) AND
+				%s - {finished_at} > (%s * '1 second'::interval) AND
 				{num_failures} < %s
 			)
 		)
@@ -434,7 +403,8 @@ WITH candidate AS (
 UPDATE %s
 SET
 	{state} = 'processing',
-	{started_at} = NOW(),
+	{started_at} = %s,
+	{last_heartbeat_at} = %s,
 	{finished_at} = NULL,
 	{failure_message} = NULL,
 	{worker_hostname} = %s
@@ -442,19 +412,16 @@ WHERE {id} IN (SELECT {id} FROM candidate)
 RETURNING {id}
 `
 
-const lockQuery = `
--- source: internal/workerutil/store.go:Dequeue
-SELECT 1 FROM %s
-WHERE {id} = %s
-FOR UPDATE SKIP LOCKED
-LIMIT 1
-`
-
 const selectRecordQuery = `
 -- source: internal/workerutil/store.go:Dequeue
-SELECT %s FROM %s
-WHERE {id} = %s
-LIMIT 1
+SELECT %s FROM %s WHERE {id} = %s
+`
+
+const updateCandidateQuery = `
+-- source: internal/workerutil/store.go:Dequeue
+UPDATE %s
+SET {last_heartbeat_at} = %s
+WHERE {id} = %s AND {state} = 'processing'
 `
 
 // Requeue updates the state of the record with the given identifier to queued and adds a processing delay before
@@ -574,10 +541,10 @@ WHERE {id} = %s AND ({state} = 'processing' OR {state} = 'completed')
 RETURNING {id}
 `
 
-// ResetStalled moves all unlocked records in the processing state for more than `StalledMaxAge` back to the queued
-// state. In order to prevent input that continually crashes worker instances, records that have been reset more
-// than `MaxNumResets` times will be marked as errored. This method returns a list of record identifiers that have
-// been reset and a list of record identifiers that have been marked as errored.
+// ResetStalled moves all processing records that have not received a heartbeat within `StalledMaxAge` back to the
+// queued state. In order to prevent input that continually crashes worker instances, records that have been reset
+// more than `MaxNumResets` times will be marked as errored. This method returns a list of record identifiers that
+// have been reset and a list of record identifiers that have been marked as errored.
 func (s *store) ResetStalled(ctx context.Context) (resetIDs, erroredIDs []int, err error) {
 	ctx, traceLog, endObservation := s.operations.resetStalled.WithAndLogger(ctx, &err, observation.Args{})
 	defer endObservation(1, observation.Args{})
@@ -603,6 +570,7 @@ func (s *store) resetStalled(ctx context.Context, q string) ([]int, error) {
 		s.formatQuery(
 			q,
 			quote(s.options.TableName),
+			s.now(),
 			int(s.options.StalledMaxAge/time.Second),
 			s.options.MaxNumResets,
 			quote(s.options.TableName),
@@ -616,7 +584,7 @@ WITH stalled AS (
 	SELECT {id} FROM %s
 	WHERE
 		{state} = 'processing' AND
-		NOW() - {started_at} > (%s * '1 second'::interval) AND
+		%s - {last_heartbeat_at} > (%s * '1 second'::interval) AND
 		{num_resets} < %s
 	FOR UPDATE SKIP LOCKED
 )
@@ -635,7 +603,7 @@ WITH stalled AS (
 	SELECT {id} FROM %s
 	WHERE
 		{state} = 'processing' AND
-		NOW() - {started_at} > (%s * '1 second'::interval) AND
+		%s - {last_heartbeat_at} > (%s * '1 second'::interval) AND
 		{num_resets} >= %s
 	FOR UPDATE SKIP LOCKED
 )
@@ -650,6 +618,10 @@ RETURNING {id}
 
 func (s *store) formatQuery(query string, args ...interface{}) *sqlf.Query {
 	return sqlf.Sprintf(s.columnReplacer.Replace(query), args...)
+}
+
+func (s *store) now() time.Time {
+	return s.options.clock.Now().UTC()
 }
 
 // quote wraps the given string in a *sqlf.Query so that it is not passed to the database

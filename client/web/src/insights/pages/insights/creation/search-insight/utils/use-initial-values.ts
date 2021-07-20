@@ -23,7 +23,7 @@ export function useSearchInsightInitialValues(): UseInitialValuesResult {
     // Creation UI saves all form values in local storage to be able restore these
     // values if page was fully refreshed or user came back from other page.
     const [localStorageFormValues, setLocalStorageFormValues] = useLocalStorage<CreateInsightFormFields | undefined>(
-        'insights.search-insight-creation',
+        'insights.search-insight-creation-ui',
         undefined
     )
 

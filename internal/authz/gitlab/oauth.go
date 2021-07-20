@@ -2,7 +2,6 @@ package gitlab
 
 import (
 	"context"
-	"fmt"
 	"net/url"
 
 	"github.com/cockroachdb/errors"
@@ -88,7 +87,7 @@ func (p *OAuthProvider) FetchUserPerms(ctx context.Context, account *extsvc.Acco
 	if account == nil {
 		return nil, errors.New("no account provided")
 	} else if !extsvc.IsHostOfAccount(p.codeHost, account) {
-		return nil, fmt.Errorf("not a code host of the account: want %q but have %q",
+		return nil, errors.Errorf("not a code host of the account: want %q but have %q",
 			account.AccountSpec.ServiceID, p.codeHost.ServiceID)
 	}
 
@@ -116,7 +115,7 @@ func (p *OAuthProvider) FetchRepoPerms(ctx context.Context, repo *extsvc.Reposit
 	if repo == nil {
 		return nil, errors.New("no repository provided")
 	} else if !extsvc.IsHostOfRepo(p.codeHost, &repo.ExternalRepoSpec) {
-		return nil, fmt.Errorf("not a code host of the repository: want %q but have %q",
+		return nil, errors.Errorf("not a code host of the repository: want %q but have %q",
 			repo.ServiceID, p.codeHost.ServiceID)
 	}
 

@@ -1,7 +1,6 @@
 package reposource
 
 import (
-	"fmt"
 	"net/url"
 	"regexp"
 	"strings"
@@ -57,14 +56,14 @@ func parseURLs(cloneURL, baseURL string) (parsedCloneURL, parsedBaseURL *url.URL
 	if baseURL != "" {
 		parsedBaseURL, err = url.Parse(baseURL)
 		if err != nil {
-			return nil, nil, false, fmt.Errorf("Error parsing baseURL: %s", err)
+			return nil, nil, false, errors.Errorf("Error parsing baseURL: %s", err)
 		}
 		parsedBaseURL = extsvc.NormalizeBaseURL(parsedBaseURL)
 	}
 
 	parsedCloneURL, err = parseCloneURL(cloneURL)
 	if err != nil {
-		return nil, nil, false, fmt.Errorf("Error parsing cloneURL: %s", err)
+		return nil, nil, false, errors.Errorf("Error parsing cloneURL: %s", err)
 	}
 	hostsMatch := parsedBaseURL != nil && hostname(parsedBaseURL) == hostname(parsedCloneURL)
 	return parsedCloneURL, parsedBaseURL, hostsMatch, nil

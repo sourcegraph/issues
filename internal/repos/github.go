@@ -48,16 +48,18 @@ type GithubSource struct {
 	originalHostname string
 }
 
-var _ Source = &GithubSource{}
-var _ UserSource = &GithubSource{}
-var _ AffiliatedRepositorySource = &GithubSource{}
-var _ VersionSource = &GithubSource{}
+var (
+	_ Source                     = &GithubSource{}
+	_ UserSource                 = &GithubSource{}
+	_ AffiliatedRepositorySource = &GithubSource{}
+	_ VersionSource              = &GithubSource{}
+)
 
 // NewGithubSource returns a new GithubSource from the given external service.
 func NewGithubSource(svc *types.ExternalService, cf *httpcli.Factory) (*GithubSource, error) {
 	var c schema.GitHubConnection
 	if err := jsonc.Unmarshal(svc.Config, &c); err != nil {
-		return nil, fmt.Errorf("external service id=%d config error: %s", svc.ID, err)
+		return nil, errors.Errorf("external service id=%d config error: %s", svc.ID, err)
 	}
 	return newGithubSource(svc, &c, cf)
 }
@@ -240,6 +242,10 @@ func (s GithubSource) GetRepo(ctx context.Context, nameWithOwner string) (*types
 
 func (s GithubSource) makeRepo(r *github.Repository) *types.Repo {
 	urn := s.svc.URN()
+	metadata := *r
+	// This field flip flops depending on which token was used to retrieve the repo
+	// so we don't want to store it.
+	metadata.ViewerPermission = ""
 	return &types.Repo{
 		Name: reposource.GitHubRepoName(
 			s.config.RepositoryPathPattern,
@@ -263,7 +269,7 @@ func (s GithubSource) makeRepo(r *github.Repository) *types.Repo {
 				CloneURL: s.remoteURL(r),
 			},
 		},
-		Metadata: r,
+		Metadata: &metadata,
 	}
 }
 
@@ -359,8 +365,9 @@ func (s *GithubSource) listOrg(ctx context.Context, org string, results chan *gi
 		s.paginate(ctx, dedupC, func(page int) (repos []*github.Repository, hasNext bool, cost int, err error) {
 			defer func() {
 				if page == 1 {
-					if apiErr, ok := err.(*github.APIError); ok && apiErr.Code == 404 {
-						oerr = fmt.Errorf("organisation %q not found", org)
+					var e *github.APIError
+					if errors.As(err, &e) && e.Code == 404 {
+						oerr = errors.Errorf("organisation %q not found", org)
 						err = nil
 					}
 				}
@@ -750,7 +757,7 @@ func (s *GithubSource) AffiliatedRepositories(ctx context.Context) ([]types.Code
 	for hasNextPage {
 		select {
 		case <-ctx.Done():
-			return nil, fmt.Errorf("context canceled")
+			return nil, errors.Errorf("context canceled")
 		default:
 		}
 		repos, hasNextPage, _, err = s.v3Client.ListAffiliatedRepositories(ctx, github.VisibilityAll, page)

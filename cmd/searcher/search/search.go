@@ -31,6 +31,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promauto"
 
 	"github.com/sourcegraph/sourcegraph/cmd/searcher/protocol"
+	"github.com/sourcegraph/sourcegraph/internal/errcode"
 	"github.com/sourcegraph/sourcegraph/internal/store"
 	"github.com/sourcegraph/sourcegraph/internal/trace/ot"
 )
@@ -107,9 +108,9 @@ func (s *Service) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	deadlineHit, err := s.search(ctx, &p, stream)
 	if err != nil {
 		code := http.StatusInternalServerError
-		if isBadRequest(err) || ctx.Err() == context.Canceled {
+		if errcode.IsBadRequest(err) || errors.Is(ctx.Err(), context.Canceled) {
 			code = http.StatusBadRequest
-		} else if isTemporary(err) {
+		} else if errcode.IsTemporary(err) {
 			code = http.StatusServiceUnavailable
 		} else {
 			log.Printf("internal error serving %#+v: %s", p, err)
@@ -171,9 +172,9 @@ func (s *Service) search(ctx context.Context, p *protocol.Request, sender *limit
 			tr.SetError()
 			ext.Error.Set(span, true)
 			span.SetTag("err", err.Error())
-			if isBadRequest(err) {
+			if errcode.IsBadRequest(err) {
 				code = "400"
-			} else if isTemporary(err) {
+			} else if errcode.IsTemporary(err) {
 				code = "503"
 			} else {
 				code = "500"
@@ -291,17 +292,3 @@ type badRequestError struct{ msg string }
 
 func (e badRequestError) Error() string    { return e.msg }
 func (e badRequestError) BadRequest() bool { return true }
-
-func isBadRequest(err error) bool {
-	e, ok := errors.Cause(err).(interface {
-		BadRequest() bool
-	})
-	return ok && e.BadRequest()
-}
-
-func isTemporary(err error) bool {
-	e, ok := errors.Cause(err).(interface {
-		Temporary() bool
-	})
-	return ok && e.Temporary()
-}

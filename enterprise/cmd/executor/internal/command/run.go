@@ -173,8 +173,9 @@ func monitorCommand(ctx context.Context, cmd *exec.Cmd, pipeReaderWaitGroup *syn
 	}
 
 	if err := cmd.Wait(); err != nil {
-		if exitErr, ok := err.(*exec.ExitError); ok {
-			return exitErr.ExitCode(), nil
+		var e *exec.ExitError
+		if errors.As(err, &e) {
+			return e.ExitCode(), nil
 		}
 	}
 

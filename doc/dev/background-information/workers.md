@@ -276,6 +276,7 @@ func makeStore(db dbutil.DB) store.Store {
 		Scan:              scanFirstExampleJob,
 		OrderByExpression: sqlf.Sprintf("j.repository_id, j.id"),
 		MaxNumResets:      5,
+		HeartbeatInterval: time.Second,
 		StalledMaxAge:     time.Second * 5,
 	})
 }

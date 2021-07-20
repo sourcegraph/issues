@@ -1,10 +1,11 @@
 package goroutine
 
 import (
-	"fmt"
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/cockroachdb/errors"
 )
 
 func TestParallel(t *testing.T) {
@@ -29,9 +30,9 @@ func TestParallel(t *testing.T) {
 		)
 	}()
 
-	ch3 <- fmt.Errorf("C")
-	ch2 <- fmt.Errorf("B")
-	ch1 <- fmt.Errorf("A")
+	ch3 <- errors.Errorf("C")
+	ch2 <- errors.Errorf("B")
+	ch1 <- errors.Errorf("A")
 
 	select {
 	case <-time.After(time.Second):

@@ -462,13 +462,7 @@ func (s *Service) ReenqueueChangeset(ctx context.Context, id int64) (changeset *
 		return nil, nil, authErr
 	}
 
-	if changeset.ReconcilerState != btypes.ReconcilerStateFailed {
-		return nil, nil, errors.New("cannot re-enqueue changeset not in failed state")
-	}
-
-	changeset.ResetReconcilerState(global.DefaultReconcilerEnqueueState())
-
-	if err = s.store.UpdateChangeset(ctx, changeset); err != nil {
+	if err := s.store.EnqueueChangeset(ctx, changeset, global.DefaultReconcilerEnqueueState(), btypes.ReconcilerStateFailed); err != nil {
 		return nil, nil, err
 	}
 

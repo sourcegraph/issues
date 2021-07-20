@@ -2,9 +2,10 @@ package graphqlbackend
 
 import (
 	"context"
-	"fmt"
 	"net/url"
 	"sync"
+
+	"github.com/cockroachdb/errors"
 
 	"github.com/sourcegraph/sourcegraph/cmd/frontend/backend"
 	"github.com/sourcegraph/sourcegraph/cmd/frontend/graphqlbackend/externallink"
@@ -199,7 +200,7 @@ func (r *GitCommitResolver) Tree(ctx context.Context, args *struct {
 		return nil, err
 	}
 	if !stat.Mode().IsDir() {
-		return nil, fmt.Errorf("not a directory: %q", args.Path)
+		return nil, errors.Errorf("not a directory: %q", args.Path)
 	}
 	return &GitTreeEntryResolver{
 		db:          r.db,
@@ -217,7 +218,7 @@ func (r *GitCommitResolver) Blob(ctx context.Context, args *struct {
 		return nil, err
 	}
 	if !stat.Mode().IsRegular() {
-		return nil, fmt.Errorf("not a blob: %q", args.Path)
+		return nil, errors.Errorf("not a blob: %q", args.Path)
 	}
 	return &GitTreeEntryResolver{
 		db:     r.db,

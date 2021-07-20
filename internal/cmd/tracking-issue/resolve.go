@@ -3,6 +3,8 @@ package main
 import (
 	"fmt"
 	"regexp"
+
+	"github.com/cockroachdb/errors"
 )
 
 // Resolve will populate the relationship fields of the registered issues and pull
@@ -71,7 +73,7 @@ func checkForCycles(trackingIssues, issues []*Issue, pullRequests []*PullRequest
 	for _, issue := range issues {
 		if !visitNode(issue, map[string]struct{}{}) {
 			// TODO(efritz) - we should try to proactively cut cycles
-			return fmt.Errorf("Tracking issues contain cycles")
+			return errors.Errorf("Tracking issues contain cycles")
 		}
 	}
 

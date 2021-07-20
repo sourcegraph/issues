@@ -552,7 +552,7 @@ func TestCloneRepo(t *testing.T) {
 
 	// Test blocking with a failure (already exists since we didn't specify overwrite)
 	_, err = s.cloneRepo(context.Background(), repoName, &cloneOptions{Block: true})
-	if !os.IsExist(errors.Cause(err)) {
+	if !errors.Is(err, os.ErrExist) {
 		t.Fatalf("expected clone repo to fail with already exists: %s", err)
 	}
 	assertCloneStatus(types.CloneStatusCloned)

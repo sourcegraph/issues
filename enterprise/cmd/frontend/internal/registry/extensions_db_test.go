@@ -7,6 +7,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/cockroachdb/errors"
 	"github.com/google/go-cmp/cmp"
 	"github.com/jackc/pgconn"
 
@@ -54,7 +55,8 @@ func TestRegistryExtensions_validNames(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			valid := true
 			if _, err := (dbExtensions{}).Create(ctx, user.ID, 0, test.name); err != nil {
-				if e, ok := err.(*pgconn.PgError); ok && (e.ConstraintName == "registry_extensions_name_valid_chars" || e.ConstraintName == "registry_extensions_name_length") {
+				var e *pgconn.PgError
+				if errors.As(err, &e) && (e.ConstraintName == "registry_extensions_name_valid_chars" || e.ConstraintName == "registry_extensions_name_length") {
 					valid = false
 				} else {
 					t.Fatal(err)

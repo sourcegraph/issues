@@ -3,9 +3,9 @@ package codemonitors
 import (
 	"context"
 	"database/sql"
-	"fmt"
 	"time"
 
+	"github.com/cockroachdb/errors"
 	"github.com/graph-gophers/graphql-go/relay"
 	"github.com/keegancsmith/sqlf"
 
@@ -170,7 +170,7 @@ func (s *Store) GetQueryByRecordID(ctx context.Context, recordID int) (query *Mo
 		return nil, err
 	}
 	if len(ms) != 1 {
-		return nil, fmt.Errorf("query should have returned 1 row")
+		return nil, errors.Errorf("query should have returned 1 row")
 	}
 	return ms[0], nil
 }
@@ -231,7 +231,7 @@ func (s *Store) runTriggerQuery(ctx context.Context, q *sqlf.Query) (*MonitorQue
 		return nil, err
 	}
 	if len(ms) == 0 {
-		return nil, fmt.Errorf("operation failed. Query should have returned 1 row")
+		return nil, errors.Errorf("operation failed. Query should have returned 1 row")
 	}
 	return ms[0], nil
 }

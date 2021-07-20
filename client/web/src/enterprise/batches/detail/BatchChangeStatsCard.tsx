@@ -5,7 +5,7 @@ import React from 'react'
 
 import { pluralize } from '@sourcegraph/shared/src/util/strings'
 
-import { DiffStat } from '../../../components/diff/DiffStat'
+import { DiffStatStack } from '../../../components/diff/DiffStat'
 import { BatchChangeFields, ChangesetsStatsFields, DiffStatFields } from '../../../graphql-operations'
 
 import { BatchChangeStateBadge } from './BatchChangeStateBadge'
@@ -61,12 +61,7 @@ export const BatchChangeStatsCard: React.FunctionComponent<BatchChangeStatsCardP
                     </span>
                 </div>
                 <div className={classNames(styles.batchChangeStatsCardDivider, 'd-none d-md-block mx-3')} />
-                <DiffStat
-                    {...diff}
-                    expandedCounts={true}
-                    separateLines={true}
-                    className={styles.batchChangeStatsCardDiffStat}
-                />
+                <DiffStatStack className={styles.batchChangeStatsCardDiffStat} {...diff} />
                 <div className="d-flex flex-wrap justify-content-end flex-grow-1">
                     <BatchChangeStatsTotalAction count={stats.total} />
                     <ChangesetStatusUnpublished

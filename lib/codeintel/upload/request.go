@@ -106,7 +106,7 @@ func decodeUploadPayload(resp *http.Response, body []byte, target *int) (bool, e
 		}
 
 		// Do not retry client errors
-		return resp.StatusCode >= 500, fmt.Errorf("unexpected status code: %d", resp.StatusCode)
+		return resp.StatusCode >= 500, errors.Errorf("unexpected status code: %d", resp.StatusCode)
 	}
 
 	if target == nil {
@@ -118,12 +118,12 @@ func decodeUploadPayload(resp *http.Response, body []byte, target *int) (bool, e
 		ID string `json:"id"`
 	}
 	if err := json.Unmarshal(body, &respPayload); err != nil {
-		return false, fmt.Errorf("unexpected response (%s)", err)
+		return false, errors.Errorf("unexpected response (%s)", err)
 	}
 
 	id, err := strconv.Atoi(respPayload.ID)
 	if err != nil {
-		return false, fmt.Errorf("unexpected response (%s)", err)
+		return false, errors.Errorf("unexpected response (%s)", err)
 	}
 
 	*target = id

@@ -52,7 +52,7 @@ func unmarshalBatchChangesCredentialID(id graphql.ID) (credentialID int64, isSit
 		isSiteCredential = true
 	case userCredentialPrefix:
 	default:
-		return credentialID, isSiteCredential, fmt.Errorf("invalid id, unsupported credential kind %q", kind)
+		return credentialID, isSiteCredential, errors.Errorf("invalid id, unsupported credential kind %q", kind)
 	}
 
 	parsedID, err := strconv.Atoi(parts[1])

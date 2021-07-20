@@ -1,6 +1,6 @@
 package search
 
-import "fmt"
+import "github.com/cockroachdb/errors"
 
 type matchType int
 
@@ -22,6 +22,6 @@ func (t matchType) MarshalJSON() ([]byte, error) {
 	case commitMatch:
 		return []byte(`"commit"`), nil
 	default:
-		return nil, fmt.Errorf("unknown matchType: %d", t)
+		return nil, errors.Errorf("unknown matchType: %d", t)
 	}
 }

@@ -3,10 +3,11 @@ package insights
 import (
 	"context"
 	"database/sql"
-	"fmt"
 	"log"
 	"os"
 	"strconv"
+
+	"github.com/cockroachdb/errors"
 
 	"github.com/sourcegraph/sourcegraph/cmd/frontend/enterprise"
 	"github.com/sourcegraph/sourcegraph/enterprise/internal/insights/resolvers"
@@ -66,11 +67,11 @@ func InitializeCodeInsightsDB(app string) (*sql.DB, error) {
 
 	db, err := dbconn.New(dbconn.Opts{DSN: timescaleDSN, DBName: "codeinsights", AppName: app})
 	if err != nil {
-		return nil, fmt.Errorf("Failed to connect to codeinsights database: %s", err)
+		return nil, errors.Errorf("Failed to connect to codeinsights database: %s", err)
 	}
 
 	if err := dbconn.MigrateDB(db, dbconn.CodeInsights); err != nil {
-		return nil, fmt.Errorf("Failed to perform codeinsights database migration: %s", err)
+		return nil, errors.Errorf("Failed to perform codeinsights database migration: %s", err)
 	}
 	return db, nil
 }

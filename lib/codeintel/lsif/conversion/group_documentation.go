@@ -10,16 +10,123 @@ import (
 	"github.com/sourcegraph/sourcegraph/lib/codeintel/semantic"
 )
 
-// TODO(slimsag): future: today we do not consume state.DocumentationResultsByResultSet which will
-// become important for e.g. letting one documentationResult link to another.
+// documentationChannels represents three result channels (pages, pathInfo, mappings), each being
+// a queue (e.g. pages is the output stream, and enqueuePages is the input stream.)
+//
+// A goroutine for each queue sits in-between the channels and effectively ensures that writes to
+// the enqueue channel do not block. Instead, they are queued up in a slice of dynamic memory. This
+// is important because it means each of the channels of results can be fully consumed independently,
+// i.e. you can read all pages before you read a single value from pathInfo/mappings, even though
+// collectDocumentation works by incrementally building all three channels (and, without the queue,
+// would fill up a channel and effectively become blocked.)
+type documentationChannels struct {
+	pages    chan *semantic.DocumentationPageData
+	pathInfo chan *semantic.DocumentationPathInfoData
+	mappings chan semantic.DocumentationMapping
 
-func collectDocumentationPages(ctx context.Context, state *State) (chan *semantic.DocumentationPageData, chan *semantic.DocumentationPathInfoData) {
-	pages := make(chan *semantic.DocumentationPageData, 1024)
-	pathInfo := make(chan *semantic.DocumentationPathInfoData, 1024)
+	enqueuePages    chan *semantic.DocumentationPageData
+	enqueuePathInfo chan *semantic.DocumentationPathInfoData
+	enqueueMappings chan semantic.DocumentationMapping
+}
+
+func (c *documentationChannels) close() {
+	close(c.enqueuePages)
+	close(c.enqueuePathInfo)
+	close(c.enqueueMappings)
+}
+
+func newDocumentationChannels() documentationChannels {
+	channels := documentationChannels{
+		pages:           make(chan *semantic.DocumentationPageData, 128),
+		pathInfo:        make(chan *semantic.DocumentationPathInfoData, 128),
+		mappings:        make(chan semantic.DocumentationMapping, 1024),
+		enqueuePages:    make(chan *semantic.DocumentationPageData, 128),
+		enqueuePathInfo: make(chan *semantic.DocumentationPathInfoData, 128),
+		enqueueMappings: make(chan semantic.DocumentationMapping, 1024),
+	}
+	go func() {
+		dst := channels.pages
+		src := channels.enqueuePages
+		var buf []*semantic.DocumentationPageData
+		for {
+			if len(buf) == 0 {
+				v, ok := <-src
+				if !ok {
+					close(dst)
+					return
+				}
+				buf = append(buf, v)
+			}
+			select {
+			case dst <- buf[0]:
+				buf = buf[1:]
+			case v, ok := <-src:
+				if !ok {
+					close(dst)
+					return
+				}
+				buf = append(buf, v)
+			}
+		}
+	}()
+	go func() {
+		dst := channels.pathInfo
+		src := channels.enqueuePathInfo
+		var buf []*semantic.DocumentationPathInfoData
+		for {
+			if len(buf) == 0 {
+				v, ok := <-src
+				if !ok {
+					close(dst)
+					return
+				}
+				buf = append(buf, v)
+			}
+			select {
+			case dst <- buf[0]:
+				buf = buf[1:]
+			case v, ok := <-src:
+				if !ok {
+					close(dst)
+					return
+				}
+				buf = append(buf, v)
+			}
+		}
+	}()
+	go func() {
+		dst := channels.mappings
+		src := channels.enqueueMappings
+		var buf []semantic.DocumentationMapping
+		for {
+			if len(buf) == 0 {
+				v, ok := <-src
+				if !ok {
+					close(dst)
+					return
+				}
+				buf = append(buf, v)
+			}
+			select {
+			case dst <- buf[0]:
+				buf = buf[1:]
+			case v, ok := <-src:
+				if !ok {
+					close(dst)
+					return
+				}
+				buf = append(buf, v)
+			}
+		}
+	}()
+	return channels
+}
+
+func collectDocumentation(ctx context.Context, state *State) documentationChannels {
+	channels := newDocumentationChannels()
 	if state.DocumentationResultRoot == -1 {
-		close(pages)
-		close(pathInfo)
-		return pages, pathInfo
+		channels.close()
+		return channels
 	}
 
 	pageCollector := &pageCollector{
@@ -33,8 +140,7 @@ func collectDocumentationPages(ctx context.Context, state *State) (chan *semanti
 	}
 
 	tmpPages := make(chan *semantic.DocumentationPageData)
-	go pageCollector.collect(ctx, tmpPages)
-
+	go pageCollector.collect(ctx, tmpPages, channels.enqueueMappings)
 	go func() {
 		// Emit path info for each page as a post-processing step once we've collected pages.
 		for page := range tmpPages {
@@ -52,17 +158,16 @@ func collectDocumentationPages(ctx context.Context, state *State) (chan *semanti
 			}
 			isIndex := page.Tree.Label.Value == "" && page.Tree.Detail.Value == ""
 
-			pages <- page
-			pathInfo <- &semantic.DocumentationPathInfoData{
+			channels.enqueuePages <- page
+			channels.enqueuePathInfo <- &semantic.DocumentationPathInfoData{
 				PathID:   page.Tree.PathID,
 				IsIndex:  isIndex,
 				Children: collectChildrenPages(page.Tree),
 			}
 		}
-		close(pages)
-		close(pathInfo)
+		channels.close()
 	}()
-	return pages, pathInfo
+	return channels
 }
 
 type duplicateChecker struct {
@@ -101,7 +206,7 @@ type pageCollector struct {
 	dupChecker, walkedPages     *duplicateChecker
 }
 
-func (p *pageCollector) collect(ctx context.Context, ch chan<- *semantic.DocumentationPageData) (remainingPages []*pageCollector) {
+func (p *pageCollector) collect(ctx context.Context, ch chan<- *semantic.DocumentationPageData, mappings chan<- semantic.DocumentationMapping) (remainingPages []*pageCollector) {
 	var walk func(parent *semantic.DocumentationNode, documentationResult int, pathID string)
 	walk = func(parent *semantic.DocumentationNode, documentationResult int, pathID string) {
 		labelID := p.state.DocumentationStringLabel[documentationResult]
@@ -136,6 +241,10 @@ func (p *pageCollector) collect(ctx context.Context, ch chan<- *semantic.Documen
 					PathID: this.PathID,
 				})
 				if p.walkedPages.add(this.PathID) {
+					mappings <- semantic.DocumentationMapping{
+						ResultID: uint64(documentationResult),
+						PathID:   this.PathID,
+					}
 					remainingPages = append(remainingPages, &pageCollector{
 						isChildPage:                 true,
 						parentPathID:                parent.PathID,
@@ -147,6 +256,10 @@ func (p *pageCollector) collect(ctx context.Context, ch chan<- *semantic.Documen
 				}
 				return
 			} else {
+				mappings <- semantic.DocumentationMapping{
+					ResultID: uint64(documentationResult),
+					PathID:   this.PathID,
+				}
 				parent.Children = append(parent.Children, semantic.DocumentationNodeChild{
 					Node: this,
 				})
@@ -193,7 +306,7 @@ func (p *pageCollector) collect(ctx context.Context, ch chan<- *semantic.Documen
 				remainingWorkMu.Unlock()
 
 				// Perform work.
-				newRemainingPages := work.collect(ctx, ch)
+				newRemainingPages := work.collect(ctx, ch, mappings)
 
 				// Add new work, if needed.
 				if len(newRemainingPages) > 0 {

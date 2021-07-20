@@ -2,8 +2,9 @@ package uploadstore
 
 import (
 	"context"
-	"fmt"
 	"io"
+
+	"github.com/cockroachdb/errors"
 
 	"github.com/sourcegraph/sourcegraph/internal/observation"
 )
@@ -51,7 +52,7 @@ func CreateLazy(ctx context.Context, config *Config, observationContext *observa
 func create(ctx context.Context, config *Config, observationContext *observation.Context) (Store, error) {
 	newStore, ok := storeConstructors[config.Backend]
 	if !ok {
-		return nil, fmt.Errorf("unknown upload store backend '%s'", config.Backend)
+		return nil, errors.Errorf("unknown upload store backend '%s'", config.Backend)
 	}
 
 	store, err := newStore(ctx, config, newOperations(observationContext))

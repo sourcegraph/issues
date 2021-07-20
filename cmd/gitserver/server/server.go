@@ -377,7 +377,7 @@ func (s *Server) syncRepoState(addrs []string, batchSize, perSecond int, fullSyn
 		}
 	}
 	if !found {
-		return fmt.Errorf("gitserver hostname, %q, not found in list", s.Hostname)
+		return errors.Errorf("gitserver hostname, %q, not found in list", s.Hostname)
 	}
 
 	ctx := s.ctx
@@ -1273,7 +1273,7 @@ func (s *Server) cloneRepo(ctx context.Context, repo api.RepoName, opts *cloneOp
 	}
 
 	if err := syncer.IsCloneable(ctx, remoteURL); err != nil {
-		return "", fmt.Errorf("error cloning repo: repo %s not cloneable: %s", repo, redactor.redact(err.Error()))
+		return "", errors.Errorf("error cloning repo: repo %s not cloneable: %s", repo, redactor.redact(err.Error()))
 	}
 
 	// Mark this repo as currently being cloned. We have to check again if someone else isn't already
@@ -1903,7 +1903,8 @@ func computeRefHash(dir GitDir) ([]byte, error) {
 	if err != nil {
 		// Ignore the failure for an empty repository: show-ref fails with
 		// empty output and an exit code of 1
-		if e, ok := err.(*exec.ExitError); !ok || len(output) != 0 || len(e.Stderr) != 0 || e.Sys().(syscall.WaitStatus).ExitStatus() != 1 {
+		var e *exec.ExitError
+		if !errors.As(err, &e) || len(output) != 0 || len(e.Stderr) != 0 || e.Sys().(syscall.WaitStatus).ExitStatus() != 1 {
 			return nil, err
 		}
 	}
@@ -1985,7 +1986,7 @@ func quickRevParseHead(dir GitDir) (string, error) {
 	headRef := bytes.TrimPrefix(head, []byte(headFileRefPrefix))
 	if bytes.HasPrefix(headRef, []byte("../")) || bytes.Contains(headRef, []byte("/../")) || bytes.HasSuffix(headRef, []byte("/..")) {
 		// 🚨 SECURITY: prevent leakage of file contents outside repo dir
-		return "", fmt.Errorf("invalid ref format: %s", headRef)
+		return "", errors.Errorf("invalid ref format: %s", headRef)
 	}
 	headRefFile := dir.Path(filepath.FromSlash(string(headRef)))
 	if refs, err := os.ReadFile(headRefFile); err == nil {

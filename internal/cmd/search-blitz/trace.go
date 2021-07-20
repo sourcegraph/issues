@@ -3,7 +3,6 @@ package main
 import (
 	"compress/gzip"
 	"context"
-	"fmt"
 	"io"
 	"io/fs"
 	"net/http"
@@ -15,6 +14,7 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/cockroachdb/errors"
 	"github.com/inconshreveable/log15"
 )
 
@@ -68,7 +68,7 @@ func (t *traceStore) Fetch(ctx context.Context, traceURL string) (err error) {
 		return nil
 	}
 
-	return fmt.Errorf("failed to fetch trace %q after %d attempts: %v", traceURL, t.MaxFetchAttempts, err)
+	return errors.Errorf("failed to fetch trace %q after %d attempts: %v", traceURL, t.MaxFetchAttempts, err)
 }
 
 func (t *traceStore) fetch(ctx context.Context, traceURL string) (err error) {
@@ -119,7 +119,7 @@ func (t *traceStore) fetch(ctx context.Context, traceURL string) (err error) {
 
 	if resp.StatusCode != 200 {
 		b, _ := io.ReadAll(resp.Body)
-		return fmt.Errorf("unexpected status code %d: %s", resp.StatusCode, b)
+		return errors.Errorf("unexpected status code %d: %s", resp.StatusCode, b)
 	}
 
 	dst := filepath.Join(t.Dir, traceID+".json.gz")

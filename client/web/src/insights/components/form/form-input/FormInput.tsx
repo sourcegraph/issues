@@ -67,14 +67,12 @@ export const FormInput = forwardRef((props, reference) => {
             </LoaderInput>
 
             {error && (
-                <small className="text-danger form-text" role="alert">
+                <small role="alert" className="text-danger form-text">
                     {error}
                 </small>
             )}
             {!error && description && (
-                <small role="alert" className={classnames('text-muted', 'form-text')}>
-                    {description}
-                </small>
+                <small className={classnames('text-muted', 'form-text', styles.description)}>{description}</small>
             )}
         </label>
     )

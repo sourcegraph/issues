@@ -5,6 +5,8 @@ import (
 
 	"github.com/cockroachdb/errors"
 	"github.com/google/go-cmp/cmp"
+
+	"github.com/sourcegraph/sourcegraph/internal/errcode"
 )
 
 func TestDecodeRepos(t *testing.T) {
@@ -63,20 +65,13 @@ func TestDecodeRepos(t *testing.T) {
 }
 
 func TestMaybeUnauthorized(t *testing.T) {
-	assertUnauthorized := func(err error) bool {
-		if ue, ok := err.(interface{ Unauthorized() bool }); ok {
-			return ue.Unauthorized()
-		}
-		return false
-	}
-
 	err := errors.New("random")
-	if assertUnauthorized(maybeUnauthorized(err)) {
+	if errcode.IsUnauthorized(maybeUnauthorized(err)) {
 		t.Errorf("Should not be unauthorized")
 	}
 
 	err = errors.New("permission denied (public key)")
-	if !assertUnauthorized(maybeUnauthorized(err)) {
+	if !errcode.IsUnauthorized(maybeUnauthorized(err)) {
 		t.Errorf("Should be unauthorized")
 	}
 }

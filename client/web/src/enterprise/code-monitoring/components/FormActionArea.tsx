@@ -139,7 +139,7 @@ export const FormActionArea: React.FunctionComponent<ActionAreaProps> = ({
                         <input
                             id="code-monitoring-form-actions-recipients"
                             type="text"
-                            className="form-control my-2"
+                            className="form-control mb-2"
                             value={`${authenticatedUser.email || ''} (you)`}
                             disabled={true}
                             autoFocus={true}

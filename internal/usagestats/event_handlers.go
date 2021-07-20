@@ -30,7 +30,10 @@ type Event struct {
 	Source         string
 	FeatureFlags   featureflag.FlagSet
 	CohortID       *string
-	Argument       json.RawMessage
+	// Referrer is only measured for Cloud events; therefore, this only goes to the BigQuery database
+	// and does not go to the Postgres DB.
+	Referrer *string
+	Argument json.RawMessage
 }
 
 // LogBackendEvent is a convenience function for logging backend events.
@@ -71,6 +74,7 @@ type bigQueryEvent struct {
 	Version         string  `json:"version"`
 	FeatureFlags    string  `json:"feature_flags"`
 	CohortID        *string `json:"cohort_id,omitempty"`
+	Referrer        string  `json:"referrer,omitempty"`
 }
 
 // publishSourcegraphDotComEvent publishes Sourcegraph.com events to BigQuery.
@@ -85,6 +89,10 @@ func publishSourcegraphDotComEvent(args Event) error {
 	if args.FirstSourceURL != nil {
 		firstSourceURL = *args.FirstSourceURL
 	}
+	referrer := ""
+	if args.Referrer != nil {
+		referrer = *args.Referrer
+	}
 	featureFlagJSON, err := json.Marshal(args.FeatureFlags)
 	if err != nil {
 		return err
@@ -94,6 +102,7 @@ func publishSourcegraphDotComEvent(args Event) error {
 		UserID:          int(args.UserID),
 		AnonymousUserID: args.UserCookieID,
 		FirstSourceURL:  firstSourceURL,
+		Referrer:        referrer,
 		Source:          args.Source,
 		Timestamp:       time.Now().UTC().Format(time.RFC3339),
 		Version:         version.Version(),

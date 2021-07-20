@@ -2,7 +2,6 @@ package graphqlbackend
 
 import (
 	"context"
-	"fmt"
 	"os"
 	"strconv"
 	"strings"
@@ -31,7 +30,7 @@ func (r *schemaResolver) siteByGQLID(ctx context.Context, id graphql.ID) (Node, 
 		return nil, err
 	}
 	if siteGQLID != singletonSiteGQLID {
-		return nil, fmt.Errorf("site not found: %q", siteGQLID)
+		return nil, errors.Errorf("site not found: %q", siteGQLID)
 	}
 	return &siteResolver{db: r.db, gqlID: siteGQLID}, nil
 }
@@ -167,13 +166,13 @@ func (r *schemaResolver) UpdateSiteConfiguration(ctx context.Context, args *stru
 		return false, errors.New("updating site configuration not allowed when using SITE_CONFIG_FILE")
 	}
 	if strings.TrimSpace(args.Input) == "" {
-		return false, fmt.Errorf("blank site configuration is invalid (you can clear the site configuration by entering an empty JSON object: {})")
+		return false, errors.Errorf("blank site configuration is invalid (you can clear the site configuration by entering an empty JSON object: {})")
 	}
 
 	if problems, err := conf.ValidateSite(args.Input); err != nil {
-		return false, fmt.Errorf("failed to validate site configuration: %w", err)
+		return false, errors.Errorf("failed to validate site configuration: %w", err)
 	} else if len(problems) > 0 {
-		return false, fmt.Errorf("site configuration is invalid: %s", strings.Join(problems, ","))
+		return false, errors.Errorf("site configuration is invalid: %s", strings.Join(problems, ","))
 	}
 
 	prev := globals.ConfigurationServerFrontendOnly.Raw()

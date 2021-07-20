@@ -1,4 +1,3 @@
-// @ts-check
 const path = require('path')
 
 require('ts-node').register({
@@ -9,8 +8,12 @@ require('ts-node').register({
 
 const log = require('fancy-log')
 const gulp = require('gulp')
+const signale = require('signale')
 const createWebpackCompiler = require('webpack')
 const WebpackDevServer = require('webpack-dev-server')
+// The `DevServerPlugin` should be exposed after the `webpack-dev-server@4` goes out of the beta stage.
+// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+const DevServerPlugin = require('webpack-dev-server/lib/utils/DevServerPlugin')
 
 const {
   graphQlSchema,
@@ -72,37 +75,52 @@ async function webpackDevelopmentServer() {
   const sockHost = process.env.SOURCEGRAPH_HTTPS_DOMAIN || 'sourcegraph.test'
   const sockPort = Number(process.env.SOURCEGRAPH_HTTPS_PORT || 3443)
 
-  /** @type {import('webpack-dev-server').Configuration & { liveReload?: boolean }} */
+  /** @type {import('webpack-dev-server').ProxyConfigMap } */
+  const proxyConfig = {
+    '/': {
+      target: 'http://localhost:3081',
+      // Avoid crashing on "read ECONNRESET".
+      onError: () => undefined,
+      // Don't log proxy errors, these usually just contain
+      // ECONNRESET errors caused by the browser cancelling
+      // requests. This should not be needed to actually debug something.
+      logLevel: 'silent',
+      onProxyReqWs: (_proxyRequest, _request, socket) =>
+        socket.on('error', error => console.error('WebSocket proxy error:', error)),
+    },
+  }
+
   const options = {
+    // react-refresh plugin triggers page reload if needed.
+    liveReload: false,
     hot: !process.env.NO_HOT,
-    inline: !process.env.NO_HOT,
-    allowedHosts: ['.host.docker.internal'],
+    firewall: false,
     host: 'localhost',
     port: 3080,
-    publicPath: '/.assets/',
-    contentBase: './ui/assets',
-    stats: WEBPACK_STATS_OPTIONS,
-    noInfo: false,
-    disableHostCheck: true,
-    proxy: {
-      '/': {
-        target: 'http://localhost:3081',
-        // Avoid crashing on "read ECONNRESET".
-        onError: () => undefined,
-        // Don't log proxy errors, these usually just contain
-        // ECONNRESET errors caused by the browser cancelling
-        // requests. This should not be needed to actually debug something.
-        logLevel: 'silent',
-        onProxyReqWs: (_proxyRequest, _request, socket) =>
-          socket.on('error', error => console.error('WebSocket proxy error:', error)),
-      },
+    client: {
+      host: sockHost,
+      port: sockPort,
+      overlay: false,
     },
-    sockHost,
-    sockPort,
+    static: {
+      directory: './ui/assets',
+      publicPath: '/.assets/',
+    },
+    proxy: proxyConfig,
+    transportMode: {
+      client: 'ws',
+    },
   }
-  WebpackDevServer.addDevServerEntrypoints(webpackConfig, options)
+
+  // Based on the update: https://github.com/webpack/webpack-dev-server/pull/2844
+  if (!webpackConfig.plugins.find(plugin => plugin.constructor === DevServerPlugin)) {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-call
+    webpackConfig.plugins.push(new DevServerPlugin(options))
+  }
+
   const server = new WebpackDevServer(createWebpackCompiler(webpackConfig), options)
   await new Promise((resolve, reject) => {
+    signale.await('Waiting for Webpack to compile assets')
     server.listen(3080, '0.0.0.0', error => (error ? reject(error) : resolve()))
   })
 }

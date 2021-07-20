@@ -39,7 +39,7 @@ func TestDependencyIndexingSchedulerHandler(t *testing.T) {
 	job := dbstore.DependencyIndexingJob{
 		UploadID: 42,
 	}
-	if err := handler.Handle(context.Background(), nil, job); err != nil {
+	if err := handler.Handle(context.Background(), job); err != nil {
 		t.Fatalf("unexpected error performing update: %s", err)
 	}
 
@@ -100,7 +100,7 @@ func TestDependencyIndexingSchedulerHandlerShouldSkipRepository(t *testing.T) {
 	job := dbstore.DependencyIndexingJob{
 		UploadID: 42,
 	}
-	if err := handler.Handle(context.Background(), nil, job); err != nil {
+	if err := handler.Handle(context.Background(), job); err != nil {
 		t.Fatalf("unexpected error performing update: %s", err)
 	}
 

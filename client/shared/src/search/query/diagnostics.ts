@@ -23,15 +23,6 @@ export function getDiagnostics(tokens: Token[], patternType: SearchPatternType):
                 message: validationResult.reason,
                 ...toMonacoRange(field.range),
             })
-        } else if (token.type === 'literal' && token.quoted) {
-            if (patternType === SearchPatternType.literal) {
-                diagnostics.push({
-                    severity: Monaco.MarkerSeverity.Warning,
-                    message:
-                        'Your search is interpreted literally and contains quotes. Did you mean to search for quotes?',
-                    ...toMonacoRange(token.range),
-                })
-            }
         }
     }
     return diagnostics

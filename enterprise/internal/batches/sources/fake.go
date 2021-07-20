@@ -2,7 +2,6 @@ package sources
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/cockroachdb/errors"
 
@@ -111,11 +110,11 @@ func (s *FakeChangesetSource) CreateDraftChangeset(ctx context.Context, c *Chang
 	}
 
 	if c.HeadRef != s.WantHeadRef {
-		return s.ChangesetExists, fmt.Errorf("wrong HeadRef. want=%s, have=%s", s.WantHeadRef, c.HeadRef)
+		return s.ChangesetExists, errors.Errorf("wrong HeadRef. want=%s, have=%s", s.WantHeadRef, c.HeadRef)
 	}
 
 	if c.BaseRef != s.WantBaseRef {
-		return s.ChangesetExists, fmt.Errorf("wrong BaseRef. want=%s, have=%s", s.WantBaseRef, c.BaseRef)
+		return s.ChangesetExists, errors.Errorf("wrong BaseRef. want=%s, have=%s", s.WantBaseRef, c.BaseRef)
 	}
 
 	if err := c.SetMetadata(s.FakeMetadata); err != nil {
@@ -154,11 +153,11 @@ func (s *FakeChangesetSource) CreateChangeset(ctx context.Context, c *Changeset)
 	}
 
 	if c.HeadRef != s.WantHeadRef {
-		return s.ChangesetExists, fmt.Errorf("wrong HeadRef. want=%s, have=%s", s.WantHeadRef, c.HeadRef)
+		return s.ChangesetExists, errors.Errorf("wrong HeadRef. want=%s, have=%s", s.WantHeadRef, c.HeadRef)
 	}
 
 	if c.BaseRef != s.WantBaseRef {
-		return s.ChangesetExists, fmt.Errorf("wrong BaseRef. want=%s, have=%s", s.WantBaseRef, c.BaseRef)
+		return s.ChangesetExists, errors.Errorf("wrong BaseRef. want=%s, have=%s", s.WantBaseRef, c.BaseRef)
 	}
 
 	if err := c.SetMetadata(s.FakeMetadata); err != nil {
@@ -180,7 +179,7 @@ func (s *FakeChangesetSource) UpdateChangeset(ctx context.Context, c *Changeset)
 	}
 
 	if c.BaseRef != s.WantBaseRef {
-		return fmt.Errorf("wrong BaseRef. want=%s, have=%s", s.WantBaseRef, c.BaseRef)
+		return errors.Errorf("wrong BaseRef. want=%s, have=%s", s.WantBaseRef, c.BaseRef)
 	}
 
 	s.UpdatedChangesets = append(s.UpdatedChangesets, c)

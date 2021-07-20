@@ -1,4 +1,6 @@
 import chalk from 'chalk'
+import { Application } from 'express'
+import { once } from 'lodash'
 import signale from 'signale'
 import createWebpackCompiler, { Configuration } from 'webpack'
 import WebpackDevServer, { ProxyConfigArrayItem } from 'webpack-dev-server'
@@ -11,7 +13,6 @@ import {
     getCSRFTokenAndCookie,
     STATIC_ASSETS_PATH,
     STATIC_ASSETS_URL,
-    WEBPACK_STATS_OPTIONS,
     WEB_SERVER_URL,
 } from '../utils'
 
@@ -23,9 +24,9 @@ const { SOURCEGRAPH_API_URL, SOURCEGRAPH_HTTPS_PORT, IS_HOT_RELOAD_ENABLED } = e
 export async function startDevelopmentServer(): Promise<void> {
     // Get CSRF token value from the `SOURCEGRAPH_API_URL`.
     const { csrfContextValue, csrfCookieValue } = await getCSRFTokenAndCookie(SOURCEGRAPH_API_URL)
-    signale.await('Development server', { ...environmentConfig, csrfContextValue, csrfCookieValue })
+    signale.start('Starting webpack-dev-server with environment config:\n', environmentConfig)
 
-    const proxyConfig = {
+    const proxyConfig: ProxyConfigArrayItem = {
         context: PROXY_ROUTES,
         ...getAPIProxySettings({
             csrfContextValue,
@@ -33,7 +34,11 @@ export async function startDevelopmentServer(): Promise<void> {
         }),
     }
 
-    const options: WebpackDevServer.Configuration = {
+    // It's not possible to use `WebpackDevServer.Configuration` here yet, because
+    // type definitions for the `webpack-dev-server` are not updated to match v4.
+    const developmentServerConfig = {
+        // react-refresh plugin triggers page reload if needed.
+        liveReload: false,
         hot: IS_HOT_RELOAD_ENABLED,
         // TODO: resolve https://github.com/webpack/webpack-dev-server/issues/2313 and enable HTTPS.
         https: false,
@@ -41,24 +46,33 @@ export async function startDevelopmentServer(): Promise<void> {
             disableDotRule: true,
         },
         port: SOURCEGRAPH_HTTPS_PORT,
-        publicPath: STATIC_ASSETS_URL,
-        contentBase: STATIC_ASSETS_PATH,
-        contentBasePublicPath: [STATIC_ASSETS_URL, '/'],
-        stats: WEBPACK_STATS_OPTIONS,
-        noInfo: false,
-        disableHostCheck: true,
-        proxy: [proxyConfig as ProxyConfigArrayItem],
-        before(app) {
+        client: {
+            overlay: false,
+        },
+        static: {
+            directory: STATIC_ASSETS_PATH,
+            publicPath: [STATIC_ASSETS_URL, '/'],
+        },
+        firewall: false,
+        proxy: [proxyConfig],
+        onBeforeSetupMiddleware(app: Application) {
             app.use(getCSRFTokenCookieMiddleware(csrfCookieValue))
         },
     }
 
-    WebpackDevServer.addDevServerEntrypoints(webpackConfig, options)
+    const compiler = createWebpackCompiler(webpackConfig)
+    const server = new WebpackDevServer(compiler, developmentServerConfig as WebpackDevServer.Configuration)
 
-    const server = new WebpackDevServer(createWebpackCompiler(webpackConfig), options)
+    compiler.hooks.afterEmit.tap(
+        'development-server-logger',
+        once(() => {
+            signale.success('Webpack build is ready!')
+        })
+    )
 
     server.listen(SOURCEGRAPH_HTTPS_PORT, '0.0.0.0', () => {
         signale.success(`Development server is ready at ${chalk.blue.bold(WEB_SERVER_URL)}`)
+        signale.await('Waiting for Webpack to compile assets')
     })
 }
 

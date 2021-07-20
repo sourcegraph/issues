@@ -1,9 +1,9 @@
 package git
 
 import (
-	"fmt"
 	"strings"
 
+	"github.com/cockroachdb/errors"
 	"github.com/gobwas/glob"
 )
 
@@ -38,7 +38,7 @@ func CompileRefGlobs(globs []RefGlob) (RefGlobs, error) {
 		// explicitly."
 		if g.Exclude != "" {
 			if !strings.HasPrefix(g.Exclude, "refs/") {
-				return nil, fmt.Errorf(`git ref exclude glob must begin with "refs/" (got %q)`, g.Exclude)
+				return nil, errors.Errorf(`git ref exclude glob must begin with "refs/" (got %q)`, g.Exclude)
 			}
 		}
 

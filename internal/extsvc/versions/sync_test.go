@@ -2,9 +2,9 @@ package versions
 
 import (
 	"context"
-	"fmt"
 	"testing"
 
+	"github.com/cockroachdb/errors"
 	"github.com/inconshreveable/log15"
 
 	"github.com/sourcegraph/sourcegraph/internal/database"
@@ -53,7 +53,7 @@ func TestGetAndStoreVersions(t *testing.T) {
 	t.Run("error fetching version", func(t *testing.T) {
 		mockExternalServices(t, es)
 
-		testErr := fmt.Errorf("what is up")
+		testErr := errors.Errorf("what is up")
 		src := &fakeVersionSource{version: "1.2.3.4", err: testErr, es: es}
 
 		_, err := loadVersions(context.Background(), nil, newFakeSourcer(src))

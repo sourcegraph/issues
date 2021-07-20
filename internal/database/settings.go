@@ -3,9 +3,9 @@ package database
 import (
 	"context"
 	"database/sql"
-	"fmt"
 	"strings"
 
+	"github.com/cockroachdb/errors"
 	"github.com/keegancsmith/sqlf"
 	"github.com/sourcegraph/jsonx"
 
@@ -47,12 +47,12 @@ func (o *SettingStore) CreateIfUpToDate(ctx context.Context, subject api.Setting
 	}
 
 	if strings.TrimSpace(contents) == "" {
-		return nil, fmt.Errorf("blank settings are invalid (you can clear the settings by entering an empty JSON object: {})")
+		return nil, errors.Errorf("blank settings are invalid (you can clear the settings by entering an empty JSON object: {})")
 	}
 
 	// Validate JSON syntax before saving.
 	if _, errs := jsonx.Parse(contents, jsonx.ParseOptions{Comments: true, TrailingCommas: true}); len(errs) > 0 {
-		return nil, fmt.Errorf("invalid settings JSON: %v", errs)
+		return nil, errors.Errorf("invalid settings JSON: %v", errs)
 	}
 
 	// Validate setting schema
@@ -61,7 +61,7 @@ func (o *SettingStore) CreateIfUpToDate(ctx context.Context, subject api.Setting
 		return nil, err
 	}
 	if len(problems) > 0 {
-		return nil, fmt.Errorf("invalid settings: %s", strings.Join(problems, ","))
+		return nil, errors.Errorf("invalid settings: %s", strings.Join(problems, ","))
 	}
 
 	s := api.Settings{

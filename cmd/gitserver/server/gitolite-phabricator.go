@@ -3,12 +3,12 @@ package server
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"net/http"
 	"os"
 	"os/exec"
 	"strings"
 
+	"github.com/cockroachdb/errors"
 	"github.com/inconshreveable/log15"
 
 	"github.com/sourcegraph/sourcegraph/internal/conf"
@@ -76,14 +76,15 @@ func getGitolitePhabCallsign(ctx context.Context, gconf *schema.GitoliteConnecti
 	cmd.Env = append(os.Environ(), "REPO="+repo)
 	stdout, err := cmd.Output()
 	if err != nil {
-		if exitErr, ok := err.(*exec.ExitError); ok {
-			return "", fmt.Errorf("Command failed: %s, stderr: %s", exitErr, string(exitErr.Stderr))
+		var e *exec.ExitError
+		if errors.As(err, &e) {
+			return "", errors.Errorf("Command failed: %s, stderr: %s", e, string(e.Stderr))
 		}
-		return "", fmt.Errorf("Command failed: %s", err)
+		return "", errors.Errorf("Command failed: %s", err)
 	}
 	callsign := strings.TrimSpace(string(stdout))
 	if !callSignPattern.MatchString(callsign) {
-		return "", fmt.Errorf("Callsign %q is invalid (must match `[A-Z]+`)", callsign)
+		return "", errors.Errorf("Callsign %q is invalid (must match `[A-Z]+`)", callsign)
 	}
 	return callsign, nil
 }

@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"net/url"
 
+	"github.com/cockroachdb/errors"
+
 	"github.com/sourcegraph/sourcegraph/cmd/frontend/auth/providers"
 	"github.com/sourcegraph/sourcegraph/internal/authz"
 	"github.com/sourcegraph/sourcegraph/internal/conf"
@@ -45,7 +47,7 @@ func newAuthzProvider(urn string, a *schema.GitLabAuthorization, instanceURL, to
 
 	glURL, err := url.Parse(instanceURL)
 	if err != nil {
-		return nil, fmt.Errorf("Could not parse URL for GitLab instance %q: %s", instanceURL, err)
+		return nil, errors.Errorf("Could not parse URL for GitLab instance %q: %s", instanceURL, err)
 	}
 
 	switch idp := a.IdentityProvider; {
@@ -71,7 +73,7 @@ func newAuthzProvider(urn string, a *schema.GitLabAuthorization, instanceURL, to
 			}
 		}
 		if !foundAuthProvider {
-			return nil, fmt.Errorf("Did not find authentication provider matching %q. Check the [**site configuration**](/site-admin/configuration) to verify an entry in [`auth.providers`](https://docs.sourcegraph.com/admin/auth) exists for %s.", instanceURL, instanceURL)
+			return nil, errors.Errorf("Did not find authentication provider matching %q. Check the [**site configuration**](/site-admin/configuration) to verify an entry in [`auth.providers`](https://docs.sourcegraph.com/admin/auth) exists for %s.", instanceURL, instanceURL)
 		}
 
 		return NewOAuthProvider(OAuthProviderOp{
@@ -108,9 +110,9 @@ func newAuthzProvider(urn string, a *schema.GitLabAuthorization, instanceURL, to
 				}), nil
 			}
 		}
-		return nil, fmt.Errorf("Did not find authentication provider matching type %s and configID %s. Check the [**site configuration**](/site-admin/configuration) to verify that an entry in [`auth.providers`](https://docs.sourcegraph.com/admin/auth) matches the type and configID.", ext.AuthProviderType, ext.AuthProviderID)
+		return nil, errors.Errorf("Did not find authentication provider matching type %s and configID %s. Check the [**site configuration**](/site-admin/configuration) to verify that an entry in [`auth.providers`](https://docs.sourcegraph.com/admin/auth) matches the type and configID.", ext.AuthProviderType, ext.AuthProviderID)
 	default:
-		return nil, fmt.Errorf("No identityProvider was specified")
+		return nil, errors.Errorf("No identityProvider was specified")
 	}
 }
 

@@ -20,6 +20,17 @@ const batchSpecExecutionFieldsFragment = gql`
         startedAt
         finishedAt
         failure
+        steps {
+            setup {
+                ...BatchSpecExecutionLogEntryFields
+            }
+            srcPreview {
+                ...BatchSpecExecutionLogEntryFields
+            }
+            teardown {
+                ...BatchSpecExecutionLogEntryFields
+            }
+        }
         placeInQueue
         batchSpec {
             applyURL
@@ -34,6 +45,15 @@ const batchSpecExecutionFieldsFragment = gql`
             url
             namespaceName
         }
+    }
+
+    fragment BatchSpecExecutionLogEntryFields on ExecutionLogEntry {
+        key
+        command
+        startTime
+        exitCode
+        durationMilliseconds
+        out
     }
 `
 

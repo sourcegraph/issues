@@ -45,21 +45,20 @@ type dependencyIndexingSchedulerHandler struct {
 	indexEnqueuer IndexEnqueuer
 }
 
-var _ dbworker.Handler = &dependencyIndexingSchedulerHandler{}
+var _ workerutil.Handler = &dependencyIndexingSchedulerHandler{}
 
 // Handle iterates all import monikers associated with a given upload that has
 // recently completed processing. Each moniker is interpreted according to its
 // scheme to determine the dependent repository and commit. A set of indexing
 // jobs are enqueued for each repository and commit pair.
-func (h *dependencyIndexingSchedulerHandler) Handle(ctx context.Context, tx dbworkerstore.Store, record workerutil.Record) error {
+func (h *dependencyIndexingSchedulerHandler) Handle(ctx context.Context, record workerutil.Record) error {
 	job := record.(dbstore.DependencyIndexingJob)
-	store := h.dbStore.With(tx)
 
-	if ok, err := h.shouldIndexDependencies(ctx, store, job.UploadID); err != nil || !ok {
+	if ok, err := h.shouldIndexDependencies(ctx, h.dbStore, job.UploadID); err != nil || !ok {
 		return err
 	}
 
-	scanner, err := store.ReferencesForUpload(ctx, job.UploadID)
+	scanner, err := h.dbStore.ReferencesForUpload(ctx, job.UploadID)
 	if err != nil {
 		return errors.Wrap(err, "dbstore.ReferencesForUpload")
 	}

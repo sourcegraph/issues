@@ -131,14 +131,14 @@ func (err errCannotCreateUser) Code() string {
 
 // IsUsernameExists reports whether err is an error indicating that the intended username exists.
 func IsUsernameExists(err error) bool {
-	e, ok := err.(errCannotCreateUser)
-	return ok && e.code == errorCodeUsernameExists
+	var e errCannotCreateUser
+	return errors.As(err, &e) && e.code == errorCodeUsernameExists
 }
 
 // IsEmailExists reports whether err is an error indicating that the intended email exists.
 func IsEmailExists(err error) bool {
-	e, ok := err.(errCannotCreateUser)
-	return ok && e.code == errorCodeEmailExists
+	var e errCannotCreateUser
+	return errors.As(err, &e) && e.code == errorCodeEmailExists
 }
 
 // NewUser describes a new to-be-created user.
@@ -295,12 +295,13 @@ func (u *UserStore) create(ctx context.Context, info NewUser) (newUser *types.Us
 		sqlf.Sprintf("INSERT INTO users(username, display_name, avatar_url, created_at, updated_at, passwd, invalidated_sessions_at, site_admin) VALUES(%s, %s, %s, %s, %s, %s, %s, %s AND NOT EXISTS(SELECT * FROM users)) RETURNING id, site_admin",
 			info.Username, info.DisplayName, avatarURL, createdAt, updatedAt, passwd, invalidatedSessionsAt, !alreadyInitialized)).Scan(&id, &siteAdmin)
 	if err != nil {
-		if pgErr, ok := err.(*pgconn.PgError); ok {
-			switch pgErr.ConstraintName {
+		var e *pgconn.PgError
+		if errors.As(err, &e) {
+			switch e.ConstraintName {
 			case "users_username":
 				return nil, errCannotCreateUser{errorCodeUsernameExists}
 			case "users_username_max_length", "users_username_valid_chars", "users_display_name_max_length":
-				return nil, errCannotCreateUser{pgErr.ConstraintName}
+				return nil, errCannotCreateUser{e.ConstraintName}
 			}
 		}
 		return nil, err
@@ -333,11 +334,9 @@ func (u *UserStore) create(ctx context.Context, info NewUser) (newUser *types.Us
 			err = u.Exec(ctx, sqlf.Sprintf("INSERT INTO user_emails(user_id, email, verification_code, is_primary) VALUES (%s, %s, %s, true)", id, info.Email, info.EmailVerificationCode))
 		}
 		if err != nil {
-			if pgErr, ok := err.(*pgconn.PgError); ok {
-				switch pgErr.ConstraintName {
-				case "user_emails_unique_verified_email":
-					return nil, errCannotCreateUser{errorCodeEmailExists}
-				}
+			var e *pgconn.PgError
+			if errors.As(err, &e) && e.ConstraintName == "user_emails_unique_verified_email" {
+				return nil, errCannotCreateUser{errorCodeEmailExists}
 			}
 			return nil, err
 		}
@@ -409,15 +408,15 @@ func logAccountCreatedEvent(ctx context.Context, db dbutil.DB, u *types.User, se
 // is a list of errors encountered while generating this list. Note that even if errors are returned, the first
 // return value is still valid.
 func orgsForAllUsersToJoin(userOrgMap map[string][]string) ([]string, []error) {
-	var errors []error
+	var errs []error
 	for userPattern, orgs := range userOrgMap {
 		if userPattern != "*" {
-			errors = append(errors, fmt.Errorf("unsupported auth.userOrgMap user pattern %q (only \"*\" is supported)", userPattern))
+			errs = append(errs, errors.Errorf("unsupported auth.userOrgMap user pattern %q (only \"*\" is supported)", userPattern))
 			continue
 		}
-		return orgs, errors
+		return orgs, errs
 	}
-	return nil, errors
+	return nil, errs
 }
 
 // UserUpdate describes user fields to update.
@@ -453,8 +452,9 @@ func (u *UserStore) Update(ctx context.Context, id int32, update UserUpdate) (er
 
 		// Ensure new username is available in shared users+orgs namespace.
 		if err := tx.Exec(ctx, sqlf.Sprintf("UPDATE names SET name=%s WHERE user_id=%s", update.Username, id)); err != nil {
-			if pgErr, ok := err.(*pgconn.PgError); ok && pgErr.ConstraintName == "names_pkey" {
-				return fmt.Errorf("Username is already in use.")
+			var e *pgconn.PgError
+			if errors.As(err, &e) && e.ConstraintName == "names_pkey" {
+				return errors.Errorf("Username is already in use.")
 			}
 			return err
 		}
@@ -474,7 +474,8 @@ func (u *UserStore) Update(ctx context.Context, id int32, update UserUpdate) (er
 	query := sqlf.Sprintf("UPDATE users SET %s WHERE id=%d", sqlf.Join(fieldUpdates, ", "), id)
 	res, err := tx.ExecResult(ctx, query)
 	if err != nil {
-		if pgErr, ok := err.(*pgconn.PgError); ok && pgErr.ConstraintName == "users_username" {
+		var e *pgconn.PgError
+		if errors.As(err, &e) && e.ConstraintName == "users_username" {
 			return errCannotCreateUser{errorCodeUsernameExists}
 		}
 		return err
@@ -996,7 +997,7 @@ func (u *UserStore) SetPassword(ctx context.Context, id int32, resetCode, newPas
 		return false, err
 	}
 	if ct > 1 {
-		return false, fmt.Errorf("illegal state: found more than one user matching ID %d", id)
+		return false, errors.Errorf("illegal state: found more than one user matching ID %d", id)
 	}
 	if ct == 0 {
 		return false, nil

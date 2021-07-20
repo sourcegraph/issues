@@ -7,11 +7,8 @@ import { FormInput } from '../../../../../../components/form/form-input/FormInpu
 import { useFieldAPI } from '../../../../../../components/form/hooks/useField'
 import { FORM_ERROR, SubmissionErrors } from '../../../../../../components/form/hooks/useForm'
 import { RepositoryField } from '../../../../../../components/form/repositories-field/RepositoryField'
-import {
-    getVisibilityValue,
-    Organization,
-    VisibilityPicker,
-} from '../../../../../../components/visibility-picker/VisibilityPicker'
+import { VisibilityPicker } from '../../../../../../components/visibility-picker/VisibilityPicker'
+import { SupportedInsightSubject } from '../../../../../../core/types/subjects'
 import { LangStatsCreationFormFields } from '../../types'
 
 import styles from './LangStatsInsightCreationForm.module.scss'
@@ -29,7 +26,7 @@ export interface LangStatsInsightCreationFormProps {
     repository: useFieldAPI<LangStatsCreationFormFields['repository']>
     threshold: useFieldAPI<LangStatsCreationFormFields['threshold']>
     visibility: useFieldAPI<LangStatsCreationFormFields['visibility']>
-    organizations: Organization[]
+    subjects: SupportedInsightSubject[]
 
     onCancel: () => void
     onFormReset: () => void
@@ -47,7 +44,7 @@ export const LangStatsInsightCreationForm: React.FunctionComponent<LangStatsInsi
         repository,
         threshold,
         visibility,
-        organizations,
+        subjects,
         onCancel,
         onFormReset,
         isFormClearActive,
@@ -104,11 +101,7 @@ export const LangStatsInsightCreationForm: React.FunctionComponent<LangStatsInsi
                 inputSymbol={<span className={styles.formThresholdInputSymbol}>%</span>}
             />
 
-            <VisibilityPicker
-                organizations={organizations}
-                value={visibility.input.value}
-                onChange={event => visibility.input.onChange(getVisibilityValue(event))}
-            />
+            <VisibilityPicker subjects={subjects} value={visibility.input.value} onChange={visibility.input.onChange} />
 
             <hr className={styles.formSeparator} />
 

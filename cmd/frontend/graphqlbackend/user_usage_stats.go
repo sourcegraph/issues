@@ -85,6 +85,7 @@ func (r *schemaResolver) LogEvent(ctx context.Context, args *struct {
 	Source         string
 	Argument       *string
 	CohortID       *string
+	Referrer       *string
 }) (*EmptyResponse, error) {
 	if !conf.EventLoggingEnabled() {
 		return nil, nil
@@ -116,6 +117,7 @@ func (r *schemaResolver) LogEvent(ctx context.Context, args *struct {
 		Argument:       payload,
 		FeatureFlags:   ffs,
 		CohortID:       args.CohortID,
+		Referrer:       args.Referrer,
 	})
 }
 

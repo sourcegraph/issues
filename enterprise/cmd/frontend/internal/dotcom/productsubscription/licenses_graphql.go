@@ -100,7 +100,7 @@ func (r *productLicense) CreatedAt() graphqlbackend.DateTime {
 
 func generateProductLicenseForSubscription(ctx context.Context, db dbutil.DB, subscriptionID string, input *graphqlbackend.ProductLicenseInput) (id string, err error) {
 	licenseKey, err := licensing.GenerateProductLicenseKey(license.Info{
-		Tags:      input.Tags,
+		Tags:      license.SanitizeTagsList(input.Tags),
 		UserCount: uint(input.UserCount),
 		ExpiresAt: time.Unix(int64(input.ExpiresAt), 0),
 	})

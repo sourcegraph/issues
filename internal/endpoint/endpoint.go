@@ -263,7 +263,7 @@ func parseURL(rawurl string) (*k8sURL, error) {
 	case 2:
 		svc, ns = parts[0], parts[1]
 	default:
-		return nil, fmt.Errorf("invalid k8s url. expected k8s+http://service.namespace:port/path, got %s", rawurl)
+		return nil, errors.Errorf("invalid k8s url. expected k8s+http://service.namespace:port/path, got %s", rawurl)
 	}
 	return &k8sURL{
 		URL:       *u,

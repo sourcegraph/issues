@@ -7,7 +7,6 @@ import (
 	"crypto/rand"
 	"encoding/base64"
 	"encoding/json"
-	"fmt"
 	"hash/crc32"
 	"io"
 	"os"
@@ -40,7 +39,7 @@ func NewKey(ctx context.Context, k schema.MountedEncryptionKey) (*Key, error) {
 	}
 
 	if len(secret) != 32 {
-		return nil, fmt.Errorf("invalid key length: %d, expected 32 bytes", len(secret))
+		return nil, errors.Errorf("invalid key length: %d, expected 32 bytes", len(secret))
 	}
 
 	return &Key{

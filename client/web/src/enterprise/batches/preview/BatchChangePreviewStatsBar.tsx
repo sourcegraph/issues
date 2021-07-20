@@ -1,7 +1,7 @@
 import classNames from 'classnames'
 import React from 'react'
 
-import { DiffStat } from '../../../components/diff/DiffStat'
+import { DiffStatStack } from '../../../components/diff/DiffStat'
 import { BatchSpecFields } from '../../../graphql-operations'
 
 import styles from './BatchChangePreviewStatsBar.module.scss'
@@ -32,12 +32,7 @@ export const BatchChangePreviewStatsBar: React.FunctionComponent<BatchChangePrev
             <span className="badge badge-info text-uppercase mb-0">Preview</span>
         </h2>
         <div className={classNames(styles.batchChangePreviewStatsBarDivider, 'd-none d-sm-block mx-3')} />
-        <DiffStat
-            {...batchSpec.diffStat}
-            separateLines={true}
-            expandedCounts={true}
-            className={styles.batchChangePreviewStatsBarDiff}
-        />
+        <DiffStatStack className={styles.batchChangePreviewStatsBarDiff} {...batchSpec.diffStat} />
         <div className={classNames(styles.batchChangePreviewStatsBarHorizontalDivider, 'd-block d-sm-none my-3')} />
         <div className={classNames(styles.batchChangePreviewStatsBarDivider, 'mx-3 d-none d-sm-block d-md-none')} />
         <div className={classNames(styles.batchChangePreviewStatsBarMetrics, 'flex-grow-1 d-flex justify-content-end')}>

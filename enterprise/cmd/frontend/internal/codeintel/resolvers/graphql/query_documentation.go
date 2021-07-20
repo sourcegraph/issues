@@ -65,7 +65,9 @@ func (r *QueryResolver) DocumentationPathInfo(ctx context.Context, args *gql.LSI
 				if err != nil {
 					return nil, err
 				}
-				children = append(children, *child)
+				if child != nil {
+					children = append(children, *child)
+				}
 			}
 		}
 		return &DocumentationPathInfoResult{

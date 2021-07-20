@@ -8,3 +8,4 @@
 - [Adding non-Git repositories](../external_service/non-git.md)
   - [Adding Perforce repositories](perforce.md)
 - [Configure repository permissions](permissions.md)
+  - [Row-level security](row_level_security.md)

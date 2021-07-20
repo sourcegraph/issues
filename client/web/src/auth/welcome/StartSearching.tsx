@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 
+import { useSteps } from '@sourcegraph/wildcard/src/components/Steps'
 import {
     Terminal,
     TerminalTitle,
@@ -9,13 +10,16 @@ import {
     TerminalProgress,
 } from '@sourcegraph/wildcard/src/components/Terminal'
 
+import { UserAreaUserFields } from '../../graphql-operations'
 import { LogoAscii } from '../LogoAscii'
-import { RepoCloningStatus } from '../useRepoCloningStatus'
+import { RepoSelectionMode } from '../PostSignUpPage'
+import { useExternalServices } from '../useExternalServices'
+import { useRepoCloningStatus } from '../useRepoCloningStatus'
+import { selectedReposVar, useSaveSelectedRepos } from '../useSelectedRepos'
 
 interface StartSearching {
-    cloningStatusLines: RepoCloningStatus['repos']
-    cloningStatusLoading: RepoCloningStatus['loading']
-    isDoneCloning: RepoCloningStatus['isDoneCloning']
+    user: UserAreaUserFields
+    repoSelectionMode: RepoSelectionMode
 }
 
 export const useShowAlert = (isDoneCloning: boolean): { showAlert: boolean } => {
@@ -38,12 +42,54 @@ export const useShowAlert = (isDoneCloning: boolean): { showAlert: boolean } => 
     return { showAlert }
 }
 
-export const StartSearching: React.FunctionComponent<StartSearching> = ({
-    cloningStatusLines,
-    cloningStatusLoading,
-    isDoneCloning,
-}) => {
+export const StartSearching: React.FunctionComponent<StartSearching> = ({ user, repoSelectionMode }) => {
+    const { externalServices } = useExternalServices(user.id)
+    const saveSelectedRepos = useSaveSelectedRepos()
+
+    const { repos: cloningStatusLines, loading: cloningStatusLoading, isDoneCloning } = useRepoCloningStatus({
+        userId: user.id,
+        pollInterval: 2000,
+        selectedReposVar,
+    })
+
+    useEffect(() => {
+        const selectedRepos = selectedReposVar()
+
+        if (externalServices && selectedRepos) {
+            const codeHostRepoPromises = []
+
+            for (const host of externalServices) {
+                const repos: string[] = []
+                for (const repo of selectedRepos) {
+                    if (repo.externalRepository.id !== host.id) {
+                        continue
+                    }
+
+                    const nameWithoutService = repo.name.slice(repo.name.indexOf('/') + 1)
+                    repos.push(nameWithoutService)
+                }
+
+                codeHostRepoPromises.push(
+                    saveSelectedRepos({
+                        variables: {
+                            id: host.id,
+                            allRepos: repoSelectionMode === 'all',
+                            repos: (repoSelectionMode === 'selected' && repos) || null,
+                        },
+                    })
+                )
+            }
+        }
+    }, [externalServices, saveSelectedRepos, repoSelectionMode])
+
     const { showAlert } = useShowAlert(isDoneCloning)
+    const { currentIndex, setComplete } = useSteps()
+
+    useEffect(() => {
+        if (showAlert || isDoneCloning) {
+            setComplete(currentIndex, true)
+        }
+    }, [currentIndex, setComplete, showAlert, isDoneCloning])
 
     return (
         <>

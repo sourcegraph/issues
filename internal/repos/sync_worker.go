@@ -30,7 +30,7 @@ type SyncWorkerOptions struct {
 }
 
 // NewSyncWorker creates a new external service sync worker.
-func NewSyncWorker(ctx context.Context, db dbutil.DB, handler dbworker.Handler, opts SyncWorkerOptions) (*workerutil.Worker, *dbworker.Resetter) {
+func NewSyncWorker(ctx context.Context, db dbutil.DB, handler workerutil.Handler, opts SyncWorkerOptions) (*workerutil.Worker, *dbworker.Resetter) {
 	if opts.NumHandlers == 0 {
 		opts.NumHandlers = 3
 	}
@@ -68,6 +68,7 @@ func NewSyncWorker(ctx context.Context, db dbutil.DB, handler dbworker.Handler, 
 		Scan:              scanSingleJob,
 		OrderByExpression: sqlf.Sprintf("next_sync_at"),
 		ColumnExpressions: syncJobColumns,
+		HeartbeatInterval: 15 * time.Second,
 		StalledMaxAge:     30 * time.Second,
 		MaxNumResets:      5,
 		MaxNumRetries:     0,

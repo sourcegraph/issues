@@ -446,7 +446,7 @@ func upload(ctx context.Context, name string, index int, rev string, limiter *ut
 
 	match := uploadIDPattern.FindSubmatch(output)
 	if len(match) == 0 {
-		return "", fmt.Errorf("failed to extract URL:\n%s", output)
+		return "", errors.Errorf("failed to extract URL:\n%s", output)
 	}
 
 	return string(match[1]), nil

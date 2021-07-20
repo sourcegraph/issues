@@ -3,6 +3,7 @@ package lsifstore
 import (
 	"context"
 	"database/sql"
+	"strconv"
 
 	"github.com/keegancsmith/sqlf"
 	"github.com/opentracing/opentracing-go/log"
@@ -128,4 +129,102 @@ func (s *Store) scanFirstDocumentationPathInfoData(rows *sql.Rows, queryErr erro
 		return nil, err
 	}
 	return record, nil
+}
+
+//nolint:unused
+func (s *Store) documentationIDToPathID(ctx context.Context, bundleID int, id semantic.ID) (_ string, err error) {
+	if id == "" {
+		return "", nil
+	}
+	ctx, _, endObservation := s.operations.documentationIDToPathID.WithAndLogger(ctx, &err, observation.Args{LogFields: []log.Field{
+		log.Int("bundleID", bundleID),
+		log.String("id", string(id)),
+	}})
+	defer endObservation(1, observation.Args{})
+
+	pathID, err := s.scanFirstDocumentationPathID(s.Store.Query(ctx, sqlf.Sprintf(documentationIDToPathIDQuery, bundleID, id)))
+	if err != nil {
+		return "", err
+	}
+	return pathID, nil
+}
+
+const documentationIDToPathIDQuery = `
+-- source: enterprise/internal/codeintel/stores/lsifstore/ranges.go:documentationIDToPathID
+SELECT
+	path_id
+FROM
+	lsif_documentation_mappings
+WHERE
+	dump_id = %s AND
+	result_id = %s
+LIMIT 1
+`
+
+// scanFirstDocumentationPathID reads the first path_id row. If no rows match the query, an empty string is returned.
+//nolint:unused
+func (s *Store) scanFirstDocumentationPathID(rows *sql.Rows, queryErr error) (_ string, err error) {
+	if queryErr != nil {
+		return "", queryErr
+	}
+	defer func() { err = basestore.CloseRows(rows, err) }()
+
+	if !rows.Next() {
+		return "", nil
+	}
+
+	var pathID string
+	if err := rows.Scan(&pathID); err != nil {
+		return "", err
+	}
+	return pathID, nil
+}
+
+//nolint:unused
+func (s *Store) documentationPathIDToID(ctx context.Context, bundleID int, pathID string) (_ semantic.ID, err error) {
+	ctx, _, endObservation := s.operations.documentationPathIDToID.WithAndLogger(ctx, &err, observation.Args{LogFields: []log.Field{
+		log.Int("bundleID", bundleID),
+		log.String("pathID", pathID),
+	}})
+	defer endObservation(1, observation.Args{})
+
+	resultID, err := s.scanFirstDocumentationResultID(s.Store.Query(ctx, sqlf.Sprintf(documentationPathIDToIDQuery, bundleID, pathID)))
+	if err != nil {
+		return "", err
+	}
+	if resultID == -1 {
+		return "", err
+	}
+	return semantic.ID(strconv.FormatInt(resultID, 10)), nil
+}
+
+const documentationPathIDToIDQuery = `
+-- source: enterprise/internal/codeintel/stores/lsifstore/ranges.go:documentationPathIDToID
+SELECT
+	result_id
+FROM
+	lsif_documentation_mappings
+WHERE
+	dump_id = %s AND
+	path_id = %s
+LIMIT 1
+`
+
+// scanFirstDocumentationResultID reads the first result_id row. If no rows match the query, an empty string is returned.
+//nolint:unused
+func (s *Store) scanFirstDocumentationResultID(rows *sql.Rows, queryErr error) (_ int64, err error) {
+	if queryErr != nil {
+		return -1, queryErr
+	}
+	defer func() { err = basestore.CloseRows(rows, err) }()
+
+	if !rows.Next() {
+		return -1, nil
+	}
+
+	var resultID int64
+	if err := rows.Scan(&resultID); err != nil {
+		return -1, err
+	}
+	return resultID, nil
 }

@@ -4,33 +4,27 @@ import { noop } from 'rxjs'
 
 import { Settings } from '@sourcegraph/shared/src/settings/settings'
 
-import { useField } from '../../../../../../components/form/hooks/useField'
-import { FormChangeEvent, SubmissionErrors, useForm } from '../../../../../../components/form/hooks/useForm'
-import { useInsightTitleValidator } from '../../../../../../components/form/hooks/useInsightTitleValidator'
-import { Organization } from '../../../../../../components/visibility-picker/VisibilityPicker'
-import { InsightTypePrefix } from '../../../../../../core/types'
+import { FormChangeEvent, SubmissionErrors } from '../../../../../../components/form/hooks/useForm'
+import { SupportedInsightSubject } from '../../../../../../core/types/subjects'
+import { getExperimentalFeatures } from '../../../../../../utils/get-experimental-features'
 import { CreateInsightFormFields } from '../../types'
 import { getSanitizedRepositories } from '../../utils/insight-sanitizer'
 import { SearchInsightLivePreview } from '../live-preview-chart/SearchInsightLivePreview'
 import { SearchInsightCreationForm } from '../search-insight-creation-form/SearchInsightCreationForm'
 
 import { useEditableSeries, createDefaultEditSeries } from './hooks/use-editable-series'
-import { INITIAL_INSIGHT_VALUES } from './initial-insight-values'
+import { useInsightCreationForm } from './hooks/use-insight-creation-form/use-insight-creation-form'
 import styles from './SearchInsightCreationContent.module.scss'
-import {
-    repositoriesExistValidator,
-    repositoriesFieldValidator,
-    requiredStepValueField,
-    seriesRequired,
-} from './validators'
 
 export interface SearchInsightCreationContentProps {
     /** This component might be used in edit or creation insight case. */
     mode?: 'creation' | 'edit'
     /** Final settings cascade. Used for title field validation. */
     settings?: Settings | null
-    /** List of all user organizations */
-    organizations?: Organization[]
+
+    /** List of all supportable insight subjects */
+    subjects?: SupportedInsightSubject[]
+
     /** Initial value for all form fields. */
     initialValue?: CreateInsightFormFields
     /** Custom class name for root form element. */
@@ -48,9 +42,9 @@ export interface SearchInsightCreationContentProps {
 export const SearchInsightCreationContent: React.FunctionComponent<SearchInsightCreationContentProps> = props => {
     const {
         mode = 'creation',
-        organizations = [],
+        subjects = [],
         settings,
-        initialValue = INITIAL_INSIGHT_VALUES,
+        initialValue,
         className,
         dataTestId,
         onSubmit,
@@ -60,26 +54,25 @@ export const SearchInsightCreationContent: React.FunctionComponent<SearchInsight
 
     const isEditMode = mode === 'edit'
 
-    const { values, formAPI, ref, handleSubmit } = useForm<CreateInsightFormFields>({
-        initialValues: initialValue,
-        onSubmit,
-        onChange,
+    const { codeInsightsAllRepos } = getExperimentalFeatures(settings)
+
+    const {
+        form: { values, formAPI, ref, handleSubmit },
+        title,
+        repositories,
+        series,
+        visibility,
+        step,
+        stepValue,
+        allReposMode,
+    } = useInsightCreationForm({
+        settings,
+        subjects,
+        initialValue,
         touched: isEditMode,
+        onChange,
+        onSubmit,
     })
-
-    // We can't have two or more insights with the same name, since we rely on name as on id of insights.
-    const titleValidator = useInsightTitleValidator({ settings, insightType: InsightTypePrefix.search })
-
-    const title = useField('title', formAPI, { sync: titleValidator })
-    const repositories = useField('repositories', formAPI, {
-        sync: repositoriesFieldValidator,
-        async: repositoriesExistValidator,
-    })
-    const visibility = useField('visibility', formAPI)
-
-    const series = useField('series', formAPI, { sync: seriesRequired })
-    const step = useField('step', formAPI)
-    const stepValue = useField('stepValue', formAPI, { sync: requiredStepValueField })
 
     const { editSeries, listen, editRequest, editCommit, cancelEdit, deleteSeries } = useEditableSeries({
         series,
@@ -106,7 +99,9 @@ export const SearchInsightCreationContent: React.FunctionComponent<SearchInsight
         (repositories.meta.validState === 'VALID' || repositories.meta.validState === 'CHECKING') &&
         repositoriesList.length > 0 &&
         (series.meta.validState === 'VALID' || validEditSeries.length) &&
-        stepValue.meta.validState === 'VALID'
+        stepValue.meta.validState === 'VALID' &&
+        // For all repos mode we are not able to show the live preview chart
+        !allReposMode.input.value
 
     const hasFilledValue =
         values.series?.some(line => line.name !== '' || line.query !== '') ||
@@ -125,12 +120,14 @@ export const SearchInsightCreationContent: React.FunctionComponent<SearchInsight
                 submitted={formAPI.submitted}
                 title={title}
                 repositories={repositories}
+                allReposMode={allReposMode}
                 visibility={visibility}
-                organizations={organizations}
+                subjects={subjects}
                 series={series}
                 step={step}
                 stepValue={stepValue}
                 isFormClearActive={hasFilledValue}
+                hasAllReposUI={codeInsightsAllRepos}
                 onSeriesLiveChange={listen}
                 onCancel={onCancel}
                 onEditSeriesRequest={editRequest}

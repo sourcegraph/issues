@@ -9,6 +9,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/cockroachdb/errors"
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
 	"github.com/google/zoekt"
@@ -409,10 +410,11 @@ func TestZoektIndexedRepos(t *testing.T) {
 
 func TestZoektResultCountFactor(t *testing.T) {
 	cases := []struct {
-		name     string
-		numRepos int
-		pattern  *search.TextPatternInfo
-		want     int
+		name         string
+		numRepos     int
+		globalSearch bool
+		pattern      *search.TextPatternInfo
+		want         int
 	}{
 		{
 			name:     "One repo implies max scaling factor",
@@ -438,10 +440,24 @@ func TestZoektResultCountFactor(t *testing.T) {
 			pattern:  &search.TextPatternInfo{FileMatchLimit: 100},
 			want:     10,
 		},
+		{
+			name:         "for global searches, k should be 1",
+			numRepos:     0,
+			globalSearch: true,
+			pattern:      &search.TextPatternInfo{},
+			want:         1,
+		},
+		{
+			name:         "for global searches, k should be 1, adjusted by the FileMatchLimit",
+			numRepos:     0,
+			globalSearch: true,
+			pattern:      &search.TextPatternInfo{FileMatchLimit: 100},
+			want:         10,
+		},
 	}
 	for _, tt := range cases {
 		t.Run(tt.name, func(t *testing.T) {
-			got := ResultCountFactor(tt.numRepos, tt.pattern.FileMatchLimit)
+			got := ResultCountFactor(tt.numRepos, tt.pattern.FileMatchLimit, tt.globalSearch)
 			if tt.want != got {
 				t.Fatalf("Want scaling factor %d but got %d", tt.want, got)
 			}
@@ -944,7 +960,7 @@ func matchesToFileMatches(matches []result.Match) ([]*result.FileMatch, error) {
 	for _, match := range matches {
 		fm, ok := match.(*result.FileMatch)
 		if !ok {
-			return nil, fmt.Errorf("expected only file match results")
+			return nil, errors.Errorf("expected only file match results")
 		}
 		fms = append(fms, fm)
 	}

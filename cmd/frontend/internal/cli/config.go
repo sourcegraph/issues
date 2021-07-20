@@ -424,16 +424,16 @@ func gitServers() []string {
 func comparePostgresDSNs(dsn1, dsn2 string) error {
 	url1, err := url.Parse(dsn1)
 	if err != nil {
-		return fmt.Errorf("illegal Postgres DSN: %s", dsn1)
+		return errors.Errorf("illegal Postgres DSN: %s", dsn1)
 	}
 
 	url2, err := url.Parse(dsn2)
 	if err != nil {
-		return fmt.Errorf("illegal Postgres DSN: %s", dsn2)
+		return errors.Errorf("illegal Postgres DSN: %s", dsn2)
 	}
 
 	if url1.Host == url2.Host && url1.Path == url2.Path {
-		return fmt.Errorf("codeintel and frontend databases must be distinct: %s and %s seem to refer to the same database", dsn1, dsn2)
+		return errors.Errorf("codeintel and frontend databases must be distinct: %s and %s seem to refer to the same database", dsn1, dsn2)
 	}
 
 	return nil

@@ -64,7 +64,8 @@ func GetByExtensionID(ctx context.Context, registry *url.URL, extensionID string
 func getBy(ctx context.Context, registry *url.URL, op, field, value string) (*Extension, error) {
 	var x *Extension
 	if err := httpGet(ctx, op, toURL(registry, path.Join("extensions", field, value), nil), &x); err != nil {
-		if e, ok := err.(*url.Error); ok && e.Err == httpError(http.StatusNotFound) {
+		var e *url.Error
+		if errors.As(err, &e) && e.Err == httpError(http.StatusNotFound) {
 			err = &notFoundError{field: field, value: value}
 		}
 		return nil, err
@@ -103,7 +104,7 @@ func httpGet(ctx context.Context, op, urlStr string, result interface{}) (err er
 		return err
 	}
 	if v := strings.TrimSpace(resp.Header.Get(MediaTypeHeaderName)); v != MediaType {
-		return &url.Error{Op: op, URL: urlStr, Err: fmt.Errorf("not a valid Sourcegraph registry (invalid media type %q, expected %q)", v, MediaType)}
+		return &url.Error{Op: op, URL: urlStr, Err: errors.Errorf("not a valid Sourcegraph registry (invalid media type %q, expected %q)", v, MediaType)}
 	}
 	if resp.StatusCode != http.StatusOK {
 		return &url.Error{Op: op, URL: urlStr, Err: httpError(resp.StatusCode)}

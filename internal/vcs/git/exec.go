@@ -41,7 +41,7 @@ func ExecSafe(ctx context.Context, repo api.RepoName, params []string) (stdout, 
 	}
 
 	if !isAllowedGitCmd(params) {
-		return nil, nil, 0, fmt.Errorf("command failed: %q is not a allowed git command", params)
+		return nil, nil, 0, errors.Errorf("command failed: %q is not a allowed git command", params)
 	}
 
 	cmd := gitserver.DefaultClient.Command("git", params...)
@@ -66,7 +66,7 @@ func ExecReader(ctx context.Context, repo api.RepoName, args []string) (io.ReadC
 	defer span.Finish()
 
 	if !isAllowedGitCmd(args) {
-		return nil, fmt.Errorf("command failed: %v is not a allowed git command", args)
+		return nil, errors.Errorf("command failed: %v is not a allowed git command", args)
 	}
 	cmd := gitserver.DefaultClient.Command("git", args...)
 	cmd.Repo = repo

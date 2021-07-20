@@ -2,7 +2,6 @@ package resolvers
 
 import (
 	"context"
-	"fmt"
 	"sort"
 	"strconv"
 	"sync"
@@ -342,7 +341,7 @@ func (r *changesetResolver) State() (string, error) {
 	case btypes.ChangesetExternalStateDeleted:
 		return string(btypes.ChangesetStateDeleted), nil
 	default:
-		return "", fmt.Errorf("invalid ExternalState %q for state calculation", r.changeset.ExternalState)
+		return "", errors.Errorf("invalid ExternalState %q for state calculation", r.changeset.ExternalState)
 	}
 }
 

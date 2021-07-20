@@ -16,11 +16,11 @@ var settingsExample = &api.Settings{ID: 1, Contents: `{
 	"insights": [
 		{
 		  "title": "fmt usage",
-		  "description": "fmt.Errorf/fmt.Printf usage",
+		  "description": "errors.Errorf/fmt.Printf usage",
 		  "id": "1",
 		  "series": [
 			{
-			  "label": "fmt.Errorf",
+			  "label": "errors.Errorf",
 			  "search": "errorf",
 			},
 			{
@@ -58,8 +58,10 @@ func TestDiscover(t *testing.T) {
 	})
 	ctx := context.Background()
 
+	loader := insights.NewMockLoader()
+
 	t.Run("test_with_no_id_filter", func(t *testing.T) {
-		discovered, err := Discover(ctx, settingStore, InsightFilterArgs{})
+		discovered, err := Discover(ctx, settingStore, loader, InsightFilterArgs{})
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -67,10 +69,10 @@ func TestDiscover(t *testing.T) {
 			{
 				ID:          "1",
 				Title:       "fmt usage",
-				Description: "fmt.Errorf/fmt.Printf usage",
+				Description: "errors.Errorf/fmt.Printf usage",
 				Series: []insights.TimeSeries{
 					{
-						Name:  "fmt.Errorf",
+						Name:  "errors.Errorf",
 						Query: "errorf",
 					},
 					{
@@ -98,7 +100,7 @@ func TestDiscover(t *testing.T) {
 	})
 
 	t.Run("test_with_id_filter", func(t *testing.T) {
-		discovered, err := Discover(ctx, settingStore, InsightFilterArgs{Ids: []string{"1"}})
+		discovered, err := Discover(ctx, settingStore, loader, InsightFilterArgs{Ids: []string{"1"}})
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -106,10 +108,10 @@ func TestDiscover(t *testing.T) {
 			{
 				ID:          "1",
 				Title:       "fmt usage",
-				Description: "fmt.Errorf/fmt.Printf usage",
+				Description: "errors.Errorf/fmt.Printf usage",
 				Series: []insights.TimeSeries{
 					{
-						Name:  "fmt.Errorf",
+						Name:  "errors.Errorf",
 						Query: "errorf",
 					},
 					{
@@ -119,6 +121,36 @@ func TestDiscover(t *testing.T) {
 				},
 			},
 		}).Equal(t, discovered)
+	})
+
+	t.Run("test_with_loader", func(t *testing.T) {
+		integrated := []insights.SearchInsight{{
+			ID:          "1234",
+			Title:       "my insight",
+			Description: "woooo!!!!",
+		}}
+
+		loader.LoadAllFunc.SetDefaultReturn(integrated, nil)
+		discovered, err := Discover(ctx, settingStore, loader, InsightFilterArgs{Ids: []string{"1"}})
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		autogold.Want("discovered_with_loader", []insights.SearchInsight{{
+			ID:          "1",
+			Title:       "fmt usage",
+			Description: "errors.Errorf/fmt.Printf usage",
+			Series: []insights.TimeSeries{
+				{
+					Name:  "errors.Errorf",
+					Query: "errorf",
+				},
+				{
+					Name:  "printf",
+					Query: "fmt.Printf",
+				},
+			},
+		}}).Equal(t, discovered)
 	})
 }
 
@@ -146,11 +178,11 @@ func Test_parseUserSettings(t *testing.T) {
 			want: autogold.Want("real", [2]interface{}{
 				&schema.Settings{Insights: []*schema.Insight{
 					{
-						Description: "fmt.Errorf/fmt.Printf usage",
+						Description: "errors.Errorf/fmt.Printf usage",
 						Id:          "1",
 						Series: []*schema.InsightSeries{
 							{
-								Label:  "fmt.Errorf",
+								Label:  "errors.Errorf",
 								Search: "errorf",
 							},
 							{

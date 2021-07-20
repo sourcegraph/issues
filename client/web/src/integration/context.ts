@@ -14,6 +14,7 @@ import {
 import { WebGraphQlOperations } from '../graphql-operations'
 import { SourcegraphContext } from '../jscontext'
 
+import { isHotReloadEnabled } from './environment'
 import { commonWebGraphQlResults } from './graphQlResults'
 import { createJsContext } from './jscontext'
 
@@ -44,6 +45,12 @@ const getAppBundle = (): string => {
     return manifest['app.js']
 }
 
+const getRuntimeAppBundle = (): string => {
+    // eslint-disable-next-line no-sync
+    const manifest = JSON.parse(fs.readFileSync(manifestFile, 'utf-8')) as Record<string, string>
+    return manifest['runtime.js']
+}
+
 /**
  * Creates the intergation test context for integration tests testing the web app.
  * This should be called in a `beforeEach()` hook and assigned to a variable `testContext` in the test scope.
@@ -58,6 +65,11 @@ export const createWebIntegrationTestContext = async ({
         string & keyof (WebGraphQlOperations & SharedGraphQlOperations)
     >({ driver, currentTest, directory })
     sharedTestContext.overrideGraphQL(commonWebGraphQlResults)
+
+    // On CI, we don't use `react-fast-refresh`, so we don't need the runtime bundle.
+    // This branching will be redundant after switching to production bundles for integration tests:
+    // https://github.com/sourcegraph/sourcegraph/issues/22831
+    const runtimeChunkScriptTag = isHotReloadEnabled ? `<script src=${getRuntimeAppBundle()}></script>` : ''
 
     // Serve all requests for index.html (everything that does not match the handlers above) the same index.html
     let jsContext = createJsContext({ sourcegraphBaseUrl: sharedTestContext.driver.sourcegraphBaseUrl })
@@ -75,6 +87,7 @@ export const createWebIntegrationTestContext = async ({
                         <script>
                             window.context = ${JSON.stringify(jsContext)}
                         </script>
+                        ${runtimeChunkScriptTag}
                         <script src=${getAppBundle()}></script>
                     </body>
                 </html>

@@ -7,6 +7,7 @@ import (
 	"github.com/graph-gophers/graphql-go"
 
 	"github.com/sourcegraph/sourcegraph/cmd/frontend/backend"
+	"github.com/sourcegraph/sourcegraph/cmd/frontend/envvar"
 	"github.com/sourcegraph/sourcegraph/internal/api"
 	"github.com/sourcegraph/sourcegraph/internal/jsonc"
 )
@@ -38,6 +39,12 @@ func settingsSubjectForNode(ctx context.Context, n Node) (*settingsSubject, erro
 		return &settingsSubject{site: s}, nil
 
 	case *UserResolver:
+		// 🚨 SECURITY: On Cloud, only the user can access their own settings.
+		if envvar.SourcegraphDotComMode() {
+			if err := backend.CheckSameUser(ctx, s.user.ID); err != nil {
+				return nil, err
+			}
+		}
 		// 🚨 SECURITY: Only the user and site admins are allowed to view the user's settings.
 		if err := backend.CheckSiteAdminOrSameUser(ctx, s.db, s.user.ID); err != nil {
 			return nil, err

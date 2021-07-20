@@ -71,7 +71,7 @@ func TestSyncerRun(t *testing.T) {
 				// methods of sync store are mocked.
 				return nil, store.ErrNoResults
 			},
-			updateChangeset: func(context.Context, *btypes.Changeset) error {
+			updateChangesetCodeHostState: func(context.Context, *btypes.Changeset) error {
 				updateCalled = true
 				return nil
 			},
@@ -334,14 +334,14 @@ func TestLoadChangesetSource(t *testing.T) {
 }
 
 type MockSyncStore struct {
-	listCodeHosts         func(context.Context, store.ListCodeHostsOpts) ([]*btypes.CodeHost, error)
-	listChangesetSyncData func(context.Context, store.ListChangesetSyncDataOpts) ([]*btypes.ChangesetSyncData, error)
-	getChangeset          func(context.Context, store.GetChangesetOpts) (*btypes.Changeset, error)
-	updateChangeset       func(context.Context, *btypes.Changeset) error
-	upsertChangesetEvents func(context.Context, ...*btypes.ChangesetEvent) error
-	getSiteCredential     func(ctx context.Context, opts store.GetSiteCredentialOpts) (*btypes.SiteCredential, error)
-	getExternalServiceIDs func(ctx context.Context, opts store.GetExternalServiceIDsOpts) ([]int64, error)
-	transact              func(context.Context) (*store.Store, error)
+	listCodeHosts                func(context.Context, store.ListCodeHostsOpts) ([]*btypes.CodeHost, error)
+	listChangesetSyncData        func(context.Context, store.ListChangesetSyncDataOpts) ([]*btypes.ChangesetSyncData, error)
+	getChangeset                 func(context.Context, store.GetChangesetOpts) (*btypes.Changeset, error)
+	updateChangesetCodeHostState func(context.Context, *btypes.Changeset) error
+	upsertChangesetEvents        func(context.Context, ...*btypes.ChangesetEvent) error
+	getSiteCredential            func(ctx context.Context, opts store.GetSiteCredentialOpts) (*btypes.SiteCredential, error)
+	getExternalServiceIDs        func(ctx context.Context, opts store.GetExternalServiceIDsOpts) ([]int64, error)
+	transact                     func(context.Context) (*store.Store, error)
 }
 
 func (m MockSyncStore) ListChangesetSyncData(ctx context.Context, opts store.ListChangesetSyncDataOpts) ([]*btypes.ChangesetSyncData, error) {
@@ -352,8 +352,8 @@ func (m MockSyncStore) GetChangeset(ctx context.Context, opts store.GetChangeset
 	return m.getChangeset(ctx, opts)
 }
 
-func (m MockSyncStore) UpdateChangeset(ctx context.Context, c *btypes.Changeset) error {
-	return m.updateChangeset(ctx, c)
+func (m MockSyncStore) UpdateChangesetCodeHostState(ctx context.Context, c *btypes.Changeset) error {
+	return m.updateChangesetCodeHostState(ctx, c)
 }
 
 func (m MockSyncStore) UpsertChangesetEvents(ctx context.Context, cs ...*btypes.ChangesetEvent) error {

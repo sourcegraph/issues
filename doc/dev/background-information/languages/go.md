@@ -6,7 +6,7 @@ For all things not covered in this document, defer to
 [Go Code Review Comments](https://code.google.com/p/go-wiki/wiki/CodeReviewComments)
 and [Effective Go](http://golang.org/doc/effective_go.html).
 
-Related pages: [Testing Go code](testing_go_code.md) | [Exposing Services](../exposing-services.md)
+Related pages: [Testing Go code](testing_go_code.md) | [Error handling in Go](go_errors.md) | [Exposing Services](../exposing-services.md)
 
 ## Panics
 

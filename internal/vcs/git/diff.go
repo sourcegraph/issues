@@ -2,7 +2,6 @@ package git
 
 import (
 	"context"
-	"fmt"
 	"io"
 	"strings"
 
@@ -34,7 +33,7 @@ func Diff(ctx context.Context, opts DiffOptions) (*DiffFileIterator, error) {
 	if strings.HasPrefix(rangeSpec, "-") || strings.HasPrefix(rangeSpec, ".") {
 		// We don't want to allow user input to add `git diff` command line
 		// flags or refer to a file.
-		return nil, fmt.Errorf("invalid diff range argument: %q", rangeSpec)
+		return nil, errors.Errorf("invalid diff range argument: %q", rangeSpec)
 	}
 
 	rdr, err := ExecReader(ctx, opts.Repo, []string{

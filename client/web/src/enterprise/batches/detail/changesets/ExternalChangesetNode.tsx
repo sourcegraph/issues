@@ -15,7 +15,7 @@ import { asError, isErrorLike } from '@sourcegraph/shared/src/util/errors'
 import { RepoSpec, RevisionSpec, FileSpec, ResolvedRevisionSpec } from '@sourcegraph/shared/src/util/url'
 
 import { ErrorAlert, ErrorMessage } from '../../../../components/alerts'
-import { DiffStat } from '../../../../components/diff/DiffStat'
+import { DiffStatStack } from '../../../../components/diff/DiffStat'
 import { ChangesetSpecType, ExternalChangesetFields } from '../../../../graphql-operations'
 import {
     queryExternalChangesetWithFileDiffs as _queryExternalChangesetWithFileDiffs,
@@ -125,7 +125,7 @@ export const ExternalChangesetNode: React.FunctionComponent<ExternalChangesetNod
             >
                 {node.checkState && <ChangesetCheckStatusCell checkState={node.checkState} className="mr-3" />}
                 {node.reviewState && <ChangesetReviewStatusCell reviewState={node.reviewState} className="mr-3" />}
-                {node.diffStat && <DiffStat {...node.diffStat} expandedCounts={true} separateLines={true} />}
+                {node.diffStat && <DiffStatStack {...node.diffStat} />}
             </div>
             <span
                 className={classNames(
@@ -149,7 +149,7 @@ export const ExternalChangesetNode: React.FunctionComponent<ExternalChangesetNod
                     node.diffStat && 'p-2'
                 )}
             >
-                {node.diffStat && <DiffStat {...node.diffStat} expandedCounts={true} separateLines={true} />}
+                {node.diffStat && <DiffStatStack {...node.diffStat} />}
             </div>
             {/* The button for expanding the information used on xs devices. */}
             <button

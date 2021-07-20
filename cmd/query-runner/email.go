@@ -136,7 +136,7 @@ func sendEmail(ctx context.Context, userID int32, eventType string, template txt
 		return errors.Wrap(err, fmt.Sprintf("InternalClient.UserEmailsGetEmail for userID=%d", userID))
 	}
 	if email == nil {
-		return fmt.Errorf("unable to send email to user ID %d with unknown email address", userID)
+		return errors.Errorf("unable to send email to user ID %d with unknown email address", userID)
 	}
 
 	if err := api.InternalClient.SendEmail(ctx, txtypes.Message{

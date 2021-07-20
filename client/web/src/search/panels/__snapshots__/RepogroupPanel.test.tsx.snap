@@ -102,6 +102,26 @@ exports[`RepogroupPanel renders correctly 1`] = `
           <img
             alt=""
             className="repogroup-panel__repogroup-icon mr-4"
+            src="https://raw.githubusercontent.com/o3de/artwork/19b89e72e15824f20204a8977a007f53d5fcd5b8/o3de/03_O3DE%20Application%20Icon/SVG/O3DE-Circle-Icon.svg"
+          />
+          <div
+            className="d-flex flex-column"
+          >
+            <AnchorLink
+              className="mb-1"
+              onClick={[Function]}
+              to="/o3de"
+            >
+              O3DE
+            </AnchorLink>
+          </div>
+        </div>
+        <div
+          className="d-flex align-items-center mb-4 col-xl-6 col-lg-12 col-sm-6"
+        >
+          <img
+            alt=""
+            className="repogroup-panel__repogroup-icon mr-4"
             src="https://avatars.githubusercontent.com/u/4969009?s=200&v=4"
           />
           <div
@@ -323,6 +343,33 @@ exports[`RepogroupPanel renders correctly 1`] = `
                   onClick={[Function]}
                 >
                   Temporal
+                </a>
+              </AnchorLink>
+            </div>
+          </div>
+          <div
+            className="d-flex align-items-center mb-4 col-xl-6 col-lg-12 col-sm-6"
+            key="o3de"
+          >
+            <img
+              alt=""
+              className="repogroup-panel__repogroup-icon mr-4"
+              src="https://raw.githubusercontent.com/o3de/artwork/19b89e72e15824f20204a8977a007f53d5fcd5b8/o3de/03_O3DE%20Application%20Icon/SVG/O3DE-Circle-Icon.svg"
+            />
+            <div
+              className="d-flex flex-column"
+            >
+              <AnchorLink
+                className="mb-1"
+                onClick={[Function]}
+                to="/o3de"
+              >
+                <a
+                  className="mb-1"
+                  href="/o3de"
+                  onClick={[Function]}
+                >
+                  O3DE
                 </a>
               </AnchorLink>
             </div>

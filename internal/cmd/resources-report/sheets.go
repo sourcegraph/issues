@@ -9,6 +9,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/cockroachdb/errors"
 	"google.golang.org/api/googleapi"
 	"google.golang.org/api/sheets/v4"
 )
@@ -51,7 +52,7 @@ type updateSheetOptions struct {
 func updateSheet(ctx context.Context, sheetID string, resources Resources, opts updateSheetOptions) (string, error) {
 	client, err := sheets.NewService(ctx)
 	if err != nil {
-		return "", fmt.Errorf("failed to init client: %w", err)
+		return "", errors.Errorf("failed to init client: %w", err)
 	}
 
 	reportTime := time.Now()
@@ -67,7 +68,7 @@ func updateSheet(ctx context.Context, sheetID string, resources Resources, opts 
 		}
 		mainSheet, err := client.Spreadsheets.Get(sheetID).Fields(googleapi.Field("sheets")).Context(ctx).Do()
 		if err != nil {
-			return "", fmt.Errorf("unable to get sheet %q: %w", sheetID, err)
+			return "", errors.Errorf("unable to get sheet %q: %w", sheetID, err)
 		}
 		for _, page := range mainSheet.Sheets {
 			if page == nil || page.Properties == nil {
@@ -134,7 +135,7 @@ func updateSheet(ctx context.Context, sheetID string, resources Resources, opts 
 			Requests: sheetOps,
 		}).Context(ctx).Do()
 		if err != nil {
-			return "", fmt.Errorf("failed to format report: %w", err)
+			return "", errors.Errorf("failed to format report: %w", err)
 		}
 	} else if opts.Verbose {
 		log.Println("no changes to make to sheet")
@@ -147,7 +148,7 @@ func updateSheet(ctx context.Context, sheetID string, resources Resources, opts 
 			Values: sheetValues,
 		}).ValueInputOption("RAW").Context(ctx).Do()
 		if err != nil {
-			return "", fmt.Errorf("failed to update report values: %w", err)
+			return "", errors.Errorf("failed to update report values: %w", err)
 		}
 		if opts.Verbose {
 			log.Printf("wrote %d resources to sheet %q", len(sheetValues), newPageID)

@@ -23,6 +23,7 @@ import (
 
 type handler struct {
 	idSet         *IDSet
+	store         workerutil.Store
 	options       Options
 	operations    *command.Operations
 	runnerFactory func(dir string, logger *command.Logger, options command.Options, operations *command.Operations) command.Runner
@@ -35,14 +36,14 @@ var ErrJobAlreadyExists = errors.New("job already exists")
 
 // Handle clones the target code into a temporary directory, invokes the target indexer in a
 // fresh docker container, and uploads the results to the external frontend API.
-func (h *handler) Handle(ctx context.Context, s workerutil.Store, record workerutil.Record) (err error) {
+func (h *handler) Handle(ctx context.Context, record workerutil.Record) (err error) {
 	job := record.(executor.Job)
 	ctx, cancel := context.WithDeadline(ctx, time.Now().Add(h.options.MaximumRuntimePerJob))
 	defer cancel()
 
 	wrapError := func(err error, message string) error {
-		if errors.Cause(err) == context.DeadlineExceeded {
-			err = fmt.Errorf("job exceeded maximum execution time of %s", h.options.MaximumRuntimePerJob)
+		if errors.Is(err, context.DeadlineExceeded) {
+			err = errors.Errorf("job exceeded maximum execution time of %s", h.options.MaximumRuntimePerJob)
 		}
 
 		return errors.Wrap(err, message)
@@ -75,7 +76,7 @@ func (h *handler) Handle(ctx context.Context, s workerutil.Store, record workeru
 			// Perform this outside of the task execution context. If there is a timeout or
 			// cancellation error we don't want to skip uploading these logs as users will
 			// often want to see how far something progressed prior to a timeout.
-			if err := s.AddExecutionLogEntry(context.Background(), record.RecordID(), entry); err != nil {
+			if err := h.store.AddExecutionLogEntry(context.Background(), record.RecordID(), entry); err != nil {
 				log15.Warn("Failed to upload executor log entry for job", "id", record.RecordID(), "repositoryName", job.RepositoryName, "commit", job.Commit, "error", err)
 			}
 		}
@@ -104,7 +105,7 @@ func (h *handler) Handle(ctx context.Context, s workerutil.Store, record workeru
 		}
 
 		if !strings.HasPrefix(path, workingDirectory) {
-			return fmt.Errorf("refusing to write outside of working directory")
+			return errors.Errorf("refusing to write outside of working directory")
 		}
 
 		if err := os.WriteFile(path, []byte(content), os.ModePerm); err != nil {
@@ -185,12 +186,18 @@ func (h *handler) Handle(ctx context.Context, s workerutil.Store, record workeru
 	for i, cliStep := range job.CliSteps {
 		log15.Info(fmt.Sprintf("Running src-cli step #%d", i), "jobID", job.ID, "repositoryName", job.RepositoryName, "commit", job.Commit)
 
+		env := cliStep.Env
+		if !options.FirecrackerOptions.Enabled {
+			for _, k := range srcCliHostEnvVars {
+				env = append(env, fmt.Sprintf("%s=%s", k, os.Getenv(k)))
+			}
+		}
+
 		cliStepCommand := command.CommandSpec{
-			Key:     fmt.Sprintf("step.src.%d", i),
-			Command: append([]string{"src"}, cliStep.Commands...),
-			Dir:     cliStep.Dir,
-			// TODO: We need $HOME/$PATH from the machine on which this is executed
-			Env:       cliStep.Env,
+			Key:       fmt.Sprintf("step.src.%d", i),
+			Command:   append([]string{"src"}, cliStep.Commands...),
+			Dir:       cliStep.Dir,
+			Env:       env,
 			Operation: h.operations.Exec,
 		}
 
@@ -201,6 +208,13 @@ func (h *handler) Handle(ctx context.Context, s workerutil.Store, record workeru
 
 	return nil
 }
+
+// srcCliHostEnvVars is a list of environment variable names that Job.CliSteps
+// inherit when executing directly on the host.
+//
+// That only happens if Firecracker is disabled (which is only on
+// developer macOS machines).
+var srcCliHostEnvVars = []string{"HOME", "PATH"}
 
 var scriptPreamble = `
 set -x

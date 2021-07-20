@@ -183,13 +183,12 @@ func TestCorrelate(t *testing.T) {
 		}),
 
 		// TODO(slimsag): Documentation extension tests
-		DocumentationResultsData:        map[int]protocol.Documentation{},
-		DocumentationStringsData:        map[int]protocol.MarkupContent{},
-		DocumentationResultsByResultSet: map[int]int{},
-		DocumentationResultRoot:         -1,
-		DocumentationChildren:           map[int][]int{},
-		DocumentationStringLabel:        map[int]int{},
-		DocumentationStringDetail:       map[int]int{},
+		DocumentationResultsData:  map[int]protocol.Documentation{},
+		DocumentationStringsData:  map[int]protocol.MarkupContent{},
+		DocumentationResultRoot:   -1,
+		DocumentationChildren:     map[int][]int{},
+		DocumentationStringLabel:  map[int]int{},
+		DocumentationStringDetail: map[int]int{},
 	}
 
 	if diff := cmp.Diff(expectedState, state, datastructures.Comparers...); diff != "" {
@@ -232,13 +231,12 @@ func TestCorrelateMetaDataRoot(t *testing.T) {
 		Diagnostics:            datastructures.NewDefaultIDSetMap(),
 
 		// TODO(slimsag): Documentation extension tests
-		DocumentationResultsData:        map[int]protocol.Documentation{},
-		DocumentationStringsData:        map[int]protocol.MarkupContent{},
-		DocumentationResultsByResultSet: map[int]int{},
-		DocumentationResultRoot:         -1,
-		DocumentationChildren:           map[int][]int{},
-		DocumentationStringLabel:        map[int]int{},
-		DocumentationStringDetail:       map[int]int{},
+		DocumentationResultsData:  map[int]protocol.Documentation{},
+		DocumentationStringsData:  map[int]protocol.MarkupContent{},
+		DocumentationResultRoot:   -1,
+		DocumentationChildren:     map[int][]int{},
+		DocumentationStringLabel:  map[int]int{},
+		DocumentationStringDetail: map[int]int{},
 	}
 
 	if diff := cmp.Diff(expectedState, state, datastructures.Comparers...); diff != "" {
@@ -281,13 +279,12 @@ func TestCorrelateMetaDataRootX(t *testing.T) {
 		Diagnostics:            datastructures.NewDefaultIDSetMap(),
 
 		// TODO(slimsag): Documentation extension tests
-		DocumentationResultsData:        map[int]protocol.Documentation{},
-		DocumentationStringsData:        map[int]protocol.MarkupContent{},
-		DocumentationResultsByResultSet: map[int]int{},
-		DocumentationResultRoot:         -1,
-		DocumentationChildren:           map[int][]int{},
-		DocumentationStringLabel:        map[int]int{},
-		DocumentationStringDetail:       map[int]int{},
+		DocumentationResultsData:  map[int]protocol.Documentation{},
+		DocumentationStringsData:  map[int]protocol.MarkupContent{},
+		DocumentationResultRoot:   -1,
+		DocumentationChildren:     map[int][]int{},
+		DocumentationStringLabel:  map[int]int{},
+		DocumentationStringDetail: map[int]int{},
 	}
 
 	if diff := cmp.Diff(expectedState, state, datastructures.Comparers...); diff != "" {

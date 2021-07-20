@@ -61,6 +61,10 @@ interface IssueTemplateArguments {
      */
     version: semver.SemVer
     /**
+     * Available as `$ONE_WORKING_DAY_BEFORE_RELEASE`
+     */
+    oneWorkingDayBeforeRelease: Date
+    /**
      * Available as `$RELEASE_DATE`
      */
     releaseDate: Date
@@ -73,7 +77,7 @@ interface IssueTemplateArguments {
 async function execTemplate(
     octokit: Octokit,
     template: IssueTemplate,
-    { version, releaseDate, oneWorkingDayAfterRelease }: IssueTemplateArguments
+    { version, oneWorkingDayBeforeRelease, releaseDate, oneWorkingDayAfterRelease }: IssueTemplateArguments
 ): Promise<string> {
     console.log(`Preparing issue from ${JSON.stringify(template)}`)
     const name = releaseName(version)
@@ -82,6 +86,10 @@ async function execTemplate(
         .replace(/\$MAJOR/g, version.major.toString())
         .replace(/\$MINOR/g, version.minor.toString())
         .replace(/\$PATCH/g, version.patch.toString())
+        .replace(
+            /\$ONE_WORKING_DAY_BEFORE_RELEASE/g,
+            dateMarkdown(oneWorkingDayBeforeRelease, `One working day before ${name} release`)
+        )
         .replace(/\$RELEASE_DATE/g, dateMarkdown(releaseDate, `${name} release date`))
         .replace(
             /\$ONE_WORKING_DAY_AFTER_RELEASE/g,
@@ -135,12 +143,14 @@ export async function ensureTrackingIssues({
     version,
     assignees,
     releaseDate,
+    oneWorkingDayBeforeRelease,
     oneWorkingDayAfterRelease,
     dryRun,
 }: {
     version: semver.SemVer
     assignees: string[]
     releaseDate: Date
+    oneWorkingDayBeforeRelease: Date
     oneWorkingDayAfterRelease: Date
     dryRun: boolean
 }): Promise<MaybeIssue[]> {
@@ -176,6 +186,7 @@ export async function ensureTrackingIssues({
         const body = await execTemplate(octokit, template, {
             version,
             releaseDate,
+            oneWorkingDayBeforeRelease,
             oneWorkingDayAfterRelease,
         })
         const issue = await ensureIssue(

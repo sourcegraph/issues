@@ -1750,6 +1750,10 @@ type MockLSIFStore struct {
 	// WriteDefinitionsFunc is an instance of a mock function object
 	// controlling the behavior of the method WriteDefinitions.
 	WriteDefinitionsFunc *LSIFStoreWriteDefinitionsFunc
+	// WriteDocumentationMappingsFunc is an instance of a mock function
+	// object controlling the behavior of the method
+	// WriteDocumentationMappings.
+	WriteDocumentationMappingsFunc *LSIFStoreWriteDocumentationMappingsFunc
 	// WriteDocumentationPagesFunc is an instance of a mock function object
 	// controlling the behavior of the method WriteDocumentationPages.
 	WriteDocumentationPagesFunc *LSIFStoreWriteDocumentationPagesFunc
@@ -1787,6 +1791,11 @@ func NewMockLSIFStore() *MockLSIFStore {
 		},
 		WriteDefinitionsFunc: &LSIFStoreWriteDefinitionsFunc{
 			defaultHook: func(context.Context, int, chan semantic.MonikerLocations) error {
+				return nil
+			},
+		},
+		WriteDocumentationMappingsFunc: &LSIFStoreWriteDocumentationMappingsFunc{
+			defaultHook: func(context.Context, int, chan semantic.DocumentationMapping) error {
 				return nil
 			},
 		},
@@ -1835,6 +1844,9 @@ func NewMockLSIFStoreFrom(i LSIFStore) *MockLSIFStore {
 		},
 		WriteDefinitionsFunc: &LSIFStoreWriteDefinitionsFunc{
 			defaultHook: i.WriteDefinitions,
+		},
+		WriteDocumentationMappingsFunc: &LSIFStoreWriteDocumentationMappingsFunc{
+			defaultHook: i.WriteDocumentationMappings,
 		},
 		WriteDocumentationPagesFunc: &LSIFStoreWriteDocumentationPagesFunc{
 			defaultHook: i.WriteDocumentationPages,
@@ -2170,6 +2182,118 @@ func (c LSIFStoreWriteDefinitionsFuncCall) Args() []interface{} {
 // Results returns an interface slice containing the results of this
 // invocation.
 func (c LSIFStoreWriteDefinitionsFuncCall) Results() []interface{} {
+	return []interface{}{c.Result0}
+}
+
+// LSIFStoreWriteDocumentationMappingsFunc describes the behavior when the
+// WriteDocumentationMappings method of the parent MockLSIFStore instance is
+// invoked.
+type LSIFStoreWriteDocumentationMappingsFunc struct {
+	defaultHook func(context.Context, int, chan semantic.DocumentationMapping) error
+	hooks       []func(context.Context, int, chan semantic.DocumentationMapping) error
+	history     []LSIFStoreWriteDocumentationMappingsFuncCall
+	mutex       sync.Mutex
+}
+
+// WriteDocumentationMappings delegates to the next hook function in the
+// queue and stores the parameter and result values of this invocation.
+func (m *MockLSIFStore) WriteDocumentationMappings(v0 context.Context, v1 int, v2 chan semantic.DocumentationMapping) error {
+	r0 := m.WriteDocumentationMappingsFunc.nextHook()(v0, v1, v2)
+	m.WriteDocumentationMappingsFunc.appendCall(LSIFStoreWriteDocumentationMappingsFuncCall{v0, v1, v2, r0})
+	return r0
+}
+
+// SetDefaultHook sets function that is called when the
+// WriteDocumentationMappings method of the parent MockLSIFStore instance is
+// invoked and the hook queue is empty.
+func (f *LSIFStoreWriteDocumentationMappingsFunc) SetDefaultHook(hook func(context.Context, int, chan semantic.DocumentationMapping) error) {
+	f.defaultHook = hook
+}
+
+// PushHook adds a function to the end of hook queue. Each invocation of the
+// WriteDocumentationMappings method of the parent MockLSIFStore instance
+// invokes the hook at the front of the queue and discards it. After the
+// queue is empty, the default hook function is invoked for any future
+// action.
+func (f *LSIFStoreWriteDocumentationMappingsFunc) PushHook(hook func(context.Context, int, chan semantic.DocumentationMapping) error) {
+	f.mutex.Lock()
+	f.hooks = append(f.hooks, hook)
+	f.mutex.Unlock()
+}
+
+// SetDefaultReturn calls SetDefaultDefaultHook with a function that returns
+// the given values.
+func (f *LSIFStoreWriteDocumentationMappingsFunc) SetDefaultReturn(r0 error) {
+	f.SetDefaultHook(func(context.Context, int, chan semantic.DocumentationMapping) error {
+		return r0
+	})
+}
+
+// PushReturn calls PushDefaultHook with a function that returns the given
+// values.
+func (f *LSIFStoreWriteDocumentationMappingsFunc) PushReturn(r0 error) {
+	f.PushHook(func(context.Context, int, chan semantic.DocumentationMapping) error {
+		return r0
+	})
+}
+
+func (f *LSIFStoreWriteDocumentationMappingsFunc) nextHook() func(context.Context, int, chan semantic.DocumentationMapping) error {
+	f.mutex.Lock()
+	defer f.mutex.Unlock()
+
+	if len(f.hooks) == 0 {
+		return f.defaultHook
+	}
+
+	hook := f.hooks[0]
+	f.hooks = f.hooks[1:]
+	return hook
+}
+
+func (f *LSIFStoreWriteDocumentationMappingsFunc) appendCall(r0 LSIFStoreWriteDocumentationMappingsFuncCall) {
+	f.mutex.Lock()
+	f.history = append(f.history, r0)
+	f.mutex.Unlock()
+}
+
+// History returns a sequence of LSIFStoreWriteDocumentationMappingsFuncCall
+// objects describing the invocations of this function.
+func (f *LSIFStoreWriteDocumentationMappingsFunc) History() []LSIFStoreWriteDocumentationMappingsFuncCall {
+	f.mutex.Lock()
+	history := make([]LSIFStoreWriteDocumentationMappingsFuncCall, len(f.history))
+	copy(history, f.history)
+	f.mutex.Unlock()
+
+	return history
+}
+
+// LSIFStoreWriteDocumentationMappingsFuncCall is an object that describes
+// an invocation of method WriteDocumentationMappings on an instance of
+// MockLSIFStore.
+type LSIFStoreWriteDocumentationMappingsFuncCall struct {
+	// Arg0 is the value of the 1st argument passed to this method
+	// invocation.
+	Arg0 context.Context
+	// Arg1 is the value of the 2nd argument passed to this method
+	// invocation.
+	Arg1 int
+	// Arg2 is the value of the 3rd argument passed to this method
+	// invocation.
+	Arg2 chan semantic.DocumentationMapping
+	// Result0 is the value of the 1st result returned from this method
+	// invocation.
+	Result0 error
+}
+
+// Args returns an interface slice containing the arguments of this
+// invocation.
+func (c LSIFStoreWriteDocumentationMappingsFuncCall) Args() []interface{} {
+	return []interface{}{c.Arg0, c.Arg1, c.Arg2}
+}
+
+// Results returns an interface slice containing the results of this
+// invocation.
+func (c LSIFStoreWriteDocumentationMappingsFuncCall) Results() []interface{} {
 	return []interface{}{c.Result0}
 }
 

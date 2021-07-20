@@ -1,8 +1,9 @@
 package shared
 
 import (
-	"fmt"
 	"strings"
+
+	"github.com/cockroachdb/errors"
 
 	"github.com/sourcegraph/sourcegraph/internal/env"
 )
@@ -49,12 +50,12 @@ func (c *Config) Validate() error {
 
 	for _, name := range c.JobAllowlist {
 		if _, ok := allowlist[name]; !ok && name != "all" {
-			return fmt.Errorf("unknown job %q", name)
+			return errors.Errorf("unknown job %q", name)
 		}
 	}
 	for _, name := range c.JobBlocklist {
 		if _, ok := allowlist[name]; !ok {
-			return fmt.Errorf("unknown job %q", name)
+			return errors.Errorf("unknown job %q", name)
 		}
 	}
 

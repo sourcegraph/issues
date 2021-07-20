@@ -13,7 +13,6 @@ import (
 	"testing"
 
 	"github.com/lib/pq"
-
 	"github.com/sourcegraph/sourcegraph/internal/database/dbconn"
 )
 
@@ -60,7 +59,7 @@ func NewDB(t testing.TB, dsn string) *sql.DB {
 	var err error
 	var config *url.URL
 	if dsn == "" {
-		config, err = url.Parse("postgres://127.0.0.1/?sslmode=disable&timezone=UTC")
+		config, err = url.Parse("postgres://sourcegraph:sourcegraph@127.0.0.1:5432/sourcegraph?sslmode=disable&timezone=UTC")
 		if err != nil {
 			t.Fatalf("failed to parse dsn %q: %s", dsn, err)
 		}
@@ -83,8 +82,11 @@ func NewDB(t testing.TB, dsn string) *sql.DB {
 
 	config.Path = "/" + dbname
 	testDB := dbConn(t, config)
+	t.Logf("testdb: %s", config.String())
 
-	testDB.SetMaxOpenConns(3)
+	// Some tests that exercise concurrency need lots of connections or they block forever.
+	// e.g. TestIntegration/DBStore/Syncer/MultipleServices
+	testDB.SetMaxOpenConns(10)
 
 	t.Cleanup(func() {
 		defer db.Close()
@@ -159,6 +161,7 @@ func wdHash() string {
 }
 
 func dbConn(t testing.TB, cfg *url.URL) *sql.DB {
+	t.Helper()
 	db, err := dbconn.NewRaw(cfg.String())
 	if err != nil {
 		t.Fatalf("failed to connect to database %q: %s", cfg, err)

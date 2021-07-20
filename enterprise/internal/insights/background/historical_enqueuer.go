@@ -11,6 +11,7 @@ import (
 	"github.com/sourcegraph/sourcegraph/internal/insights"
 
 	"github.com/cockroachdb/errors"
+
 	"github.com/sourcegraph/sourcegraph/enterprise/internal/insights/compression"
 
 	"golang.org/x/time/rate"
@@ -116,6 +117,7 @@ func newInsightHistoricalEnqueuer(ctx context.Context, workerBaseStore *basestor
 		now:           time.Now,
 		settingStore:  settingStore,
 		insightsStore: insightsStore,
+		loader:        insights.NewLoader(repoStore.Handle().DB()),
 		repoStore:     database.Repos(workerBaseStore.Handle().DB()),
 		limiter:       limiter,
 		enqueueQueryRunnerJob: func(ctx context.Context, job *queryrunner.Job) error {
@@ -212,6 +214,7 @@ type historicalEnqueuer struct {
 	now                   func() time.Time
 	settingStore          discovery.SettingStore
 	insightsStore         store.Interface
+	loader                insights.Loader
 	repoStore             RepoStore
 	enqueueQueryRunnerJob func(ctx context.Context, job *queryrunner.Job) error
 	gitFirstEverCommit    func(ctx context.Context, repoName api.RepoName) (*git.Commit, error)
@@ -231,7 +234,7 @@ type historicalEnqueuer struct {
 
 func (h *historicalEnqueuer) Handler(ctx context.Context) error {
 	// Discover all insights on the instance.
-	foundInsights, err := discovery.Discover(ctx, h.settingStore, discovery.InsightFilterArgs{})
+	foundInsights, err := discovery.Discover(ctx, h.settingStore, h.loader, discovery.InsightFilterArgs{})
 	if err != nil {
 		return errors.Wrap(err, "Discover")
 	}
@@ -289,7 +292,7 @@ func (h *historicalEnqueuer) buildForRepo(ctx context.Context, uniqueSeries map[
 		if err != nil {
 			// Ignore RepoNotFoundErr because it could just be that the repository was actually
 			// deleted and allReposIterator had it cached.
-			if _, ok := err.(*database.RepoNotFoundErr); !ok {
+			if errors.HasType(err, &database.RepoNotFoundErr{}) {
 				return err // hard DB error
 			} else {
 				return nil
@@ -304,7 +307,7 @@ func (h *historicalEnqueuer) buildForRepo(ctx context.Context, uniqueSeries map[
 		// Find the first commit made to the repository on the default branch.
 		firstHEADCommit, err := h.gitFirstEverCommit(ctx, api.RepoName(repoName))
 		if err != nil {
-			if gitserver.IsRevisionNotFound(err) || vcs.IsRepoNotExist(err) {
+			if errors.HasType(err, &gitserver.RevisionNotFoundError{}) || vcs.IsRepoNotExist(err) {
 				return nil // no error - repo may not be cloned yet (or not even pushed to code host yet)
 			}
 			if strings.Contains(err.Error(), `failed (output: "usage: git rev-list [OPTION] <commit-id>...`) {
@@ -461,7 +464,7 @@ func (h *historicalEnqueuer) buildSeries(ctx context.Context, bctx *buildSeriesC
 	// timeframe we're trying to fill in historical data for.
 	nearestCommit, err := h.gitFindNearestCommit(ctx, bctx.repo.Name, "HEAD", frameMidpoint)
 	if err != nil {
-		if gitserver.IsRevisionNotFound(err) || vcs.IsRepoNotExist(err) {
+		if errors.HasType(err, &gitserver.RevisionNotFoundError{}) || vcs.IsRepoNotExist(err) {
 			return // no error - repo may not be cloned yet (or not even pushed to code host yet)
 		}
 		hardErr = errors.Wrap(err, "FindNearestCommit")

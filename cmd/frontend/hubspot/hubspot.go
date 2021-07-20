@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
-	"fmt"
 	"io"
 	"net/http"
 	"net/url"
@@ -12,6 +11,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/cockroachdb/errors"
 	"github.com/google/go-querystring/query"
 	"golang.org/x/net/context/ctxhttp"
 )
@@ -65,7 +65,7 @@ func (c *Client) postForm(methodName string, baseURL *url.URL, suffix string, bo
 		if err != nil {
 			return wrapError(methodName, err)
 		}
-		return wrapError(methodName, fmt.Errorf("Code %v: %s", resp.StatusCode, string(buf)))
+		return wrapError(methodName, errors.Errorf("Code %v: %s", resp.StatusCode, string(buf)))
 	}
 
 	return nil
@@ -90,7 +90,7 @@ func (c *Client) postJSON(methodName string, baseURL *url.URL, reqPayload, respP
 	if resp.StatusCode != http.StatusOK {
 		buf := new(bytes.Buffer)
 		_, _ = buf.ReadFrom(resp.Body)
-		return wrapError(methodName, fmt.Errorf("Code %v: %s", resp.StatusCode, buf.String()))
+		return wrapError(methodName, errors.Errorf("Code %v: %s", resp.StatusCode, buf.String()))
 	}
 
 	return json.NewDecoder(resp.Body).Decode(respPayload)
@@ -123,7 +123,7 @@ func (c *Client) get(methodName string, baseURL *url.URL, suffix string, params 
 	if resp.StatusCode != http.StatusOK {
 		buf := new(bytes.Buffer)
 		_, _ = buf.ReadFrom(resp.Body)
-		return wrapError(methodName, fmt.Errorf("Code %v: %s", resp.StatusCode, buf.String()))
+		return wrapError(methodName, errors.Errorf("Code %v: %s", resp.StatusCode, buf.String()))
 	}
 	return nil
 }
@@ -132,5 +132,5 @@ func wrapError(methodName string, err error) error {
 	if err == nil {
 		return nil
 	}
-	return fmt.Errorf("hubspot.%s: %v", methodName, err)
+	return errors.Errorf("hubspot.%s: %v", methodName, err)
 }

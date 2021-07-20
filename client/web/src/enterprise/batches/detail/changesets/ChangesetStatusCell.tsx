@@ -54,7 +54,7 @@ export const ChangesetStatusUnpublished: React.FunctionComponent<{ label?: JSX.E
     label = <span>Unpublished</span>,
     className,
 }) => (
-    <div className={classNames(iconClassNames, className)} data-tooltip="Set published: true to publish to code host">
+    <div className={classNames(iconClassNames, className)}>
         <SourceBranchIcon />
         {label}
     </div>

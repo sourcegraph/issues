@@ -152,7 +152,7 @@ export const CodeMonitorForm: React.FunctionComponent<CodeMonitorFormProps> = ({
                         <input
                             id="code-monitor-form-name"
                             type="text"
-                            className="form-control my-2 test-name-input"
+                            className="form-control mb-2 test-name-input"
                             required={true}
                             onChange={event => {
                                 onNameChange(event.target.value)
@@ -178,7 +178,7 @@ export const CodeMonitorForm: React.FunctionComponent<CodeMonitorFormProps> = ({
                         <label htmlFor="code-monitor-form-owner">Owner</label>
                         <select
                             id="code-monitor-form-owner"
-                            className="form-control my-2 code-monitor-form__owner-dropdown w-auto"
+                            className="form-control mb-2 code-monitor-form__owner-dropdown w-auto"
                             disabled={true}
                         >
                             <option value={authenticatedUser.displayName || authenticatedUser.username}>

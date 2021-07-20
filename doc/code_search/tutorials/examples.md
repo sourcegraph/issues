@@ -59,6 +59,12 @@ licensed to the apache software foundation select:file
 file:package.json type:diff after:"1 week ago" select:repo
 ```
 
+[Search changes in a files that contain a keyword](https://sourcegraph.com/search?q=context:global+repo:%5Egithub%5C.com/sourcegraph/sourcegraph%24+type:diff+file:contains.content%28%22golang%5C.org/x/sync/errgroup%22%29+.Go&patternType=literal)
+
+```sgquery
+repo:^github\.com/sourcegraph/sourcegraph$ type:diff file:contains.content("golang\.org/x/sync/errgroup") .Go
+```
+
 ## When to use regex search mode
 
 Sourcegraph's default literal search mode is line-based and will not match across lines, so regex can be useful when you wish to do so:

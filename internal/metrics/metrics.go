@@ -7,6 +7,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/cockroachdb/errors"
 	"github.com/inconshreveable/log15"
 	"github.com/prometheus/client_golang/prometheus"
 
@@ -144,10 +145,7 @@ func MustRegisterDiskMonitor(path string) {
 
 func mustRegisterOnce(c prometheus.Collector) {
 	err := registerer.Register(c)
-	if err != nil {
-		if _, ok := err.(prometheus.AlreadyRegisteredError); ok {
-			return
-		}
+	if err != nil && !errors.HasType(err, prometheus.AlreadyRegisteredError{}) {
 		panic(err)
 	}
 }

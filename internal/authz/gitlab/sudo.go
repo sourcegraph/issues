@@ -162,7 +162,7 @@ func (p *SudoProvider) fetchAccountByExternalUID(ctx context.Context, uid string
 		return nil, err
 	}
 	if len(glUsers) >= 2 {
-		return nil, fmt.Errorf("failed to determine unique GitLab user for query %q", q.Encode())
+		return nil, errors.Errorf("failed to determine unique GitLab user for query %q", q.Encode())
 	}
 	if len(glUsers) == 0 {
 		return nil, nil
@@ -179,7 +179,7 @@ func (p *SudoProvider) fetchAccountByUsername(ctx context.Context, username stri
 		return nil, err
 	}
 	if len(glUsers) >= 2 {
-		return nil, fmt.Errorf("failed to determine unique GitLab user for query %q", q.Encode())
+		return nil, errors.Errorf("failed to determine unique GitLab user for query %q", q.Encode())
 	}
 	if len(glUsers) == 0 {
 		return nil, nil
@@ -199,7 +199,7 @@ func (p *SudoProvider) FetchUserPerms(ctx context.Context, account *extsvc.Accou
 	if account == nil {
 		return nil, errors.New("no account provided")
 	} else if !extsvc.IsHostOfAccount(p.codeHost, account) {
-		return nil, fmt.Errorf("not a code host of the account: want %q but have %q",
+		return nil, errors.Errorf("not a code host of the account: want %q but have %q",
 			account.AccountSpec.ServiceID, p.codeHost.ServiceID)
 	}
 
@@ -264,7 +264,7 @@ func (p *SudoProvider) FetchRepoPerms(ctx context.Context, repo *extsvc.Reposito
 	if repo == nil {
 		return nil, errors.New("no repository provided")
 	} else if !extsvc.IsHostOfRepo(p.codeHost, &repo.ExternalRepoSpec) {
-		return nil, fmt.Errorf("not a code host of the repository: want %q but have %q",
+		return nil, errors.Errorf("not a code host of the repository: want %q but have %q",
 			repo.ServiceID, p.codeHost.ServiceID)
 	}
 

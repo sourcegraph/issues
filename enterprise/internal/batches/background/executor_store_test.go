@@ -187,6 +187,19 @@ stdout: {HORSE}
 			},
 			wantErr: ErrNoBatchSpecRandID,
 		},
+
+		{
+			name: "non-json output inbetween valid json",
+			entries: []workerutil.ExecutionLogEntry{
+				{
+					Key: "step.src.0",
+					Out: `stdout: {"operation":"PARSING_BATCH_SPEC","timestamp":"2021-07-12T12:25:33.965Z","status":"STARTED"}
+stdout: No changeset specs created
+stdout: {"operation":"CREATING_BATCH_SPEC","timestamp":"2021-07-12T12:26:01.165Z","status":"SUCCESS","message":"https://example.com/users/erik/batch-changes/apply/QmF0Y2hTcGVjOiI5cFZPcHJyTUhNQiI="}`,
+				},
+			},
+			wantRandID: "9pVOprrMHMB",
+		},
 	}
 
 	for _, tt := range tests {

@@ -64,6 +64,7 @@ export function experimentalFeaturesFromSettings(
     showOnboardingTour: boolean
     showEnterpriseHomePanels: boolean
     showMultilineSearchConsole: boolean
+    showSearchNotebook: boolean
     showSearchContext: boolean
     showSearchContextManagement: boolean
     showQueryBuilder: boolean
@@ -82,6 +83,7 @@ export function experimentalFeaturesFromSettings(
         showSearchContext = false,
         showSearchContextManagement = false,
         showMultilineSearchConsole = false,
+        showSearchNotebook = false,
         showQueryBuilder = false,
         codeMonitoring = true, // Default to true if not set
         // eslint-disable-next-line unicorn/prevent-abbreviations
@@ -96,6 +98,7 @@ export function experimentalFeaturesFromSettings(
         showSearchContextManagement,
         showEnterpriseHomePanels,
         showMultilineSearchConsole,
+        showSearchNotebook,
         showQueryBuilder,
         enableCodeMonitoring: codeMonitoring,
         enableAPIDocs: apiDocs,

@@ -23,5 +23,9 @@ export const getDashboardOwnerName = (dashboard: RealInsightDashboard): string =
         return 'Private'
     }
 
+    if (type === InsightsDashboardType.Global) {
+        return 'Global'
+    }
+
     return dashboard.owner.name
 }

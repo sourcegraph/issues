@@ -2,7 +2,6 @@ package registry
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/cockroachdb/errors"
 
@@ -124,7 +123,7 @@ func extensionRegistryPublishExtension(ctx context.Context, db dbutil.DB, args *
 		return nil, err
 	}
 	if !isLocal {
-		return nil, fmt.Errorf("unable to publish remote extension %q (publish it directly to the registry on %q)", args.ExtensionID, prefix)
+		return nil, errors.Errorf("unable to publish remote extension %q (publish it directly to the registry on %q)", args.ExtensionID, prefix)
 	}
 
 	// Get or create the extension to publish.
@@ -172,7 +171,7 @@ func extensionRegistryPublishExtension(ctx context.Context, db dbutil.DB, args *
 	// Validate the manifest.
 	if err := validateExtensionManifest(args.Manifest); err != nil {
 		if !args.Force {
-			return nil, fmt.Errorf("invalid extension manifest: %s", err)
+			return nil, errors.Errorf("invalid extension manifest: %s", err)
 		}
 	}
 

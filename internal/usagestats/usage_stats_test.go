@@ -482,7 +482,7 @@ func siteActivityCompare(got, want *types.SiteUsageStatistics) error {
 		return nil
 	}
 	if len(got.DAUs) != len(want.DAUs) || len(got.WAUs) != len(want.WAUs) || len(got.MAUs) != len(want.MAUs) {
-		return fmt.Errorf("site activities must be same length, got %d want %d (DAUs), got %d want %d (WAUs), got %d want %d (MAUs)", len(got.DAUs), len(want.DAUs), len(got.WAUs), len(want.WAUs), len(got.MAUs), len(want.MAUs))
+		return errors.Errorf("site activities must be same length, got %d want %d (DAUs), got %d want %d (WAUs), got %d want %d (MAUs)", len(got.DAUs), len(want.DAUs), len(got.WAUs), len(want.WAUs), len(got.MAUs), len(want.MAUs))
 	}
 	if err := siteActivityPeriodSliceCompare("DAUs", got.DAUs, want.DAUs); err != nil {
 		return err
@@ -498,7 +498,7 @@ func siteActivityCompare(got, want *types.SiteUsageStatistics) error {
 
 func siteActivityPeriodSliceCompare(label string, got, want []*types.SiteActivityPeriod) error {
 	if got == nil || want == nil {
-		return fmt.Errorf("%v slices can not be nil", label)
+		return errors.Errorf("%v slices can not be nil", label)
 	}
 	for i, v := range got {
 		if err := siteActivityPeriodCompare(label, v, want[i]); err != nil {
@@ -516,7 +516,7 @@ func siteActivityPeriodCompare(label string, got, want *types.SiteActivityPeriod
 		return nil
 	}
 	if got.StartTime != want.StartTime || got.UserCount != want.UserCount || got.RegisteredUserCount != want.RegisteredUserCount || got.AnonymousUserCount != want.AnonymousUserCount || got.IntegrationUserCount != want.IntegrationUserCount {
-		return fmt.Errorf("[%v] got %+v want %+v", label, got, want)
+		return errors.Errorf("[%v] got %+v want %+v", label, got, want)
 	}
 	return nil
 }

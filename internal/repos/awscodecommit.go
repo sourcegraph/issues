@@ -39,7 +39,7 @@ type AWSCodeCommitSource struct {
 func NewAWSCodeCommitSource(svc *types.ExternalService, cf *httpcli.Factory) (*AWSCodeCommitSource, error) {
 	var c schema.AWSCodeCommitConnection
 	if err := jsonc.Unmarshal(svc.Config, &c); err != nil {
-		return nil, fmt.Errorf("external service id=%d config error: %s", svc.ID, err)
+		return nil, errors.Errorf("external service id=%d config error: %s", svc.ID, err)
 	}
 	return newAWSCodeCommitSource(svc, &c, cf)
 }

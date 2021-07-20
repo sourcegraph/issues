@@ -227,7 +227,7 @@ func (c *Client) Archive(ctx context.Context, repo api.RepoName, opt ArchiveOpti
 		}
 	default:
 		resp.Body.Close()
-		return nil, fmt.Errorf("unexpected status code: %d", resp.StatusCode)
+		return nil, errors.Errorf("unexpected status code: %d", resp.StatusCode)
 	}
 }
 
@@ -281,7 +281,7 @@ func (c *Cmd) sendExec(ctx context.Context) (_ io.ReadCloser, _ http.Header, err
 
 	default:
 		resp.Body.Close()
-		return nil, nil, fmt.Errorf("unexpected status code: %d", resp.StatusCode)
+		return nil, nil, errors.Errorf("unexpected status code: %d", resp.StatusCode)
 	}
 }
 
@@ -324,7 +324,7 @@ func (c *Client) P4Exec(ctx context.Context, host, user, password string, args .
 		// Read response body at best effort
 		body, _ := io.ReadAll(resp.Body)
 		_ = resp.Body.Close()
-		return nil, nil, fmt.Errorf("unexpected status code: %d - %s", resp.StatusCode, body)
+		return nil, nil, errors.Errorf("unexpected status code: %d - %s", resp.StatusCode, body)
 	}
 }
 
@@ -429,10 +429,10 @@ func (c *cmdReader) Read(p []byte) (int, error) {
 			stderr = stderr[:100] + "... (truncated)"
 		}
 		if errorMsg := c.trailer.Get("X-Exec-Error"); errorMsg != "" {
-			return 0, fmt.Errorf("%s (stderr: %q)", errorMsg, stderr)
+			return 0, errors.Errorf("%s (stderr: %q)", errorMsg, stderr)
 		}
 		if exitStatus := c.trailer.Get("X-Exec-Exit-Status"); exitStatus != "0" {
-			return 0, fmt.Errorf("non-zero exit status: %s (stderr: %q)", exitStatus, stderr)
+			return 0, errors.Errorf("non-zero exit status: %s (stderr: %q)", exitStatus, stderr)
 		}
 	}
 	return n, err
@@ -490,7 +490,7 @@ func (c *Client) ping(ctx context.Context, addr string) error {
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		return fmt.Errorf("ping: bad HTTP response status %d", resp.StatusCode)
+		return errors.Errorf("ping: bad HTTP response status %d", resp.StatusCode)
 	}
 
 	return nil
@@ -611,7 +611,7 @@ func (c *Client) RequestRepoUpdate(ctx context.Context, repo api.RepoName, since
 	defer resp.Body.Close()
 	if resp.StatusCode != http.StatusOK {
 		body, _ := io.ReadAll(io.LimitReader(resp.Body, 200))
-		return nil, &url.Error{URL: resp.Request.URL.String(), Op: "RepoInfo", Err: fmt.Errorf("RepoInfo: http status %d: %s", resp.StatusCode, body)}
+		return nil, &url.Error{URL: resp.Request.URL.String(), Op: "RepoInfo", Err: errors.Errorf("RepoInfo: http status %d: %s", resp.StatusCode, body)}
 	}
 
 	var info *protocol.RepoUpdateResponse
@@ -641,7 +641,7 @@ func (c *Client) IsRepoCloneable(ctx context.Context, repo api.RepoName) error {
 		return err
 	}
 	if r.StatusCode != http.StatusOK {
-		return fmt.Errorf("gitserver error (status code %d): %s", r.StatusCode, string(body))
+		return errors.Errorf("gitserver error (status code %d): %s", r.StatusCode, string(body))
 	}
 
 	var resp protocol.IsRepoCloneableResponse
@@ -897,7 +897,7 @@ func (c *Client) Remove(ctx context.Context, repo api.RepoName) error {
 	if resp.StatusCode != http.StatusOK {
 		// best-effort inclusion of body in error message
 		body, _ := io.ReadAll(io.LimitReader(resp.Body, 200))
-		return &url.Error{URL: resp.Request.URL.String(), Op: "RepoRemove", Err: fmt.Errorf("RepoRemove: http status %d: %s", resp.StatusCode, string(body))}
+		return &url.Error{URL: resp.Request.URL.String(), Op: "RepoRemove", Err: errors.Errorf("RepoRemove: http status %d: %s", resp.StatusCode, string(body))}
 	}
 	return nil
 }
@@ -976,14 +976,14 @@ func (c *Client) CreateCommitFromPatch(ctx context.Context, req protocol.CreateC
 	data, err := io.ReadAll(resp.Body)
 	if err != nil {
 		log15.Warn("reading gitserver create-commit-from-patch response", "err", err.Error())
-		return "", &url.Error{URL: resp.Request.URL.String(), Op: "CreateCommitFromPatch", Err: fmt.Errorf("CreateCommitFromPatch: http status %d %s", resp.StatusCode, err.Error())}
+		return "", &url.Error{URL: resp.Request.URL.String(), Op: "CreateCommitFromPatch", Err: errors.Errorf("CreateCommitFromPatch: http status %d %s", resp.StatusCode, err.Error())}
 	}
 
 	var res protocol.CreateCommitFromPatchResponse
 	err = json.Unmarshal(data, &res)
 	if err != nil {
 		log15.Warn("decoding gitserver create-commit-from-patch response", "err", err.Error())
-		return "", &url.Error{URL: resp.Request.URL.String(), Op: "CreateCommitFromPatch", Err: fmt.Errorf("CreateCommitFromPatch: http status %d %s", resp.StatusCode, string(data))}
+		return "", &url.Error{URL: resp.Request.URL.String(), Op: "CreateCommitFromPatch", Err: errors.Errorf("CreateCommitFromPatch: http status %d %s", resp.StatusCode, string(data))}
 	}
 
 	if res.Error != nil {

@@ -12,4 +12,5 @@ export const INITIAL_INSIGHT_VALUES: CreateInsightFormFields = {
     stepValue: '2',
     title: '',
     repositories: '',
+    allRepos: false,
 }

@@ -957,7 +957,7 @@ loop:
 			if parameter, ok, _ := p.ParseParameter(); ok {
 				// we don't support NOT -field:value
 				if parameter.Negated {
-					return nil, fmt.Errorf("unexpected NOT before \"-%s:%s\". Remove NOT and try again",
+					return nil, errors.Errorf("unexpected NOT before \"-%s:%s\". Remove NOT and try again",
 						parameter.Field, parameter.Value)
 				}
 				parameter.Negated = true
@@ -1130,7 +1130,7 @@ func Parse(in string, searchType SearchType) ([]Node, error) {
 
 	nodes, err := parser.parseOr()
 	if err != nil {
-		if _, ok := err.(*ExpectedOperand); ok {
+		if errors.HasType(err, &ExpectedOperand{}) {
 			// The query may be unbalanced or malformed as in "(" or
 			// "x or" and expects an operand. Try harder to parse it.
 			if nodes, err := parser.tryFallbackParser(in); err == nil {

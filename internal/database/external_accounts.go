@@ -8,6 +8,7 @@ import (
 	"strconv"
 	"sync"
 
+	"github.com/cockroachdb/errors"
 	"github.com/keegancsmith/sqlf"
 	otlog "github.com/opentracing/opentracing-go/log"
 
@@ -191,7 +192,7 @@ AND deleted_at IS NULL
 
 	if exists && associatedUserID != userID {
 		// The account already exists and is associated with another user.
-		return fmt.Errorf("unable to change association of external account from user %d to user %d (delete the external account and then try again)", associatedUserID, userID)
+		return errors.Errorf("unable to change association of external account from user %d to user %d (delete the external account and then try again)", associatedUserID, userID)
 	}
 
 	if !exists {
@@ -531,7 +532,7 @@ func MaybeDecrypt(ctx context.Context, key encryption.Key, data, keyIdent string
 		return data, nil
 	}
 	if key == nil {
-		return data, fmt.Errorf("couldn't decrypt encrypted data, key is nil")
+		return data, errors.Errorf("couldn't decrypt encrypted data, key is nil")
 	}
 	decrypted, err := key.Decrypt(ctx, []byte(data))
 	if err != nil {

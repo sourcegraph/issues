@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/cockroachdb/errors"
 	"github.com/inconshreveable/log15"
 
 	"github.com/sourcegraph/sourcegraph/internal/api"
@@ -63,7 +64,7 @@ func slackNotify(ctx context.Context, recipient *recipient, text string, slackWe
 	}
 
 	if slackWebhookURL == nil || *slackWebhookURL == "" {
-		return fmt.Errorf("unable to send Slack notification because recipient (%s) has no Slack webhook URL configured", recipient.spec)
+		return errors.Errorf("unable to send Slack notification because recipient (%s) has no Slack webhook URL configured", recipient.spec)
 	}
 
 	payload := &slack.Payload{

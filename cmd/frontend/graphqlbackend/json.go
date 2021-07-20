@@ -2,7 +2,8 @@ package graphqlbackend
 
 import (
 	"encoding/json"
-	"fmt"
+
+	"github.com/cockroachdb/errors"
 )
 
 // JSONValue implements the JSONValue scalar type. In GraphQL queries, it is represented the JSON
@@ -36,7 +37,7 @@ func (JSONCString) ImplementsGraphQLType(name string) bool {
 func (j *JSONCString) UnmarshalGraphQL(input interface{}) error {
 	s, ok := input.(string)
 	if !ok {
-		return fmt.Errorf("invalid GraphQL JSONCString scalar value input (got %T, expected string)", input)
+		return errors.Errorf("invalid GraphQL JSONCString scalar value input (got %T, expected string)", input)
 	}
 	*j = JSONCString(s)
 	return nil

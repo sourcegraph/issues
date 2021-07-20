@@ -1151,6 +1151,11 @@ func testSearchClient(t *testing.T, client searchClient) {
 				query:  `type:diff repo:go-diff file:contains(after_success)`, // matches .travis.yml and its 10 commits
 				counts: counts{Commit: 10},
 			},
+			{
+				name:   `select repo on 'and' operation`,
+				query:  `repo:^github\.com/sgtest/go-diff$ (func and main) select:repo`,
+				counts: counts{Repo: 1},
+			},
 		}
 
 		for _, test := range tests {

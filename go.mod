@@ -85,7 +85,7 @@ require (
 	github.com/gorilla/sessions v1.2.1
 	github.com/gosimple/slug v1.9.0 // indirect
 	github.com/goware/urlx v0.3.1
-	github.com/grafana-tools/sdk v0.0.0-20210521150820-354cd37a4b4e
+	github.com/grafana-tools/sdk v0.0.0-20210709154219-f35c5af8140d
 	github.com/graph-gophers/graphql-go v0.0.0-20201113091052-beb923fada29
 	github.com/graphql-go/graphql v0.7.9
 	github.com/gregjones/httpcache v0.0.0-20190611155906-901d90724c79
@@ -114,7 +114,6 @@ require (
 	github.com/matryer/is v1.4.0 // indirect
 	github.com/mattn/go-sqlite3 v2.0.3+incompatible
 	github.com/mcuadros/go-version v0.0.0-20190830083331-035f6764e8d2
-	github.com/mgutz/ansi v0.0.0-20200706080929-d51e80ef957d // indirect
 	github.com/microcosm-cc/bluemonday v1.0.4
 	github.com/mitchellh/mapstructure v1.3.3 // indirect
 	github.com/mschoch/smat v0.2.0 // indirect
@@ -126,7 +125,6 @@ require (
 	github.com/peterbourgon/ff v1.7.0
 	github.com/peterhellberg/link v1.1.0
 	github.com/pquerna/cachecontrol v0.0.0-20200819021114-67c6ae64274f // indirect
-	github.com/princjef/gomarkdoc v0.1.3
 	github.com/prometheus/alertmanager v0.21.0
 	github.com/prometheus/client_golang v1.9.0
 	github.com/prometheus/common v0.15.0
@@ -182,9 +180,9 @@ require (
 	golang.org/x/net v0.0.0-20210614182718-04defd469f4e
 	golang.org/x/oauth2 v0.0.0-20210514164344-f6687ab2804c
 	golang.org/x/sync v0.0.0-20210220032951-036812b2e83c
-	golang.org/x/sys v0.0.0-20210616094352-59db8d763f22
+	golang.org/x/sys v0.0.0-20210630005230-0f9fa26af87c
 	golang.org/x/time v0.0.0-20200630173020-3af7569d3a1e
-	golang.org/x/tools v0.1.4
+	golang.org/x/tools v0.1.5
 	google.golang.org/api v0.46.0
 	google.golang.org/genproto v0.0.0-20210517163617-5e0236093d7a
 	google.golang.org/protobuf v1.26.0

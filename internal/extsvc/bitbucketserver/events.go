@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"net/http"
 	"time"
+
+	"github.com/cockroachdb/errors"
 )
 
 const (
@@ -29,7 +31,7 @@ func ParseWebhookEvent(eventType string, payload []byte) (e interface{}, err err
 		e = &PullRequestParticipantStatusEvent{}
 		return e, json.Unmarshal(payload, e)
 	default:
-		return nil, fmt.Errorf("unknown webhook event type: %q", eventType)
+		return nil, errors.Errorf("unknown webhook event type: %q", eventType)
 	}
 }
 

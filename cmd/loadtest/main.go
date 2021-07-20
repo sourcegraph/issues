@@ -9,6 +9,7 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/cockroachdb/errors"
 	"github.com/inconshreveable/log15"
 
 	"github.com/sourcegraph/sourcegraph/internal/env"
@@ -70,16 +71,16 @@ func search(v GQLSearchVars) (int, error) {
 	gqlQuery := GraphQLQuery{Query: gqlSearch, Variables: v}
 	b, err := json.Marshal(gqlQuery)
 	if err != nil {
-		return 0, fmt.Errorf("failed to marshal query: %s", err)
+		return 0, errors.Errorf("failed to marshal query: %s", err)
 	}
 	resp, err := http.Post(frontendURL("/.api/graphql?Search"), "application/json", bytes.NewReader(b))
 	if err != nil {
-		return 0, fmt.Errorf("response error: %s", err)
+		return 0, errors.Errorf("response error: %s", err)
 	}
 	defer resp.Body.Close()
 	var res GraphQLResponseSearch
 	if err := json.NewDecoder(resp.Body).Decode(&res); err != nil {
-		return 0, fmt.Errorf("could not decode response body: %s", err)
+		return 0, errors.Errorf("could not decode response body: %s", err)
 	}
 	return len(res.Data.Search.Results.Results), nil
 }

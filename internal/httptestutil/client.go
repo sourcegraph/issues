@@ -3,7 +3,6 @@ package httptestutil
 import (
 	"bytes"
 	"encoding/json"
-	"fmt"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -60,7 +59,7 @@ func (c *Client) Do(req *http.Request) (*http.Response, error) {
 func (c *Client) DoOK(req *http.Request) (*http.Response, error) {
 	resp, err := c.Do(req)
 	if resp != nil && resp.StatusCode != http.StatusOK {
-		err = fmt.Errorf("Do %s %s: HTTP %d (%s)", req.URL, req.Method, resp.StatusCode, resp.Status)
+		err = errors.Errorf("Do %s %s: HTTP %d (%s)", req.URL, req.Method, resp.StatusCode, resp.Status)
 	}
 	return resp, err
 }
@@ -81,11 +80,13 @@ func (c Client) DoNoFollowRedirects(req *http.Request) (*http.Response, error) {
 	noRedir := errors.New("x")
 	c.CheckRedirect = func(r *http.Request, via []*http.Request) error { return noRedir }
 	resp, err := c.Do(req)
-	if urlErr, ok := err.(*url.Error); ok && urlErr != nil {
-		if urlErr.Err == noRedir {
+	if err != nil {
+		var e *url.Error
+		if errors.As(err, &e) && e.Err == noRedir {
 			err = nil
 		}
 	}
+
 	return resp, err
 }
 
@@ -123,7 +124,7 @@ func (c *Client) DoJSON(method, url string, in, out interface{}) error {
 	}
 	defer resp.Body.Close()
 	if ct := resp.Header.Get("content-type"); !strings.HasPrefix(ct, "application/json") {
-		return fmt.Errorf("content type %q is not JSON", ct)
+		return errors.Errorf("content type %q is not JSON", ct)
 	}
 	if out != nil {
 		if err := json.NewDecoder(resp.Body).Decode(out); err != nil {

@@ -1,5 +1,5 @@
 import classnames from 'classnames'
-import React, { PropsWithChildren, RefObject } from 'react'
+import React, { PropsWithChildren, ReactNode, RefObject } from 'react'
 
 interface FormGroupProps {
     /** Name attr value for root fieldset element. */
@@ -7,11 +7,11 @@ interface FormGroupProps {
     /** Title on top of group. */
     title: string
     /** Subtitle of group. */
-    subtitle?: string
+    subtitle?: ReactNode
     /** Error message for field group. */
     error?: string
     /** Description text, renders below of content inputs of group. */
-    description?: string
+    description?: ReactNode
     /** Custom class name for root fieldset element. */
     className?: string
     /** Custom class name for label element of the group. */

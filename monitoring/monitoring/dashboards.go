@@ -7,22 +7,6 @@ import (
 	"github.com/grafana-tools/sdk"
 )
 
-type PanelType string
-
-const (
-	PanelTypeGraph   PanelType = "graph"
-	PanelTypeHeatmap PanelType = "heatmap"
-)
-
-func (pt PanelType) Valid() bool {
-	switch pt {
-	case PanelTypeGraph, PanelTypeHeatmap:
-		return true
-	default:
-		return false
-	}
-}
-
 // UnitType for controlling the unit type display on graphs.
 type UnitType string
 

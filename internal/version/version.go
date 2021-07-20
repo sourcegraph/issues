@@ -2,7 +2,6 @@ package version
 
 import (
 	"expvar"
-	"fmt"
 	"math"
 	"os"
 	"strconv"
@@ -54,7 +53,7 @@ var timestamp = devTimestamp
 func HowLongOutOfDate(now time.Time) (int, error) {
 	buildUnixTimestamp, err := strconv.ParseInt(timestamp, 10, 64)
 	if err != nil {
-		return 0, fmt.Errorf("unable to parse version build timestamp: %w", err)
+		return 0, errors.Errorf("unable to parse version build timestamp: %w", err)
 	}
 	buildTime := time.Unix(buildUnixTimestamp, 0)
 

@@ -2,8 +2,8 @@ package graphqlbackend
 
 import (
 	"context"
-	"fmt"
 
+	"github.com/cockroachdb/errors"
 	"github.com/graph-gophers/graphql-go"
 	"github.com/graph-gophers/graphql-go/relay"
 
@@ -90,7 +90,7 @@ func (f *FeatureFlagOverrideResolver) Namespace(ctx context.Context) (*Namespace
 		o, err := OrgByIDInt32(ctx, f.db, *f.inner.OrgID)
 		return &NamespaceResolver{o}, err
 	}
-	return nil, fmt.Errorf("one of userID or orgID must be set")
+	return nil, errors.Errorf("one of userID or orgID must be set")
 }
 func (f *FeatureFlagOverrideResolver) ID() graphql.ID {
 	return marshalOverrideID(overrideSpec{
@@ -177,7 +177,7 @@ func (r *schemaResolver) CreateFeatureFlag(ctx context.Context, args struct {
 	} else if args.RolloutBasisPoints != nil {
 		res, err = ff.CreateRollout(ctx, args.Name, *args.RolloutBasisPoints)
 	} else {
-		return nil, fmt.Errorf("either 'value' or 'rolloutBasisPoints' must be set")
+		return nil, errors.Errorf("either 'value' or 'rolloutBasisPoints' must be set")
 	}
 
 	return &FeatureFlagResolver{r.db, res}, err
@@ -206,7 +206,7 @@ func (r *schemaResolver) UpdateFeatureFlag(ctx context.Context, args struct {
 	} else if args.RolloutBasisPoints != nil {
 		ff.Rollout = &featureflag.FeatureFlagRollout{Rollout: *args.RolloutBasisPoints}
 	} else {
-		return nil, fmt.Errorf("either 'value' or 'rolloutBasisPoints' must be set")
+		return nil, errors.Errorf("either 'value' or 'rolloutBasisPoints' must be set")
 	}
 
 	res, err := database.FeatureFlags(r.db).UpdateFeatureFlag(ctx, ff)

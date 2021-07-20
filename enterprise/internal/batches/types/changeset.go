@@ -888,20 +888,29 @@ func WithExternalID(id string) func(*Changeset) bool {
 	return func(c *Changeset) bool { return c.ExternalID == id }
 }
 
-// ChangesetsStats holds stats information on a list of changesets.
-type ChangesetsStats struct {
-	Retrying    int32
-	Failed      int32
-	Scheduled   int32
-	Processing  int32
+type CommonChangesetsStats struct {
 	Unpublished int32
 	Draft       int32
 	Open        int32
 	Merged      int32
 	Closed      int32
-	Deleted     int32
-	Archived    int32
 	Total       int32
+}
+
+// RepoChangesetsStats holds stats information on a list of changesets for a repo.
+type RepoChangesetsStats struct {
+	CommonChangesetsStats
+}
+
+// ChangesetsStats holds additional stats information on a list of changesets.
+type ChangesetsStats struct {
+	CommonChangesetsStats
+	Retrying   int32
+	Failed     int32
+	Scheduled  int32
+	Processing int32
+	Deleted    int32
+	Archived   int32
 }
 
 // ChangesetEventKindFor returns the ChangesetEventKind for the given

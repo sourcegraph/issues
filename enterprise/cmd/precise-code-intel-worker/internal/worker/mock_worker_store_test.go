@@ -24,13 +24,6 @@ type MockWorkerStore struct {
 	// DequeueFunc is an instance of a mock function object controlling the
 	// behavior of the method Dequeue.
 	DequeueFunc *WorkerStoreDequeueFunc
-	// DequeueWithIndependentTransactionContextFunc is an instance of a mock
-	// function object controlling the behavior of the method
-	// DequeueWithIndependentTransactionContext.
-	DequeueWithIndependentTransactionContextFunc *WorkerStoreDequeueWithIndependentTransactionContextFunc
-	// DoneFunc is an instance of a mock function object controlling the
-	// behavior of the method Done.
-	DoneFunc *WorkerStoreDoneFunc
 	// HandleFunc is an instance of a mock function object controlling the
 	// behavior of the method Handle.
 	HandleFunc *WorkerStoreHandleFunc
@@ -64,18 +57,8 @@ func NewMockWorkerStore() *MockWorkerStore {
 			},
 		},
 		DequeueFunc: &WorkerStoreDequeueFunc{
-			defaultHook: func(context.Context, string, []*sqlf.Query) (workerutil.Record, store.Store, bool, error) {
+			defaultHook: func(context.Context, string, []*sqlf.Query) (workerutil.Record, context.CancelFunc, bool, error) {
 				return nil, nil, false, nil
-			},
-		},
-		DequeueWithIndependentTransactionContextFunc: &WorkerStoreDequeueWithIndependentTransactionContextFunc{
-			defaultHook: func(context.Context, string, []*sqlf.Query) (workerutil.Record, store.Store, bool, error) {
-				return nil, nil, false, nil
-			},
-		},
-		DoneFunc: &WorkerStoreDoneFunc{
-			defaultHook: func(error) error {
-				return nil
 			},
 		},
 		HandleFunc: &WorkerStoreHandleFunc{
@@ -126,12 +109,6 @@ func NewMockWorkerStoreFrom(i store.Store) *MockWorkerStore {
 		},
 		DequeueFunc: &WorkerStoreDequeueFunc{
 			defaultHook: i.Dequeue,
-		},
-		DequeueWithIndependentTransactionContextFunc: &WorkerStoreDequeueWithIndependentTransactionContextFunc{
-			defaultHook: i.DequeueWithIndependentTransactionContext,
-		},
-		DoneFunc: &WorkerStoreDoneFunc{
-			defaultHook: i.Done,
 		},
 		HandleFunc: &WorkerStoreHandleFunc{
 			defaultHook: i.Handle,
@@ -272,15 +249,15 @@ func (c WorkerStoreAddExecutionLogEntryFuncCall) Results() []interface{} {
 // WorkerStoreDequeueFunc describes the behavior when the Dequeue method of
 // the parent MockWorkerStore instance is invoked.
 type WorkerStoreDequeueFunc struct {
-	defaultHook func(context.Context, string, []*sqlf.Query) (workerutil.Record, store.Store, bool, error)
-	hooks       []func(context.Context, string, []*sqlf.Query) (workerutil.Record, store.Store, bool, error)
+	defaultHook func(context.Context, string, []*sqlf.Query) (workerutil.Record, context.CancelFunc, bool, error)
+	hooks       []func(context.Context, string, []*sqlf.Query) (workerutil.Record, context.CancelFunc, bool, error)
 	history     []WorkerStoreDequeueFuncCall
 	mutex       sync.Mutex
 }
 
 // Dequeue delegates to the next hook function in the queue and stores the
 // parameter and result values of this invocation.
-func (m *MockWorkerStore) Dequeue(v0 context.Context, v1 string, v2 []*sqlf.Query) (workerutil.Record, store.Store, bool, error) {
+func (m *MockWorkerStore) Dequeue(v0 context.Context, v1 string, v2 []*sqlf.Query) (workerutil.Record, context.CancelFunc, bool, error) {
 	r0, r1, r2, r3 := m.DequeueFunc.nextHook()(v0, v1, v2)
 	m.DequeueFunc.appendCall(WorkerStoreDequeueFuncCall{v0, v1, v2, r0, r1, r2, r3})
 	return r0, r1, r2, r3
@@ -289,7 +266,7 @@ func (m *MockWorkerStore) Dequeue(v0 context.Context, v1 string, v2 []*sqlf.Quer
 // SetDefaultHook sets function that is called when the Dequeue method of
 // the parent MockWorkerStore instance is invoked and the hook queue is
 // empty.
-func (f *WorkerStoreDequeueFunc) SetDefaultHook(hook func(context.Context, string, []*sqlf.Query) (workerutil.Record, store.Store, bool, error)) {
+func (f *WorkerStoreDequeueFunc) SetDefaultHook(hook func(context.Context, string, []*sqlf.Query) (workerutil.Record, context.CancelFunc, bool, error)) {
 	f.defaultHook = hook
 }
 
@@ -297,7 +274,7 @@ func (f *WorkerStoreDequeueFunc) SetDefaultHook(hook func(context.Context, strin
 // Dequeue method of the parent MockWorkerStore instance invokes the hook at
 // the front of the queue and discards it. After the queue is empty, the
 // default hook function is invoked for any future action.
-func (f *WorkerStoreDequeueFunc) PushHook(hook func(context.Context, string, []*sqlf.Query) (workerutil.Record, store.Store, bool, error)) {
+func (f *WorkerStoreDequeueFunc) PushHook(hook func(context.Context, string, []*sqlf.Query) (workerutil.Record, context.CancelFunc, bool, error)) {
 	f.mutex.Lock()
 	f.hooks = append(f.hooks, hook)
 	f.mutex.Unlock()
@@ -305,21 +282,21 @@ func (f *WorkerStoreDequeueFunc) PushHook(hook func(context.Context, string, []*
 
 // SetDefaultReturn calls SetDefaultDefaultHook with a function that returns
 // the given values.
-func (f *WorkerStoreDequeueFunc) SetDefaultReturn(r0 workerutil.Record, r1 store.Store, r2 bool, r3 error) {
-	f.SetDefaultHook(func(context.Context, string, []*sqlf.Query) (workerutil.Record, store.Store, bool, error) {
+func (f *WorkerStoreDequeueFunc) SetDefaultReturn(r0 workerutil.Record, r1 context.CancelFunc, r2 bool, r3 error) {
+	f.SetDefaultHook(func(context.Context, string, []*sqlf.Query) (workerutil.Record, context.CancelFunc, bool, error) {
 		return r0, r1, r2, r3
 	})
 }
 
 // PushReturn calls PushDefaultHook with a function that returns the given
 // values.
-func (f *WorkerStoreDequeueFunc) PushReturn(r0 workerutil.Record, r1 store.Store, r2 bool, r3 error) {
-	f.PushHook(func(context.Context, string, []*sqlf.Query) (workerutil.Record, store.Store, bool, error) {
+func (f *WorkerStoreDequeueFunc) PushReturn(r0 workerutil.Record, r1 context.CancelFunc, r2 bool, r3 error) {
+	f.PushHook(func(context.Context, string, []*sqlf.Query) (workerutil.Record, context.CancelFunc, bool, error) {
 		return r0, r1, r2, r3
 	})
 }
 
-func (f *WorkerStoreDequeueFunc) nextHook() func(context.Context, string, []*sqlf.Query) (workerutil.Record, store.Store, bool, error) {
+func (f *WorkerStoreDequeueFunc) nextHook() func(context.Context, string, []*sqlf.Query) (workerutil.Record, context.CancelFunc, bool, error) {
 	f.mutex.Lock()
 	defer f.mutex.Unlock()
 
@@ -366,7 +343,7 @@ type WorkerStoreDequeueFuncCall struct {
 	Result0 workerutil.Record
 	// Result1 is the value of the 2nd result returned from this method
 	// invocation.
-	Result1 store.Store
+	Result1 context.CancelFunc
 	// Result2 is the value of the 3rd result returned from this method
 	// invocation.
 	Result2 bool
@@ -385,232 +362,6 @@ func (c WorkerStoreDequeueFuncCall) Args() []interface{} {
 // invocation.
 func (c WorkerStoreDequeueFuncCall) Results() []interface{} {
 	return []interface{}{c.Result0, c.Result1, c.Result2, c.Result3}
-}
-
-// WorkerStoreDequeueWithIndependentTransactionContextFunc describes the
-// behavior when the DequeueWithIndependentTransactionContext method of the
-// parent MockWorkerStore instance is invoked.
-type WorkerStoreDequeueWithIndependentTransactionContextFunc struct {
-	defaultHook func(context.Context, string, []*sqlf.Query) (workerutil.Record, store.Store, bool, error)
-	hooks       []func(context.Context, string, []*sqlf.Query) (workerutil.Record, store.Store, bool, error)
-	history     []WorkerStoreDequeueWithIndependentTransactionContextFuncCall
-	mutex       sync.Mutex
-}
-
-// DequeueWithIndependentTransactionContext delegates to the next hook
-// function in the queue and stores the parameter and result values of this
-// invocation.
-func (m *MockWorkerStore) DequeueWithIndependentTransactionContext(v0 context.Context, v1 string, v2 []*sqlf.Query) (workerutil.Record, store.Store, bool, error) {
-	r0, r1, r2, r3 := m.DequeueWithIndependentTransactionContextFunc.nextHook()(v0, v1, v2)
-	m.DequeueWithIndependentTransactionContextFunc.appendCall(WorkerStoreDequeueWithIndependentTransactionContextFuncCall{v0, v1, v2, r0, r1, r2, r3})
-	return r0, r1, r2, r3
-}
-
-// SetDefaultHook sets function that is called when the
-// DequeueWithIndependentTransactionContext method of the parent
-// MockWorkerStore instance is invoked and the hook queue is empty.
-func (f *WorkerStoreDequeueWithIndependentTransactionContextFunc) SetDefaultHook(hook func(context.Context, string, []*sqlf.Query) (workerutil.Record, store.Store, bool, error)) {
-	f.defaultHook = hook
-}
-
-// PushHook adds a function to the end of hook queue. Each invocation of the
-// DequeueWithIndependentTransactionContext method of the parent
-// MockWorkerStore instance invokes the hook at the front of the queue and
-// discards it. After the queue is empty, the default hook function is
-// invoked for any future action.
-func (f *WorkerStoreDequeueWithIndependentTransactionContextFunc) PushHook(hook func(context.Context, string, []*sqlf.Query) (workerutil.Record, store.Store, bool, error)) {
-	f.mutex.Lock()
-	f.hooks = append(f.hooks, hook)
-	f.mutex.Unlock()
-}
-
-// SetDefaultReturn calls SetDefaultDefaultHook with a function that returns
-// the given values.
-func (f *WorkerStoreDequeueWithIndependentTransactionContextFunc) SetDefaultReturn(r0 workerutil.Record, r1 store.Store, r2 bool, r3 error) {
-	f.SetDefaultHook(func(context.Context, string, []*sqlf.Query) (workerutil.Record, store.Store, bool, error) {
-		return r0, r1, r2, r3
-	})
-}
-
-// PushReturn calls PushDefaultHook with a function that returns the given
-// values.
-func (f *WorkerStoreDequeueWithIndependentTransactionContextFunc) PushReturn(r0 workerutil.Record, r1 store.Store, r2 bool, r3 error) {
-	f.PushHook(func(context.Context, string, []*sqlf.Query) (workerutil.Record, store.Store, bool, error) {
-		return r0, r1, r2, r3
-	})
-}
-
-func (f *WorkerStoreDequeueWithIndependentTransactionContextFunc) nextHook() func(context.Context, string, []*sqlf.Query) (workerutil.Record, store.Store, bool, error) {
-	f.mutex.Lock()
-	defer f.mutex.Unlock()
-
-	if len(f.hooks) == 0 {
-		return f.defaultHook
-	}
-
-	hook := f.hooks[0]
-	f.hooks = f.hooks[1:]
-	return hook
-}
-
-func (f *WorkerStoreDequeueWithIndependentTransactionContextFunc) appendCall(r0 WorkerStoreDequeueWithIndependentTransactionContextFuncCall) {
-	f.mutex.Lock()
-	f.history = append(f.history, r0)
-	f.mutex.Unlock()
-}
-
-// History returns a sequence of
-// WorkerStoreDequeueWithIndependentTransactionContextFuncCall objects
-// describing the invocations of this function.
-func (f *WorkerStoreDequeueWithIndependentTransactionContextFunc) History() []WorkerStoreDequeueWithIndependentTransactionContextFuncCall {
-	f.mutex.Lock()
-	history := make([]WorkerStoreDequeueWithIndependentTransactionContextFuncCall, len(f.history))
-	copy(history, f.history)
-	f.mutex.Unlock()
-
-	return history
-}
-
-// WorkerStoreDequeueWithIndependentTransactionContextFuncCall is an object
-// that describes an invocation of method
-// DequeueWithIndependentTransactionContext on an instance of
-// MockWorkerStore.
-type WorkerStoreDequeueWithIndependentTransactionContextFuncCall struct {
-	// Arg0 is the value of the 1st argument passed to this method
-	// invocation.
-	Arg0 context.Context
-	// Arg1 is the value of the 2nd argument passed to this method
-	// invocation.
-	Arg1 string
-	// Arg2 is the value of the 3rd argument passed to this method
-	// invocation.
-	Arg2 []*sqlf.Query
-	// Result0 is the value of the 1st result returned from this method
-	// invocation.
-	Result0 workerutil.Record
-	// Result1 is the value of the 2nd result returned from this method
-	// invocation.
-	Result1 store.Store
-	// Result2 is the value of the 3rd result returned from this method
-	// invocation.
-	Result2 bool
-	// Result3 is the value of the 4th result returned from this method
-	// invocation.
-	Result3 error
-}
-
-// Args returns an interface slice containing the arguments of this
-// invocation.
-func (c WorkerStoreDequeueWithIndependentTransactionContextFuncCall) Args() []interface{} {
-	return []interface{}{c.Arg0, c.Arg1, c.Arg2}
-}
-
-// Results returns an interface slice containing the results of this
-// invocation.
-func (c WorkerStoreDequeueWithIndependentTransactionContextFuncCall) Results() []interface{} {
-	return []interface{}{c.Result0, c.Result1, c.Result2, c.Result3}
-}
-
-// WorkerStoreDoneFunc describes the behavior when the Done method of the
-// parent MockWorkerStore instance is invoked.
-type WorkerStoreDoneFunc struct {
-	defaultHook func(error) error
-	hooks       []func(error) error
-	history     []WorkerStoreDoneFuncCall
-	mutex       sync.Mutex
-}
-
-// Done delegates to the next hook function in the queue and stores the
-// parameter and result values of this invocation.
-func (m *MockWorkerStore) Done(v0 error) error {
-	r0 := m.DoneFunc.nextHook()(v0)
-	m.DoneFunc.appendCall(WorkerStoreDoneFuncCall{v0, r0})
-	return r0
-}
-
-// SetDefaultHook sets function that is called when the Done method of the
-// parent MockWorkerStore instance is invoked and the hook queue is empty.
-func (f *WorkerStoreDoneFunc) SetDefaultHook(hook func(error) error) {
-	f.defaultHook = hook
-}
-
-// PushHook adds a function to the end of hook queue. Each invocation of the
-// Done method of the parent MockWorkerStore instance invokes the hook at
-// the front of the queue and discards it. After the queue is empty, the
-// default hook function is invoked for any future action.
-func (f *WorkerStoreDoneFunc) PushHook(hook func(error) error) {
-	f.mutex.Lock()
-	f.hooks = append(f.hooks, hook)
-	f.mutex.Unlock()
-}
-
-// SetDefaultReturn calls SetDefaultDefaultHook with a function that returns
-// the given values.
-func (f *WorkerStoreDoneFunc) SetDefaultReturn(r0 error) {
-	f.SetDefaultHook(func(error) error {
-		return r0
-	})
-}
-
-// PushReturn calls PushDefaultHook with a function that returns the given
-// values.
-func (f *WorkerStoreDoneFunc) PushReturn(r0 error) {
-	f.PushHook(func(error) error {
-		return r0
-	})
-}
-
-func (f *WorkerStoreDoneFunc) nextHook() func(error) error {
-	f.mutex.Lock()
-	defer f.mutex.Unlock()
-
-	if len(f.hooks) == 0 {
-		return f.defaultHook
-	}
-
-	hook := f.hooks[0]
-	f.hooks = f.hooks[1:]
-	return hook
-}
-
-func (f *WorkerStoreDoneFunc) appendCall(r0 WorkerStoreDoneFuncCall) {
-	f.mutex.Lock()
-	f.history = append(f.history, r0)
-	f.mutex.Unlock()
-}
-
-// History returns a sequence of WorkerStoreDoneFuncCall objects describing
-// the invocations of this function.
-func (f *WorkerStoreDoneFunc) History() []WorkerStoreDoneFuncCall {
-	f.mutex.Lock()
-	history := make([]WorkerStoreDoneFuncCall, len(f.history))
-	copy(history, f.history)
-	f.mutex.Unlock()
-
-	return history
-}
-
-// WorkerStoreDoneFuncCall is an object that describes an invocation of
-// method Done on an instance of MockWorkerStore.
-type WorkerStoreDoneFuncCall struct {
-	// Arg0 is the value of the 1st argument passed to this method
-	// invocation.
-	Arg0 error
-	// Result0 is the value of the 1st result returned from this method
-	// invocation.
-	Result0 error
-}
-
-// Args returns an interface slice containing the arguments of this
-// invocation.
-func (c WorkerStoreDoneFuncCall) Args() []interface{} {
-	return []interface{}{c.Arg0}
-}
-
-// Results returns an interface slice containing the results of this
-// invocation.
-func (c WorkerStoreDoneFuncCall) Results() []interface{} {
-	return []interface{}{c.Result0}
 }
 
 // WorkerStoreHandleFunc describes the behavior when the Handle method of

@@ -3,8 +3,8 @@ package codemonitors
 import (
 	"context"
 	"database/sql"
-	"fmt"
 
+	"github.com/cockroachdb/errors"
 	"github.com/graph-gophers/graphql-go"
 	"github.com/keegancsmith/sqlf"
 
@@ -91,7 +91,7 @@ func (s *Store) AllRecipientsForEmailIDInt64(ctx context.Context, emailID int64)
 	var rows *sql.Rows
 	rows, err = s.Query(ctx, sqlf.Sprintf(allRecipientsForEmailIDInt64FmtStr, emailID))
 	if err != nil {
-		return nil, fmt.Errorf("store.AllRecipientsForEmailIDInt64: %w", err)
+		return nil, errors.Errorf("store.AllRecipientsForEmailIDInt64: %w", err)
 	}
 	defer func() { err = rows.Close() }()
 	return scanRecipients(rows)

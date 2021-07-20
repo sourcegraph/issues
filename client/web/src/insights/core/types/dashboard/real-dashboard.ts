@@ -6,12 +6,14 @@ import { ExtendedInsightDashboard } from './core'
 export interface BuiltInInsightDashboard extends ExtendedInsightDashboard {
     /**
      * Property to distinguish between real user-created dashboard and virtual
-     * built-in dashboard. Currently we support 2 types of user built-in dashboard.
+     * built-in dashboard. Currently we support 3 types of user built-in dashboard.
      *
      * "Personal" - all personal insights from personal settings (all users
      * have it by default)
      *
      * "Organizations level" - all organizations act as an insights dashboard.
+     *
+     * "Global level" - all insights from site (global) setting subject.
      */
     builtIn: true
 }
@@ -34,7 +36,7 @@ export interface SettingsBasedInsightDashboard extends ExtendedInsightDashboard 
 export type RealInsightDashboard = SettingsBasedInsightDashboard | BuiltInInsightDashboard
 
 export function isSettingsBasedInsightsDashboard(
-    dashboard: RealInsightDashboard
+    dashboard: RealInsightDashboard | undefined
 ): dashboard is SettingsBasedInsightDashboard {
-    return !!dashboard.settingsKey
+    return !!dashboard?.settingsKey
 }

@@ -65,7 +65,7 @@ exports[`FormActionArea Error is shown if code monitor has empty description 1`]
       </label>
       <input
         autoFocus={true}
-        className="form-control my-2"
+        className="form-control mb-2"
         disabled={true}
         id="code-monitoring-form-actions-recipients"
         required={true}

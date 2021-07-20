@@ -2,7 +2,6 @@ package extsvc
 
 import (
 	"encoding/json"
-	"fmt"
 
 	"github.com/cockroachdb/errors"
 )
@@ -54,7 +53,7 @@ func getJSONOrError(field *json.RawMessage, v interface{}) error {
 	if err := json.Unmarshal(*field, v); err != nil {
 		var jsonErr jsonError
 		if err := json.Unmarshal(*field, &jsonErr); err != nil {
-			return fmt.Errorf("could not parse field as JSON: %s", err)
+			return errors.Errorf("could not parse field as JSON: %s", err)
 		}
 		return errors.New(jsonErr.Error)
 	}

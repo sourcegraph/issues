@@ -2,9 +2,9 @@ package graphqlbackend
 
 import (
 	"context"
-	"fmt"
 	"testing"
 
+	"github.com/cockroachdb/errors"
 	gqlerrors "github.com/graph-gophers/graphql-go/errors"
 
 	"github.com/sourcegraph/sourcegraph/cmd/frontend/backend"
@@ -451,7 +451,7 @@ func TestRepositories_CursorPagination(t *testing.T) {
 					{
 						Path:          []interface{}{"repositories"},
 						Message:       `cannot unmarshal repository cursor type: ""`,
-						ResolverError: fmt.Errorf(`cannot unmarshal repository cursor type: ""`),
+						ResolverError: errors.Errorf(`cannot unmarshal repository cursor type: ""`),
 					},
 				},
 			},

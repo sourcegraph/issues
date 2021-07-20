@@ -4,6 +4,8 @@ import (
 	"context"
 	"testing"
 
+	"github.com/cockroachdb/errors"
+
 	"github.com/sourcegraph/sourcegraph/cmd/frontend/backend"
 	"github.com/sourcegraph/sourcegraph/internal/api"
 	"github.com/sourcegraph/sourcegraph/internal/types"
@@ -19,7 +21,7 @@ func TestGetRepo(t *testing.T) {
 		})
 
 		_, err := GetRepo(context.Background(), map[string]string{"Repo": "repo1"})
-		if _, ok := err.(*URLMovedError); !ok {
+		if !errors.HasType(err, &URLMovedError{}) {
 			t.Fatalf("err: want type *URLMovedError but got %T", err)
 		}
 	})

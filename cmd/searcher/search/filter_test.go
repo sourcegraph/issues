@@ -2,10 +2,10 @@ package search
 
 import (
 	"context"
-	"fmt"
 	"reflect"
 	"testing"
 
+	"github.com/cockroachdb/errors"
 	"github.com/google/zoekt/ignore"
 
 	"github.com/sourcegraph/sourcegraph/internal/api"
@@ -29,7 +29,7 @@ func TestNewIgnoreMatcher(t *testing.T) {
 
 func TestMissingIgnoreFile(t *testing.T) {
 	git.Mocks.ReadFile = func(commit api.CommitID, name string) ([]byte, error) {
-		return nil, fmt.Errorf("err open .sourcegraph/ignore: file does not exist")
+		return nil, errors.Errorf("err open .sourcegraph/ignore: file does not exist")
 	}
 	defer func() { git.Mocks.ReadFile = nil }()
 

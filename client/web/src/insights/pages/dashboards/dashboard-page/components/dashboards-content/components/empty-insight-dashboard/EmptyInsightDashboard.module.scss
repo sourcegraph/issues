@@ -1,0 +1,18 @@
+.empty-section {
+    max-width: 22.75rem;
+}
+
+.item-card {
+    min-height: 20rem;
+    height: 100%;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-color);
+
+    &:hover {
+        background: var(--link-hover-bg-color);
+        text-decoration: none;
+    }
+}

@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"sort"
 	"strings"
+
+	"github.com/cockroachdb/errors"
 )
 
 // EndpointMap is the subset of endpoint.Map (consistent hashmap) methods we
@@ -114,7 +116,7 @@ func findEndpoint(eps map[string]struct{}, hostname string) (string, error) {
 		}
 
 		if endpoint != "" {
-			return "", fmt.Errorf("hostname %q matches multiple in %s", hostname, endpointsString(eps))
+			return "", errors.Errorf("hostname %q matches multiple in %s", hostname, endpointsString(eps))
 		}
 		endpoint = ep
 	}
@@ -122,7 +124,7 @@ func findEndpoint(eps map[string]struct{}, hostname string) (string, error) {
 		return endpoint, nil
 	}
 
-	return "", fmt.Errorf("hostname %q not found in %s", hostname, endpointsString(eps))
+	return "", errors.Errorf("hostname %q not found in %s", hostname, endpointsString(eps))
 }
 
 // endpointsString creates a user readable String for an endpoint map.

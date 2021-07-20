@@ -5,6 +5,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/cockroachdb/errors"
 	"github.com/graph-gophers/graphql-go"
 
 	"github.com/sourcegraph/sourcegraph/cmd/frontend/backend"
@@ -91,7 +92,7 @@ func (r *extensionDBResolver) ViewerCanAdminister(ctx context.Context) (bool, er
 	if err == backend.ErrMustBeSiteAdmin || err == backend.ErrNotAnOrgMember || err == backend.ErrNotAuthenticated {
 		return false, nil
 	}
-	if _, ok := err.(*backend.InsufficientAuthorizationError); ok {
+	if errors.HasType(err, &backend.InsufficientAuthorizationError{}) {
 		return false, nil
 	}
 	return err == nil, err

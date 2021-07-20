@@ -97,7 +97,7 @@ func (s *IndexEnqueuer) QueueIndexesForPackage(ctx context.Context, pkg semantic
 
 	resp, err := s.repoUpdater.EnqueueRepoUpdate(ctx, api.RepoName(repoName))
 	if err != nil {
-		if isNotFoundError(err) {
+		if errcode.IsNotFound(err) {
 			return nil
 		}
 
@@ -106,7 +106,7 @@ func (s *IndexEnqueuer) QueueIndexesForPackage(ctx context.Context, pkg semantic
 
 	commit, err := s.gitserverClient.ResolveRevision(ctx, int(resp.ID), revision)
 	if err != nil {
-		if isNotFoundError(err) {
+		if errcode.IsNotFound(err) {
 			return nil
 		}
 
@@ -216,8 +216,4 @@ func (s *IndexEnqueuer) inferIndexJobsFromRepositoryStructure(ctx context.Contex
 	}
 
 	return indexes, nil
-}
-
-func isNotFoundError(err error) bool {
-	return errcode.IsNotFound(errors.Cause(err))
 }

@@ -2,11 +2,13 @@ package server
 
 import (
 	"context"
+	"fmt"
 	"sync"
 	"time"
 
 	"github.com/cockroachdb/errors"
 	"github.com/derision-test/glock"
+	"github.com/inconshreveable/log15"
 
 	apiclient "github.com/sourcegraph/sourcegraph/enterprise/internal/executor"
 	"github.com/sourcegraph/sourcegraph/internal/observation"
@@ -70,7 +72,7 @@ type executorMeta struct {
 type jobMeta struct {
 	queueName string
 	record    workerutil.Record
-	tx        store.Store
+	cancel    context.CancelFunc
 	started   time.Time
 }
 
@@ -121,7 +123,7 @@ func (m *handler) dequeue(ctx context.Context, queueName, executorName, executor
 		}
 	}()
 
-	record, tx, dequeued, err := queueOptions.Store.DequeueWithIndependentTransactionContext(ctx, executorHostname, nil)
+	record, cancel, dequeued, err := queueOptions.Store.Dequeue(context.Background(), executorHostname, nil)
 	if err != nil {
 		return apiclient.Job{}, false, err
 	}
@@ -131,23 +133,33 @@ func (m *handler) dequeue(ctx context.Context, queueName, executorName, executor
 
 	job, err := queueOptions.RecordTransformer(ctx, record)
 	if err != nil {
-		return apiclient.Job{}, false, tx.Done(err)
+		if _, err := queueOptions.Store.MarkFailed(ctx, record.RecordID(), fmt.Sprintf("failed to transform record: %s", err)); err != nil {
+			log15.Error("Failed to mark record as failed", "recordID", record.RecordID(), "error", err)
+		}
+
+		cancel()
+		return apiclient.Job{}, false, err
 	}
 
 	now := m.clock.Now()
-	m.addMeta(executorName, jobMeta{queueName: queueName, record: record, tx: tx, started: now})
+	m.addMeta(executorName, jobMeta{queueName: queueName, record: record, cancel: cancel, started: now})
 	return job, true, nil
 }
 
 // addExecutionLogEntry calls AddExecutionLogEntry for the given job. If the job identifier
 // is not known, a false-valued flag is returned.
 func (m *handler) addExecutionLogEntry(ctx context.Context, queueName, executorName string, jobID int, entry workerutil.ExecutionLogEntry) error {
-	job, err := m.findMeta(queueName, executorName, jobID, false)
+	queueOptions, ok := m.options.QueueOptions[queueName]
+	if !ok {
+		return ErrUnknownQueue
+	}
+
+	_, err := m.findMeta(queueName, executorName, jobID, false)
 	if err != nil {
 		return err
 	}
 
-	if err := job.tx.AddExecutionLogEntry(ctx, jobID, entry); err != nil {
+	if err := queueOptions.Store.AddExecutionLogEntry(ctx, jobID, entry); err != nil {
 		return err
 	}
 
@@ -157,40 +169,58 @@ func (m *handler) addExecutionLogEntry(ctx context.Context, queueName, executorN
 // markComplete calls MarkComplete for the given job, then commits the job's transaction.
 // The job is removed from the executor's job list on success.
 func (m *handler) markComplete(ctx context.Context, queueName, executorName string, jobID int) error {
+	queueOptions, ok := m.options.QueueOptions[queueName]
+	if !ok {
+		return ErrUnknownQueue
+	}
+
 	job, err := m.findMeta(queueName, executorName, jobID, true)
 	if err != nil {
 		return err
 	}
 
 	defer func() { m.dequeueSemaphore <- struct{}{} }()
-	_, err = job.tx.MarkComplete(ctx, job.record.RecordID())
-	return job.tx.Done(err)
+	defer job.cancel()
+	_, err = queueOptions.Store.MarkComplete(ctx, job.record.RecordID())
+	return err
 }
 
 // markErrored calls MarkErrored for the given job, then commits the job's transaction.
 // The job is removed from the executor's job list on success.
 func (m *handler) markErrored(ctx context.Context, queueName, executorName string, jobID int, errorMessage string) error {
+	queueOptions, ok := m.options.QueueOptions[queueName]
+	if !ok {
+		return ErrUnknownQueue
+	}
+
 	job, err := m.findMeta(queueName, executorName, jobID, true)
 	if err != nil {
 		return err
 	}
 
 	defer func() { m.dequeueSemaphore <- struct{}{} }()
-	_, err = job.tx.MarkErrored(ctx, job.record.RecordID(), errorMessage)
-	return job.tx.Done(err)
+	defer job.cancel()
+	_, err = queueOptions.Store.MarkErrored(ctx, job.record.RecordID(), errorMessage)
+	return err
 }
 
 // markFailed calls MarkFailed for the given job, then commits the job's transaction.
 // The job is removed from the executor's job list on success.
 func (m *handler) markFailed(ctx context.Context, queueName, executorName string, jobID int, errorMessage string) error {
+	queueOptions, ok := m.options.QueueOptions[queueName]
+	if !ok {
+		return ErrUnknownQueue
+	}
+
 	job, err := m.findMeta(queueName, executorName, jobID, true)
 	if err != nil {
 		return err
 	}
 
 	defer func() { m.dequeueSemaphore <- struct{}{} }()
-	_, err = job.tx.MarkFailed(ctx, job.record.RecordID(), errorMessage)
-	return job.tx.Done(err)
+	defer job.cancel()
+	_, err = queueOptions.Store.MarkFailed(ctx, job.record.RecordID(), errorMessage)
+	return err
 }
 
 // findMeta returns the job with the given id and executor name. If the job is
@@ -199,10 +229,6 @@ func (m *handler) markFailed(ctx context.Context, queueName, executorName string
 func (m *handler) findMeta(queueName, executorName string, jobID int, remove bool) (jobMeta, error) {
 	m.m.Lock()
 	defer m.m.Unlock()
-
-	if _, ok := m.options.QueueOptions[queueName]; !ok {
-		return jobMeta{}, ErrUnknownQueue
-	}
 
 	executor, ok := m.executors[executorName]
 	if !ok {

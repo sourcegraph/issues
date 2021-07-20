@@ -1,9 +1,9 @@
-import { ApolloError, QueryLazyOptions, ReactiveVar } from '@apollo/client'
+import { ApolloError, ReactiveVar } from '@apollo/client'
 import { upperFirst, xor } from 'lodash'
 
-import { useLazyQuery, gql } from '@sourcegraph/shared/src/graphql/graphql'
+import { useQuery, gql } from '@sourcegraph/shared/src/graphql/graphql'
 
-import { Maybe, Exact, UserRepositoriesVariables } from '../graphql-operations'
+import { Maybe, UserRepositoriesVariables } from '../graphql-operations'
 
 import { MinSelectedRepo } from './useSelectedRepos'
 
@@ -21,7 +21,6 @@ interface RepoLine {
 }
 
 export interface RepoCloningStatus {
-    trigger: (options?: QueryLazyOptions<Exact<UserRepositoriesVariables>>) => void
     repos: RepoLine[] | undefined
     loading: boolean
     isDoneCloning: boolean
@@ -94,23 +93,23 @@ export const useRepoCloningStatus = ({
 }: UseRepoCloningStatusArguments): RepoCloningStatus => {
     let areAllRepoCloned = true
 
-    const [trigger, { called, data, loading, error, stopPolling }] = useLazyQuery<
-        CloneProgressResult,
-        UserRepositoriesVariables
-    >(USER_AFFILIATED_REPOS_MIRROR_INFO, {
-        variables: {
-            id: userId,
-            cloned: true,
-            notCloned: true,
-            indexed: true,
-            notIndexed: true,
-            first: 2000,
-            query: null,
-            externalServiceID: null,
-        },
-        pollInterval,
-        fetchPolicy: 'no-cache',
-    })
+    const { called, data, loading, error, stopPolling } = useQuery<CloneProgressResult, UserRepositoriesVariables>(
+        USER_AFFILIATED_REPOS_MIRROR_INFO,
+        {
+            variables: {
+                id: userId,
+                cloned: true,
+                notCloned: true,
+                indexed: true,
+                notIndexed: true,
+                first: 2000,
+                query: null,
+                externalServiceID: null,
+            },
+            pollInterval,
+            fetchPolicy: 'no-cache',
+        }
+    )
 
     const selectedRepos = selectedReposVar()
 
@@ -118,7 +117,6 @@ export const useRepoCloningStatus = ({
 
     if (!Array.isArray(repos)) {
         return {
-            trigger,
             repos: undefined,
             isDoneCloning: false,
             loading,
@@ -151,12 +149,12 @@ export const useRepoCloningStatus = ({
     const isDoneCloning = didReceiveAllRepoStatuses && areAllRepoCloned
 
     // stop polling and cleanup memory when all repos are done cloning
-    if (called && stopPolling && isDoneCloning) {
+    if (called && isDoneCloning) {
         stopPolling()
         previousPercentage = {}
     }
 
-    return { trigger, repos: repoLines, isDoneCloning, loading, error }
+    return { repos: repoLines, isDoneCloning, loading, error }
 }
 
 const parseMirrorInfo = (

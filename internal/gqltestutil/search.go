@@ -249,7 +249,7 @@ func (r *AnyResult) UnmarshalJSON(b []byte) error {
 		}
 		r.Inner = rr
 	default:
-		return fmt.Errorf("Unknown type %s", typeUnmarshaller.TypeName)
+		return errors.Errorf("Unknown type %s", typeUnmarshaller.TypeName)
 	}
 	return nil
 }
@@ -415,7 +415,7 @@ func (srr *SearchSuggestionsResult) UnmarshalJSON(data []byte) error {
 		}
 		srr.inner = v
 	default:
-		return fmt.Errorf("unknown typename %s", typeDecoder.TypeName)
+		return errors.Errorf("unknown typename %s", typeDecoder.TypeName)
 	}
 
 	return nil

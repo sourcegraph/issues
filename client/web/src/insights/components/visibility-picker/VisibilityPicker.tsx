@@ -1,49 +1,36 @@
 import React, { ChangeEvent } from 'react'
+import { Link } from 'react-router-dom'
 
+import { SettingsUserSubject } from '@sourcegraph/shared/src/settings/settings'
+
+import {
+    isGlobalSubject,
+    isOrganizationSubject,
+    isUserSubject,
+    SupportedInsightSubject,
+} from '../../core/types/subjects'
 import { FormGroup } from '../form/form-group/FormGroup'
 import { FormRadioInput } from '../form/form-radio-input/FormRadioInput'
 
-export const getVisibilityValue = (event: VisibilityChangeEvent): string => {
-    if (event.type === 'personal') {
-        return 'personal'
-    }
-
-    if (event.type === 'organization') {
-        return event.orgID
-    }
-
-    return ''
-}
-
-export type VisibilityChangeEvent = { type: 'personal' } | { type: 'organization'; orgID: string }
-
-export interface Organization {
-    id: string
-    name: string
-    displayName?: string | null
-}
-
 export interface VisibilityPickerProps {
     /**
-     * Current visibility value. Possible value
-     * 'personal' or any org id which is just a string.
-     * */
+     * Current visibility value.
+     */
     value: string
 
     /**
      * On change handler.
-     * */
-    onChange: (event: VisibilityChangeEvent) => void
+     */
+    onChange: (subjectId: string) => void
 
     /**
-     * Organization list - to display org radio buttons right after
-     * personal radio
-     * */
-    organizations: Organization[]
+     * Supported insight subjects list - to display subjects visibility radio buttons
+     */
+    subjects: SupportedInsightSubject[]
 
     /**
      * Custom class name for visibility group label element.
-     * */
+     */
     labelClassName?: string
 }
 
@@ -51,50 +38,43 @@ export interface VisibilityPickerProps {
  * Shared component for visibility field for creation UI pages.
  * */
 export const VisibilityPicker: React.FunctionComponent<VisibilityPickerProps> = props => {
-    const { value, organizations, onChange, labelClassName } = props
+    const { value, subjects, onChange, labelClassName } = props
 
     const handleChange = (event: ChangeEvent<HTMLInputElement>): void => {
-        const value = event.target.value
-
-        if (value === 'personal') {
-            return onChange({ type: 'personal' })
-        }
-
-        const org = organizations.find(org => org.id === value)
-
-        if (org) {
-            onChange({ type: 'organization', orgID: org.id })
-        }
+        onChange(event.target.value)
     }
 
-    const possibleOrg = organizations.find(org => org.id === value)
+    const userSubject = getUserSubject(subjects)
+    const organizationSubjects = subjects.filter(isOrganizationSubject)
+    const globalSubject = subjects.find(isGlobalSubject)!
 
-    const descriptionText = !possibleOrg
-        ? 'This insight will only be visible to you. It will not be shown to other users in your organization.'
-        : `This insight will be visible to all users in the ${
-              possibleOrg.displayName || possibleOrg.name
-          } organization who have enabled code insights.`
+    const canGlobalSubjectBeEdited = globalSubject.allowSiteSettingsEdits && globalSubject.viewerCanAdminister
 
     return (
         <FormGroup
             name="visibility"
             title="Visibility"
-            description={descriptionText}
+            subtitle={
+                <span>
+                    This insight will be always displayed in the{' '}
+                    <Link to="/insights/dashboards/all">‘All Insights’ dashboard</Link> by default
+                </span>
+            }
             className="mb-0 mt-4"
             labelClassName={labelClassName}
             contentClassName="d-flex flex-wrap mb-n2"
         >
             <FormRadioInput
                 name="visibility"
-                value="personal"
-                title="Personal"
+                value={userSubject.id}
+                title="Private"
                 description="only you"
-                checked={value === 'personal'}
-                className="mr-3"
+                checked={value === userSubject.id}
+                className="mr-3 w-100"
                 onChange={handleChange}
             />
 
-            {organizations.map(org => (
+            {organizationSubjects.map(org => (
                 <FormRadioInput
                     key={org.id}
                     name="visibility"
@@ -103,21 +83,42 @@ export const VisibilityPicker: React.FunctionComponent<VisibilityPickerProps> = 
                     description={`all users in ${org.displayName ?? org.name} organization`}
                     checked={value === org.id}
                     onChange={handleChange}
-                    className="mr-3"
+                    className="mr-3 w-100"
                 />
             ))}
 
-            {organizations.length === 0 && (
+            {organizationSubjects.length === 0 && (
                 <FormRadioInput
                     name="visibility"
                     value="organization"
                     disabled={true}
                     title="Organization"
                     description="all users in your organization"
-                    className="mr-3"
+                    className="mr-3 w-100"
                     labelTooltipText="Create or join the Organization to share code insights with others!"
                 />
             )}
+
+            <FormRadioInput
+                name="visibility"
+                value={globalSubject.id}
+                title="Global"
+                description="visible to everyone on your Sourcegraph instance"
+                checked={value === globalSubject.id}
+                disabled={!canGlobalSubjectBeEdited}
+                className="mr-3 w-100"
+                onChange={handleChange}
+            />
         </FormGroup>
     )
+}
+
+/**
+ * Returns a user setting subject from the settings cascade subjects.
+ *
+ * @param subjects - insight supported settings subjects
+ */
+export function getUserSubject(subjects: SupportedInsightSubject[]): SettingsUserSubject {
+    // We always have user subject in our settings cascade
+    return subjects.find(isUserSubject)!
 }

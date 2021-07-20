@@ -112,15 +112,6 @@ type IndexStepResolver interface {
 	LogEntry() ExecutionLogEntryResolver
 }
 
-type ExecutionLogEntryResolver interface {
-	Key() string
-	Command() []string
-	StartTime() DateTime
-	ExitCode() int32
-	Out(ctx context.Context) (string, error)
-	DurationMilliseconds() int32
-}
-
 type LSIFIndexConnectionResolver interface {
 	Nodes(ctx context.Context) ([]LSIFIndexResolver, error)
 	TotalCount(ctx context.Context) (*int32, error)

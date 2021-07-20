@@ -6,6 +6,7 @@ import React from 'react'
 import {
     InsightDashboard,
     InsightsDashboardType,
+    isGlobalDashboard,
     isOrganizationDashboard,
     isPersonalDashboard,
     RealInsightDashboard,
@@ -45,7 +46,7 @@ export const DashboardSelect: React.FunctionComponent<DashboardSelectProps> = pr
         <div className={className}>
             <VisuallyHidden id={LABEL_ID}>Choose a dashboard</VisuallyHidden>
 
-            <ListboxInput aria-labelledby={LABEL_ID} value={value} onChange={handleChange}>
+            <ListboxInput aria-labelledby={LABEL_ID} value={value ?? 'unknown'} onChange={handleChange}>
                 <MenuButton dashboards={dashboards} />
 
                 <ListboxPopover className={classnames(styles.popover)} portal={true}>
@@ -56,19 +57,37 @@ export const DashboardSelect: React.FunctionComponent<DashboardSelectProps> = pr
                             className={styles.option}
                         />
 
-                        <ListboxGroup>
-                            <ListboxGroupLabel className={classnames(styles.groupLabel, 'text-muted')}>
-                                Private
-                            </ListboxGroupLabel>
+                        {dashboards.some(isPersonalDashboard) && (
+                            <ListboxGroup>
+                                <ListboxGroupLabel className={classnames(styles.groupLabel, 'text-muted')}>
+                                    Private
+                                </ListboxGroupLabel>
 
-                            {dashboards.filter(isPersonalDashboard).map(dashboard => (
-                                <SelectDashboardOption
-                                    key={dashboard.id}
-                                    dashboard={dashboard}
-                                    className={styles.option}
-                                />
-                            ))}
-                        </ListboxGroup>
+                                {dashboards.filter(isPersonalDashboard).map(dashboard => (
+                                    <SelectDashboardOption
+                                        key={dashboard.id}
+                                        dashboard={dashboard}
+                                        className={styles.option}
+                                    />
+                                ))}
+                            </ListboxGroup>
+                        )}
+
+                        {dashboards.some(isGlobalDashboard) && (
+                            <ListboxGroup>
+                                <ListboxGroupLabel className={classnames(styles.groupLabel, 'text-muted')}>
+                                    Global
+                                </ListboxGroupLabel>
+
+                                {dashboards.filter(isGlobalDashboard).map(dashboard => (
+                                    <SelectDashboardOption
+                                        key={dashboard.id}
+                                        dashboard={dashboard}
+                                        className={styles.option}
+                                    />
+                                ))}
+                            </ListboxGroup>
+                        )}
 
                         {organizationGroups.map(group => (
                             <ListboxGroup key={group.id}>

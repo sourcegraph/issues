@@ -9,6 +9,7 @@ import (
 	"reflect"
 	"testing"
 
+	"github.com/cockroachdb/errors"
 	"github.com/google/go-cmp/cmp"
 	"github.com/inconshreveable/log15"
 
@@ -60,7 +61,7 @@ func TestProjectQueryToURL(t *testing.T) {
 		if url != test.expURL {
 			t.Errorf("expected %v, got %v", test.expURL, url)
 		}
-		if !reflect.DeepEqual(test.expErr, err) {
+		if !errors.Is(err, test.expErr) {
 			t.Errorf("expected err %v, got %v", test.expErr, err)
 		}
 	}
@@ -254,7 +255,7 @@ func TestGitLabSource_WithAuthenticator(t *testing.T) {
 				src, err = src.(UserSource).WithAuthenticator(tc)
 				if err == nil {
 					t.Error("unexpected nil error")
-				} else if _, ok := err.(UnsupportedAuthenticatorError); !ok {
+				} else if !errors.HasType(err, UnsupportedAuthenticatorError{}) {
 					t.Errorf("unexpected error of type %T: %v", err, err)
 				}
 				if src != nil {

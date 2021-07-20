@@ -168,7 +168,8 @@ func TestClient_ListOrgRepositories(t *testing.T) {
     "fork": false
   }
 ]
-`}
+`,
+	}
 
 	c := newTestClient(t, &mock)
 	wantRepos := []*Repository{
@@ -362,6 +363,7 @@ func TestClient_GetReposByNameWithOwner(t *testing.T) {
 		IsPrivate:        true,
 		IsFork:           false,
 		IsArchived:       true,
+		IsLocked:         true,
 		ViewerPermission: "ADMIN",
 	}
 
@@ -374,6 +376,7 @@ func TestClient_GetReposByNameWithOwner(t *testing.T) {
 		IsPrivate:        true,
 		IsFork:           false,
 		IsArchived:       true,
+		IsDisabled:       true,
 		ViewerPermission: "ADMIN",
 	}
 
@@ -398,6 +401,7 @@ func TestClient_GetReposByNameWithOwner(t *testing.T) {
       "isPrivate": true,
       "isFork": false,
       "isArchived": true,
+      "isLocked": true,
       "viewerPermission": "ADMIN"
     },
     "repo_sourcegraph_clojure_grapher": {
@@ -409,6 +413,7 @@ func TestClient_GetReposByNameWithOwner(t *testing.T) {
       "isPrivate": true,
       "isFork": false,
       "isArchived": true,
+      "isDisabled": true,
       "viewerPermission": "ADMIN"
     }
   }
@@ -430,6 +435,7 @@ func TestClient_GetReposByNameWithOwner(t *testing.T) {
       "isPrivate": true,
       "isFork": false,
       "isArchived": true,
+      "isLocked": true,
       "viewerPermission": "ADMIN"
     },
     "repo_sourcegraph_clojure_grapher": null
@@ -495,9 +501,6 @@ func TestClient_GetReposByNameWithOwner(t *testing.T) {
 				t.Errorf("error:\nhave: %v\nwant: %v", have, want)
 			}
 
-			if mock.count != 1 {
-				t.Errorf("mock.count == %d", mock.count)
-			}
 			if want, have := len(tc.wantRepos), len(repos); want != have {
 				t.Errorf("wrong number of repos. want=%d, have=%d", want, have)
 			}

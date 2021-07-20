@@ -4,7 +4,6 @@ import (
 	"context"
 	"database/sql/driver"
 	"encoding/json"
-	"fmt"
 
 	"github.com/cockroachdb/errors"
 
@@ -43,7 +42,7 @@ func (n *NullAuthenticator) Scan(value interface{}) (err error) {
 	case nil:
 		return nil
 	default:
-		return fmt.Errorf("value is not string: %T", value)
+		return errors.Errorf("value is not string: %T", value)
 	}
 }
 

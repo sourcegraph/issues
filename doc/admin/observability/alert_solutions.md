@@ -842,6 +842,30 @@ To learn more about Sourcegraph's alerting and how to set up alerts, see [our al
 
 <br />
 
+## frontend: mean_blocked_seconds_per_conn_request
+
+<p class="subtitle">mean blocked seconds per conn request</p>
+
+**Descriptions**
+
+- <span class="badge badge-warning">warning</span> frontend: 0.05s+ mean blocked seconds per conn request for 5m0s
+- <span class="badge badge-critical">critical</span> frontend: 0.1s+ mean blocked seconds per conn request for 10m0s
+
+**Possible solutions**
+
+- **Silence this alert:** If you are aware of this alert and want to silence notifications for it, add the following to your site configuration and set a reminder to re-evaluate the alert:
+
+```json
+"observability.silenceAlerts": [
+  "warning_frontend_mean_blocked_seconds_per_conn_request",
+  "critical_frontend_mean_blocked_seconds_per_conn_request"
+]
+```
+
+<sub>*Managed by the [Sourcegraph Core application team](https://about.sourcegraph.com/handbook/engineering/core-application).*</sub>
+
+<br />
+
 ## frontend: internal_indexed_search_error_responses
 
 <p class="subtitle">internal indexed search error responses every 5m</p>
@@ -1446,6 +1470,30 @@ To learn more about Sourcegraph's alerting and how to set up alerts, see [our al
 ```json
 "observability.silenceAlerts": [
   "warning_gitserver_frontend_internal_api_error_responses"
+]
+```
+
+<sub>*Managed by the [Sourcegraph Core application team](https://about.sourcegraph.com/handbook/engineering/core-application).*</sub>
+
+<br />
+
+## gitserver: mean_blocked_seconds_per_conn_request
+
+<p class="subtitle">mean blocked seconds per conn request</p>
+
+**Descriptions**
+
+- <span class="badge badge-warning">warning</span> gitserver: 0.05s+ mean blocked seconds per conn request for 5m0s
+- <span class="badge badge-critical">critical</span> gitserver: 0.1s+ mean blocked seconds per conn request for 10m0s
+
+**Possible solutions**
+
+- **Silence this alert:** If you are aware of this alert and want to silence notifications for it, add the following to your site configuration and set a reminder to re-evaluate the alert:
+
+```json
+"observability.silenceAlerts": [
+  "warning_gitserver_mean_blocked_seconds_per_conn_request",
+  "critical_gitserver_mean_blocked_seconds_per_conn_request"
 ]
 ```
 
@@ -2402,6 +2450,30 @@ To learn more about Sourcegraph's alerting and how to set up alerts, see [our al
 
 <br />
 
+## precise-code-intel-worker: mean_blocked_seconds_per_conn_request
+
+<p class="subtitle">mean blocked seconds per conn request</p>
+
+**Descriptions**
+
+- <span class="badge badge-warning">warning</span> precise-code-intel-worker: 0.05s+ mean blocked seconds per conn request for 5m0s
+- <span class="badge badge-critical">critical</span> precise-code-intel-worker: 0.1s+ mean blocked seconds per conn request for 10m0s
+
+**Possible solutions**
+
+- **Silence this alert:** If you are aware of this alert and want to silence notifications for it, add the following to your site configuration and set a reminder to re-evaluate the alert:
+
+```json
+"observability.silenceAlerts": [
+  "warning_precise-code-intel-worker_mean_blocked_seconds_per_conn_request",
+  "critical_precise-code-intel-worker_mean_blocked_seconds_per_conn_request"
+]
+```
+
+<sub>*Managed by the [Sourcegraph Core application team](https://about.sourcegraph.com/handbook/engineering/core-application).*</sub>
+
+<br />
+
 ## precise-code-intel-worker: frontend_internal_api_error_responses
 
 <p class="subtitle">frontend-internal API error responses every 5m by route</p>
@@ -3207,6 +3279,30 @@ To learn more about Sourcegraph's alerting and how to set up alerts, see [our al
 ```
 
 <sub>*Managed by the [Sourcegraph Code-intelligence team](https://about.sourcegraph.com/handbook/engineering/code-intelligence).*</sub>
+
+<br />
+
+## worker: mean_blocked_seconds_per_conn_request
+
+<p class="subtitle">mean blocked seconds per conn request</p>
+
+**Descriptions**
+
+- <span class="badge badge-warning">warning</span> worker: 0.05s+ mean blocked seconds per conn request for 5m0s
+- <span class="badge badge-critical">critical</span> worker: 0.1s+ mean blocked seconds per conn request for 10m0s
+
+**Possible solutions**
+
+- **Silence this alert:** If you are aware of this alert and want to silence notifications for it, add the following to your site configuration and set a reminder to re-evaluate the alert:
+
+```json
+"observability.silenceAlerts": [
+  "warning_worker_mean_blocked_seconds_per_conn_request",
+  "critical_worker_mean_blocked_seconds_per_conn_request"
+]
+```
+
+<sub>*Managed by the [Sourcegraph Core application team](https://about.sourcegraph.com/handbook/engineering/core-application).*</sub>
 
 <br />
 
@@ -4156,6 +4252,30 @@ with your code hosts connections or networking issues affecting communication wi
 ```json
 "observability.silenceAlerts": [
   "critical_repo-updater_gitlab_rest_rate_limit_remaining"
+]
+```
+
+<sub>*Managed by the [Sourcegraph Core application team](https://about.sourcegraph.com/handbook/engineering/core-application).*</sub>
+
+<br />
+
+## repo-updater: mean_blocked_seconds_per_conn_request
+
+<p class="subtitle">mean blocked seconds per conn request</p>
+
+**Descriptions**
+
+- <span class="badge badge-warning">warning</span> repo-updater: 0.05s+ mean blocked seconds per conn request for 5m0s
+- <span class="badge badge-critical">critical</span> repo-updater: 0.1s+ mean blocked seconds per conn request for 10m0s
+
+**Possible solutions**
+
+- **Silence this alert:** If you are aware of this alert and want to silence notifications for it, add the following to your site configuration and set a reminder to re-evaluate the alert:
+
+```json
+"observability.silenceAlerts": [
+  "warning_repo-updater_mean_blocked_seconds_per_conn_request",
+  "critical_repo-updater_mean_blocked_seconds_per_conn_request"
 ]
 ```
 
@@ -5963,6 +6083,30 @@ with your code hosts connections or networking issues affecting communication wi
 ```
 
 <sub>*Managed by the [Sourcegraph Code-intelligence team](https://about.sourcegraph.com/handbook/engineering/code-intelligence).*</sub>
+
+<br />
+
+## executor-queue: mean_blocked_seconds_per_conn_request
+
+<p class="subtitle">mean blocked seconds per conn request</p>
+
+**Descriptions**
+
+- <span class="badge badge-warning">warning</span> executor-queue: 0.05s+ mean blocked seconds per conn request for 5m0s
+- <span class="badge badge-critical">critical</span> executor-queue: 0.1s+ mean blocked seconds per conn request for 10m0s
+
+**Possible solutions**
+
+- **Silence this alert:** If you are aware of this alert and want to silence notifications for it, add the following to your site configuration and set a reminder to re-evaluate the alert:
+
+```json
+"observability.silenceAlerts": [
+  "warning_executor-queue_mean_blocked_seconds_per_conn_request",
+  "critical_executor-queue_mean_blocked_seconds_per_conn_request"
+]
+```
+
+<sub>*Managed by the [Sourcegraph Core application team](https://about.sourcegraph.com/handbook/engineering/core-application).*</sub>
 
 <br />
 

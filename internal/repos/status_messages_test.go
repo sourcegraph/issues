@@ -11,6 +11,7 @@ import (
 	"github.com/cockroachdb/errors"
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/uuid"
+	"github.com/keegancsmith/sqlf"
 
 	"github.com/sourcegraph/sourcegraph/internal/api"
 	"github.com/sourcegraph/sourcegraph/internal/database"
@@ -295,7 +296,7 @@ func TestStatusMessages(t *testing.T) {
 				}
 			}
 			t.Cleanup(func() {
-				_, err = db.ExecContext(ctx, `DELETE FROM gitserver_repos`)
+				err = store.Exec(ctx, sqlf.Sprintf(`DELETE FROM gitserver_repos`))
 				if err != nil {
 					t.Fatal(err)
 				}
@@ -308,15 +309,15 @@ func TestStatusMessages(t *testing.T) {
 					if !ok {
 						continue
 					}
-					_, err = db.ExecContext(ctx, `
+					err = store.Exec(ctx, sqlf.Sprintf(`
 						INSERT INTO external_service_repos(external_service_id, repo_id, user_id, clone_url)
-						VALUES ($1, $2, NULLIF($3, 0), 'example.com')
-					`, svc.ID, repo.ID, svc.NamespaceUserID)
+						VALUES (%s, %s, NULLIF(%s, 0), 'example.com')
+					`, svc.ID, repo.ID, svc.NamespaceUserID))
 					if err != nil {
 						t.Fatal(err)
 					}
 					t.Cleanup(func() {
-						_, err = db.ExecContext(ctx, `DELETE FROM external_service_repos WHERE external_service_id = $1`, svc.ID)
+						err = store.Exec(ctx, sqlf.Sprintf(`DELETE FROM external_service_repos WHERE external_service_id = %s`, svc.ID))
 						if err != nil {
 							t.Fatal(err)
 						}

@@ -17,11 +17,12 @@ type Store interface {
 	// accordance with the concrete persistence layer (e.g. additional SQL conditions for a database layer).
 	QueuedCount(ctx context.Context, extraArguments interface{}) (int, error)
 
-	// Dequeue selects the a record for processing. Any extra arguments supplied will be used in accordance with the
+	// Dequeue selects a record for processing. Any extra arguments supplied will be used in accordance with the
 	// concrete persistence layer (e.g. additional SQL conditions for a database layer). This method returns a boolean
-	// flag indicating the existence of a processable record along with a refined store instance which should be used
-	// for all additional operations (MarkComplete, MarkErrored, and Done) while processing the given record.
-	Dequeue(ctx context.Context, workerHostname string, extraArguments interface{}) (Record, Store, bool, error)
+	// flag indicating the existence of a processable record along with a cancel function that should be called once
+	// the record is finished being processed. This will release any resources used to lock the record from selection
+	// by another concurrent worker process.
+	Dequeue(ctx context.Context, workerHostname string, extraArguments interface{}) (Record, context.CancelFunc, bool, error)
 
 	// AddExecutionLogEntry adds an executor log entry to the record.
 	AddExecutionLogEntry(ctx context.Context, id int, entry ExecutionLogEntry) error
@@ -37,11 +38,6 @@ type Store interface {
 	// MarkFailed attempts to update the state of the record to failed. This method returns a boolean flag indicating
 	// if the record was updated.
 	MarkFailed(ctx context.Context, id int, failureMessage string) (bool, error)
-
-	// Done marks the current record as complete. Depending on the store implementation, this may release locked
-	// or temporary resources, or commit or rollback a transaction. This method should append any additional error
-	// that occurs during finalization to the error argument.
-	Done(err error) error
 }
 
 // ExecutionLogEntry represents a command run by the executor.

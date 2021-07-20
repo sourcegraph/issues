@@ -100,7 +100,8 @@ type CampaignsCredentialResolver interface {
 }
 
 type CreateBatchChangeArgs struct {
-	BatchSpec graphql.ID
+	BatchSpec         graphql.ID
+	PublicationStates *[]ChangesetSpecPublicationStateInput
 }
 
 type ApplyBatchChangeArgs struct {
@@ -121,6 +122,7 @@ type ListBatchChangesArgs struct {
 	ViewerCanAdminister *bool
 
 	Namespace *graphql.ID
+	Repo      *graphql.ID
 }
 
 type CloseBatchChangeArgs struct {
@@ -242,6 +244,11 @@ type CloseChangesetsArgs struct {
 	BulkOperationBaseArgs
 }
 
+type PublishChangesetsArgs struct {
+	BulkOperationBaseArgs
+	Draft bool
+}
+
 type BatchChangesResolver interface {
 	//
 	// MUTATIONS
@@ -274,6 +281,7 @@ type BatchChangesResolver interface {
 	MergeChangesets(ctx context.Context, args *MergeChangesetsArgs) (BulkOperationResolver, error)
 	CreateBatchSpecExecution(ctx context.Context, args *CreateBatchSpecExecutionArgs) (BatchSpecExecutionResolver, error)
 	CloseChangesets(ctx context.Context, args *CloseChangesetsArgs) (BulkOperationResolver, error)
+	PublishChangesets(ctx context.Context, args *PublishChangesetsArgs) (BulkOperationResolver, error)
 
 	// Queries
 
@@ -286,6 +294,8 @@ type BatchChangesResolver interface {
 	BatchChanges(cx context.Context, args *ListBatchChangesArgs) (BatchChangesConnectionResolver, error)
 
 	BatchChangesCodeHosts(ctx context.Context, args *ListBatchChangesCodeHostsArgs) (BatchChangesCodeHostConnectionResolver, error)
+	RepoChangesetsStats(ctx context.Context, repo *graphql.ID) (RepoChangesetsStatsResolver, error)
+	RepoDiffStat(ctx context.Context, repo *graphql.ID) (*DiffStat, error)
 
 	NodeResolvers() map[string]NodeByIDFunc
 }
@@ -560,6 +570,7 @@ type ListChangesetsArgs struct {
 	Search                         *string
 
 	OnlyArchived bool
+	Repo         *graphql.ID
 }
 
 type BatchChangeResolver interface {
@@ -595,19 +606,27 @@ type BatchChangesConnectionResolver interface {
 	PageInfo(ctx context.Context) (*graphqlutil.PageInfo, error)
 }
 
-type ChangesetsStatsResolver interface {
-	Retrying() int32
-	Failed() int32
-	Scheduled() int32
-	Processing() int32
+type CommonChangesetsStatsResolver interface {
 	Unpublished() int32
 	Draft() int32
 	Open() int32
 	Merged() int32
 	Closed() int32
+	Total() int32
+}
+
+type RepoChangesetsStatsResolver interface {
+	CommonChangesetsStatsResolver
+}
+
+type ChangesetsStatsResolver interface {
+	CommonChangesetsStatsResolver
+	Retrying() int32
+	Failed() int32
+	Scheduled() int32
+	Processing() int32
 	Deleted() int32
 	Archived() int32
-	Total() int32
 }
 
 type ChangesetsConnectionResolver interface {
@@ -717,8 +736,15 @@ type BatchSpecExecutionResolver interface {
 	StartedAt() *DateTime
 	FinishedAt() *DateTime
 	Failure() *string
+	Steps() BatchSpecExecutionStepsResolver
 	PlaceInQueue() *int32
 	BatchSpec(ctx context.Context) (BatchSpecResolver, error)
 	Initiator(ctx context.Context) (*UserResolver, error)
 	Namespace(ctx context.Context) (*NamespaceResolver, error)
+}
+
+type BatchSpecExecutionStepsResolver interface {
+	Setup() []ExecutionLogEntryResolver
+	SrcPreview() ExecutionLogEntryResolver
+	Teardown() []ExecutionLogEntryResolver
 }

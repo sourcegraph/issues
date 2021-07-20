@@ -44,7 +44,7 @@ export const ButtonDropdownCta: React.FunctionComponent<ButtonDropdownCtaProps> 
         <ButtonDropdown className="menu-nav-item" direction="down" isOpen={isDropdownOpen} toggle={toggleDropdownOpen}>
             <DropdownToggle
                 className={classNames(
-                    'btn btn-sm btn-outline-secondary nav-link text-decoration-none',
+                    'btn btn-sm btn-outline-secondary text-decoration-none',
                     className,
                     styles.toggle
                 )}

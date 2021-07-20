@@ -54,7 +54,7 @@ func (h Webhook) getRepoForPR(
 	}
 
 	if len(rs) != 1 {
-		return nil, fmt.Errorf("fetched repositories have wrong length: %d", len(rs))
+		return nil, errors.Errorf("fetched repositories have wrong length: %d", len(rs))
 	}
 
 	return rs[0], nil
@@ -170,7 +170,7 @@ func (h Webhook) upsertChangesetEvent(
 		ChangesetIDs: []int64{cs.ID},
 	})
 	state.SetDerivedState(ctx, tx.Repos(), cs, events)
-	if err := tx.UpdateChangeset(ctx, cs); err != nil {
+	if err := tx.UpdateChangesetCodeHostState(ctx, cs); err != nil {
 		return err
 	}
 

@@ -9,8 +9,8 @@ import (
 	"os"
 	"strings"
 
+	"github.com/cockroachdb/errors"
 	"github.com/gorilla/schema"
-	"github.com/hashicorp/go-multierror"
 
 	"github.com/sourcegraph/sourcegraph/internal/vcs"
 )
@@ -26,8 +26,7 @@ func HTTP(err error) int {
 		return http.StatusOK
 	}
 
-	switch err {
-	case context.DeadlineExceeded:
+	if errors.Is(err, context.DeadlineExceeded) {
 		return http.StatusRequestTimeout
 	}
 
@@ -37,20 +36,21 @@ func HTTP(err error) int {
 		return http.StatusNotFound
 	}
 
-	switch e := err.(type) {
-	case interface {
-		HTTPStatusCode() int
-	}:
+	var e interface{ HTTPStatusCode() int }
+	if errors.As(err, &e) {
 		return e.HTTPStatusCode()
-	case schema.ConversionError:
+	}
+
+	if errors.HasType(err, schema.ConversionError{}) {
 		return http.StatusBadRequest
-	case schema.MultiError:
+	}
+	if errors.HasType(err, schema.MultiError{}) {
 		return http.StatusBadRequest
 	}
 
-	if os.IsNotExist(err) {
+	if errors.Is(err, os.ErrNotExist) {
 		return http.StatusNotFound
-	} else if os.IsPermission(err) {
+	} else if errors.Is(err, os.ErrPermission) {
 		return http.StatusForbidden
 	} else if IsNotFound(err) {
 		return http.StatusNotFound
@@ -102,106 +102,61 @@ func (e *Mock) NotFound() bool {
 // methods like Repo.Get when the repo is not found. It will also *not* map
 // HTTPStatusCode into not found.
 func IsNotFound(err error) bool {
-	type notFounder interface {
-		NotFound() bool
-	}
-	return isErrorPredicate(err, func(err error) bool {
-		e, ok := err.(notFounder)
-		return ok && e.NotFound()
-	})
+	var e interface{ NotFound() bool }
+	return errors.As(err, &e) && e.NotFound()
 }
 
 // IsUnauthorized will check if err or one of its causes is an unauthorized
 // error.
 func IsUnauthorized(err error) bool {
-	type unauthorizeder interface {
-		Unauthorized() bool
-	}
-	return isErrorPredicate(err, func(err error) bool {
-		e, ok := err.(unauthorizeder)
-		return ok && e.Unauthorized()
-	})
+	var e interface{ Unauthorized() bool }
+	return errors.As(err, &e) && e.Unauthorized()
 }
 
 // IsForbidden will check if err or one of its causes is a forbidden error.
 func IsForbidden(err error) bool {
-	type forbiddener interface {
-		Forbidden() bool
-	}
-	return isErrorPredicate(err, func(err error) bool {
-		e, ok := err.(forbiddener)
-		return ok && e.Forbidden()
-	})
+	var e interface{ Forbidden() bool }
+	return errors.As(err, &e) && e.Forbidden()
 }
 
 // IsAccountSuspended will check if err or one of its causes was due to the
 // account being suspended
 func IsAccountSuspended(err error) bool {
-	type accountSuspendeder interface {
-		AccountSuspended() bool
-	}
-	return isErrorPredicate(err, func(err error) bool {
-		e, ok := err.(accountSuspendeder)
-		return ok && e.AccountSuspended()
-	})
+	var e interface{ AccountSuspended() bool }
+	return errors.As(err, &e) && e.AccountSuspended()
 }
 
 // IsBadRequest will check if err or one of its causes is a bad request.
 func IsBadRequest(err error) bool {
-	type badRequester interface {
-		BadRequest() bool
-	}
-	return isErrorPredicate(err, func(err error) bool {
-		badrequest, ok := err.(badRequester)
-		return ok && badrequest.BadRequest()
-	})
+	var e interface{ BadRequest() bool }
+	return errors.As(err, &e) && e.BadRequest()
 }
 
 // IsTemporary will check if err or one of its causes is temporary. A
 // temporary error can be retried. Many errors in the go stdlib implement the
 // temporary interface.
 func IsTemporary(err error) bool {
-	type temporaryer interface {
-		Temporary() bool
-	}
-	return isErrorPredicate(err, func(err error) bool {
-		e, ok := err.(temporaryer)
-		return ok && e.Temporary()
-	})
+	var e interface{ Temporary() bool }
+	return errors.As(err, &e) && e.Temporary()
 }
 
 // IsBlocked will check if err or one of its causes is a blocked error.
 func IsBlocked(err error) bool {
-	type blocker interface {
-		Blocked() bool
-	}
-	return isErrorPredicate(err, func(err error) bool {
-		e, ok := err.(blocker)
-		return ok && e.Blocked()
-	})
+	var e interface{ Blocked() bool }
+	return errors.As(err, &e) && e.Blocked()
 }
 
 // IsTimeout will check if err or one of its causes is a timeout. Many errors
 // in the go stdlib implement the timeout interface.
 func IsTimeout(err error) bool {
-	type timeouter interface {
-		Timeout() bool
-	}
-	return isErrorPredicate(err, func(err error) bool {
-		e, ok := err.(timeouter)
-		return ok && e.Timeout()
-	})
+	var e interface{ Timeout() bool }
+	return errors.As(err, &e) && e.Timeout()
 }
 
 // IsNonRetryable will check if err or one of its causes is a error that cannot be retried.
 func IsNonRetryable(err error) bool {
-	type nonRetryabler interface {
-		NonRetryable() bool
-	}
-	return isErrorPredicate(err, func(err error) bool {
-		e, ok := err.(nonRetryabler)
-		return ok && e.NonRetryable()
-	})
+	var e interface{ NonRetryable() bool }
+	return errors.As(err, &e) && e.NonRetryable()
 }
 
 // MakeNonRetryable makes any error non-retryable.
@@ -212,33 +167,3 @@ func MakeNonRetryable(err error) error {
 type nonRetryableError struct{ error }
 
 func (nonRetryableError) NonRetryable() bool { return true }
-
-// isErrorPredicate returns true if err or one of its causes returns true when
-// passed to p.
-func isErrorPredicate(err error, p func(err error) bool) bool {
-	type causer interface {
-		Cause() error
-	}
-
-	errs := []error{err}
-
-	// We often use multierr.Error which doesn't implement causer
-	if me, ok := err.(*multierror.Error); ok {
-		errs = me.Errors
-	}
-
-	for _, err := range errs {
-		for err != nil {
-			if p(err) {
-				return true
-			}
-			cause, ok := err.(causer)
-			if !ok {
-				break
-			}
-			err = cause.Cause()
-		}
-	}
-
-	return false
-}

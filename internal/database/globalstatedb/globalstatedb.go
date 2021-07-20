@@ -119,12 +119,11 @@ func tryInsertNew(ctx context.Context, dbh execDatabaseHandler) error {
 		EXISTS (SELECT 1 FROM users WHERE deleted_at IS NULL)
 	);`, siteID))
 	if err != nil {
-		if pgErr, ok := err.(*pgconn.PgError); ok {
-			if pgErr.ConstraintName == "global_state_pkey" {
-				// The row we were trying to insert already exists.
-				// Don't treat this as an error.
-				err = nil
-			}
+		var e *pgconn.PgError
+		if errors.As(err, &e) && e.ConstraintName == "global_state_pkey" {
+			// The row we were trying to insert already exists.
+			// Don't treat this as an error.
+			err = nil
 		}
 	}
 	return err

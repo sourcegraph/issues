@@ -24,7 +24,7 @@ func getOrCreateUser(ctx context.Context, db dbutil.DB, p *provider, idToken *oi
 	if unverifiedEmail := claims.EmailVerified != nil && !*claims.EmailVerified; unverifiedEmail {
 		// If the OP explicitly reports `"email_verified": false`, then reject the authentication
 		// attempt. If undefined or true, then it will be allowed.
-		return nil, fmt.Sprintf("Only users with verified email addresses may authenticate to Sourcegraph. The email address %q is not verified on the external authentication provider.", userInfo.Email), fmt.Errorf("refusing unverified user email address %q", userInfo.Email)
+		return nil, fmt.Sprintf("Only users with verified email addresses may authenticate to Sourcegraph. The email address %q is not verified on the external authentication provider.", userInfo.Email), errors.Errorf("refusing unverified user email address %q", userInfo.Email)
 	}
 
 	pi, err := p.getCachedInfoAndError()

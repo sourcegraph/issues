@@ -4,13 +4,13 @@ exports[`StatusBar renders correctly 1`] = `
 <body>
   <div>
     <div
-      class="status-bar w-100 border-top d-flex percy-hide"
+      class="status-bar border-top percy-hide"
     >
       <div
         class="status-bar__items d-flex align-items-center px-2"
       >
         <a
-          class="status-bar__item h-100 d-flex align-items-center px-1 text-decoration-none status-bar__item--noop"
+          class="status-bar__item h-100 d-flex align-items-center px-1 status-bar__item--noop text-decoration-none"
           href=""
           role="button"
           tabindex="-1"
@@ -23,7 +23,7 @@ exports[`StatusBar renders correctly 1`] = `
         </a>
         <a
           aria-label="Code owners: @felixbecker, @beyang"
-          class="status-bar__item h-100 d-flex align-items-center px-1 text-decoration-none status-bar__item--interactive status-bar__item--noop"
+          class="status-bar__item h-100 d-flex align-items-center px-1 status-bar__item--noop text-decoration-none"
           data-tooltip="Code owners: @felixbecker, @beyang"
           href=""
           role="button"

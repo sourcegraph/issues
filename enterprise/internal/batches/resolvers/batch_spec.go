@@ -2,7 +2,6 @@ package resolvers
 
 import (
 	"context"
-	"fmt"
 	"strconv"
 	"sync"
 
@@ -91,7 +90,7 @@ func (r *batchSpecResolver) ChangesetSpecs(ctx context.Context, args *graphqlbac
 func (r *batchSpecResolver) ApplyPreview(ctx context.Context, args *graphqlbackend.ChangesetApplyPreviewConnectionArgs) (graphqlbackend.ChangesetApplyPreviewConnectionResolver, error) {
 	if args.CurrentState != nil {
 		if !btypes.ChangesetState(*args.CurrentState).Valid() {
-			return nil, fmt.Errorf("invalid currentState %q", *args.CurrentState)
+			return nil, errors.Errorf("invalid currentState %q", *args.CurrentState)
 		}
 	}
 	if err := validateFirstParamDefaults(args.First); err != nil {
@@ -119,7 +118,7 @@ func (r *batchSpecResolver) ApplyPreview(ctx context.Context, args *graphqlbacke
 	}
 	if args.Action != nil {
 		if !btypes.ReconcilerOperation(*args.Action).Valid() {
-			return nil, fmt.Errorf("invalid action %q", *args.Action)
+			return nil, errors.Errorf("invalid action %q", *args.Action)
 		}
 	}
 

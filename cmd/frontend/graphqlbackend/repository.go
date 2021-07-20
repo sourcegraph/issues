@@ -141,6 +141,22 @@ func (r *RepositoryResolver) CloneInProgress(ctx context.Context) (bool, error) 
 	return r.MirrorInfo().CloneInProgress(ctx)
 }
 
+func (r *RepositoryResolver) BatchChanges(ctx context.Context, args *ListBatchChangesArgs) (BatchChangesConnectionResolver, error) {
+	id := r.ID()
+	args.Repo = &id
+	return EnterpriseResolvers.batchChangesResolver.BatchChanges(ctx, args)
+}
+
+func (r *RepositoryResolver) ChangesetsStats(ctx context.Context) (RepoChangesetsStatsResolver, error) {
+	id := r.ID()
+	return EnterpriseResolvers.batchChangesResolver.RepoChangesetsStats(ctx, &id)
+}
+
+func (r *RepositoryResolver) BatchChangesDiffStat(ctx context.Context) (*DiffStat, error) {
+	id := r.ID()
+	return EnterpriseResolvers.batchChangesResolver.RepoDiffStat(ctx, &id)
+}
+
 type RepositoryCommitArgs struct {
 	Rev          string
 	InputRevspec *string
@@ -154,7 +170,7 @@ func (r *RepositoryResolver) Commit(ctx context.Context, args *RepositoryCommitA
 
 	commitID, err := backend.Repos.ResolveRev(ctx, repo, args.Rev)
 	if err != nil {
-		if gitserver.IsRevisionNotFound(err) {
+		if errors.HasType(err, &gitserver.RevisionNotFoundError{}) {
 			return nil, nil
 		}
 		return nil, err
@@ -201,7 +217,7 @@ func getDefaultBranchForRepo(ctx context.Context, repoName api.RepoName) (string
 
 	// If we fail to get the default branch due to cloning or being empty, we return nothing.
 	if err != nil {
-		if vcs.IsCloneInProgress(err) || gitserver.IsRevisionNotFound(err) {
+		if vcs.IsCloneInProgress(err) || errors.HasType(err, &gitserver.RevisionNotFoundError{}) {
 			return "", nil
 		}
 		return "", err
@@ -421,7 +437,7 @@ func (r *schemaResolver) ResolvePhabricatorDiff(ctx context.Context, args *struc
 	}
 
 	// If we already created the commit
-	if commit, err := getCommit(); commit != nil || (err != nil && !gitserver.IsRevisionNotFound(err)) {
+	if commit, err := getCommit(); commit != nil || (err != nil && !errors.HasType(err, &gitserver.RevisionNotFoundError{})) {
 		return commit, err
 	}
 

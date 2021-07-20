@@ -14,6 +14,7 @@ import bitbucketServerSchemaJSON from '../../../../schema/bitbucket_server.schem
 import githubSchemaJSON from '../../../../schema/github.schema.json'
 import gitlabSchemaJSON from '../../../../schema/gitlab.schema.json'
 import gitoliteSchemaJSON from '../../../../schema/gitolite.schema.json'
+import jvmPackagesSchemaJSON from '../../../../schema/jvm-packages.schema.json'
 import otherExternalServiceSchemaJSON from '../../../../schema/other_external_service.schema.json'
 import perforceSchemaJSON from '../../../../schema/perforce.schema.json'
 import phabricatorSchemaJSON from '../../../../schema/phabricator.schema.json'
@@ -40,6 +41,7 @@ const externalServices: Record<ExternalServiceKind, JSONSchema> = {
     GITHUB: githubSchemaJSON,
     GITLAB: gitlabSchemaJSON,
     GITOLITE: gitoliteSchemaJSON,
+    JVMPACKAGES: jvmPackagesSchemaJSON,
     OTHER: otherExternalServiceSchemaJSON,
     PERFORCE: perforceSchemaJSON,
     PHABRICATOR: phabricatorSchemaJSON,

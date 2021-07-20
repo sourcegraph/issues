@@ -436,6 +436,8 @@ This panel indicates idle.
 
 This panel indicates mean blocked seconds per conn request.
 
+> NOTE: Alerts related to this panel are documented in the [alert solutions reference](./alert_solutions.md#frontend-mean-blocked-seconds-per-conn-request).
+
 <sub>*Managed by the [Sourcegraph Core application team](https://about.sourcegraph.com/handbook/engineering/core-application).*</sub>
 
 <br />
@@ -977,6 +979,8 @@ This panel indicates idle.
 #### gitserver: mean_blocked_seconds_per_conn_request
 
 This panel indicates mean blocked seconds per conn request.
+
+> NOTE: Alerts related to this panel are documented in the [alert solutions reference](./alert_solutions.md#gitserver-mean-blocked-seconds-per-conn-request).
 
 <sub>*Managed by the [Sourcegraph Core application team](https://about.sourcegraph.com/handbook/engineering/core-application).*</sub>
 
@@ -1641,6 +1645,8 @@ This panel indicates idle.
 
 This panel indicates mean blocked seconds per conn request.
 
+> NOTE: Alerts related to this panel are documented in the [alert solutions reference](./alert_solutions.md#precise-code-intel-worker-mean-blocked-seconds-per-conn-request).
+
 <sub>*Managed by the [Sourcegraph Core application team](https://about.sourcegraph.com/handbook/engineering/core-application).*</sub>
 
 <br />
@@ -2170,6 +2176,8 @@ This panel indicates idle.
 #### worker: mean_blocked_seconds_per_conn_request
 
 This panel indicates mean blocked seconds per conn request.
+
+> NOTE: Alerts related to this panel are documented in the [alert solutions reference](./alert_solutions.md#worker-mean-blocked-seconds-per-conn-request).
 
 <sub>*Managed by the [Sourcegraph Core application team](https://about.sourcegraph.com/handbook/engineering/core-application).*</sub>
 
@@ -2738,6 +2746,8 @@ This panel indicates idle.
 #### repo-updater: mean_blocked_seconds_per_conn_request
 
 This panel indicates mean blocked seconds per conn request.
+
+> NOTE: Alerts related to this panel are documented in the [alert solutions reference](./alert_solutions.md#repo-updater-mean-blocked-seconds-per-conn-request).
 
 <sub>*Managed by the [Sourcegraph Core application team](https://about.sourcegraph.com/handbook/engineering/core-application).*</sub>
 
@@ -3911,6 +3921,8 @@ This panel indicates idle.
 #### executor-queue: mean_blocked_seconds_per_conn_request
 
 This panel indicates mean blocked seconds per conn request.
+
+> NOTE: Alerts related to this panel are documented in the [alert solutions reference](./alert_solutions.md#executor-queue-mean-blocked-seconds-per-conn-request).
 
 <sub>*Managed by the [Sourcegraph Core application team](https://about.sourcegraph.com/handbook/engineering/core-application).*</sub>
 

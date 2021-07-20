@@ -5,6 +5,7 @@ import { NEVER, of } from 'rxjs'
 import { SearchSuggestion } from '../../graphql/schema'
 
 import { getCompletionItems, repositoryCompletionItemKind } from './completion'
+import { POPULAR_LANGUAGES } from './languageFilter'
 import { scanSearchQuery, ScanSuccess, ScanResult } from './scanner'
 import { Token } from './token'
 
@@ -293,46 +294,7 @@ describe('getCompletionItems()', () => {
                     false
                 )
             )?.suggestions.map(({ label }) => label)
-        ).toMatchInlineSnapshot(`
-            [
-              "Assembly",
-              "Bash",
-              "C",
-              "C++",
-              "C#",
-              "CSS",
-              "Dart",
-              "Elixir",
-              "Erlang",
-              "Go",
-              "GraphQL",
-              "Haskell",
-              "HTML",
-              "Java",
-              "JavaScript",
-              "Kotlin",
-              "JSON",
-              "Julia",
-              "Lua",
-              "Markdown",
-              "Objective-C",
-              "OCaml",
-              "PHP",
-              "PowerShell",
-              "Python",
-              "R",
-              "Ruby",
-              "Rust",
-              "Sass",
-              "Scala",
-              "SQL",
-              "Swift",
-              "TypeScript",
-              "VBA",
-              "XML",
-              "Zig"
-            ]
-        `)
+        ).toStrictEqual(POPULAR_LANGUAGES)
     })
 
     test('returns completions in order of discrete value definition, not alphabetically', async () => {

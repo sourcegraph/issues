@@ -148,19 +148,19 @@ func serveTestNotification(w http.ResponseWriter, r *http.Request) {
 
 	recipients, err := getNotificationRecipients(r.Context(), args.SavedSearch.Spec, args.SavedSearch.Config)
 	if err != nil {
-		writeError(w, fmt.Errorf("error computing recipients: %s", err))
+		writeError(w, errors.Errorf("error computing recipients: %s", err))
 		return
 	}
 
 	for _, recipient := range recipients {
 		if err := emailNotifySubscribeUnsubscribe(r.Context(), recipient, args.SavedSearch, notifySubscribedTemplate); err != nil {
-			writeError(w, fmt.Errorf("error sending email notifications to %s: %s", recipient.spec, err))
+			writeError(w, errors.Errorf("error sending email notifications to %s: %s", recipient.spec, err))
 			return
 		}
 		testNotificationAlert := fmt.Sprintf(`It worked! This is a test notification for the Sourcegraph saved search <%s|"%s">.`, searchURL(args.SavedSearch.Config.Query, utmSourceSlack), args.SavedSearch.Config.Description)
 		if err := slackNotify(context.Background(), recipient,
 			testNotificationAlert, args.SavedSearch.Config.SlackWebhookURL); err != nil {
-			writeError(w, fmt.Errorf("error sending slack notifications to %s: %s", recipient.spec, err))
+			writeError(w, errors.Errorf("error sending slack notifications to %s: %s", recipient.spec, err))
 			return
 		}
 	}

@@ -2,7 +2,6 @@ package graphqlbackend
 
 import (
 	"context"
-	"fmt"
 	"sync"
 
 	"github.com/cockroachdb/errors"
@@ -68,7 +67,7 @@ func (r *userConnectionResolver) compute(ctx context.Context) ([]*types.User, in
 		case "THIS_MONTH":
 			r.opt.UserIDs, err = usagestats.ListRegisteredUsersThisMonth(ctx, r.db)
 		default:
-			err = fmt.Errorf("unknown user active period %s", *r.activePeriod)
+			err = errors.Errorf("unknown user active period %s", *r.activePeriod)
 		}
 		if err != nil {
 			r.err = err

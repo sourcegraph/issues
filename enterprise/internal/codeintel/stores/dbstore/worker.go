@@ -10,6 +10,9 @@ import (
 	dbworkerstore "github.com/sourcegraph/sourcegraph/internal/workerutil/dbworker/store"
 )
 
+// UploadHeartbeatInterval is the duration between heartbeat updates to the upload job records.
+const UploadHeartbeatInterval = time.Second
+
 // StalledUploadMaxAge is the maximum allowable duration between updating the state of an
 // upload as "processing" and locking the upload row during processing. An unlocked row that
 // is marked as processing likely indicates that the worker that dequeued the upload has died.
@@ -28,6 +31,7 @@ var uploadWorkerStoreOptions = dbworkerstore.Options{
 	ColumnExpressions: uploadColumnsWithNullRank,
 	Scan:              scanFirstUploadRecord,
 	OrderByExpression: sqlf.Sprintf("u.uploaded_at, u.id"),
+	HeartbeatInterval: UploadHeartbeatInterval,
 	StalledMaxAge:     StalledUploadMaxAge,
 	MaxNumResets:      UploadMaxNumResets,
 }
@@ -35,6 +39,9 @@ var uploadWorkerStoreOptions = dbworkerstore.Options{
 func WorkerutilUploadStore(s basestore.ShareableStore, observationContext *observation.Context) dbworkerstore.Store {
 	return dbworkerstore.NewWithMetrics(s.Handle(), uploadWorkerStoreOptions, observationContext)
 }
+
+// IndexHeartbeatInterval is the duration between heartbeat updates to the index job records.
+const IndexHeartbeatInterval = time.Second
 
 // StalledIndexMaxAge is the maximum allowable duration between updating the state of an
 // index as "processing" and locking the index row during processing. An unlocked row that
@@ -54,6 +61,7 @@ var indexWorkerStoreOptions = dbworkerstore.Options{
 	ColumnExpressions: indexColumnsWithNullRank,
 	Scan:              scanFirstIndexRecord,
 	OrderByExpression: sqlf.Sprintf("u.queued_at, u.id"),
+	HeartbeatInterval: IndexHeartbeatInterval,
 	StalledMaxAge:     StalledIndexMaxAge,
 	MaxNumResets:      IndexMaxNumResets,
 }

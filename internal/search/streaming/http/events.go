@@ -2,7 +2,8 @@ package http
 
 import (
 	"bytes"
-	"fmt"
+
+	"github.com/cockroachdb/errors"
 )
 
 // EventMatch is an interface which only the top level match event types
@@ -143,7 +144,7 @@ func (t MatchType) MarshalJSON() ([]byte, error) {
 	case CommitMatchType:
 		return []byte(`"commit"`), nil
 	default:
-		return nil, fmt.Errorf("unknown MatchType: %d", t)
+		return nil, errors.Errorf("unknown MatchType: %d", t)
 	}
 
 }
@@ -158,7 +159,7 @@ func (t *MatchType) UnmarshalJSON(b []byte) error {
 	} else if bytes.Equal(b, []byte(`"commit"`)) {
 		*t = CommitMatchType
 	} else {
-		return fmt.Errorf("unknown MatchType: %s", b)
+		return errors.Errorf("unknown MatchType: %s", b)
 	}
 	return nil
 }

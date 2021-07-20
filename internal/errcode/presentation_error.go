@@ -1,5 +1,7 @@
 package errcode
 
+import "github.com/cockroachdb/errors"
+
 // A PresentationError is an error with a message (returned by the PresentationError method) that is
 // suitable for presentation to the user.
 type PresentationError interface {
@@ -54,19 +56,10 @@ func (e *presentationError) PresentationError() string { return e.msg }
 // interface (e.g., by using WithPresentationMessage). If no presentation message exists for err,
 // the empty string is returned.
 func PresentationMessage(err error) string {
-	type causer interface {
-		Cause() error
+	var e PresentationError
+	if errors.As(err, &e) {
+		return e.PresentationError()
 	}
 
-	for err != nil {
-		if e, ok := err.(PresentationError); ok {
-			return e.PresentationError()
-		}
-		cause, ok := err.(causer)
-		if !ok {
-			break
-		}
-		err = cause.Cause()
-	}
 	return ""
 }

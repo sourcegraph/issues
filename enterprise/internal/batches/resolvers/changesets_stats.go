@@ -47,3 +47,28 @@ func (r *changesetsStatsResolver) Archived() int32 {
 func (r *changesetsStatsResolver) Total() int32 {
 	return r.stats.Total
 }
+
+type repoChangesetsStatsResolver struct {
+	stats btypes.RepoChangesetsStats
+}
+
+var _ graphqlbackend.RepoChangesetsStatsResolver = &repoChangesetsStatsResolver{}
+
+func (r *repoChangesetsStatsResolver) Unpublished() int32 {
+	return r.stats.Unpublished
+}
+func (r *repoChangesetsStatsResolver) Open() int32 {
+	return r.stats.Open
+}
+func (r *repoChangesetsStatsResolver) Draft() int32 {
+	return r.stats.Draft
+}
+func (r *repoChangesetsStatsResolver) Merged() int32 {
+	return r.stats.Merged
+}
+func (r *repoChangesetsStatsResolver) Closed() int32 {
+	return r.stats.Closed
+}
+func (r *repoChangesetsStatsResolver) Total() int32 {
+	return r.stats.Total
+}

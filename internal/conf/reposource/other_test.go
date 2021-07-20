@@ -1,8 +1,9 @@
 package reposource
 
 import (
-	"reflect"
 	"testing"
+
+	"github.com/cockroachdb/errors"
 
 	"github.com/sourcegraph/sourcegraph/schema"
 )
@@ -69,7 +70,7 @@ func TestOtherCloneURLToRepoName(t *testing.T) {
 		for _, u := range test.urls {
 			repoName, err := Other{&test.conn}.CloneURLToRepoName(u.cloneURL)
 			if u.err != nil {
-				if !reflect.DeepEqual(u.err, err) {
+				if !errors.Is(err, u.err) {
 					t.Errorf("expected error [%v], but got [%v] for clone URL %q (connection: %+v)", u.err, err, u.cloneURL, test.conn)
 				}
 				continue

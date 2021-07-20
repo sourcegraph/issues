@@ -20,7 +20,6 @@ func TestHandle(t *testing.T) {
 		t.Fatalf("unexpected error creating workspace: %s", err)
 	}
 
-	store := NewMockStore()
 	runner := NewMockRunner()
 
 	job := executor.Job{
@@ -76,7 +75,7 @@ func TestHandle(t *testing.T) {
 		},
 	}
 
-	if err := handler.Handle(context.Background(), store, job); err != nil {
+	if err := handler.Handle(context.Background(), job); err != nil {
 		t.Fatalf("unexpected error handling record: %s", err)
 	}
 
@@ -104,6 +103,74 @@ func TestHandle(t *testing.T) {
 		{"/bin/sh", "42.1_linux@deadbeef.sh"},
 		{"src", "batch", "help"},
 		{"src", "batch", "apply", "-f", "spec.yaml"},
+	}
+	if diff := cmp.Diff(expectedCommands, commands); diff != "" {
+		t.Errorf("unexpected commands (-want +got):\n%s", diff)
+	}
+}
+
+func TestHandleSrcCliStepsWithoutFirecracker(t *testing.T) {
+	testDir := "/tmp/src-executor-without-firecracker"
+	makeTempDir = func() (string, error) { return testDir, nil }
+	if err := os.MkdirAll(filepath.Join(testDir, command.ScriptsPath), os.ModePerm); err != nil {
+		t.Fatalf("unexpected error creating workspace: %s", err)
+	}
+
+	overwriteEnv := func(k, v string) {
+		old := os.Getenv(k)
+		os.Setenv(k, v)
+		t.Cleanup(func() { os.Setenv(k, old) })
+	}
+
+	overwriteEnv("HOME", "/home/my-user-account")
+	overwriteEnv("PATH", "/the/best/bin:/usr/local/bin")
+
+	job := executor.Job{
+		CliSteps: []executor.CliStep{
+			{
+				Commands: []string{"batch", "help"},
+				Env:      []string{"STEPDEFENV=true"},
+			},
+			{
+				Commands: []string{"batch", "apply", "-f", "spec.yaml"},
+			},
+		},
+	}
+
+	options := Options{
+		FirecrackerOptions: command.FirecrackerOptions{Enabled: false},
+	}
+
+	runner := NewMockRunner()
+
+	handler := &handler{
+		idSet:      newIDSet(),
+		options:    options,
+		operations: command.NewOperations(&observation.TestContext),
+		runnerFactory: func(dir string, logger *command.Logger, options command.Options, operations *command.Operations) command.Runner {
+			if dir == "" {
+				// See comment in test above
+				return NewMockRunner()
+			}
+
+			return runner
+		},
+	}
+
+	if err := handler.Handle(context.Background(), job); err != nil {
+		t.Fatalf("unexpected error handling record: %s", err)
+	}
+
+	var commands [][]string
+	for _, call := range runner.RunFunc.History() {
+		commands = append(commands, append(call.Arg1.Env, call.Arg1.Command...))
+	}
+
+	expectedCommands := [][]string{
+		{"STEPDEFENV=true", "HOME=/home/my-user-account", "PATH=/the/best/bin:/usr/local/bin",
+			"src", "batch", "help"},
+		{"HOME=/home/my-user-account", "PATH=/the/best/bin:/usr/local/bin",
+			"src", "batch", "apply", "-f", "spec.yaml"},
 	}
 	if diff := cmp.Diff(expectedCommands, commands); diff != "" {
 		t.Errorf("unexpected commands (-want +got):\n%s", diff)

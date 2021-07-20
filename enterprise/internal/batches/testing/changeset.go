@@ -38,6 +38,9 @@ type TestChangesetOpts struct {
 	ReconcilerState btypes.ReconcilerState
 	FailureMessage  string
 	NumFailures     int64
+	NumResets       int64
+
+	SyncErrorMessage string
 
 	OwnedByBatchChange int64
 
@@ -95,8 +98,13 @@ func BuildChangeset(opts TestChangesetOpts) *btypes.Changeset {
 
 		ReconcilerState: opts.ReconcilerState,
 		NumFailures:     opts.NumFailures,
+		NumResets:       opts.NumResets,
 
 		Metadata: opts.Metadata,
+	}
+
+	if opts.SyncErrorMessage != "" {
+		changeset.SyncErrorMessage = &opts.SyncErrorMessage
 	}
 
 	if opts.ExternalBranch != "" {

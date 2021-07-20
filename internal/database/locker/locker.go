@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 
+	"github.com/cockroachdb/errors"
 	"github.com/hashicorp/go-multierror"
 	"github.com/keegancsmith/sqlf"
 	"github.com/segmentio/fasthash/fnv1"
@@ -53,13 +54,51 @@ func (l *Locker) Transact(ctx context.Context) (*Locker, error) {
 // occurs during unlock, the error is added to the resulting error value.
 type UnlockFunc func(err error) error
 
-// Lock attempts to take an advisory lock on the given key. If successful, this method will
-// return a true-valued flag along with a function that must be called to release the lock.
+// ErrTransaction occurs when Lock is called inside of a transaction.
+var ErrTransaction = errors.New("locker: in a transaction")
+
+// Lock creates a transactional store and calls its Lock method. This method expects that
+// the locker is outside of a transaction. The transaction's lifetime is linked to the lock,
+// so the internal locker will commit or rollback once the lock is released.
 func (l *Locker) Lock(ctx context.Context, key int, blocking bool) (locked bool, _ UnlockFunc, err error) {
+	if l.InTransaction() {
+		return false, nil, ErrTransaction
+	}
+
+	tx, err := l.Transact(ctx)
+	if err != nil {
+		return false, nil, err
+	}
+	defer func() {
+		if !locked {
+			// Catch failure cases
+			err = tx.Done(err)
+		}
+	}()
+
+	locked, unlock, err := tx.LockInTransaction(ctx, key, blocking)
+	if err != nil || !locked {
+		return false, nil, err
+	}
+
+	return true, func(err error) error { return tx.Done(unlock(err)) }, nil
+}
+
+// ErrNoTransaction occurs when LockInTransaction is called outside of a transaction.
+var ErrNoTransaction = errors.New("locker: not in a transaction")
+
+// LockInTransaction attempts to take an advisory lock on the given key. If successful, this method
+// will return a true-valued flag along with a function that must be called to release the lock. This
+// method assumes that the locker is currently in a transaction.
+func (l *Locker) LockInTransaction(ctx context.Context, key int, blocking bool) (locked bool, _ UnlockFunc, err error) {
+	if !l.InTransaction() {
+		return false, nil, ErrNoTransaction
+	}
+
 	if blocking {
-		locked, err = l.lock(ctx, key)
+		locked, err = l.selectAdvisoryLock(ctx, key)
 	} else {
-		locked, err = l.tryLock(ctx, key)
+		locked, err = l.selectTryAdvisoryLock(ctx, key)
 	}
 
 	if err != nil || !locked {
@@ -67,7 +106,7 @@ func (l *Locker) Lock(ctx context.Context, key int, blocking bool) (locked bool,
 	}
 
 	unlock := func(err error) error {
-		if unlockErr := l.unlock(key); unlockErr != nil {
+		if unlockErr := l.unlock(context.Background(), key); unlockErr != nil {
 			err = multierror.Append(err, unlockErr)
 		}
 
@@ -77,24 +116,24 @@ func (l *Locker) Lock(ctx context.Context, key int, blocking bool) (locked bool,
 	return true, unlock, nil
 }
 
-// lock blocks until an advisory lock is taken on the given key.
-func (l *Locker) lock(ctx context.Context, key int) (bool, error) {
-	err := l.Store.Exec(ctx, sqlf.Sprintf(lockQuery, l.namespace, key))
+// selectAdvisoryLock blocks until an advisory lock is taken on the given key.
+func (l *Locker) selectAdvisoryLock(ctx context.Context, key int) (bool, error) {
+	err := l.Store.Exec(ctx, sqlf.Sprintf(selectAdvisoryLockQuery, l.namespace, key))
 	if err != nil {
 		return false, err
 	}
 	return true, nil
 }
 
-const lockQuery = `
--- source: internal/database/locker/locker.go:lock
+const selectAdvisoryLockQuery = `
+-- source: internal/database/locker/locker.go:selectAdvisoryLock
 SELECT pg_advisory_lock(%s, %s)
 `
 
-// tryLock attempts to take an advisory lock on the given key. Returns true on
-// success and false on failure.
-func (l *Locker) tryLock(ctx context.Context, key int) (bool, error) {
-	ok, _, err := basestore.ScanFirstBool(l.Store.Query(ctx, sqlf.Sprintf(tryLockQuery, l.namespace, key)))
+// selectTryAdvisoryLock attempts to take an advisory lock on the given key. Returns true
+// on success and false on failure.
+func (l *Locker) selectTryAdvisoryLock(ctx context.Context, key int) (bool, error) {
+	ok, _, err := basestore.ScanFirstBool(l.Store.Query(ctx, sqlf.Sprintf(selectTryAdvisoryLockQuery, l.namespace, key)))
 	if err != nil || !ok {
 		return false, err
 	}
@@ -102,15 +141,25 @@ func (l *Locker) tryLock(ctx context.Context, key int) (bool, error) {
 	return true, nil
 }
 
-const tryLockQuery = `
--- source: internal/database/locker/locker.go:tryLock
+const selectTryAdvisoryLockQuery = `
+-- source: internal/database/locker/locker.go:selectTryAdvisoryLock
 SELECT pg_try_advisory_lock(%s, %s)
 `
 
+var ErrUnlock = errors.New("failed to unlock")
+
 // unlock releases the advisory lock on the given key.
-func (l *Locker) unlock(key int) error {
-	err := l.Store.Exec(context.Background(), sqlf.Sprintf(unlockQuery, l.namespace, key))
-	return err
+func (l *Locker) unlock(ctx context.Context, key int) error {
+	ok, _, err := basestore.ScanFirstBool(l.Store.Query(ctx, sqlf.Sprintf(unlockQuery, l.namespace, key)))
+	if !ok {
+		if err == nil {
+			err = ErrUnlock
+		}
+
+		return err
+	}
+
+	return nil
 }
 
 const unlockQuery = `

@@ -5,6 +5,8 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/cockroachdb/errors"
+
 	btypes "github.com/sourcegraph/sourcegraph/enterprise/internal/batches/types"
 )
 
@@ -193,9 +195,17 @@ func DeterminePlan(previousSpec, currentSpec *btypes.ChangesetSpec, ch *btypes.C
 			pl.SetOp(btypes.ReconcilerOperationReopen)
 		}
 
-		// Only do undraft, when the codehost supports draft changesets.
-		if delta.Undraft && btypes.ExternalServiceSupports(ch.ExternalServiceType, btypes.CodehostCapabilityDraftChangesets) {
-			pl.AddOp(btypes.ReconcilerOperationUndraft)
+		// Figure out if we need to do an undraft, assuming the code host
+		// supports draft changesets. This may be due to a new spec being
+		// applied, which would mean delta.Undraft is set, or because the UI
+		// publication state has been changed, for which we need to compare the
+		// current changeset state against the desired state.
+		if btypes.ExternalServiceSupports(ch.ExternalServiceType, btypes.CodehostCapabilityDraftChangesets) {
+			if delta.Undraft {
+				pl.AddOp(btypes.ReconcilerOperationUndraft)
+			} else if calc := calculatePublicationState(currentSpec.Spec.Published, ch.UiPublicationState); calc.IsPublished() && ch.ExternalState == btypes.ChangesetExternalStateDraft {
+				pl.AddOp(btypes.ReconcilerOperationUndraft)
+			}
 		}
 
 		if delta.AttributesChanged() {
@@ -226,7 +236,7 @@ func DeterminePlan(previousSpec, currentSpec *btypes.ChangesetSpec, ch *btypes.C
 		}
 
 	default:
-		return pl, fmt.Errorf("unknown changeset publication state: %s", ch.PublicationState)
+		return pl, errors.Errorf("unknown changeset publication state: %s", ch.PublicationState)
 	}
 
 	return pl, nil

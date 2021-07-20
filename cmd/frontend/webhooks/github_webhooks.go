@@ -2,7 +2,6 @@ package webhooks
 
 import (
 	"context"
-	"fmt"
 	"io"
 	"net/http"
 	"strconv"
@@ -10,6 +9,7 @@ import (
 
 	"golang.org/x/sync/errgroup"
 
+	"github.com/cockroachdb/errors"
 	gh "github.com/google/go-github/v28/github"
 	"github.com/inconshreveable/log15"
 
@@ -129,7 +129,7 @@ func (h *GitHubWebhook) getExternalService(r *http.Request, body []byte) (*types
 	}
 	gc, ok := c.(*schema.GitHubConnection)
 	if !ok {
-		return nil, fmt.Errorf("invalid configuration, recieved github webhook for non-github external service: %v", externalServiceID)
+		return nil, errors.Errorf("invalid configuration, recieved github webhook for non-github external service: %v", externalServiceID)
 	}
 
 	// 🚨 SECURITY: Try to authenticate the request with any of the stored secrets
@@ -183,5 +183,5 @@ func (h *GitHubWebhook) findAndValidateExternalService(ctx context.Context, sig 
 			}
 		}
 	}
-	return nil, fmt.Errorf("couldn't find any external service for webhook")
+	return nil, errors.Errorf("couldn't find any external service for webhook")
 }

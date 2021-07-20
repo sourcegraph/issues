@@ -5,6 +5,8 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/cockroachdb/errors"
+
 	"github.com/sourcegraph/sourcegraph/internal/database/dbtest"
 )
 
@@ -84,7 +86,7 @@ func TestOrgs_Delete(t *testing.T) {
 
 	// Org no longer exists.
 	_, err = Orgs(db).GetByID(ctx, org.ID)
-	if _, ok := err.(*OrgNotFoundError); !ok {
+	if !errors.HasType(err, &OrgNotFoundError{}) {
 		t.Errorf("got error %v, want *OrgNotFoundError", err)
 	}
 	orgs, err := Orgs(db).List(ctx, &OrgsListOptions{Query: "a"})
@@ -97,7 +99,7 @@ func TestOrgs_Delete(t *testing.T) {
 
 	// Can't delete already-deleted org.
 	err = Orgs(db).Delete(ctx, org.ID)
-	if _, ok := err.(*OrgNotFoundError); !ok {
+	if !errors.HasType(err, &OrgNotFoundError{}) {
 		t.Errorf("got error %v, want *OrgNotFoundError", err)
 	}
 }

@@ -3,7 +3,7 @@ import fs from 'fs'
 import path from 'path'
 
 import signale from 'signale'
-import { Stats } from 'webpack'
+import { StatsCompilation } from 'webpack'
 
 import { readJsonFile, storybookWorkspacePath, rootPath } from '../webpack.config.common'
 
@@ -27,8 +27,8 @@ export const ensureWebpackStatsAreReady = (): void => {
 }
 
 // Read Webpack stats JSON file. If it's not available use `yarn build:webpack-stats` command to create it.
-export function getWebpackStats(): Stats.ToJsonOutput {
+export function getWebpackStats(): StatsCompilation {
     ensureWebpackStatsAreReady()
 
-    return readJsonFile(webpackStatsPath) as Stats.ToJsonOutput
+    return readJsonFile(webpackStatsPath) as StatsCompilation
 }

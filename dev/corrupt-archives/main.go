@@ -1,12 +1,13 @@
 package main
 
 import (
-	"fmt"
 	"io/fs"
 	"log"
 	"os"
 	"path/filepath"
 	"strings"
+
+	"github.com/cockroachdb/errors"
 )
 
 func corruptArchives(dir string) error {
@@ -42,7 +43,7 @@ func corruptArchives(dir string) error {
 func corruptArchive(path string, size int64) error {
 	file, err := os.OpenFile(path, os.O_APPEND|os.O_WRONLY, 0644)
 	if err != nil {
-		return fmt.Errorf("open err: %v", err)
+		return errors.Errorf("open err: %v", err)
 	}
 	defer file.Close()
 

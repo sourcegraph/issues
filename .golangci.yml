@@ -35,6 +35,10 @@ linters-settings:
   govet:
     disable:
       - composites
+  forbidigo:
+    forbid:
+      # Use errors.New instead
+      - 'fmt\.Errorf'
 
 issues:
   exclude-rules:

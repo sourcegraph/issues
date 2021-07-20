@@ -89,7 +89,7 @@ func (cs *clusterScanner) watchEndpointEvents() (bool, error) {
 	// TODO(Dax): Rewrite this to used NewSharedInformerFactory from k8s/client-go
 	watcher, err := cs.client.Endpoints(cs.namespace).Watch(metav1.ListOptions{})
 	if err != nil {
-		return false, fmt.Errorf("k8s client.Watch error: %w", err)
+		return false, errors.Errorf("k8s client.Watch error: %w", err)
 	}
 	defer watcher.Stop()
 
@@ -97,7 +97,7 @@ func (cs *clusterScanner) watchEndpointEvents() (bool, error) {
 		event := <-watcher.ResultChan()
 		if err != nil {
 			// we need a new watcher
-			return true, fmt.Errorf("k8s watcher.Next error: %w", err)
+			return true, errors.Errorf("k8s watcher.Next error: %w", err)
 		}
 
 		if event.Type == watch.Error {

@@ -2,10 +2,9 @@
     display: inline-flex;
     align-items: center;
 
-    &__total {
-        padding-right: 0.125rem;
-        // stylelint-disable-next-line declaration-property-unit-whitelist
-        margin-bottom: -1px;
+    &__squares {
+        display: flex;
+        flex-wrap: nowrap;
     }
 
     &__square {

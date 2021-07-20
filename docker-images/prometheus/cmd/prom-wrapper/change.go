@@ -7,6 +7,7 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/cockroachdb/errors"
 	"github.com/go-openapi/strfmt"
 	"github.com/inconshreveable/log15"
 	amclient "github.com/prometheus/alertmanager/api/v2/client"
@@ -101,7 +102,7 @@ func changeSilences(ctx context.Context, log log15.Logger, change ChangeContext,
 	// delete existing silences that should no longer be silenced
 	existingSilences, err := change.AMClient.Silence.GetSilences(&silence.GetSilencesParams{Context: ctx})
 	if err != nil {
-		newProblem(fmt.Errorf("failed to get existing silences: %w", err))
+		newProblem(errors.Errorf("failed to get existing silences: %w", err))
 		return
 	}
 	for _, s := range existingSilences.Payload {
@@ -119,7 +120,7 @@ func changeSilences(ctx context.Context, log log15.Logger, change ChangeContext,
 				Context:   ctx,
 				SilenceID: uid,
 			}); err != nil {
-				newProblem(fmt.Errorf("failed to delete existing silence %q: %w", *s.ID, err))
+				newProblem(errors.Errorf("failed to delete existing silence %q: %w", *s.ID, err))
 				return
 			}
 		}
@@ -155,7 +156,7 @@ func changeSilences(ctx context.Context, log log15.Logger, change ChangeContext,
 		if err != nil {
 			silenceData, _ := json.Marshal(s)
 			log.Error("failed to update silence", "error", err, "silence", string(silenceData), "existingSilence", existingSilence)
-			newProblem(fmt.Errorf("failed to update silence: %w", err))
+			newProblem(errors.Errorf("failed to update silence: %w", err))
 			return
 		}
 	}

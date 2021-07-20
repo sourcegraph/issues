@@ -3,7 +3,7 @@ import { useMemo } from 'react'
 
 import { Settings } from '@sourcegraph/shared/src/settings/settings'
 
-import { InsightTypePrefix } from '../../../core/types'
+import { INSIGHTS_ALL_REPOS_SETTINGS_KEY, InsightTypePrefix } from '../../../core/types'
 import { composeValidators, createRequiredValidator } from '../validators'
 
 import { Validator } from './useField'
@@ -24,11 +24,16 @@ export function useInsightTitleValidator(props: useTitleValidatorProps): Validat
     const { settings, insightType } = props
 
     return useMemo(() => {
+        const normalizedSettingsKeys = Object.keys(settings ?? DEFAULT_FINAL_SETTINGS)
+        const normalizedInsightAllReposKeys = Object.keys(
+            settings?.[INSIGHTS_ALL_REPOS_SETTINGS_KEY] ?? DEFAULT_FINAL_SETTINGS
+        )
+
         const existingInsightNames = new Set(
-            Object.keys(settings ?? DEFAULT_FINAL_SETTINGS)
+            [...normalizedSettingsKeys, ...normalizedInsightAllReposKeys]
                 // According to our convention about insights name <insight type>.insight.<insight name>
                 .filter(key => key.startsWith(`${insightType}`))
-                .map(key => camelCase(key.split('.').pop()))
+                .map(key => camelCase(key.split(`${insightType}.`).pop()))
         )
 
         return composeValidators<string>(createRequiredValidator('Title is a required field.'), value =>

@@ -2,9 +2,10 @@ package repos
 
 import (
 	"context"
-	"fmt"
 	"net/url"
 	"strings"
+
+	"github.com/cockroachdb/errors"
 
 	"github.com/sourcegraph/sourcegraph/internal/api"
 	"github.com/sourcegraph/sourcegraph/internal/conf/reposource"
@@ -27,7 +28,7 @@ type PerforceSource struct {
 func NewPerforceSource(svc *types.ExternalService) (*PerforceSource, error) {
 	var c schema.PerforceConnection
 	if err := jsonc.Unmarshal(svc.Config, &c); err != nil {
-		return nil, fmt.Errorf("external service id=%d config error: %s", svc.ID, err)
+		return nil, errors.Errorf("external service id=%d config error: %s", svc.ID, err)
 	}
 	return newPerforceSource(svc, &c)
 }

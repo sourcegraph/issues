@@ -2,13 +2,13 @@ package worker
 
 import (
 	"context"
-	"fmt"
 	"io"
 	"os"
 	"strings"
 	"testing"
 	"time"
 
+	"github.com/cockroachdb/errors"
 	"github.com/google/go-cmp/cmp"
 
 	"github.com/sourcegraph/sourcegraph/cmd/frontend/backend"
@@ -58,12 +58,14 @@ func TestHandle(t *testing.T) {
 	gitserverClient.CommitDateFunc.SetDefaultReturn(expectedCommitDate, nil)
 
 	handler := &handler{
+		dbStore:         mockDBStore,
+		workerStore:     mockWorkerStore,
 		lsifStore:       mockLSIFStore,
 		uploadStore:     mockUploadStore,
 		gitserverClient: gitserverClient,
 	}
 
-	requeued, err := handler.handle(context.Background(), mockWorkerStore, mockDBStore, upload)
+	requeued, err := handler.handle(context.Background(), upload)
 	if err != nil {
 		t.Fatalf("unexpected error handling upload: %s", err)
 	} else if requeued {
@@ -175,15 +177,17 @@ func TestHandleError(t *testing.T) {
 	mockUploadStore.GetFunc.SetDefaultHook(copyTestDump)
 
 	// Set a different tip commit
-	mockDBStore.MarkRepositoryAsDirtyFunc.SetDefaultReturn(fmt.Errorf("uh-oh!"))
+	mockDBStore.MarkRepositoryAsDirtyFunc.SetDefaultReturn(errors.Errorf("uh-oh!"))
 
 	handler := &handler{
+		dbStore:         mockDBStore,
+		workerStore:     mockWorkerStore,
 		lsifStore:       mockLSIFStore,
 		uploadStore:     mockUploadStore,
 		gitserverClient: gitserverClient,
 	}
 
-	requeued, err := handler.handle(context.Background(), mockWorkerStore, mockDBStore, upload)
+	requeued, err := handler.handle(context.Background(), upload)
 	if err == nil {
 		t.Fatalf("unexpected nil error handling upload")
 	} else if !strings.Contains(err.Error(), "uh-oh!") {
@@ -232,11 +236,13 @@ func TestHandleCloneInProgress(t *testing.T) {
 	gitserverClient := NewMockGitserverClient()
 
 	handler := &handler{
+		dbStore:         mockDBStore,
+		workerStore:     mockWorkerStore,
 		uploadStore:     mockUploadStore,
 		gitserverClient: gitserverClient,
 	}
 
-	requeued, err := handler.handle(context.Background(), mockWorkerStore, mockDBStore, upload)
+	requeued, err := handler.handle(context.Background(), upload)
 	if err != nil {
 		t.Fatalf("unexpected error handling upload: %s", err)
 	} else if !requeued {

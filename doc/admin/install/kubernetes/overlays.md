@@ -11,7 +11,7 @@
       - [Migrate-to-nonroot overlay](#migrate-to-nonroot-overlay)
       - [Non-privileged create cluster overlay](#non-privileged-create-cluster-overlay)
       - [Non-privileged overlay](#non-privileged-overlay)
-      - [minibus overlay](#minibus-overlay)
+      - [minikube overlay](#minikube-overlay)
     - [Upgrading Sourcegraph with an overlay](#upgrading-sourcegraph-with-an-overlay)
   - [Troubleshooting](#troubleshooting)
 
@@ -299,7 +299,8 @@ minikube stop
 1. Create a new branch from the origin branch to the version upgrading to
 
     ```
-    git checkout 3.25
+    export SOURCEGRAPH_VERSION="v3.29.1"
+    git checkout $SOURCEGRAPH_VERSION
     ```
 
 1. Create a new branch for this specific version

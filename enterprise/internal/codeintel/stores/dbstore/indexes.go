@@ -499,17 +499,23 @@ func (s *Store) DeleteIndexesWithoutRepository(ctx context.Context, now time.Tim
 
 const deleteIndexesWithoutRepositoryQuery = `
 -- source: enterprise/internal/codeintel/stores/dbstore/indexes.go:DeleteIndexesWithoutRepository
-WITH deleted_repos AS (
-	SELECT r.id AS id FROM repo r
-	WHERE
-		%s - r.deleted_at >= %s * interval '1 second' AND
-		EXISTS (SELECT 1 from lsif_indexes u WHERE u.repository_id = r.id)
+WITH
+candidates AS (
+	SELECT u.id
+	FROM repo r
+	JOIN lsif_indexes u ON u.repository_id = r.id
+	WHERE %s - r.deleted_at >= %s * interval '1 second'
+
+	-- Lock these rows in a deterministic order so that we don't
+	-- deadlock with other processes updating the lsif_indexes table.
+	ORDER BY u.id FOR UPDATE
 ),
-deleted_uploads AS (
-	DELETE FROM lsif_indexes u WHERE repository_id IN (SELECT id FROM deleted_repos)
+deleted AS (
+	DELETE FROM lsif_indexes u
+	WHERE id IN (SELECT id FROM candidates)
 	RETURNING u.id, u.repository_id
 )
-SELECT d.repository_id, COUNT(*) FROM deleted_uploads d GROUP BY d.repository_id
+SELECT d.repository_id, COUNT(*) FROM deleted d GROUP BY d.repository_id
 `
 
 // DeleteOldIndexes deletes indexes older than the given age.
@@ -543,9 +549,20 @@ func (s *Store) DeleteOldIndexes(ctx context.Context, maxAge time.Duration, now 
 
 const deleteOldIndexesQuery = `
 -- source: enterprise/internal/codeintel/stores/dbstore/indexes.go:DeleteOldIndexes
-WITH deleted_indexes AS (
-	DELETE FROM lsif_indexes u WHERE %s - u.queued_at > (%s || ' second')::interval
+WITH
+candidates AS (
+	SELECT u.id
+	FROM lsif_indexes u
+	WHERE %s - u.queued_at > (%s || ' second')::interval
+
+	-- Lock these rows in a deterministic order so that we don't
+	-- deadlock with other processes updating the lsif_indexes table.
+	ORDER BY u.id FOR UPDATE
+),
+deleted AS (
+	DELETE FROM lsif_indexes u
+	WHERE id IN (SELECT id FROM candidates)
 	RETURNING u.id, u.repository_id
 )
-SELECT d.repository_id, COUNT(*) FROM deleted_indexes d GROUP BY d.repository_id
+SELECT d.repository_id, COUNT(*) FROM deleted d GROUP BY d.repository_id
 `

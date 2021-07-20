@@ -19,15 +19,9 @@ export const InsightCardMenu: React.FunctionComponent<InsightCardMenuProps> = pr
     const { insightID, className, onDelete } = props
     const history = useHistory()
 
-    // According to our naming convention of insight
-    // <type>.<name>.<render view = insight page | directory | home page>
-    // You can see insight id generation at extension codebase like here
-    // https://github.com/sourcegraph/sourcegraph-search-insights/blob/master/src/search-insights.ts#L86
-    const normalizedInsightID = insightID.split('.').slice(0, -1).join('.')
-
     const handleEditClick = (event: MouseEvent): void => {
         event.preventDefault()
-        history.push(`/insights/edit/${normalizedInsightID}`)
+        history.push(`/insights/edit/${insightID}`)
     }
 
     return (
@@ -35,10 +29,7 @@ export const InsightCardMenu: React.FunctionComponent<InsightCardMenuProps> = pr
             <MenuButton data-testid="InsightContextMenuButton" className={classnames(className, 'btn btn-outline p-1')}>
                 <DotsVerticalIcon size={16} />
             </MenuButton>
-            <MenuList
-                data-testid={`context-menu.${normalizedInsightID}`}
-                className={classnames(styles.panel, 'dropdown-menu')}
-            >
+            <MenuList data-testid={`context-menu.${insightID}`} className={classnames(styles.panel, 'dropdown-menu')}>
                 <MenuLink
                     data-testid="InsightContextMenuEditLink"
                     className={classnames('btn btn-outline', styles.item)}

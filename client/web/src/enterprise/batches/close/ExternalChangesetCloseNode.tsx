@@ -12,7 +12,7 @@ import { ThemeProps } from '@sourcegraph/shared/src/theme'
 import { RepoSpec, RevisionSpec, FileSpec, ResolvedRevisionSpec } from '@sourcegraph/shared/src/util/url'
 
 import { ErrorAlert } from '../../../components/alerts'
-import { DiffStat } from '../../../components/diff/DiffStat'
+import { DiffStatStack } from '../../../components/diff/DiffStat'
 import { ExternalChangesetFields } from '../../../graphql-operations'
 import { queryExternalChangesetWithFileDiffs as _queryExternalChangesetWithFileDiffs } from '../detail/backend'
 import { ChangesetCheckStatusCell } from '../detail/changesets/ChangesetCheckStatusCell'
@@ -87,7 +87,7 @@ export const ExternalChangesetCloseNode: React.FunctionComponent<ExternalChanges
             >
                 {node.checkState && <ChangesetCheckStatusCell checkState={node.checkState} className="mr-3" />}
                 {node.reviewState && <ChangesetReviewStatusCell reviewState={node.reviewState} className="mr-3" />}
-                {node.diffStat && <DiffStat {...node.diffStat} expandedCounts={true} separateLines={true} />}
+                {node.diffStat && <DiffStatStack {...node.diffStat} />}
             </div>
             <span className="d-none d-md-inline">
                 {node.checkState && <ChangesetCheckStatusCell checkState={node.checkState} />}
@@ -96,7 +96,7 @@ export const ExternalChangesetCloseNode: React.FunctionComponent<ExternalChanges
                 {node.reviewState && <ChangesetReviewStatusCell reviewState={node.reviewState} />}
             </span>
             <div className="d-none d-md-flex justify-content-center">
-                {node.diffStat && <DiffStat {...node.diffStat} expandedCounts={true} separateLines={true} />}
+                {node.diffStat && <DiffStatStack {...node.diffStat} />}
             </div>
             {/* The button for expanding the information used on xs devices. */}
             <button
