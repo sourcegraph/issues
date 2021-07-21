@@ -552,6 +552,9 @@ func withMode(args search.TextParameters, st query.SearchType, versionContext *s
 	if isGlobalSearch() && isIndexedSearch && isFileOrPath && !isEmpty {
 		args.Mode = search.ZoektGlobalSearch
 	}
+	if isEmpty {
+		args.Mode = search.SkipContentAndPathSearch
+	}
 	return args
 }
 
@@ -1450,7 +1453,7 @@ func (r *searchResolver) doResults(ctx context.Context, args *search.TextParamet
 		// of indexed default searchrepos. No need to call searcher, because
 		// len(searcherRepos) will always be 0.
 		if envvar.SourcegraphDotComMode() {
-			args.Mode = search.NoFilePath
+			args.Mode = search.SkipContentAndPathSearch
 		} else {
 			args.Mode = search.SearcherOnly
 		}
@@ -1514,7 +1517,7 @@ func (r *searchResolver) doResults(ctx context.Context, args *search.TextParamet
 	}
 
 	if args.ResultTypes.Has(result.TypeFile | result.TypePath) {
-		if args.Mode != search.NoFilePath && !args.PatternInfo.IsEmpty() {
+		if args.Mode != search.SkipContentAndPathSearch {
 			wg := waitGroup(true)
 			wg.Add(1)
 			goroutine.Go(func() {

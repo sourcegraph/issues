@@ -108,15 +108,16 @@ const (
 	// optimised code path.
 	SearcherOnly
 
-	// Disables file/path search. Used only in conjunction with ZoektGlobalSearch on
-	// Sourcegraph.com.
-	NoFilePath
+	// Disables content and file path search. Used:
+	// (1) in conjunction with ZoektGlobalSearch on Sourcegraph.com.
+	// (2) when a query does not specify any patterns for a content or file path search.
+	SkipContentAndPathSearch
 )
 
 var globalSearchModeStrings = map[GlobalSearchMode]string{
-	ZoektGlobalSearch: "ZoektGlobalSearch",
-	SearcherOnly:      "SearcherOnly",
-	NoFilePath:        "NoFilePath",
+	ZoektGlobalSearch:        "ZoektGlobalSearch",
+	SearcherOnly:             "SearcherOnly",
+	SkipContentAndPathSearch: "SkipContentAndPathSearch",
 }
 
 func (m GlobalSearchMode) String() string {
