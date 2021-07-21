@@ -59,11 +59,12 @@ func (d *MavenDependency) GitTagFromVersion() string {
 	return "v" + d.Version
 }
 
+// ParseMavenDependency parses a dependency string in the Coursier format (colon seperated group ID, artifact ID and version)
+// into a MavenDependency.
 func ParseMavenDependency(dependency string) (MavenDependency, error) {
 	parts := strings.Split(dependency, ":")
 	if len(parts) < 3 {
 		return MavenDependency{}, fmt.Errorf("dependency %q must contain at least two colon ':' characters", dependency)
-
 	}
 	version := parts[2]
 

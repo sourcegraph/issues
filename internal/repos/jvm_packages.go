@@ -17,24 +17,34 @@ import (
 // A JVMPackagesSource creates git repositories from `*-sources.jar` files of
 // published Maven dependencies from the JVM ecosystem.
 type JVMPackagesSource struct {
-	svc    *types.ExternalService
-	config *schema.JVMPackagesConnection
+	svc     *types.ExternalService
+	config  *schema.JVMPackagesConnection
+	dbStore JVMPackagesRepoStore
+}
+
+type JVMPackagesRepoStore interface {
+	GetJVMDependencyRepos(ctx context.Context) ([]JVMDependencyRepo, error)
+}
+
+type JVMDependencyRepo struct {
+	Identifier, Version string
 }
 
 // NewJVMPackagesSource returns a new MavenSource from the given external
 // service.
-func NewJVMPackagesSource(svc *types.ExternalService) (*JVMPackagesSource, error) {
+func NewJVMPackagesSource(svc *types.ExternalService, dbStore JVMPackagesRepoStore) (*JVMPackagesSource, error) {
 	var c schema.JVMPackagesConnection
 	if err := jsonc.Unmarshal(svc.Config, &c); err != nil {
 		return nil, fmt.Errorf("external service id=%d config error: %s", svc.ID, err)
 	}
-	return newJVMPackagesSource(svc, &c)
+	return newJVMPackagesSource(svc, &c, dbStore)
 }
 
-func newJVMPackagesSource(svc *types.ExternalService, c *schema.JVMPackagesConnection) (*JVMPackagesSource, error) {
+func newJVMPackagesSource(svc *types.ExternalService, c *schema.JVMPackagesConnection, dbStore JVMPackagesRepoStore) (*JVMPackagesSource, error) {
 	return &JVMPackagesSource{
-		svc:    svc,
-		config: c,
+		svc:     svc,
+		config:  c,
+		dbStore: dbStore,
 	}, nil
 }
 
@@ -57,6 +67,28 @@ func (s *JVMPackagesSource) listDependentRepos(ctx context.Context, results chan
 			Repo:   repo,
 		}
 	}
+	if err != nil {
+		results <- SourceResult{Err: err}
+		return
+	}
+
+	dbDeps, err := s.dbStore.GetJVMDependencyRepos(ctx)
+	if err != nil {
+		results <- SourceResult{Err: err}
+		return
+	}
+
+	for _, dep := range dbDeps {
+		parsed, err := reposource.ParseMavenDependency(dep.Identifier)
+		if err != nil {
+			continue
+		}
+		repo := s.makeRepo(parsed.MavenModule)
+		results <- SourceResult{
+			Source: s,
+			Repo:   repo,
+		}
+	}
 }
 
 func (s *JVMPackagesSource) GetRepo(ctx context.Context, artifactPath string) (*types.Repo, error) {
@@ -69,6 +101,20 @@ func (s *JVMPackagesSource) GetRepo(ctx context.Context, artifactPath string) (*
 	if err != nil {
 		return nil, err
 	}
+
+	dbDeps, err := s.dbStore.GetJVMDependencyRepos(ctx)
+	if err != nil {
+	}
+
+	for _, dep := range dbDeps {
+		parsed, err := reposource.ParseMavenDependency(dep.Identifier)
+		if err != nil {
+			continue
+		}
+		dependencies = append(dependencies, parsed)
+	}
+
+	fmt.Printf("ALL DEPS %+v\n", dependencies)
 
 	for _, dep := range dependencies {
 		if dep.MavenModule == module {
