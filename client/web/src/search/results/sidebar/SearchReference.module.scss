@@ -64,6 +64,10 @@
     > :last-child {
         margin-bottom: 0;
     }
+
+    p > code {
+        white-space: break-spaces;
+    }
 }
 
 .placeholder {
