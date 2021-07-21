@@ -369,8 +369,17 @@ func (s *store) Dequeue(ctx context.Context, workerHostname string, conditions [
 			}
 
 			if err = s.Exec(heartbeatCtx, s.formatQuery(updateCandidateQuery, quote(s.options.TableName), s.now(), record.RecordID())); err != nil {
-				if err != heartbeatCtx.Err() {
-					log15.Error("Failed to refresh last_heartbeat_at", "name", s.options.Name, "id", id, "error", err)
+				fmt.Printf("heartbeatCtx=%+v (%T), err=%+v (%T)\n", heartbeatCtx.Err(), heartbeatCtx.Err(), err, err)
+				fmt.Printf("errors.Cause(err)=%+v (%T)\n", errors.Cause(err), errors.Cause(err))
+				fmt.Printf("errors.Unwrap(err)=%+v (%T)\n", errors.Unwrap(err), errors.Unwrap(err))
+
+				select {
+				case <-heartbeatCtx.Done():
+					return
+				default:
+					if err != heartbeatCtx.Err() {
+						log15.Error("Failed to refresh last_heartbeat_at", "name", s.options.Name, "id", id, "error", err)
+					}
 				}
 			}
 		}

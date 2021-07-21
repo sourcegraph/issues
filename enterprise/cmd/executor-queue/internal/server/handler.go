@@ -154,6 +154,7 @@ func (m *handler) addExecutionLogEntry(ctx context.Context, queueName, executorN
 		return ErrUnknownQueue
 	}
 
+	fmt.Println("addExecutionLogEntry")
 	_, err := m.findMeta(queueName, executorName, jobID, false)
 	if err != nil {
 		return err
@@ -230,6 +231,7 @@ func (m *handler) findMeta(queueName, executorName string, jobID int, remove boo
 	m.m.Lock()
 	defer m.m.Unlock()
 
+	fmt.Printf("addMeta. queueName=%s, executorName=%s, jobID=%d, remove=%t\n", queueName, executorName, jobID, remove)
 	executor, ok := m.executors[executorName]
 	if !ok {
 		return jobMeta{}, ErrUnknownJob
@@ -256,6 +258,7 @@ func (m *handler) addMeta(executorName string, job jobMeta) {
 	m.m.Lock()
 	defer m.m.Unlock()
 
+	fmt.Printf("addMeta. executorName=%s, job=%+v\n", executorName, job)
 	executor, ok := m.executors[executorName]
 	if !ok {
 		executor = &executorMeta{}
