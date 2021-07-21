@@ -1462,9 +1462,24 @@ func (r *Resolver) CreateBatchSpecExecution(ctx context.Context, args *graphqlba
 	actor := actor.FromContext(ctx)
 
 	exec := &btypes.BatchSpecExecution{
-		BatchSpec:       args.Spec,
-		UserID:          actor.UID,
-		NamespaceUserID: actor.UID,
+		BatchSpec: args.Spec,
+		UserID:    actor.UID,
+	}
+
+	// TODO: Add a test to verify namespace is correctly set and permissions are enforced properly.
+	if args.Namespace != nil {
+		err = graphqlbackend.UnmarshalNamespaceID(*args.Namespace, &exec.NamespaceUserID, &exec.NamespaceOrgID)
+		if err != nil {
+			return nil, err
+		}
+		svc := service.New(r.store)
+		// 🚨 SECURITY: Check that the requesting user has access to the namespace.
+		err = svc.CheckNamespaceAccess(ctx, exec.NamespaceUserID, exec.NamespaceOrgID)
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		exec.NamespaceUserID = actor.UID
 	}
 
 	if err := r.store.CreateBatchSpecExecution(ctx, exec); err != nil {

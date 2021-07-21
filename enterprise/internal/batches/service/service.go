@@ -15,7 +15,6 @@ import (
 	btypes "github.com/sourcegraph/sourcegraph/enterprise/internal/batches/types"
 	"github.com/sourcegraph/sourcegraph/internal/actor"
 	"github.com/sourcegraph/sourcegraph/internal/database"
-	"github.com/sourcegraph/sourcegraph/internal/database/dbutil"
 	"github.com/sourcegraph/sourcegraph/internal/extsvc/auth"
 	"github.com/sourcegraph/sourcegraph/internal/httpcli"
 	"github.com/sourcegraph/sourcegraph/internal/repoupdater"
@@ -74,7 +73,7 @@ func (s *Service) CreateBatchSpec(ctx context.Context, opts CreateBatchSpecOpts)
 	}
 
 	// Check whether the current user has access to either one of the namespaces.
-	err = checkNamespaceAccess(ctx, s.store.DB(), opts.NamespaceUserID, opts.NamespaceOrgID)
+	err = s.CheckNamespaceAccess(ctx, opts.NamespaceUserID, opts.NamespaceOrgID)
 	if err != nil {
 		return nil, err
 	}
@@ -267,7 +266,7 @@ func (s *Service) MoveBatchChange(ctx context.Context, opts MoveBatchChangeOpts)
 	}
 	// Check if current user has access to target namespace if set.
 	if opts.NewNamespaceOrgID != 0 || opts.NewNamespaceUserID != 0 {
-		err = checkNamespaceAccess(ctx, s.store.DB(), opts.NewNamespaceUserID, opts.NewNamespaceOrgID)
+		err = s.CheckNamespaceAccess(ctx, opts.NewNamespaceUserID, opts.NewNamespaceOrgID)
 		if err != nil {
 			return nil, err
 		}
@@ -469,7 +468,7 @@ func (s *Service) ReenqueueChangeset(ctx context.Context, id int64) (changeset *
 	return changeset, repo, nil
 }
 
-// checkNamespaceAccess checks whether the current user in the ctx has access
+// CheckNamespaceAccess checks whether the current user in the ctx has access
 // to either the user ID or the org ID as a namespace.
 // If the userID is non-zero that will be checked. Otherwise the org ID will be
 // checked.
@@ -477,11 +476,11 @@ func (s *Service) ReenqueueChangeset(ctx context.Context, id int64) (changeset *
 // Otherwise it checks whether the current user _is_ the namespace user or has
 // access to the namespace org.
 // If both values are zero, an error is returned.
-func checkNamespaceAccess(ctx context.Context, db dbutil.DB, namespaceUserID, namespaceOrgID int32) error {
+func (s *Service) CheckNamespaceAccess(ctx context.Context, namespaceUserID, namespaceOrgID int32) error {
 	if namespaceOrgID != 0 {
-		return backend.CheckOrgAccessOrSiteAdmin(ctx, db, namespaceOrgID)
+		return backend.CheckOrgAccessOrSiteAdmin(ctx, s.store.DB(), namespaceOrgID)
 	} else if namespaceUserID != 0 {
-		return backend.CheckSiteAdminOrSameUser(ctx, db, namespaceUserID)
+		return backend.CheckSiteAdminOrSameUser(ctx, s.store.DB(), namespaceUserID)
 	} else {
 		return ErrNoNamespace
 	}

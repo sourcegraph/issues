@@ -5,13 +5,17 @@ import {
     BatchSpecExecutionCreateFields,
     CreateBatchSpecExecutionResult,
     CreateBatchSpecExecutionVariables,
+    Scalars,
 } from '../../../graphql-operations'
 
-export async function createBatchSpecExecution(spec: string): Promise<BatchSpecExecutionCreateFields> {
+export async function createBatchSpecExecution(
+    spec: string,
+    namespace: Scalars['ID']
+): Promise<BatchSpecExecutionCreateFields> {
     const result = await requestGraphQL<CreateBatchSpecExecutionResult, CreateBatchSpecExecutionVariables>(
         gql`
-            mutation CreateBatchSpecExecution($spec: String!) {
-                createBatchSpecExecution(spec: $spec) {
+            mutation CreateBatchSpecExecution($spec: String!, $namespace: ID) {
+                createBatchSpecExecution(spec: $spec, namespace: $namespace) {
                     ...BatchSpecExecutionCreateFields
                 }
             }
@@ -23,7 +27,7 @@ export async function createBatchSpecExecution(spec: string): Promise<BatchSpecE
                 }
             }
         `,
-        { spec }
+        { spec, namespace }
     ).toPromise()
     return dataOrThrowErrors(result).createBatchSpecExecution
 }

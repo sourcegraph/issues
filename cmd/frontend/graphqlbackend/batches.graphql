@@ -2168,8 +2168,11 @@ extend type Mutation {
     Creates a new batch spec execution from a given batch spec yaml file input.
     The execution will be queued for processing by an executor. If some are available
     for work, they will pick this up eventually.
+
+
+    If namespace is not specified, the current user's personal namespace is used.
     """
-    createBatchSpecExecution(spec: String!): BatchSpecExecution!
+    createBatchSpecExecution(spec: String!, namespace: ID): BatchSpecExecution!
 }
 
 extend type Query {
