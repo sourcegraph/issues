@@ -104,6 +104,7 @@ func (s *JVMPackagesSource) GetRepo(ctx context.Context, artifactPath string) (*
 
 	dbDeps, err := s.dbStore.GetJVMDependencyRepos(ctx)
 	if err != nil {
+		return nil, err
 	}
 
 	for _, dep := range dbDeps {
@@ -113,8 +114,6 @@ func (s *JVMPackagesSource) GetRepo(ctx context.Context, artifactPath string) (*
 		}
 		dependencies = append(dependencies, parsed)
 	}
-
-	fmt.Printf("ALL DEPS %+v\n", dependencies)
 
 	for _, dep := range dependencies {
 		if dep.MavenModule == module {

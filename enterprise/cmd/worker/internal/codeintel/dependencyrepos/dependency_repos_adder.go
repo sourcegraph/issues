@@ -79,7 +79,7 @@ func (h *dependencyRepoAddingHandler) Handle(ctx context.Context, record workeru
 
 		parser, ok := schemeToParser[packageReference.Scheme]
 		if !ok {
-			return errors.Newf("no parser found for schema %s", packageReference.Scheme)
+			return &ReferenceSchemeError{Scheme: packageReference.Scheme}
 		}
 
 		result, err := parser(packageReference.Package)
@@ -130,4 +130,12 @@ func (h *dependencyRepoAddingHandler) Handle(ctx context.Context, record workeru
 	}
 
 	return err
+}
+
+type ReferenceSchemeError struct {
+	Scheme string
+}
+
+func (e *ReferenceSchemeError) Error() string {
+	return fmt.Sprintf("no parser found for schema %s", e.Scheme)
 }

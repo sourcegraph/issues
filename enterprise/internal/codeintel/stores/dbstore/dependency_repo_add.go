@@ -3,7 +3,6 @@ package dbstore
 import (
 	"context"
 	"database/sql"
-	"fmt"
 	"time"
 
 	"github.com/cockroachdb/errors"
@@ -118,12 +117,10 @@ func (s *Store) InsertCloneableDependencyRepos(ctx context.Context, dependencies
 			err = errors.Wrap(flushErr, "batch.Inserter.Flush")
 		}
 	}()
-	fmt.Printf("inserting %d elements\n", len(dependencies))
 	for _, dep := range dependencies {
 		if insertErr := inserter.Insert(ctx, dep.Identifier, dep.Version, dep.Scheme); insertErr != nil {
 			return errors.Wrap(err, "batch.Inserter")
 		}
-		fmt.Printf("inserted %+v\n", dep)
 	}
 	return nil
 }
