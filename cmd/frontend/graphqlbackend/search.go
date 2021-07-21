@@ -320,7 +320,8 @@ func (r *searchResolver) suggestFilePaths(ctx context.Context, limit int) ([]Sea
 		SearcherURLs:    r.searcherURLs,
 	}
 
-	if args.PatternInfo.IsEmpty() {
+	isEmpty := args.PatternInfo.Pattern == "" && args.PatternInfo.ExcludePattern == "" && len(args.PatternInfo.IncludePatterns) == 0
+	if isEmpty {
 		// Empty query isn't an error, but it has no results.
 		return nil, nil
 	}
