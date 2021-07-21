@@ -22,7 +22,7 @@ interface CodeHostItemProps {
     // optional service object fields when the code host connection is active
     service?: ListExternalServiceFields
 
-    onDidAdd: (service: ListExternalServiceFields) => void
+    onDidAdd?: (service: ListExternalServiceFields) => void
     onDidRemove: () => void
     onDidError: (error: ErrorLike) => void
 }

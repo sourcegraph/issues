@@ -232,7 +232,7 @@ export const Layout: React.FunctionComponent<LayoutProps> = props => {
         props.location.pathname === '/sign-in' ||
         props.location.pathname === '/sign-up' ||
         props.location.pathname === '/password-reset' ||
-        props.location.pathname === '/post-sign-up'
+        props.location.pathname === '/welcome'
 
     // TODO Change this behavior when we have global focus management system
     // Need to know this for disable autofocus on nav search input

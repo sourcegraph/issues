@@ -1,0 +1,9 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Steps Invalid configuration will error when StepPanels does not includes children 1`] = `"StepPanels must include at least one child"`;
+
+exports[`Steps Invalid configuration will error when initial step is less than 1 1`] = `"Current step is out of limits"`;
+
+exports[`Steps Invalid configuration will error when initial step is more than <Step> components length 1`] = `"The step-index is out of the boundaries. Check if the number of steps and your initialStep or setStep assignation are in concordance."`;
+
+exports[`Steps Invalid configuration will error when initial step is more than Steps length 1`] = `"Current step is out of limits"`;

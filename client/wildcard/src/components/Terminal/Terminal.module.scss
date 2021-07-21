@@ -1,0 +1,46 @@
+.download-progress-wrapper,
+.download-progress-item {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    display: flex;
+    flex: 1;
+}
+
+.terminal-wrapper {
+    padding: 1.5rem;
+    background-color: #214863;
+    color: var(--light-text);
+    height: 25rem;
+    overflow-y: auto;
+}
+
+.terminal-line {
+    display: flex;
+    width: 100%;
+}
+
+.terminal-title {
+    flex: 1;
+    font-weight: bold;
+    color: var(--oc-green-4);
+}
+
+.download-progress-wrapper {
+    flex-direction: column;
+}
+
+.download-progress {
+    display: flex;
+    flex: 1;
+    max-width: 100%;
+    &::before {
+        content: '[';
+    }
+    &::after {
+        content: ']';
+        display: flex;
+        flex: 1;
+        justify-content: flex-end;
+    }
+}

@@ -1,0 +1,56 @@
+.list,
+.list-numeric {
+    display: flex;
+    gap: 1rem;
+    padding: 0;
+    margin: 0;
+    justify-content: space-between;
+    list-style-position: inside;
+}
+
+.list {
+    list-style: none;
+}
+
+.list-item {
+    flex: 1;
+    border: 0;
+    border-top-width: 2px;
+    padding-top: 0.5rem;
+    border-style: solid;
+    color: var(--text-muted);
+}
+
+.active {
+    color: var(--body-color);
+}
+
+.border-reset {
+    border: 0;
+}
+
+.color-purple {
+    border-top-color: var(--logo-purple);
+}
+
+.color-blue {
+    border-top-color: var(--logo-blue);
+}
+
+.color-orange {
+    border-top-color: var(--logo-orange);
+}
+
+.disabled {
+    color: var(--color-text-3);
+    border-top-color: var(--color-bg);
+}
+
+.button {
+    background: none;
+    padding: 0;
+    border: none;
+    &:disabled {
+        cursor: not-allowed;
+    }
+}

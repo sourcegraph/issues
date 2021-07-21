@@ -38,6 +38,21 @@
 
 .post-signup-page {
     margin-top: 7rem;
+    margin-bottom: 5rem;
+    &__logo {
+        height: 1.75rem;
+        width: 1.75rem;
+    }
+    &__logo-link {
+        outline: 0;
+        margin: 0.25rem 0.5rem;
+        display: flex;
+        width: fit-content;
+        text-decoration: none;
+    }
+    &__link-disabled {
+        color: var(--hl-gray-5);
+    }
     &__container {
         width: 37.25rem;
     }

@@ -251,12 +251,10 @@ export const UserAddCodeHostsPage: React.FunctionComponent<UserAddCodeHostsPageP
 
             {/* display external service errors and success banners */}
             {getErrorAndSuccessBanners(statusOrError)}
-
             {/* display other errors, e.g. network errors */}
             {isErrorLike(statusOrError) && (
                 <ErrorAlert error={statusOrError} prefix="Code host action error" icon={false} />
             )}
-
             {codeHostExternalServices && isServicesByKind(statusOrError) ? (
                 <Container>
                     <ul className="list-group">
