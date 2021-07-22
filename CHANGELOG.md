@@ -15,7 +15,7 @@ All notable changes to Sourcegraph are documented in this file.
 
 ### Added
 
--
+- Code Insights background queries now process in a priority order backwards through time. This will allow insights to populate concurrently. [#23101](https://github.com/sourcegraph/sourcegraph/pull/23101)
 
 ### Changed
 

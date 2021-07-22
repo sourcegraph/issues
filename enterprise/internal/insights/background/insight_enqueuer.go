@@ -5,6 +5,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/sourcegraph/sourcegraph/internal/insights/priority"
+
 	"github.com/sourcegraph/sourcegraph/internal/insights"
 
 	"github.com/cockroachdb/errors"
@@ -95,6 +97,8 @@ func discoverAndEnqueueInsights(
 				SearchQuery:  withCountUnlimited(series.Query),
 				ProcessAfter: &processAfter,
 				State:        "queued",
+				Priority:     int(priority.High),
+				Cost:         int(priority.Indexed),
 			})
 			if err != nil {
 				multi = multierror.Append(multi, err)

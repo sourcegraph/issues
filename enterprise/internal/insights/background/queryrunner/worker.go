@@ -112,7 +112,7 @@ func createDBWorkerStore(s *basestore.Store) dbworkerstore.Store {
 		StalledMaxAge:     60 * time.Second,
 		RetryAfter:        10 * time.Second,
 		MaxNumRetries:     3,
-		OrderByExpression: sqlf.Sprintf("id"),
+		OrderByExpression: sqlf.Sprintf("priority, id"),
 	})
 }
 
@@ -127,6 +127,8 @@ func EnqueueJob(ctx context.Context, workerBaseStore *basestore.Store, job *Job)
 			job.RecordTime,
 			job.State,
 			job.ProcessAfter,
+			job.Cost,
+			job.Priority,
 		),
 	))
 	return
@@ -139,8 +141,10 @@ INSERT INTO insights_query_runner_jobs (
 	search_query,
 	record_time,
 	state,
-	process_after
-) VALUES (%s, %s, %s, %s, %s)
+	process_after,
+	cost,
+	priority
+) VALUES (%s, %s, %s, %s, %s, %s, %s)
 RETURNING id
 `
 
@@ -165,6 +169,8 @@ SELECT
 	series_id,
 	search_query,
 	record_time,
+	cost,
+	priority,
 	id,
 	state,
 	failure_message,
@@ -224,6 +230,8 @@ type Job struct {
 	SeriesID    string
 	SearchQuery string
 	RecordTime  *time.Time // If non-nil, record results at this time instead of the time at which search results were found.
+	Cost        int
+	Priority    int
 
 	// Standard/required dbworker fields. If enqueuing a job, these may all be zero values except State.
 	//
@@ -266,6 +274,8 @@ func doScanJobs(rows *sql.Rows, err error) ([]*Job, error) {
 			&j.SeriesID,
 			&j.SearchQuery,
 			&j.RecordTime,
+			&j.Cost,
+			&j.Priority,
 
 			// Standard/required dbworker fields.
 			&j.ID,
@@ -296,6 +306,8 @@ var jobsColumns = []*sqlf.Query{
 	sqlf.Sprintf("insights_query_runner_jobs.series_id"),
 	sqlf.Sprintf("insights_query_runner_jobs.search_query"),
 	sqlf.Sprintf("insights_query_runner_jobs.record_time"),
+	sqlf.Sprintf("insights_query_runner_jobs.cost"),
+	sqlf.Sprintf("insights_query_runner_jobs.priority"),
 	sqlf.Sprintf("id"),
 	sqlf.Sprintf("state"),
 	sqlf.Sprintf("failure_message"),

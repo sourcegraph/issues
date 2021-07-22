@@ -8,6 +8,8 @@ import (
 	"sync"
 	"time"
 
+	"github.com/sourcegraph/sourcegraph/internal/insights/priority"
+
 	"github.com/sourcegraph/sourcegraph/internal/insights"
 
 	"github.com/cockroachdb/errors"
@@ -483,6 +485,8 @@ func (h *historicalEnqueuer) buildSeries(ctx context.Context, bctx *buildSeriesC
 		SearchQuery: query,
 		RecordTime:  &frameMidpoint,
 		State:       "queued",
+		Priority:    int(priority.FromTimeInterval(frameMidpoint, time.Now())), // eventually we will use the end of the historical range, for now current time works fine
+		Cost:        int(priority.Unindexed),
 	})
 	return
 }
