@@ -7,7 +7,7 @@
 
 ![Screenshot](https://user-images.githubusercontent.com/1646931/46309383-09ba9800-c571-11e8-8ee4-1a2ec32072f2.png)
 
-**Features**
+**Enterprise Features**
 
 - Fast global code search with a hybrid backend that combines a trigram index with in-memory streaming.
 - Code intelligence for many languages via the [Language Server Index Format](https://lsif.dev/).
