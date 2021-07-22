@@ -285,6 +285,18 @@ export const checkIsGitHub = (): boolean => checkIsGitHubDotCom() || checkIsGitH
 
 const OPEN_ON_SOURCEGRAPH_ID = 'open-on-sourcegraph'
 
+const adjustOverlayPosition: CodeHost['adjustOverlayPosition'] = ({ top, left }) => {
+    const octotree = document.querySelector('.octotree-sidebar')
+    // When browser install octotree plugin, it shows a sidebar on left.
+    if (octotree) {
+        left += octotree.getBoundingClientRect().right
+    }
+    return {
+        top,
+        left,
+    }
+}
+
 export const createOpenOnSourcegraphIfNotExists: MountGetter = (container: HTMLElement): HTMLElement | null => {
     const pageheadActions = querySelectorOrSelf(container, '.pagehead-actions')
     // If ran on page that isn't under a repository namespace.
@@ -324,6 +336,7 @@ export const githubCodeHost: CodeHost = {
     codeViewResolvers: [genericCodeViewResolver, fileLineContainerResolver, searchResultCodeViewResolver],
     contentViewResolvers: [markdownBodyViewResolver],
     nativeTooltipResolvers: [nativeTooltipResolver],
+    adjustOverlayPosition,
     getContext: () => {
         const repoHeaderHasPrivateMarker =
             !!document.querySelector('.repohead .private') ||
