@@ -2,7 +2,7 @@
 
 ## What does "best practice" mean to us?
 
-Sourcegraph is a highly scalable and configurable application. As an open source company we hope our customers will feel empowered to customize Sourcegraph to meet their unique needs, but we cannot guarantee whether deviations from the below guidelines will work or be supportable by Sourcegraph. If in doubt, please contact your Customer Engineer or reach out to support.
+Sourcegraph is a highly scalable and configurable application. As an open source company we hope our customers will feel empowered to customize Sourcegraph to meet their unique needs, but we cannot guarantee whether deviations from the below guidelines will work or be supportable by Sourcegraph. If in doubt, please contact your Customer Engineer or [reach out to support](../index.md#get-help).
 
 ## Sourcegraph Performance Dependencies
 
@@ -14,17 +14,12 @@ _To get a better idea of your resource requirements for your instance use our_ [
 
 ## Deployment Best Practices
 
-## Docker Compose
+### Docker Compose
 
-Docker Compose Sourcegraph may be customized by forking our [repo](https://github.com/sourcegraph/deploy-sourcegraph-docker) and altering our standard [docker-compose.yaml](https://sourcegraph.com/github.com/sourcegraph/deploy-sourcegraph-docker@master/-/blob/docker-compose/docker-compose.yaml) file, we consider the following best practice:
+- Docker Compose Sourcegraph may be customized using our [configuration guide](install/docker-compose/operations.md#configure), and should follow our [configuration best practices](install/docker-compose/operations.md#configuration-best-practices).
+- Our [Docker Compose requirements](install/docker-compose/index.md#docker-compose) must be met.
 
-- The version argument in the .yaml file must be the same as in the standard deployment
-- Users should only alter the .yaml file to adjust resource limits, or duplicate container entries to add more container replicas
-- Minimum Docker version: v20.10.0 ([https://docs.docker.com/engine/release-notes/#20100](https://docs.docker.com/engine/release-notes/#20100))
-- Minimum version of Docker Compose: v1.22.0 ([https://docs.docker.com/compose/release-notes/#1220](https://docs.docker.com/compose/release-notes/#1220)) - this is first version that supports Docker Compose format `2.4`
-- Docker Compose deployments should only be deployed with `docker-compose up`, and not Docker Swarm
-
-## Kubernetes
+### Kubernetes
 
 Kubernetes deployments may be customized in a variety of ways, we consider the following best practice:
 
@@ -40,7 +35,7 @@ _Unless scale, resiliency, or some other legitimate need exists that necessitate
 
 _Any major modifications outside of what we ship in the [standard deployment](https://github.com/sourcegraph/deploy-sourcegraph) are the responsibility of the user to manage, including but not limited to: Helm templates, Terraform configuration, and other ops/infrastructure tooling._
 
-## Sourcegraph Server (single Docker container)
+### Sourcegraph Server (single Docker container)
 
 Sourcegraph Server is best used for trying out Sourcegraph. It&#39;s not intended for enterprise production deployments for the following reasons:
 

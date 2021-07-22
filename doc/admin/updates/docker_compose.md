@@ -2,6 +2,9 @@
 
 This document describes the exact changes needed to update a [Docker Compose Sourcegraph instance](../install/docker-compose.md).
 Each section comprehensively describes the steps needed to upgrade, and any manual migration steps you must perform.
+**Always refer to this page before upgrading Sourcegraph**, as it comprehensively describes the steps needed to upgrade, and any manual migration steps you must perform.
+
+Also refer to the [upgrade guide](../install/docker-compose/operations.md#upgrade).
 
 A new version of Sourcegraph is released every month (with patch releases in between, released as needed). Check the [Sourcegraph blog](https://about.sourcegraph.com/blog) or the site admin updates page to learn about updates. We actively maintain the two most recent monthly releases of Sourcegraph.
 
@@ -11,8 +14,6 @@ A new version of Sourcegraph is released every month (with patch releases in bet
 
 > ⚠️ **Regardless of your deployment type:** ⚠️
 > <br>Check your <a href="../migrations">out of band migration status</a> prior to upgrade to avoid a necessary rollback while the migration finishes.
-
-**Always refer to this page before upgrading Sourcegraph,** as it comprehensively describes the steps needed to upgrade, and any manual migration steps you must perform.
 
 <!-- GENERATE UPGRADE GUIDE ON RELEASE (release tooling uses this to add entries) -->
 
@@ -210,20 +211,6 @@ docker run --rm -it -v /var/lib/docker:/docker alpine:latest sh -c 'chown -R 999
 
 ### Standard upgrade procedure
 
-In your fork of [the deploy-sourcegraph-docker](https://github.com/sourcegraph/deploy-sourcegraph-docker) repository, merge the new version into the `release` branch if you maintain any changes (see: [storing customizations in a fork](../install/docker-compose.md#optional-recommended-store-customizations-in-a-fork)):
+Refer to the [upgrade guide](../install/docker-compose/operations.md#upgrade).
 
-```sh
-cd docker-compose/
-git fetch upstream
-git merge upstream $NEW_VERSION
-# Address any merge conflicts you may have.
-```
 
-Then on your server:
-
-```sh
-cd deploy-sourcegraph-docker/docker-compose/
-docker-compose down --remove-orphans
-git pull
-docker-compose up -d
-```

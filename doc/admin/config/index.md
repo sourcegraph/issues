@@ -1,5 +1,7 @@
 # Configuring Sourcegraph
 
+This page documents how to configure a Sourcegraph instance. For deployment configuration, please refer to the [relevant installation guide](../install/index.md).
+
 - [Site configuration](site_config.md)
 - [Code host configuration](../external_service/index.md) (GitHub, GitLab, and the [Nginx HTTP server](../http_https_configuration.md).)
 - [Search configuration](../search.md)

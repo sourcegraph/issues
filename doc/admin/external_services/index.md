@@ -17,3 +17,9 @@ See the following guides to use an external or managed version of each service t
 - See [Using your own PostgreSQL server](./postgres.md) to replace the bundled PostgreSQL instances.
 - See [Using your own Redis server](./redis.md) to replace the bundled Redis instances.
 - See [Using a managed object storage service (S3 or GCS)](./object_storage.md) to replace the bundled MinIO instance.
+
+## Cloud alternatives
+
+- Amazon Web Services: [AWS RDS for PostgreSQL](https://aws.amazon.com/rds/), [Amazon ElastiCache](https://aws.amazon.com/elasticache/redis/), and [S3](https://aws.amazon.com/s3/) for storing user uploads.
+- Google Cloud: [Cloud SQL for PostgreSQL](https://cloud.google.com/sql/docs/postgres/), [Cloud Memorystore](https://cloud.google.com/memorystore/), and [Cloud Storage](https://cloud.google.com/storage) for storing user uploads.
+- Digital Ocean: [Digital Ocean Managed Databases](https://www.digitalocean.com/products/managed-databases/) for [Postgres](https://www.digitalocean.com/products/managed-databases-postgresql/), [Redis](https://www.digitalocean.com/products/managed-databases-redis/), and [Spaces](https://www.digitalocean.com/products/spaces/) for storing user uploads.
