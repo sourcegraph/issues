@@ -1,6 +1,12 @@
+import { GraphQLError } from 'graphql'
+import type { Location } from 'history'
+
 import { Scalars } from '@sourcegraph/shared/src/graphql-operations'
+import { GraphQLResult } from '@sourcegraph/shared/src/graphql/graphql'
 import { hasProperty } from '@sourcegraph/shared/src/util/types'
 
+import { Connection } from './ConnectionType'
+import { QUERY_KEY } from './constants'
 import type { FilteredConnectionFilter, FilteredConnectionFilterValue } from './FilterControl'
 
 /** Checks if the passed value satisfies the GraphQL Node interface */
@@ -41,4 +47,85 @@ export const parseQueryInt = (searchParameters: URLSearchParams, name: string): 
         return valueNumber
     }
     return null
+}
+
+/**
+ * Determine if a connection has a next page.
+ * Provides fallback logic to support queries where `hasNextPage` is undefined.
+ */
+export const hasNextPage = (connection: Connection<unknown>): boolean =>
+    connection.pageInfo
+        ? connection.pageInfo.hasNextPage
+        : typeof connection.totalCount === 'number' && connection.nodes.length < connection.totalCount
+
+export interface GetUrlQueryParameters {
+    first: {
+        actual: number
+        default: number
+    }
+    query?: string
+    values?: Map<string, FilteredConnectionFilterValue>
+    filters?: FilteredConnectionFilter[]
+    visibleResultCount?: number
+    search: Location['search']
+}
+
+/**
+ * Determines the URL search parameters for a connection.
+ */
+export const getUrlQuery = ({
+    first,
+    query,
+    values,
+    visibleResultCount,
+    filters,
+    search,
+}: GetUrlQueryParameters): string => {
+    const searchParameters = new URLSearchParams(search)
+
+    if (query) {
+        searchParameters.set(QUERY_KEY, query)
+    }
+
+    if (first.actual !== first.default) {
+        searchParameters.set('first', String(first.actual))
+    }
+
+    if (values && filters) {
+        for (const filter of filters) {
+            const value = values.get(filter.id)
+            if (value === undefined) {
+                continue
+            }
+            if (value !== filter.values[0]) {
+                searchParameters.set(filter.id, value.value)
+            } else {
+                searchParameters.delete(filter.id)
+            }
+        }
+    }
+
+    if (visibleResultCount && visibleResultCount !== 0 && visibleResultCount !== first.actual) {
+        searchParameters.set('visible', String(visibleResultCount))
+    }
+
+    return searchParameters.toString()
+}
+
+interface AsGraphQLResultParameters<TResult> {
+    data?: TResult
+    errors: readonly GraphQLError[]
+}
+
+/**
+ * Map non-conforming GraphQL responses to a GraphQLResult.
+ */
+export const asGraphQLResult = <T>({ data, errors }: AsGraphQLResultParameters<T>): GraphQLResult<T> => {
+    if (!data) {
+        return { data: undefined, errors }
+    }
+    return {
+        data,
+        errors: undefined,
+    }
 }

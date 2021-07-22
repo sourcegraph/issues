@@ -6,7 +6,7 @@ import { useRedesignToggle } from '@sourcegraph/shared/src/util/useRedesignToggl
 
 import { ConnectionNodesSummary } from './ConnectionNodesSummary'
 import { Connection } from './ConnectionType'
-import { hasID } from './utils'
+import { hasID, hasNextPage } from './utils'
 
 /**
  * Props for the FilteredConnection component's result nodes and associated summary/pagination controls.
@@ -137,11 +137,8 @@ export const ConnectionNodes = <C extends Connection<N>, N, NP = {}, HP = {}>({
     onShowMore,
     showMoreClassName,
 }: ConnectionNodesProps<C, N, NP, HP>): JSX.Element => {
+    const nextPage = hasNextPage(connection)
     const [isRedesignEnabled] = useRedesignToggle()
-
-    const hasNextPage = connection.pageInfo
-        ? connection.pageInfo.hasNextPage
-        : typeof connection.totalCount === 'number' && connection.nodes.length < connection.totalCount
 
     const totalCount = getTotalCount(connection, first)
     const summary = (
@@ -154,7 +151,7 @@ export const ConnectionNodes = <C extends Connection<N>, N, NP = {}, HP = {}>({
             connectionQuery={connectionQuery}
             emptyElement={emptyElement}
             connection={connection}
-            hasNextPage={hasNextPage}
+            hasNextPage={nextPage}
         />
     )
 
@@ -183,7 +180,7 @@ export const ConnectionNodes = <C extends Connection<N>, N, NP = {}, HP = {}>({
             {!loading && (
                 <div className={summaryContainerClassName}>
                     {!connectionQuery && summary}
-                    {!noShowMore && hasNextPage && (
+                    {!noShowMore && nextPage && (
                         <button
                             type="button"
                             className={classNames(

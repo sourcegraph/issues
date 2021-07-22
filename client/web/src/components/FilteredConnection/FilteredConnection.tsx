@@ -26,9 +26,10 @@ import { asError, ErrorLike, isErrorLike } from '@sourcegraph/shared/src/util/er
 import { ErrorMessage } from '../alerts'
 
 import { ConnectionNodes, ConnectionNodesState, ConnectionNodesDisplayProps, ConnectionProps } from './ConnectionNodes'
-import { Connection } from './ConnectionType'
+import { Connection, ConnectionQueryArguments } from './ConnectionType'
+import { QUERY_KEY } from './constants'
 import { FilterControl, FilteredConnectionFilter, FilteredConnectionFilterValue } from './FilterControl'
-import { getFilterFromURL, parseQueryInt } from './utils'
+import { getFilterFromURL, getUrlQuery, parseQueryInt } from './utils'
 
 /**
  * Fields that belong in FilteredConnectionProps and that don't depend on the type parameters. These are the fields
@@ -126,12 +127,7 @@ interface FilteredConnectionProps<C extends Connection<N>, N, NP = {}, HP = {}>
 /**
  * The arguments for the Props.queryConnection function.
  */
-export interface FilteredConnectionQueryArguments {
-    first?: number
-    after?: string
-    query?: string
-}
-
+export interface FilteredConnectionQueryArguments extends ConnectionQueryArguments {}
 interface FilteredConnectionState<C extends Connection<N>, N> extends ConnectionNodesState {
     activeValues: Map<string, FilteredConnectionFilterValue>
 
@@ -149,9 +145,6 @@ interface FilteredConnectionState<C extends Connection<N>, N> extends Connection
      */
     visible?: number
 }
-
-/** The URL query parameter where the search query for FilteredConnection is stored. */
-const QUERY_KEY = 'query'
 
 /**
  * Displays a collection of items with filtering and pagination. It is called
@@ -355,7 +348,7 @@ export class FilteredConnection<
                 .subscribe(
                     ({ connectionOrError, previousPage, ...rest }) => {
                         if (this.props.useURLQuery) {
-                            const searchFragment = this.urlQuery({ visible: previousPage.length })
+                            const searchFragment = this.urlQuery({ visibleResultCount: previousPage.length })
                             if (this.props.location.search !== searchFragment) {
                                 this.props.history.replace({
                                     search: searchFragment,
@@ -438,12 +431,12 @@ export class FilteredConnection<
         first,
         query,
         values,
-        visible,
+        visibleResultCount,
     }: {
         first?: number
         query?: string
         values?: Map<string, FilteredConnectionFilterValue>
-        visible?: number
+        visibleResultCount?: number
     }): string {
         if (!first) {
             first = this.state.first
@@ -454,34 +447,19 @@ export class FilteredConnection<
         if (!values) {
             values = this.state.activeValues
         }
-        const searchParameters = new URLSearchParams(this.props.location.search)
-        if (query) {
-            searchParameters.set(QUERY_KEY, query)
-        }
 
-        if (first !== this.props.defaultFirst) {
-            searchParameters.set('first', String(first))
-        }
-        if (values && this.props.filters) {
-            for (const filter of this.props.filters) {
-                if (values === undefined) {
-                    continue
-                }
-                const value = values.get(filter.id)
-                if (value === undefined) {
-                    continue
-                }
-                if (value !== filter.values[0]) {
-                    searchParameters.set(filter.id, value.value)
-                } else {
-                    searchParameters.delete(filter.id)
-                }
-            }
-        }
-        if (visible !== 0 && visible !== first) {
-            searchParameters.set('visible', String(visible))
-        }
-        return searchParameters.toString()
+        return getUrlQuery({
+            query,
+            first: {
+                actual: first,
+                // Always set through `defaultProps`
+                default: this.props.defaultFirst!,
+            },
+            values,
+            visibleResultCount,
+            search: this.props.location.search,
+            filters: this.props.filters,
+        })
     }
 
     public componentDidUpdate(): void {
