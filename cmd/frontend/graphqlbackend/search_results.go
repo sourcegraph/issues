@@ -548,7 +548,8 @@ func withMode(args search.TextParameters, st query.SearchType, versionContext *s
 
 	isFileOrPath := args.ResultTypes.Has(result.TypeFile) || args.ResultTypes.Has(result.TypePath)
 	isIndexedSearch := args.PatternInfo.Index != query.No
-	if isGlobalSearch() && isIndexedSearch && isFileOrPath {
+	isEmpty := args.PatternInfo.Pattern == "" && args.PatternInfo.ExcludePattern == "" && len(args.PatternInfo.IncludePatterns) == 0
+	if isGlobalSearch() && isIndexedSearch && isFileOrPath && !isEmpty {
 		args.Mode = search.ZoektGlobalSearch
 	}
 	return args
@@ -1437,7 +1438,7 @@ func (r *searchResolver) doResults(ctx context.Context, args *search.TextParamet
 
 	// performance optimization: call zoekt early, resolve repos concurrently, filter
 	// search results with resolved repos.
-	if args.Mode == search.ZoektGlobalSearch && !args.PatternInfo.IsEmpty() {
+	if args.Mode == search.ZoektGlobalSearch {
 		argsIndexed := *args
 		wg := waitGroup(true)
 		wg.Add(1)
