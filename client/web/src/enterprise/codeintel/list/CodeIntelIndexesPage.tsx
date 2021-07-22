@@ -2,7 +2,7 @@ import React, { FunctionComponent, useCallback, useEffect } from 'react'
 import { RouteComponentProps } from 'react-router'
 
 import { TelemetryProps } from '@sourcegraph/shared/src/telemetry/telemetryService'
-import { PageHeader } from '@sourcegraph/wildcard'
+import { Container, PageHeader } from '@sourcegraph/wildcard'
 
 import {
     FilteredConnection,
@@ -79,7 +79,7 @@ export const CodeIntelIndexesPage: FunctionComponent<CodeIntelIndexesPageProps> 
         <div className="code-intel-indexes">
             <PageTitle title="Precise code intelligence auto-index records" />
             <PageHeader
-                className="mb-3"
+                headingElement="h2"
                 path={[{ text: 'Precise code intelligence auto-index records' }]}
                 description={
                     <>
@@ -90,23 +90,27 @@ export const CodeIntelIndexesPage: FunctionComponent<CodeIntelIndexesPageProps> 
                         .
                     </>
                 }
+                className="mb-3"
             />
-            <div className="list-group position-relative">
-                <FilteredConnection<LsifIndexFields, Omit<CodeIntelIndexNodeProps, 'node'>>
-                    listComponent="div"
-                    listClassName="codeintel-indexes__grid mb-3"
-                    noun="index"
-                    pluralNoun="indexes"
-                    nodeComponent={CodeIntelIndexNode}
-                    nodeComponentProps={{ now }}
-                    queryConnection={queryIndexes}
-                    history={props.history}
-                    location={props.location}
-                    cursorPaging={true}
-                    filters={filters}
-                    defaultFilter="All"
-                />
-            </div>
+
+            <Container>
+                <div className="list-group position-relative">
+                    <FilteredConnection<LsifIndexFields, Omit<CodeIntelIndexNodeProps, 'node'>>
+                        listComponent="div"
+                        listClassName="codeintel-indexes__grid mb-3"
+                        noun="index"
+                        pluralNoun="indexes"
+                        nodeComponent={CodeIntelIndexNode}
+                        nodeComponentProps={{ now }}
+                        queryConnection={queryIndexes}
+                        history={props.history}
+                        location={props.location}
+                        cursorPaging={true}
+                        filters={filters}
+                        defaultFilter="All"
+                    />
+                </div>
+            </Container>
         </div>
     )
 }

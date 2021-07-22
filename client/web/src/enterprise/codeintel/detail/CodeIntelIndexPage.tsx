@@ -9,7 +9,7 @@ import { LSIFIndexState } from '@sourcegraph/shared/src/graphql-operations'
 import { TelemetryProps } from '@sourcegraph/shared/src/telemetry/telemetryService'
 import { asError, ErrorLike, isErrorLike } from '@sourcegraph/shared/src/util/errors'
 import { useObservable } from '@sourcegraph/shared/src/util/useObservable'
-import { PageHeader } from '@sourcegraph/wildcard'
+import { Container, PageHeader } from '@sourcegraph/wildcard'
 
 import { ErrorAlert } from '../../../components/alerts'
 import { PageTitle } from '../../../components/PageTitle'
@@ -94,6 +94,7 @@ export const CodeIntelIndexPage: FunctionComponent<CodeIntelIndexPageProps> = ({
             ) : (
                 <>
                     <PageHeader
+                        headingElement="h2"
                         path={[
                             {
                                 text: (
@@ -112,19 +113,21 @@ export const CodeIntelIndexPage: FunctionComponent<CodeIntelIndexPageProps> = ({
                         className="mb-3"
                     />
 
-                    <CodeIntelStateBanner
-                        state={indexOrError.state}
-                        placeInQueue={indexOrError.placeInQueue}
-                        failure={indexOrError.failure}
-                        typeName="index"
-                        pluralTypeName="indexes"
-                        className={classNamesByState.get(indexOrError.state)}
-                    />
-                    <CodeIntelIndexMeta node={indexOrError} now={now} />
-                    <CodeIntelAssociatedUpload node={indexOrError} now={now} />
+                    <Container>
+                        <CodeIntelStateBanner
+                            state={indexOrError.state}
+                            placeInQueue={indexOrError.placeInQueue}
+                            failure={indexOrError.failure}
+                            typeName="index"
+                            pluralTypeName="indexes"
+                            className={classNamesByState.get(indexOrError.state)}
+                        />
+                        <CodeIntelIndexMeta node={indexOrError} now={now} />
+                        <CodeIntelAssociatedUpload node={indexOrError} now={now} />
 
-                    <h3>Timeline</h3>
-                    <CodeIntelIndexTimeline index={indexOrError} now={now} className="mb-3" />
+                        <h3>Timeline</h3>
+                        <CodeIntelIndexTimeline index={indexOrError} now={now} className="mb-3" />
+                    </Container>
                 </>
             )}
         </div>

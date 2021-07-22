@@ -1,6 +1,7 @@
 import { subYears, formatISO } from 'date-fns'
 import * as H from 'history'
 import BookOpenVariantIcon from 'mdi-react/BookOpenVariantIcon'
+import BrainIcon from 'mdi-react/BrainIcon'
 import FolderIcon from 'mdi-react/FolderIcon'
 import HistoryIcon from 'mdi-react/HistoryIcon'
 import SettingsIcon from 'mdi-react/SettingsIcon'
@@ -424,6 +425,12 @@ export const TreePage: React.FunctionComponent<Props> = ({
                                             to={`/${encodeURIPathComponent(repo.name)}/-/stats/contributors`}
                                         >
                                             <UserIcon className="icon-inline" /> Contributors
+                                        </Link>
+                                        <Link
+                                            className="btn btn-outline-secondary"
+                                            to={`/${encodeURIPathComponent(repo.name)}/-/code-intelligence`}
+                                        >
+                                            <BrainIcon className="icon-inline" /> Code Intelligence
                                         </Link>
                                         {showBatchChanges && (
                                             <RepoBatchChangesButton

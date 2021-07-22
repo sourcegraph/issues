@@ -137,7 +137,7 @@ export const CodeIntelUploadsPage: FunctionComponent<CodeIntelUploadsPageProps> 
                 <div className="list-group position-relative">
                     <FilteredConnection<LsifUploadFields, Omit<CodeIntelUploadNodeProps, 'node'>>
                         listComponent="div"
-                        listClassName="codeintel-uploads__grid"
+                        listClassName="codeintel-uploads__grid mb-3"
                         noun="upload"
                         pluralNoun="uploads"
                         nodeComponent={CodeIntelUploadNode}
