@@ -258,6 +258,36 @@ interface TreeEntryLSIFData {
     https://sourcegraph.com/search?q=repo:%5Egithub%5C.com/sourcegraph/sourcegraph%24+type+DocumentationPathInfoResult+struct&patternType=literal&case=yes
     """
     documentationPathInfo(pathID: String!, maxDepth: Int, ignoreIndex: Boolean): JSONValue!
+
+    """
+    A list of definitions of the symbol described by the given documentation path ID, if any.
+    """
+    documentationDefinitions(pathID: String!): LocationConnection!
+
+    """
+    A list of references of the symbol under the given document position.
+    """
+    documentationReferences(
+        """
+        The documentation path ID, e.g. from the documentationPage return value.
+        """
+        pathID: String!
+
+        """
+        When specified, indicates that this request should be paginated and
+        to fetch results starting at this cursor.
+        A future request can be made for more results by passing in the
+        'LocationConnection.pageInfo.endCursor' that is returned.
+        """
+        after: String
+
+        """
+        When specified, indicates that this request should be paginated and
+        the first N results (relative to the cursor) should be returned. i.e.
+        how many results to return per page.
+        """
+        first: Int
+    ): LocationConnection!
 }
 
 """

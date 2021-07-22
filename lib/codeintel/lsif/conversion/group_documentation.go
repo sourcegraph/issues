@@ -129,6 +129,18 @@ func collectDocumentation(ctx context.Context, state *State) documentationChanne
 		return channels
 	}
 
+	// Build a map of documentationResult IDs -> document IDs.
+	documentationResultIDToDocumentID := map[int]int{}
+	for documentID := range state.DocumentData {
+		ranges := state.Contains.Get(documentID)
+		if ranges != nil {
+			ranges.Each(func(rangeID int) {
+				rn := state.RangeData[rangeID]
+				documentationResultIDToDocumentID[rn.DocumentationResultID] = documentID
+			})
+		}
+	}
+
 	pageCollector := &pageCollector{
 		numWorkers:                  32,
 		isChildPage:                 false,
@@ -137,6 +149,13 @@ func collectDocumentation(ctx context.Context, state *State) documentationChanne
 		startingDocumentationResult: state.DocumentationResultRoot,
 		dupChecker:                  &duplicateChecker{pathIDs: make(map[string]struct{}, 16*1024)},
 		walkedPages:                 &duplicateChecker{pathIDs: make(map[string]struct{}, 128)},
+		lookupFilepath: func(documentationResultID int) *string {
+			if documentID, ok := documentationResultIDToDocumentID[documentationResultID]; ok {
+				tmp := state.DocumentData[documentID]
+				return &tmp
+			}
+			return nil
+		},
 	}
 
 	tmpPages := make(chan *semantic.DocumentationPageData)
@@ -204,6 +223,7 @@ type pageCollector struct {
 	state                       *State
 	startingDocumentationResult int
 	dupChecker, walkedPages     *duplicateChecker
+	lookupFilepath              func(documentationResultID int) *string
 }
 
 func (p *pageCollector) collect(ctx context.Context, ch chan<- *semantic.DocumentationPageData, mappings chan<- semantic.DocumentationMapping) (remainingPages []*pageCollector) {
@@ -244,6 +264,7 @@ func (p *pageCollector) collect(ctx context.Context, ch chan<- *semantic.Documen
 					mappings <- semantic.DocumentationMapping{
 						ResultID: uint64(documentationResult),
 						PathID:   this.PathID,
+						FilePath: p.lookupFilepath(documentationResult),
 					}
 					remainingPages = append(remainingPages, &pageCollector{
 						isChildPage:                 true,
@@ -252,6 +273,7 @@ func (p *pageCollector) collect(ctx context.Context, ch chan<- *semantic.Documen
 						startingDocumentationResult: documentationResult,
 						dupChecker:                  p.dupChecker,
 						walkedPages:                 p.walkedPages,
+						lookupFilepath:              p.lookupFilepath,
 					})
 				}
 				return
@@ -259,6 +281,7 @@ func (p *pageCollector) collect(ctx context.Context, ch chan<- *semantic.Documen
 				mappings <- semantic.DocumentationMapping{
 					ResultID: uint64(documentationResult),
 					PathID:   this.PathID,
+					FilePath: p.lookupFilepath(documentationResult),
 				}
 				parent.Children = append(parent.Children, semantic.DocumentationNodeChild{
 					Node: this,

@@ -16,7 +16,6 @@ func (r *queryResolver) DocumentationReferences(ctx context.Context, pathID stri
 		LogFields: []log.Field{
 			log.Int("repositoryID", r.repositoryID),
 			log.String("commit", r.commit),
-			log.String("path", r.path),
 			log.Int("numUploads", len(r.uploads)),
 			log.String("uploads", uploadIDsToString(r.uploads)),
 			log.String("pathID", pathID),
@@ -33,12 +32,13 @@ func (r *queryResolver) DocumentationReferences(ctx context.Context, pathID stri
 	// request on the first location we find.
 	for _, upload := range r.uploads {
 		traceLog(log.Int("uploadID", upload.ID))
-		locations, _, err := r.lsifStore.DocumentationDefinitions(ctx, upload.ID, r.path, pathID, DefinitionsLimit, 0)
+		locations, _, err := r.lsifStore.DocumentationDefinitions(ctx, upload.ID, pathID, DefinitionsLimit, 0)
 		if err != nil {
 			return nil, "", errors.Wrap(err, "lsifStore.DocumentationDefinitions")
 		}
 		if len(locations) > 0 {
 			location := locations[0]
+			r.path = location.Path
 			return r.References(ctx, location.Range.Start.Line, location.Range.Start.Character, limit, rawCursor)
 		}
 	}

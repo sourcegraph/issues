@@ -180,6 +180,10 @@ type DocumentationMapping struct {
 
 	// PathID is the path ID corresponding to the documentationResult vertex ID.
 	PathID string `json:"pathID"`
+
+	// The file path corresponding to the documentationResult vertex ID, or nil if there is no
+	// associated file.
+	FilePath *string `json:"filePath"`
 }
 
 // Package pairs a package name and the dump that provides it.
