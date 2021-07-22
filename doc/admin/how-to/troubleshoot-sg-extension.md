@@ -26,6 +26,10 @@ This happens if the extension is disabled or if you're visiting a page where an 
 You can upgrade an extension in your private extension registry by simpily running the same `src extensions copy -extension-id=... -current-user=...` command as you would when you first [publish the extension](https://docs.sourcegraph.com/admin/extensions#publish-extensions-to-a-private-extension-registry).
 
 
+#### What does it mean when a red dot shows up on the Sourcegraph browser extension icon?
+
+The red dot indicates that either the Sourcegraph URL entered is invalid, or you are currently on a private repository. Visit our [browser extension docs](https://docs.sourcegraph.com/integration/browser_extension#make-it-work-for-private-code) for more information about enabling Sourcegraph to work with private repositories.
+
 ## Extension Specific FAQs
 
 #### Sonarqube: Error fetching Sonarqube data: Error: Forbidden
