@@ -74,7 +74,21 @@ For example, if your Perforce depot `//Sourcegraph/` has different permissions f
 }
 ```
 
-By configuring each subdirectory that has unique permissions, Sourcegraph is able to recognize and enforce permissions for each defined repository.
+By configuring each subdirectory that has unique permissions, Sourcegraph is able to recognize and enforce permissions for each defined repository. You *cannot* define these permissions as:
+
+
+```json
+{
+  ...
+  "depots": [
+    "//Sourcegraph/Backend/",
+    "//Sourcegraph/Frontend/",
+    "//Sourcegraph/Frontend/Extension/"
+  ]
+}
+```
+
+as this will override the permissions for the `//Sourcegraph/Frontend/Extension/` depot. See Known limitations below. 
 
 #### Known limitations
 
