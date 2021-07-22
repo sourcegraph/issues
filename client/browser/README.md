@@ -145,6 +145,8 @@ It currently does not run in CI and is intended to be run manually for release t
 
 ## Deploy
 
+### Chrome Web Store
+
 Deployment the Chrome web store happen automatically in CI when the `bext/release` branch is updated.
 Releases are also uploaded to the [GitHub releases
 page](https://github.com/sourcegraph/browser-extensions/releases) and tagged in
@@ -155,6 +157,26 @@ To release the latest commit on `main`, ensure your `main` branch is up-to-date 
 ```sh
 git push origin main:bext/release
 ```
+
+### Firefox Add-on Store
+
+Currently, we manually release to the Firefox store. This requires uploading both the bundled extension and the source code (for review) in the [Add-on Developer Hub](https://addons.mozilla.org/en-US/developers/addons).
+
+> To ensure that the bundle is reproducible from the source code, you'll bundle the source code first and then build the extension from that bundle. This also ensures that `code-intel-extensions` are fetched from scratch (rather than your cached version). This is important, since the FireFox extension bundles extensions rather than fetches them from the registry.
+
+First, get the newest releasable extension commit hash (such as the current `main` hash) and set it equal to `commitId` in the `client/browser/scripts/create-source-zip` script.
+
+Then, to zip the source code, run:
+
+```
+yarn run create-source-zip
+```
+
+Use the resulting `zip` to [build the extension](#install-dependencies-and-build). After finishing, you'll submit the `.xpi` file to the Firefox store and the `zip` from this step as the readable source code required.
+
+### Safari
+
+_TODO_
 
 ## Manual build of the browser extension
 
