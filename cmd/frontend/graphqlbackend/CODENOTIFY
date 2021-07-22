@@ -14,7 +14,7 @@ batches.go @eseliger
 
 # Insights
 insights.go @slimsag
-insights.go @felixfbecker
+insights.go @sourcegraph/code-insights-backend
 
 # Code intelligence
 codeintel.go @efritz
