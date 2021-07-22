@@ -1,9 +1,12 @@
 # Updating Sourcegraph
 
-> IMPORTANT: Please check [Upgrading docs](../../updates/kubernetes.md) before upgrading to any particular
-> version of Sourcegraph to check if any manual migrations are necessary.
 
 A new version of Sourcegraph is released every month (with patch releases in between, released as needed). Check the [Sourcegraph blog](https://about.sourcegraph.com/blog) for release announcements.
+
+> <br>
+> ⚠️ IMPORTANT: Please check [Upgrading docs](../../updates/kubernetes.md) for critical version-specific requirements before upgrading to any particular
+> version of Sourcegraph, to check if any manual migrations or changes are necessary.
+> <br> 
 
 ## Steps
 
@@ -16,24 +19,27 @@ A new version of Sourcegraph is released every month (with patch releases in bet
    git remote add upstream https://github.com/sourcegraph/deploy-sourcegraph
    ```
 
-1. Merge the new version of Sourcegraph into your release branch.
+2. <a name="merge">Merge the new version of Sourcegraph into your release branch.</a>
 
    ```bash
+   # Go to the directory for your fork of the sourcegraph/deploy-sourcegraph repository
    cd $DEPLOY_SOURCEGRAPH_FORK
+   # Retrieve the updated list of releases available
    git fetch
-   # to merge the upstream release tag into your release branch.
-   git checkout release
+   # Check out your release branch, ready to merge the upstream release tag into your release branch.
+   git checkout release # Or use `git checkout -b release` to create the branch
    # Choose which version you want to deploy from https://github.com/sourcegraph/deploy-sourcegraph/releases
-   git merge $NEW_VERSION
+   git merge $NEW_VERSION # e.g. `git merge v3.28.0`
+   
    ```
 
-1. Deploy the updated version of Sourcegraph to your Kubernetes cluster:
+3. Deploy the updated version of Sourcegraph to your Kubernetes cluster:
 
    ```
    ./kubectl-apply-all.sh
    ```
 
-1. Monitor the status of the deployment.
+4. Monitor the status of the deployment.
 
    ```
    kubectl get pods -o wide --watch
@@ -41,11 +47,15 @@ A new version of Sourcegraph is released every month (with patch releases in bet
 
 ## Rollback
 
-You can rollback by resetting your `release` branch to the old state and proceeding with step 2 above.
+You can rollback by resetting your `release` branch to the old state and proceeding with [step 2 above](#merge).
 
-_If an update includes a database migration, rollback will require some manual DB
-modifications. We plan to eliminate these in the near future, but for now,
-email <mailto:support@sourcegraph.com> if you have concerns before updating to a new release._
+To reset your branch to the default state:
+```
+git checkout -f release
+```
+
+> ⚠️ Warning: If an update you're rolling back _from_ included a database migration, rollback will require some manual DB modifications. 
+> We plan to eliminate these in the near future, but for now, email <mailto:support@sourcegraph.com> if you have concerns before updating to a new release or have issues rolling back.
 
 ## Improving update reliability and latency with node selectors
 
