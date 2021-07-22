@@ -167,9 +167,25 @@ Scroll to the bottom and check the *Allow 2-Legged OAuth* checkbox, then write y
 
 ---
 
-Go to your Sourcegraph's *Manage repositories* page (i.e. `https://sourcegraph.example.com/site-admin/external-services`) and either edit or create a new *Bitbucket Server* connection. Click on the *Enforce permissions* quick action on top of the configuration editor. Copy the *Consumer Key* you generated before to the `oauth.consumerKey` field and the output of the command `base64 sourcegraph.pem | tr -d '\n'` to the `oauth.signingKey` field.
+Go to your Sourcegraph's *Manage repositories* page (i.e. `https://sourcegraph.example.com/site-admin/external-services`) and either edit or create a new *Bitbucket Server* connection. Add the following settings:
 
-<img src="https://imgur.com/ucetesA.png" width="800">
+```
+{
+// Other config goes here
+	"authorization": {
+		"identityProvider": {
+			"type": "username"
+		},
+		"oauth": {
+			"consumerKey": "KEY GOES HERE",
+			"signingKey": "KEY GOES HERE"
+		}
+	}
+}
+
+```
+
+Copy the *Consumer Key* you generated before to the `oauth.consumerKey` field and the output of the command `base64 sourcegraph.pem | tr -d '\n'` to the `oauth.signingKey` field. Save your changes.
 
 ### Fast permission sync with Bitbucket Server plugin
 
