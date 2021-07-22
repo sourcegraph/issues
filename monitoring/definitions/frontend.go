@@ -294,202 +294,114 @@ func Frontend() *monitoring.Container {
 					},
 				},
 			},
-			{
-				Title:  "Precise code intelligence usage at a glance",
-				Hidden: true,
-				Rows: []monitoring.Row{
-					{
-						{
-							Name:              "codeintel_resolvers_99th_percentile_duration",
-							Description:       "99th percentile successful resolver duration over 5m",
-							Query:             `histogram_quantile(0.99, sum by (le)(rate(src_codeintel_resolvers_duration_seconds_bucket{job=~"(sourcegraph-)?frontend"}[5m])))`,
-							Warning:           monitoring.Alert().GreaterOrEqual(20, nil),
-							Panel:             monitoring.Panel().LegendFormat("requests").Unit(monitoring.Seconds),
-							Owner:             monitoring.ObservableOwnerCodeIntel,
-							PossibleSolutions: "none",
-						},
-						{
-							Name:              "codeintel_resolvers_errors",
-							Description:       "resolver errors every 5m",
-							Query:             `sum(increase(src_codeintel_resolvers_errors_total{job=~"(sourcegraph-)?frontend"}[5m]))`,
-							Warning:           monitoring.Alert().GreaterOrEqual(20, nil),
-							Panel:             monitoring.Panel().LegendFormat("errors"),
-							Owner:             monitoring.ObservableOwnerCodeIntel,
-							PossibleSolutions: "none",
-						},
-					},
+
+			// src_codeintel_resolvers_total
+			// src_codeintel_resolvers_duration_seconds_bucket
+			// src_codeintel_resolvers_errors_total
+			shared.NewObservationGroup(containerName, monitoring.ObservableOwnerCodeIntel, shared.ObservationGroupOptions{
+				ObservableOptions: shared.ObservableOptions{
+					Namespace:         "codeintel",
+					GroupDescription:  "Precise code intelligence usage at a glance",
+					MetricName:        "codeintel_resolvers",
+					MetricDescription: "graphql",
+					Hidden:            true,
 				},
-			},
-			{
-				Title:  "Precise code intelligence stores and clients",
-				Hidden: true,
-				Rows: []monitoring.Row{
-					{
-						{
-							Name:              "codeintel_dbstore_99th_percentile_duration",
-							Description:       "99th percentile successful database store operation duration over 5m",
-							Query:             `histogram_quantile(0.99, sum by (le)(rate(src_codeintel_dbstore_duration_seconds_bucket{job=~"(sourcegraph-)?frontend"}[5m])))`,
-							Warning:           monitoring.Alert().GreaterOrEqual(20, nil),
-							Panel:             monitoring.Panel().LegendFormat("operations").Unit(monitoring.Seconds),
-							Owner:             monitoring.ObservableOwnerCodeIntel,
-							PossibleSolutions: "none",
-						},
-						{
-							Name:              "codeintel_dbstore_errors",
-							Description:       "database store errors every 5m",
-							Query:             `sum(increase(src_codeintel_dbstore_errors_total{job=~"(sourcegraph-)?frontend"}[5m]))`,
-							Warning:           monitoring.Alert().GreaterOrEqual(20, nil),
-							Panel:             monitoring.Panel().LegendFormat("errors"),
-							Owner:             monitoring.ObservableOwnerCodeIntel,
-							PossibleSolutions: "none",
-						},
-					},
-					{
-						{
-							Name:              "codeintel_upload_workerstore_99th_percentile_duration",
-							Description:       "99th percentile successful upload worker store operation duration over 5m",
-							Query:             `histogram_quantile(0.99, sum by (le)(rate(src_workerutil_dbworker_store_precise_code_intel_upload_worker_store_duration_seconds_bucket{job=~"(sourcegraph-)?frontend"}[5m])))`,
-							Warning:           monitoring.Alert().GreaterOrEqual(20, nil),
-							Panel:             monitoring.Panel().LegendFormat("operations").Unit(monitoring.Seconds),
-							Owner:             monitoring.ObservableOwnerCodeIntel,
-							PossibleSolutions: "none",
-						},
-						{
-							Name:              "codeintel_upload_workerstore_errors",
-							Description:       "upload worker store errors every 5m",
-							Query:             `sum(increase(src_workerutil_dbworker_store_precise_code_intel_upload_worker_store_errors_total{job=~"(sourcegraph-)?frontend"}[5m]))`,
-							Warning:           monitoring.Alert().GreaterOrEqual(20, nil),
-							Panel:             monitoring.Panel().LegendFormat("errors"),
-							Owner:             monitoring.ObservableOwnerCodeIntel,
-							PossibleSolutions: "none",
-						},
-					},
-					{
-						{
-							Name:              "codeintel_index_workerstore_99th_percentile_duration",
-							Description:       "99th percentile successful index worker store operation duration over 5m",
-							Query:             `histogram_quantile(0.99, sum by (le)(rate(src_workerutil_dbworker_store_precise_code_intel_index_worker_store_duration_seconds_bucket{job=~"(sourcegraph-)?frontend"}[5m])))`,
-							Warning:           monitoring.Alert().GreaterOrEqual(20, nil),
-							Panel:             monitoring.Panel().LegendFormat("operations").Unit(monitoring.Seconds),
-							Owner:             monitoring.ObservableOwnerCodeIntel,
-							PossibleSolutions: "none",
-						},
-						{
-							Name:              "codeintel_index_workerstore_errors",
-							Description:       "index worker store errors every 5m",
-							Query:             `sum(increase(src_workerutil_dbworker_store_precise_code_intel_index_worker_store_errors_total{job=~"(sourcegraph-)?frontend"}[5m]))`,
-							Warning:           monitoring.Alert().GreaterOrEqual(20, nil),
-							Panel:             monitoring.Panel().LegendFormat("errors"),
-							Owner:             monitoring.ObservableOwnerCodeIntel,
-							PossibleSolutions: "none",
-						},
-					},
-					{
-						{
-							Name:              "codeintel_lsifstore_99th_percentile_duration",
-							Description:       "99th percentile successful LSIF store operation duration over 5m",
-							Query:             `histogram_quantile(0.99, sum by (le)(rate(src_codeintel_lsifstore_duration_seconds_bucket{job=~"(sourcegraph-)?frontend"}[5m])))`,
-							Warning:           monitoring.Alert().GreaterOrEqual(20, nil),
-							Panel:             monitoring.Panel().LegendFormat("operations").Unit(monitoring.Seconds),
-							Owner:             monitoring.ObservableOwnerCodeIntel,
-							PossibleSolutions: "none",
-						},
-						{
-							Name:              "codeintel_lsifstore_errors",
-							Description:       "lSIF store errors every 5m", // DUMB
-							Query:             `sum(increase(src_codeintel_lsifstore_errors_total{job=~"(sourcegraph-)?frontend"}[5m]))`,
-							Warning:           monitoring.Alert().GreaterOrEqual(20, nil),
-							Panel:             monitoring.Panel().LegendFormat("errors"),
-							Owner:             monitoring.ObservableOwnerCodeIntel,
-							PossibleSolutions: "none",
-						},
-					},
-					{
-						{
-							Name:              "codeintel_uploadstore_99th_percentile_duration",
-							Description:       "99th percentile successful upload store operation duration over 5m",
-							Query:             `histogram_quantile(0.99, sum by (le)(rate(src_codeintel_uploadstore_duration_seconds_bucket{job=~"(sourcegraph-)?frontend"}[5m])))`,
-							Warning:           monitoring.Alert().GreaterOrEqual(20, nil),
-							Panel:             monitoring.Panel().LegendFormat("operations").Unit(monitoring.Seconds),
-							Owner:             monitoring.ObservableOwnerCodeIntel,
-							PossibleSolutions: "none",
-						},
-						{
-							Name:              "codeintel_uploadstore_errors",
-							Description:       "upload store errors every 5m",
-							Query:             `sum(increase(src_codeintel_uploadstore_errors_total{job=~"(sourcegraph-)?frontend"}[5m]))`,
-							Warning:           monitoring.Alert().GreaterOrEqual(20, nil),
-							Panel:             monitoring.Panel().LegendFormat("errors"),
-							Owner:             monitoring.ObservableOwnerCodeIntel,
-							PossibleSolutions: "none",
-						},
-					},
-					{
-						{
-							Name:              "codeintel_gitserverclient_99th_percentile_duration",
-							Description:       "99th percentile successful gitserver client operation duration over 5m",
-							Query:             `histogram_quantile(0.99, sum by (le)(rate(src_codeintel_gitserver_duration_seconds_bucket{job=~"(sourcegraph-)?frontend"}[5m])))`,
-							Warning:           monitoring.Alert().GreaterOrEqual(20, nil),
-							Panel:             monitoring.Panel().LegendFormat("operations").Unit(monitoring.Seconds),
-							Owner:             monitoring.ObservableOwnerCodeIntel,
-							PossibleSolutions: "none",
-						},
-						{
-							Name:              "codeintel_gitserverclient_errors",
-							Description:       "gitserver client errors every 5m",
-							Query:             `sum(increase(src_codeintel_gitserver_errors_total{job=~"(sourcegraph-)?frontend"}[5m]))`,
-							Warning:           monitoring.Alert().GreaterOrEqual(20, nil),
-							Panel:             monitoring.Panel().LegendFormat("errors"),
-							Owner:             monitoring.ObservableOwnerCodeIntel,
-							PossibleSolutions: "none",
-						},
-					},
+			}),
+
+			// src_codeintel_autoindex_enqueuer_total
+			// src_codeintel_autoindex_enqueuer_duration_seconds_bucket
+			// src_codeintel_autoindex_enqueuer_errors_total
+			shared.NewObservationGroup(containerName, monitoring.ObservableOwnerCodeIntel, shared.ObservationGroupOptions{
+				ObservableOptions: shared.ObservableOptions{
+					Namespace:         "codeintel",
+					GroupDescription:  "Auto-index enqueuer",
+					MetricName:        "codeintel_autoindex_enqueuer",
+					MetricDescription: "enqueuer",
+					Hidden:            true,
 				},
-			},
-			{
-				Title:  "Out of band migrations",
-				Hidden: true,
-				Rows: []monitoring.Row{
-					{
-						{
-							Name:           "out_of_band_migrations_up_99th_percentile_duration",
-							Description:    "99th percentile successful out-of-band up migration invocation (single batch processed) duration over 5m",
-							Query:          `histogram_quantile(0.99, sum by (le, migration)(rate(src_oobmigration_duration_seconds_bucket{op="up"}[5m])))`,
-							NoAlert:        true,
-							Panel:          monitoring.Panel().LegendFormat("migration {{migration}}").Unit(monitoring.Seconds),
-							Owner:          monitoring.ObservableOwnerCoreApplication,
-							Interpretation: "none",
-						},
-						{
-							Name:              "out_of_band_migrations_up_errors",
-							Description:       "out-of-band up migration errors every 5m",
-							Query:             `sum by (migration)(increase(src_oobmigration_errors_total{op="up"}[5m]))`,
-							Warning:           monitoring.Alert().GreaterOrEqual(20, nil),
-							Panel:             monitoring.Panel().LegendFormat("migration {{migration}}"),
-							Owner:             monitoring.ObservableOwnerCoreApplication,
-							PossibleSolutions: "none",
-						},
-						{
-							Name:           "out_of_band_migrations_down_99th_percentile_duration",
-							Description:    "99th percentile successful out-of-band down migration invocation (single batch processed) duration over 5m",
-							Query:          `histogram_quantile(0.99, sum by (le, migration)(rate(src_oobmigration_duration_seconds_bucket{op="down"}[5m])))`,
-							NoAlert:        true,
-							Panel:          monitoring.Panel().LegendFormat("migration {{migration}}").Unit(monitoring.Seconds),
-							Owner:          monitoring.ObservableOwnerCoreApplication,
-							Interpretation: "none",
-						},
-						{
-							Name:              "out_of_band_migrations_down_errors",
-							Description:       "out-of-band down migration errors every 5m",
-							Query:             `sum by (migration)(increase(src_oobmigration_errors_total{op="down"}[5m]))`,
-							Warning:           monitoring.Alert().GreaterOrEqual(20, nil),
-							Panel:             monitoring.Panel().LegendFormat("migration {{migration}}"),
-							Owner:             monitoring.ObservableOwnerCoreApplication,
-							PossibleSolutions: "none",
-						},
-					},
+			}),
+
+			// src_codeintel_dbstore_total
+			// src_codeintel_dbstore_duration_seconds_bucket
+			// src_codeintel_dbstore_errors_total
+			shared.NewObservationGroup(containerName, monitoring.ObservableOwnerCodeIntel, shared.ObservationGroupOptions{
+				ObservableOptions: shared.ObservableOptions{
+					Namespace:         "codeintel",
+					GroupDescription:  "dbstore stats (db=frontend)",
+					MetricName:        "codeintel_dbstore",
+					MetricDescription: "store",
+					Hidden:            true,
 				},
-			},
+			}),
+
+			// src_codeintel_lsifstore_total
+			// src_codeintel_lsifstore_duration_seconds_bucket
+			// src_codeintel_lsifstore_errors_total
+			shared.NewObservationGroup(containerName, monitoring.ObservableOwnerCodeIntel, shared.ObservationGroupOptions{
+				ObservableOptions: shared.ObservableOptions{
+					Namespace:         "codeintel",
+					GroupDescription:  "lsifstore stats (db=codeintel-db)",
+					MetricName:        "codeintel_lsifstore",
+					MetricDescription: "store",
+					Hidden:            true,
+				},
+			}),
+
+			// src_codeintel_gitserver_total
+			// src_codeintel_gitserver_duration_seconds_bucket
+			// src_codeintel_gitserver_errors_total
+			shared.NewObservationGroup(containerName, monitoring.ObservableOwnerCodeIntel, shared.ObservationGroupOptions{
+				ObservableOptions: shared.ObservableOptions{
+					Namespace:         "codeintel",
+					GroupDescription:  "gitserver client",
+					MetricName:        "codeintel_gitserver",
+					MetricDescription: "client",
+					Hidden:            true,
+				},
+			}),
+
+			// src_codeintel_uploadstore_total
+			// src_codeintel_uploadstore_duration_seconds_bucket
+			// src_codeintel_uploadstore_errors_total
+			shared.NewObservationGroup(containerName, monitoring.ObservableOwnerCodeIntel, shared.ObservationGroupOptions{
+				ObservableOptions: shared.ObservableOptions{
+					Namespace:         "codeintel",
+					GroupDescription:  "uploadstore stats (queries GCS/S3/MinIO)",
+					MetricName:        "codeintel_uploadstore",
+					MetricDescription: "store",
+					Hidden:            true,
+				},
+			}),
+
+			// src_oobmigration_total
+			// src_oobmigration_duration_seconds_bucket
+			// src_oobmigration_errors_total
+			shared.NewObservationGroup(containerName, monitoring.ObservableOwnerCodeIntel, shared.ObservationGroupOptions{
+				ObservableOptions: shared.ObservableOptions{
+					Namespace:         "Out-of-band migrations",
+					GroupDescription:  "up migration invocation (one batch processed)",
+					MetricName:        "oobmigration",
+					MetricDescription: "migration handler",
+					Filters:           []string{`op="up"`},
+					By:                []string{"migration"},
+					Hidden:            true,
+				},
+			}),
+
+			// src_oobmigration_total
+			// src_oobmigration_duration_seconds_bucket
+			// src_oobmigration_errors_total
+			shared.NewObservationGroup(containerName, monitoring.ObservableOwnerCodeIntel, shared.ObservationGroupOptions{
+				ObservableOptions: shared.ObservableOptions{
+					Namespace:         "Out-of-band migrations",
+					GroupDescription:  "down migration invocation (one batch processed)",
+					MetricName:        "oobmigration",
+					MetricDescription: "migration handler",
+					Filters:           []string{`op="down"`},
+					By:                []string{"migration"},
+					Hidden:            true,
+				},
+			}),
 
 			{
 				Title:  "Internal service requests",
@@ -573,6 +485,7 @@ func Frontend() *monitoring.Container {
 				},
 			},
 
+			// Resource monitoring
 			shared.NewDatabaseConnectionsMonitoringGroup("frontend"),
 			shared.NewContainerMonitoringGroup(containerName, monitoring.ObservableOwnerCoreApplication, nil),
 			shared.NewProvisioningIndicatorsGroup(containerName, monitoring.ObservableOwnerCoreApplication, nil),
