@@ -2,6 +2,8 @@
 
 This document provides a high level overview of Sourcegraph's architecture so you can understand how our systems fit together.
 
+The **"Dependencies"** sections give a short, high-level overview of dependencies on other architecture components and the most important aspects of _how_ they are used.
+
 ## Code syncing
 
 At its core, Sourcegraph maintains a persistent cache of all the code that is connected to it. It is persistent, because this data is critical for Sourcegraph to function, but it is ultimately a cache because the code host is the source of truth and our cache is eventually consistent.
@@ -45,6 +47,15 @@ If you want to learn more about code intelligence:
 - [Code intelligence developer documentation](../codeintel/index.md)
 - [Available indexers](../../../code_intelligence/references/indexers.md)
 
+### Dependencies
+
+- [Search](#search)
+  - Symbol search is used for basic code intel
+- [Sourcegraph extension API](#sourcegraph-extension-api)
+  - Hover and definition providers
+- [Native integrations (for code hosts)](#native-integrations-for-code-hosts)
+  - UI of hover tooltips on code hosts
+
 ## Batch Changes
 
 Batch Changes (formerly known as [campaigns](../../../batch_changes/references/name-change.md)) creates and manages large scale code changes across projects, repositories, and code hosts.
@@ -59,6 +70,13 @@ If you want to learn more about batch changes:
 - [Batch Changes design principles](../../../batch_changes/explanations/batch_changes_design.md)
 - [Batch Changes developer documentation](../batch_changes/index.md)
 - [How `src` executes a batch spec](../../../batch_changes/explanations/how_src_executes_a_batch_spec.md)
+
+### Dependencies
+
+- [src-cli](#src-cli)
+  - Batch changes are currently executed client-side through the `src` CLI
+- [Search](#search)
+  - Repositories in which batch specs need to be executed are resolved through the search API
 
 ## Code insights
 
@@ -87,6 +105,21 @@ If you want to learn more about code insights:
 - [Code insights product document (PD)](https://docs.google.com/document/d/1d34gCpt_rUOMAun8phcjNsFofGaaA_N_8znmgaugdKw/edit)
 - [Original code insights RFC](https://docs.google.com/document/d/1EHzor6I1GhVVIpl70mH-c10b1tNEl_p1xRMJ9qHQfoc/edit)
 
+### Dependencies
+
+- [Search](#search)
+  - GraphQL API for text search, in particular `search()`, `matchCount`, `stats.languages`
+  - Query syntax: Code insights "construct" search queries programmatically
+  - Exhaustive search (with `count:all`/`count:999999` operator)
+  - Historical search (= unindexed search, currently)
+  - Commit search to find historical commits to search over
+- [Code Syncing](#code-syncing)
+  - The WIP code insights backend has direct dependencies on `gitserver` and `repo-updater`
+- Future: [Batch Changes](#batch-changes)
+  - "Create a batch change from a code insight" flow
+- Future: [Code monitoring](#code-monitoring)
+  - "Create a code monitor from a code insight" flow
+
 ## Code monitoring
 
 Code monitoring allows users to get notified of changes to their codebase.
@@ -100,6 +133,11 @@ The **actions** are run in response to a trigger event. For now, the only suppor
 If you want to learn more about code monitoring:
 
 - [Code monitoring documentation](https://docs.sourcegraph.com/code_monitoring)
+
+### Dependencies
+
+- [Search](#search)
+  - Diff and commit search triggers
 
 ## Browser extensions
 
@@ -124,6 +162,11 @@ If you want to learn more about native integrations:
 
 - [Overview of code host integrations](../web/code_host_integrations.md)
 
+### Dependencies
+
+- [Code syncing](#code-syncing)
+  - Uses the GraphQL API to resolve repositories and revisions on code hosts
+
 ## Sourcegraph extension API
 
 The Sourcegraph extension API allows developers to write extensions that extend the functionality of Sourcegraph.
@@ -141,6 +184,11 @@ If you want to learn more about our extension API:
 
 - [Sourcegraph extension architecture](sourcegraph-extensions.md)
 
+### Dependencies
+
+- [Search](#search)
+  - Query transformer API hooks into search in the web app
+
 ## src-cli
 
 src-cli, or `src`, is a command line tool that users can run locally to interact with Sourcegraph.
@@ -153,6 +201,13 @@ If you want to learn more about src-cli:
 
 - [src-cli repository](https://github.com/sourcegraph/src-cli)
 - [src-cli documentation](../../../cli/index.md)
+
+### Dependencies
+
+- [Search](#search)
+  - GraphQL API
+- [Batch Changes](#batch-changes)
+  - GraphQL API
 
 ## Editor extensions
 
