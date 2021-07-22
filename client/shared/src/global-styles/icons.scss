@@ -16,9 +16,8 @@
 }
 
 // TODO find a better way to scale icons that is not proportional to the font size
-// 14px font size -> 20px icon size
-$icon-inline-size: (20em / 14);
-$icon-inline-redesign-size: (16em / 14);
+$icon-inline-md-size: (20em / 14); // 14px font -> 20px icon
+$icon-inline-size: (16em / 14); // 14px font -> 16px icon
 
 svg.icon-inline,
 div.icon-inline,
@@ -26,19 +25,13 @@ img.icon-inline,
 .icon-inline svg {
     width: $icon-inline-size;
     height: $icon-inline-size;
-    // Match color of the text
-    fill: currentColor;
-
-    :where(.theme-redesign) & {
-        width: $icon-inline-redesign-size;
-        height: $icon-inline-redesign-size;
-        vertical-align: text-bottom;
-    }
+    fill: currentColor; // Match color of the text
+    vertical-align: text-bottom;
 }
 
 .icon-inline-md {
-    width: $icon-inline-size;
-    height: $icon-inline-size;
+    width: $icon-inline-md-size;
+    height: $icon-inline-md-size;
 }
 
 // Special case for the loader
