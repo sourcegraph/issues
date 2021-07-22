@@ -131,42 +131,43 @@ describe('Code intelligence regression test suite', () => {
             )
         })
 
-        test('Symbols sidebar', async () => {
-            await driver.page.goto(
-                config.sourcegraphBaseUrl +
-                    '/github.com/sourcegraph/sourcegraph@c543dfd3936019befe94b881ade89e637d1a3dc3'
-            )
-            await driver.findElementWithText('Symbols', {
-                action: 'click',
-                selector: '.test-repo-revision-sidebar button',
-                wait: { timeout: 10 * 1000 },
-            })
-            await driver.findElementWithText('backgroundEntry', {
-                action: 'click',
-                selector: '.test-repo-revision-sidebar a span',
-                wait: { timeout: 2 * 1000 },
-            })
-            await driver.replaceText({
-                selector: 'input[placeholder="Search symbols..."]',
-                newText: 'buildentry',
-            })
-            await driver.page.waitForFunction(
-                () => {
-                    const sidebar = document.querySelector<HTMLElement>('.test-repo-revision-sidebar')
-                    return sidebar && !sidebar.textContent?.includes('backgroundEntry')
-                },
-                { timeout: 2 * 1000 }
-            )
-            await driver.findElementWithText('buildEntry', {
-                action: 'click',
-                selector: '.test-repo-revision-sidebar a span',
-                wait: { timeout: 2 * 1000 },
-            })
-            await driver.waitUntilURL(
-                `${config.sourcegraphBaseUrl}/github.com/sourcegraph/sourcegraph@c543dfd3936019befe94b881ade89e637d1a3dc3/-/blob/browser/config/webpack/base.config.ts?L6:7-6:17`,
-                { timeout: 2 * 1000 }
-            )
-        })
+        // TODO: Disabled because it's flaky. https://github.com/sourcegraph/sourcegraph/issues/23098
+        // test('Symbols sidebar', async () => {
+        //     await driver.page.goto(
+        //         config.sourcegraphBaseUrl +
+        //             '/github.com/sourcegraph/sourcegraph@c543dfd3936019befe94b881ade89e637d1a3dc3'
+        //     )
+        //     await driver.findElementWithText('Symbols', {
+        //         action: 'click',
+        //         selector: '.test-repo-revision-sidebar button',
+        //         wait: { timeout: 10 * 1000 },
+        //     })
+        //     await driver.findElementWithText('backgroundEntry', {
+        //         action: 'click',
+        //         selector: '.test-repo-revision-sidebar a span',
+        //         wait: { timeout: 2 * 1000 },
+        //     })
+        //     await driver.replaceText({
+        //         selector: 'input[placeholder="Search symbols..."]',
+        //         newText: 'buildentry',
+        //     })
+        //     await driver.page.waitForFunction(
+        //         () => {
+        //             const sidebar = document.querySelector<HTMLElement>('.test-repo-revision-sidebar')
+        //             return sidebar && !sidebar.textContent?.includes('backgroundEntry')
+        //         },
+        //         { timeout: 2 * 1000 }
+        //     )
+        //     await driver.findElementWithText('buildEntry', {
+        //         action: 'click',
+        //         selector: '.test-repo-revision-sidebar a span',
+        //         wait: { timeout: 2 * 1000 },
+        //     })
+        //     await driver.waitUntilURL(
+        //         `${config.sourcegraphBaseUrl}/github.com/sourcegraph/sourcegraph@c543dfd3936019befe94b881ade89e637d1a3dc3/-/blob/browser/config/webpack/base.config.ts?L6:7-6:17`,
+        //         { timeout: 2 * 1000 }
+        //     )
+        // })
 
         test('Definitions, references, and hovers', () =>
             testCodeNavigation(driver, config, {
