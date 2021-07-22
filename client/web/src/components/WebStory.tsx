@@ -1,3 +1,4 @@
+import { MockedProvider } from '@apollo/client/testing'
 import React, { useMemo } from 'react'
 import { MemoryRouter, MemoryRouterProps, RouteComponentProps, withRouter } from 'react-router'
 
@@ -35,9 +36,15 @@ export const WebStory: React.FunctionComponent<WebStoryProps> = ({
     usePrependStyles('web-styles', webStyles)
 
     return (
-        <MemoryRouter {...memoryRouterProps}>
-            <Tooltip />
-            <Children {...breadcrumbSetters} isLightTheme={isLightTheme} telemetryService={NOOP_TELEMETRY_SERVICE} />
-        </MemoryRouter>
+        <MockedProvider>
+            <MemoryRouter {...memoryRouterProps}>
+                <Tooltip />
+                <Children
+                    {...breadcrumbSetters}
+                    isLightTheme={isLightTheme}
+                    telemetryService={NOOP_TELEMETRY_SERVICE}
+                />
+            </MemoryRouter>
+        </MockedProvider>
     )
 }
