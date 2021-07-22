@@ -8,7 +8,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/gitchander/permutation"
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
 	"github.com/keegancsmith/sqlf"
@@ -29,15 +28,7 @@ import (
 	"github.com/sourcegraph/sourcegraph/schema"
 )
 
-func testSyncerBatchSync(s *repos.Store) func(*testing.T) {
-	return testSyncerSync(s, false)
-}
-
-func testSyncerStreamingSync(s *repos.Store) func(*testing.T) {
-	return testSyncerSync(s, true)
-}
-
-func testSyncerSync(s *repos.Store, streaming bool) func(*testing.T) {
+func testSyncerSync(s *repos.Store) func(*testing.T) {
 	return func(t *testing.T) {
 		servicesPerKind := createExternalServices(t, s)
 
@@ -466,27 +457,6 @@ func testSyncerSync(s *repos.Store, streaming bool) func(*testing.T) {
 					err:    "<nil>",
 				},
 			)
-
-			if !streaming {
-				// streaming SyncExternalService removes the possibility of adding any sources to a repo beyond the
-				// currently syncing external service, so we don't test this for the streaming syncer.
-				testCases = append(testCases, testCase{
-					name: string(tc.repo.Name) + "/new repo sources",
-					sourcer: repos.NewFakeSourcer(nil,
-						repos.NewFakeSource(tc.svc.Clone(), nil, tc.repo.Clone()),
-						repos.NewFakeSource(svcdup.Clone(), nil, tc.repo.Clone()),
-					),
-					store:  s,
-					stored: types.Repos{tc.repo.Clone()},
-					now:    clock.Now,
-					diff: repos.Diff{Modified: types.Repos{tc.repo.With(
-						types.Opt.RepoModifiedAt(clock.Time(1)),
-						types.Opt.RepoSources(tc.svc.URN(), svcdup.URN()),
-					)}},
-					svcs: []*types.ExternalService{tc.svc},
-					err:  "<nil>",
-				})
-			}
 		}
 
 		for _, tc := range testCases {
@@ -523,14 +493,13 @@ func testSyncerSync(s *repos.Store, streaming bool) func(*testing.T) {
 				}
 
 				syncer := &repos.Syncer{
-					Sourcer:   tc.sourcer,
-					Store:     tc.store,
-					Now:       now,
-					Streaming: streaming,
+					Sourcer: tc.sourcer,
+					Store:   st,
+					Now:     now,
 				}
 
 				for _, svc := range tc.svcs {
-					err := syncer.SyncExternalService(ctx, st, svc.ID, time.Millisecond)
+					err := syncer.SyncExternalService(ctx, svc.ID, time.Millisecond)
 
 					if have, want := fmt.Sprint(err), tc.err; !strings.Contains(have, want) {
 						t.Errorf("error %q doesn't contain %q", have, want)
@@ -554,25 +523,11 @@ func testSyncerSync(s *repos.Store, streaming bool) func(*testing.T) {
 	}
 }
 
-func testBatchSyncRepo(s *repos.Store) func(*testing.T) {
-	return testSyncRepo(s, false)
-}
-
-func testStreamingSyncRepo(s *repos.Store) func(*testing.T) {
-	return testSyncRepo(s, true)
-}
-
-func testSyncRepo(s *repos.Store, streaming bool) func(*testing.T) {
+func testSyncRepo(s *repos.Store) func(*testing.T) {
 	return func(t *testing.T) {
 		clock := timeutil.NewFakeClock(time.Now(), time.Second)
 
-		opts := []func(*types.ExternalService){}
-		if streaming {
-			// Streaming SyncRepo only syncs repos if it finds a cloud default external service of the same type.
-			opts = append(opts, func(svc *types.ExternalService) { svc.CloudDefault = true })
-		}
-
-		servicesPerKind := createExternalServices(t, s, opts...)
+		servicesPerKind := createExternalServices(t, s, func(svc *types.ExternalService) { svc.CloudDefault = true })
 
 		repo := &types.Repo{
 			ID:          0, // explicitly make default value for sourced repo
@@ -672,11 +627,10 @@ func testSyncRepo(s *repos.Store, streaming bool) func(*testing.T) {
 
 				clock := clock
 				syncer := &repos.Syncer{
-					Now:       clock.Now,
-					Store:     st,
-					Streaming: streaming,
+					Now:   clock.Now,
+					Store: st,
 				}
-				err := syncer.SyncRepo(ctx, st, tc.sourced.Clone())
+				err := syncer.SyncRepo(ctx, tc.sourced.Clone())
 				if err != nil {
 					t.Fatal(err)
 				}
@@ -692,282 +646,7 @@ func testSyncRepo(s *repos.Store, streaming bool) func(*testing.T) {
 	}
 }
 
-func TestDiff(t *testing.T) {
-	t.Parallel()
-
-	eid := func(id string) api.ExternalRepoSpec {
-		return api.ExternalRepoSpec{
-			ID:          id,
-			ServiceType: "fake",
-			ServiceID:   "https://fake.com",
-		}
-	}
-	now := time.Now()
-
-	type testCase struct {
-		name   string
-		store  types.Repos
-		source types.Repos
-		diff   repos.Diff
-	}
-
-	cases := []testCase{
-		{
-			name: "empty",
-			diff: repos.Diff{},
-		},
-		{
-			name:   "added",
-			source: types.Repos{{ExternalRepo: eid("1")}},
-			diff:   repos.Diff{Added: types.Repos{{ExternalRepo: eid("1")}}},
-		},
-		{
-			name:  "deleted",
-			store: types.Repos{{ExternalRepo: eid("1")}},
-			diff:  repos.Diff{Deleted: types.Repos{{ExternalRepo: eid("1")}}},
-		},
-		{
-			name: "modified",
-			store: types.Repos{
-				{ExternalRepo: eid("1"), Name: "foo", Description: "foo"},
-				{ExternalRepo: eid("2"), Name: "bar"},
-			},
-			source: types.Repos{
-				{ExternalRepo: eid("1"), Name: "foo", Description: "bar"},
-				{ExternalRepo: eid("2"), Name: "bar", URI: "2"},
-			},
-			diff: repos.Diff{Modified: types.Repos{
-				{ExternalRepo: eid("1"), Name: "foo", Description: "bar"},
-				{ExternalRepo: eid("2"), Name: "bar", URI: "2"},
-			}},
-		},
-		{
-			name:   "unmodified",
-			store:  types.Repos{{ExternalRepo: eid("1"), Description: "foo"}},
-			source: types.Repos{{ExternalRepo: eid("1"), Description: "foo"}},
-			diff: repos.Diff{Unmodified: types.Repos{
-				{ExternalRepo: eid("1"), Description: "foo"},
-			}},
-		},
-		{
-			name: "duplicates in source are merged",
-			source: types.Repos{
-				{ExternalRepo: eid("1"), Description: "foo", Sources: map[string]*types.SourceInfo{
-					"a": {ID: "a"},
-				}},
-				{ExternalRepo: eid("1"), Description: "bar", Sources: map[string]*types.SourceInfo{
-					"b": {ID: "b"},
-				}},
-			},
-			diff: repos.Diff{Added: types.Repos{
-				{ExternalRepo: eid("1"), Description: "bar", Sources: map[string]*types.SourceInfo{
-					"a": {ID: "a"},
-					"b": {ID: "b"},
-				}},
-			}},
-		},
-		{
-			name: "duplicate with a changed name is merged correctly",
-			store: types.Repos{
-				{Name: "1", ExternalRepo: eid("1"), Description: "foo"},
-			},
-			source: types.Repos{
-				{Name: "2", ExternalRepo: eid("1"), Description: "foo"},
-			},
-			diff: repos.Diff{Modified: types.Repos{
-				{Name: "2", ExternalRepo: eid("1"), Description: "foo"},
-			}},
-		},
-		{
-			name: "unmodified preserves stored repo",
-			store: types.Repos{
-				{ExternalRepo: eid("1"), Description: "foo", UpdatedAt: now},
-			},
-			source: types.Repos{
-				{ExternalRepo: eid("1"), Description: "foo"},
-			},
-			diff: repos.Diff{Unmodified: types.Repos{
-				{ExternalRepo: eid("1"), Description: "foo", UpdatedAt: now},
-			}},
-		},
-	}
-
-	permutedCases := []testCase{
-		{
-			// Repo renamed and repo created with old name
-			name: "renamed repo",
-			store: types.Repos{
-				{Name: "1", ExternalRepo: eid("old"), Description: "foo"},
-			},
-			source: types.Repos{
-				{Name: "2", ExternalRepo: eid("old"), Description: "foo"},
-				{Name: "1", ExternalRepo: eid("new"), Description: "bar"},
-			},
-			diff: repos.Diff{
-				Modified: types.Repos{
-					{Name: "2", ExternalRepo: eid("old"), Description: "foo"},
-				},
-				Added: types.Repos{
-					{Name: "1", ExternalRepo: eid("new"), Description: "bar"},
-				},
-			},
-		},
-		{
-			name:  "repo renamed to an already deleted repo",
-			store: types.Repos{},
-			source: types.Repos{
-				{Name: "a", ExternalRepo: eid("b")},
-			},
-			diff: repos.Diff{
-				Added: types.Repos{
-					{Name: "a", ExternalRepo: eid("b")},
-				},
-			},
-		},
-		{
-			name: "repo renamed to a repo that gets deleted",
-			store: types.Repos{
-				{Name: "a", ExternalRepo: eid("a")},
-				{Name: "b", ExternalRepo: eid("b")},
-			},
-			source: types.Repos{
-				{Name: "a", ExternalRepo: eid("b")},
-			},
-			diff: repos.Diff{
-				Deleted:  types.Repos{{Name: "a", ExternalRepo: eid("a")}},
-				Modified: types.Repos{{Name: "a", ExternalRepo: eid("b")}},
-			},
-		},
-		{
-			name: "swapped repo",
-			store: types.Repos{
-				{Name: "foo", ExternalRepo: eid("1"), Description: "foo"},
-				{Name: "bar", ExternalRepo: eid("2"), Description: "bar"},
-			},
-			source: types.Repos{
-				{Name: "bar", ExternalRepo: eid("1"), Description: "bar"},
-				{Name: "foo", ExternalRepo: eid("2"), Description: "foo"},
-			},
-			diff: repos.Diff{
-				Modified: types.Repos{
-					{Name: "bar", ExternalRepo: eid("1"), Description: "bar"},
-					{Name: "foo", ExternalRepo: eid("2"), Description: "foo"},
-				},
-			},
-		},
-		{
-			name: "deterministic merging of source",
-			source: types.Repos{
-				{Name: "foo", ExternalRepo: eid("1"), Description: "desc1", Sources: map[string]*types.SourceInfo{"a": nil}},
-				{Name: "foo", ExternalRepo: eid("1"), Description: "desc2", Sources: map[string]*types.SourceInfo{"b": nil}},
-			},
-			diff: repos.Diff{
-				Added: types.Repos{
-					{Name: "foo", ExternalRepo: eid("1"), Description: "desc2", Sources: map[string]*types.SourceInfo{"a": nil, "b": nil}},
-				},
-			},
-		},
-		{
-			name: "conflict on case insensitive name",
-			source: types.Repos{
-				{Name: "foo", ExternalRepo: eid("1")},
-				{Name: "Foo", ExternalRepo: eid("2")},
-			},
-			diff: repos.Diff{
-				Added: types.Repos{
-					{Name: "Foo", ExternalRepo: eid("2")},
-				},
-			},
-		},
-		{
-			name: "conflict on case insensitive name exists 1",
-			store: types.Repos{
-				{Name: "foo", ExternalRepo: eid("1")},
-			},
-			source: types.Repos{
-				{Name: "foo", ExternalRepo: eid("1")},
-				{Name: "Foo", ExternalRepo: eid("2")},
-			},
-			diff: repos.Diff{
-				Added: types.Repos{
-					{Name: "Foo", ExternalRepo: eid("2")},
-				},
-				Deleted: types.Repos{
-					{Name: "foo", ExternalRepo: eid("1")},
-				},
-			},
-		},
-		{
-			name: "conflict on case insensitive name exists 2",
-			store: types.Repos{
-				{Name: "Foo", ExternalRepo: eid("2")},
-			},
-			source: types.Repos{
-				{Name: "foo", ExternalRepo: eid("1")},
-				{Name: "Foo", ExternalRepo: eid("2")},
-			},
-			diff: repos.Diff{
-				Unmodified: types.Repos{
-					{Name: "Foo", ExternalRepo: eid("2")},
-				},
-			},
-		},
-		// 🚨 SECURITY: Tests to ensure we detect repository visibility changes.
-		{
-			name: "repository visiblity changed",
-			store: types.Repos{
-				{Name: "foo", ExternalRepo: eid("1"), Description: "foo", Private: false},
-			},
-			source: types.Repos{
-				{Name: "foo", ExternalRepo: eid("1"), Description: "foo", Private: true},
-			},
-			diff: repos.Diff{
-				Modified: types.Repos{
-					{Name: "foo", ExternalRepo: eid("1"), Description: "foo", Private: true},
-				},
-			},
-		},
-	}
-
-	for _, tc := range permutedCases {
-		store := permutation.New(tc.store)
-		for i := 0; store.Next(); i++ {
-			source := permutation.New(tc.source)
-			for j := 0; source.Next(); j++ {
-				cases = append(cases, testCase{
-					name:   fmt.Sprintf("%s/permutation_%d_%d", tc.name, i, j),
-					store:  tc.store.Clone(),
-					source: tc.source.Clone(),
-					diff:   tc.diff,
-				})
-			}
-		}
-	}
-
-	for _, tc := range cases {
-		tc := tc
-		t.Run(tc.name, func(t *testing.T) {
-			t.Parallel()
-
-			diff := repos.NewDiff(tc.source, tc.store)
-			diff.Sort()
-			tc.diff.Sort()
-			if cDiff := cmp.Diff(diff, tc.diff); cDiff != "" {
-				t.Fatalf("unexpected diff:\n%s", cDiff)
-			}
-		})
-	}
-}
-
-func testBatchSyncRun(store *repos.Store) func(t *testing.T) {
-	return testSyncRun(store, false)
-}
-
-func testStreamingSyncRun(store *repos.Store) func(t *testing.T) {
-	return testSyncRun(store, true)
-}
-
-func testSyncRun(store *repos.Store, streaming bool) func(t *testing.T) {
+func testSyncRun(store *repos.Store) func(t *testing.T) {
 	return func(t *testing.T) {
 		ctx, cancel := context.WithCancel(context.Background())
 		defer cancel()
@@ -1001,12 +680,10 @@ func testSyncRun(store *repos.Store, streaming bool) func(t *testing.T) {
 		}
 
 		syncer := &repos.Syncer{
-			Sourcer:          repos.NewFakeSourcer(nil, repos.NewFakeSource(svc, nil, sourced...)),
-			Store:            store,
-			Synced:           make(chan repos.Diff),
-			SingleRepoSynced: make(chan repos.Diff),
-			Now:              time.Now,
-			Streaming:        streaming,
+			Sourcer: repos.NewFakeSourcer(nil, repos.NewFakeSource(svc, nil, sourced...)),
+			Store:   store,
+			Synced:  make(chan repos.Diff),
+			Now:     time.Now,
 		}
 
 		// Initial repos in store
@@ -1033,49 +710,28 @@ func testSyncRun(store *repos.Store, streaming bool) func(t *testing.T) {
 			t.Fatalf("Synced mismatch (-want +got):\n%s", d)
 		}
 
-		if !streaming {
-			// Next up it should find the new repo and send it down SingleRepoSynced
-			diff = <-syncer.SingleRepoSynced
-			if d := cmp.Diff(repos.Diff{Added: types.Repos{mk("new")}}, diff, ignore); d != "" {
-				t.Fatalf("Synced mismatch (-want +got):\n%s", d)
-			}
+		// Next up it should find the existing repo and send it down Synced
+		diff = <-syncer.Synced
+		if d := cmp.Diff(repos.Diff{Modified: sourced[:1]}, diff, ignore); d != "" {
+			t.Fatalf("Synced mismatch (-want +got):\n%s", d)
+		}
 
-			// Finally we get the final diff.
-			diff = <-syncer.Synced
-			if d := cmp.Diff(repos.Diff{Modified: sourced[:1], Unmodified: sourced[1:]}, diff, ignore); d != "" {
-				t.Fatalf("Synced mismatch (-want +got):\n%s", d)
-			}
+		// Then the new repo.
+		diff = <-syncer.Synced
+		if d := cmp.Diff(repos.Diff{Added: sourced[1:]}, diff, ignore); d != "" {
+			t.Fatalf("Synced mismatch (-want +got):\n%s", d)
+		}
 
-			// We check synced again to test us going around the Run loop 2 times in
-			// total.
-			diff = <-syncer.Synced
-			if d := cmp.Diff(repos.Diff{Unmodified: sourced}, diff, ignore); d != "" {
-				t.Fatalf("Synced mismatch (-want +got):\n%s", d)
-			}
-		} else {
-			// Next up it should find the existing repo and send it down Synced
-			diff = <-syncer.Synced
-			if d := cmp.Diff(repos.Diff{Modified: sourced[:1]}, diff, ignore); d != "" {
-				t.Fatalf("Synced mismatch (-want +got):\n%s", d)
-			}
+		// We check synced again to test us going around the Run loop 2 times in
+		// total.
+		diff = <-syncer.Synced
+		if d := cmp.Diff(repos.Diff{Unmodified: sourced[:1]}, diff, ignore); d != "" {
+			t.Fatalf("Synced mismatch (-want +got):\n%s", d)
+		}
 
-			// Then the new repo.
-			diff = <-syncer.Synced
-			if d := cmp.Diff(repos.Diff{Added: sourced[1:]}, diff, ignore); d != "" {
-				t.Fatalf("Synced mismatch (-want +got):\n%s", d)
-			}
-
-			// We check synced again to test us going around the Run loop 2 times in
-			// total.
-			diff = <-syncer.Synced
-			if d := cmp.Diff(repos.Diff{Unmodified: sourced[:1]}, diff, ignore); d != "" {
-				t.Fatalf("Synced mismatch (-want +got):\n%s", d)
-			}
-
-			diff = <-syncer.Synced
-			if d := cmp.Diff(repos.Diff{Unmodified: sourced[1:]}, diff, ignore); d != "" {
-				t.Fatalf("Synced mismatch (-want +got):\n%s", d)
-			}
+		diff = <-syncer.Synced
+		if d := cmp.Diff(repos.Diff{Unmodified: sourced[1:]}, diff, ignore); d != "" {
+			t.Fatalf("Synced mismatch (-want +got):\n%s", d)
 		}
 
 		// Cancel context and the run loop should stop
@@ -1087,15 +743,7 @@ func testSyncRun(store *repos.Store, streaming bool) func(t *testing.T) {
 	}
 }
 
-func testBatchSyncerMultipleServices(store *repos.Store) func(t *testing.T) {
-	return testSyncerMultipleServices(store, false)
-}
-
-func testStreamingSyncerMultipleServices(store *repos.Store) func(t *testing.T) {
-	return testSyncerMultipleServices(store, true)
-}
-
-func testSyncerMultipleServices(store *repos.Store, streaming bool) func(t *testing.T) {
+func testSyncerMultipleServices(store *repos.Store) func(t *testing.T) {
 	return func(t *testing.T) {
 		ctx, cancel := context.WithCancel(context.Background())
 		defer cancel()
@@ -1181,10 +829,9 @@ func testSyncerMultipleServices(store *repos.Store, streaming bool) func(t *test
 				}
 				return repos.Sources{s}, nil
 			},
-			Store:     store,
-			Synced:    make(chan repos.Diff),
-			Now:       time.Now,
-			Streaming: streaming,
+			Store:  store,
+			Synced: make(chan repos.Diff),
+			Now:    time.Now,
 		}
 
 		done := make(chan error)
@@ -1222,38 +869,20 @@ func testSyncerMultipleServices(store *repos.Store, streaming bool) func(t *test
 			t.Fatalf("expected %d sync jobs, got %d", len(services), jobCount)
 		}
 
-		if !streaming {
-			for i := 0; i < len(services); i++ {
-				diff = <-syncer.Synced
-				if len(diff.Added) != 10 {
-					t.Fatalf("Expected 10 Added repos. got %d", len(diff.Added))
-				}
-				if len(diff.Deleted) != 0 {
-					t.Fatalf("Expected 0 Deleted repos. got %d", len(diff.Added))
-				}
-				if len(diff.Modified) != 0 {
-					t.Fatalf("Expected 0 Modified repos. got %d", len(diff.Added))
-				}
-				if len(diff.Unmodified) != 0 {
-					t.Fatalf("Expected 0 Unmodified repos. got %d", len(diff.Added))
-				}
-			}
-		} else {
-			for i := 0; i < len(services)*10; i++ {
-				diff := <-syncer.Synced
+		for i := 0; i < len(services)*10; i++ {
+			diff := <-syncer.Synced
 
-				if len(diff.Added) != 1 {
-					t.Fatalf("Expected 1 Added repos. got %d", len(diff.Added))
-				}
-				if len(diff.Deleted) != 0 {
-					t.Fatalf("Expected 0 Deleted repos. got %d", len(diff.Added))
-				}
-				if len(diff.Modified) != 0 {
-					t.Fatalf("Expected 0 Modified repos. got %d", len(diff.Added))
-				}
-				if len(diff.Unmodified) != 0 {
-					t.Fatalf("Expected 0 Unmodified repos. got %d", len(diff.Added))
-				}
+			if len(diff.Added) != 1 {
+				t.Fatalf("Expected 1 Added repos. got %d", len(diff.Added))
+			}
+			if len(diff.Deleted) != 0 {
+				t.Fatalf("Expected 0 Deleted repos. got %d", len(diff.Added))
+			}
+			if len(diff.Modified) != 0 {
+				t.Fatalf("Expected 0 Modified repos. got %d", len(diff.Added))
+			}
+			if len(diff.Unmodified) != 0 {
+				t.Fatalf("Expected 0 Unmodified repos. got %d", len(diff.Added))
 			}
 		}
 
@@ -1278,15 +907,7 @@ func testSyncerMultipleServices(store *repos.Store, streaming bool) func(t *test
 	}
 }
 
-func testBatchOrphanedRepo(store *repos.Store) func(*testing.T) {
-	return testOrphanedRepo(store, false)
-}
-
-func testStreamingOrphanedRepo(store *repos.Store) func(*testing.T) {
-	return testOrphanedRepo(store, true)
-}
-
-func testOrphanedRepo(store *repos.Store, streaming bool) func(*testing.T) {
+func testOrphanedRepo(store *repos.Store) func(*testing.T) {
 	return func(t *testing.T) {
 		ctx, cancel := context.WithCancel(context.Background())
 		defer cancel()
@@ -1331,11 +952,10 @@ func testOrphanedRepo(store *repos.Store, streaming bool) func(*testing.T) {
 				s := repos.NewFakeSource(svc1, nil, githubRepo)
 				return repos.Sources{s}, nil
 			},
-			Store:     store,
-			Now:       time.Now,
-			Streaming: streaming,
+			Store: store,
+			Now:   time.Now,
 		}
-		if err := syncer.SyncExternalService(ctx, store, svc1.ID, 10*time.Second); err != nil {
+		if err := syncer.SyncExternalService(ctx, svc1.ID, 10*time.Second); err != nil {
 			t.Fatal(err)
 		}
 
@@ -1344,7 +964,7 @@ func testOrphanedRepo(store *repos.Store, streaming bool) func(*testing.T) {
 			s := repos.NewFakeSource(svc2, nil, githubRepo)
 			return repos.Sources{s}, nil
 		}
-		if err := syncer.SyncExternalService(ctx, store, svc2.ID, 10*time.Second); err != nil {
+		if err := syncer.SyncExternalService(ctx, svc2.ID, 10*time.Second); err != nil {
 			t.Fatal(err)
 		}
 
@@ -1359,7 +979,7 @@ func testOrphanedRepo(store *repos.Store, streaming bool) func(*testing.T) {
 			s := repos.NewFakeSource(svc1, nil)
 			return repos.Sources{s}, nil
 		}
-		if err := syncer.SyncExternalService(ctx, store, svc1.ID, 10*time.Second); err != nil {
+		if err := syncer.SyncExternalService(ctx, svc1.ID, 10*time.Second); err != nil {
 			t.Fatal(err)
 		}
 
@@ -1383,7 +1003,7 @@ func testOrphanedRepo(store *repos.Store, streaming bool) func(*testing.T) {
 			s := repos.NewFakeSource(svc2, nil)
 			return repos.Sources{s}, nil
 		}
-		if err := syncer.SyncExternalService(ctx, store, svc2.ID, 10*time.Second); err != nil {
+		if err := syncer.SyncExternalService(ctx, svc2.ID, 10*time.Second); err != nil {
 			t.Fatal(err)
 		}
 
@@ -1395,15 +1015,7 @@ func testOrphanedRepo(store *repos.Store, streaming bool) func(*testing.T) {
 	}
 }
 
-func testConflictingBatchSyncers(store *repos.Store) func(*testing.T) {
-	return testConflictingSyncers(store, false)
-}
-
-func testConflictingStreamingSyncers(store *repos.Store) func(*testing.T) {
-	return testConflictingSyncers(store, true)
-}
-
-func testConflictingSyncers(store *repos.Store, streaming bool) func(*testing.T) {
+func testConflictingSyncers(store *repos.Store) func(*testing.T) {
 	return func(t *testing.T) {
 		ctx, cancel := context.WithCancel(context.Background())
 		defer cancel()
@@ -1448,11 +1060,10 @@ func testConflictingSyncers(store *repos.Store, streaming bool) func(*testing.T)
 				s := repos.NewFakeSource(svc1, nil, githubRepo)
 				return repos.Sources{s}, nil
 			},
-			Store:     store,
-			Now:       time.Now,
-			Streaming: streaming,
+			Store: store,
+			Now:   time.Now,
 		}
-		if err := syncer.SyncExternalService(ctx, store, svc1.ID, 10*time.Second); err != nil {
+		if err := syncer.SyncExternalService(ctx, svc1.ID, 10*time.Second); err != nil {
 			t.Fatal(err)
 		}
 
@@ -1462,11 +1073,10 @@ func testConflictingSyncers(store *repos.Store, streaming bool) func(*testing.T)
 				s := repos.NewFakeSource(svc2, nil, githubRepo)
 				return repos.Sources{s}, nil
 			},
-			Store:     store,
-			Now:       time.Now,
-			Streaming: streaming,
+			Store: store,
+			Now:   time.Now,
 		}
-		if err := syncer.SyncExternalService(ctx, store, svc2.ID, 10*time.Second); err != nil {
+		if err := syncer.SyncExternalService(ctx, svc2.ID, 10*time.Second); err != nil {
 			t.Fatal(err)
 		}
 
@@ -1507,78 +1117,42 @@ func testConflictingSyncers(store *repos.Store, streaming bool) func(*testing.T)
 				s := repos.NewFakeSource(svc1, nil, updatedRepo)
 				return repos.Sources{s}, nil
 			},
-			Store:     store,
-			Now:       time.Now,
-			Streaming: streaming,
+			Store: tx1,
+			Now:   time.Now,
 		}
-		if err := syncer.SyncExternalService(ctx, tx1, svc1.ID, 10*time.Second); err != nil {
+		if err := syncer.SyncExternalService(ctx, svc1.ID, 10*time.Second); err != nil {
 			t.Fatal(err)
 		}
 
-		if !streaming {
-			errChan := make(chan error)
-			upsertCalledCh := make(chan struct{})
-			go func() {
-				// Start syncing using tx2
-				syncer2 := &repos.Syncer{
-					Sourcer: func(services ...*types.ExternalService) (repos.Sources, error) {
-						s := repos.NewFakeSource(svc2, nil, updatedRepo.With(func(r *types.Repo) {
-							r.Description = newDescription
-						}))
-						return repos.Sources{s}, nil
-					},
-					Store: store,
-					Now:   time.Now,
-				}
-				storeCp := *store
-				storeCp.Mocks.UpsertRepos = func(ctx context.Context, repos ...*types.Repo) (err error) {
-					close(upsertCalledCh)
-					return store.UpsertRepos(ctx, repos...)
-				}
-				err := syncer2.SyncExternalService(ctx, &storeCp, svc2.ID, 10*time.Second)
-				errChan <- err
-			}()
-
-			<-upsertCalledCh
-			tx1.Done(nil)
-
-			err = <-errChan
-			if err != nil {
-				t.Fatalf("Error in syncer2: %v", err)
-			}
-			tx2.Done(nil)
-		} else {
-			syncer2 := &repos.Syncer{
-				Sourcer: func(services ...*types.ExternalService) (repos.Sources, error) {
-					s := repos.NewFakeSource(svc2, nil, githubRepo.With(func(r *types.Repo) {
-						r.Description = newDescription
-					}))
-					return repos.Sources{s}, nil
-				},
-				Store:     tx2,
-				Synced:    make(chan repos.Diff, 2),
-				Now:       time.Now,
-				Streaming: true,
-			}
-
-			errChan := make(chan error)
-			go func() {
-				errChan <- syncer2.SyncExternalService(ctx, tx2, svc2.ID, 10*time.Second)
-			}()
-
-			tx1.Done(nil)
-
-			if err = <-errChan; err != nil {
-				t.Fatalf("syncer2 err: %v", err)
-			}
-
-			diff := <-syncer2.Synced
-			if have, want := diff.Repos().Names(), []string{string(updatedRepo.Name)}; !cmp.Equal(want, have) {
-				t.Fatalf("syncer2 Synced mismatch: (-want, +have): %s", cmp.Diff(want, have))
-			}
-
-			tx2.Done(nil)
+		syncer2 := &repos.Syncer{
+			Sourcer: func(services ...*types.ExternalService) (repos.Sources, error) {
+				s := repos.NewFakeSource(svc2, nil, githubRepo.With(func(r *types.Repo) {
+					r.Description = newDescription
+				}))
+				return repos.Sources{s}, nil
+			},
+			Store:  tx2,
+			Synced: make(chan repos.Diff, 2),
+			Now:    time.Now,
 		}
+
+		errChan := make(chan error)
+		go func() {
+			errChan <- syncer2.SyncExternalService(ctx, svc2.ID, 10*time.Second)
+		}()
+
+		tx1.Done(nil)
+
+		if err = <-errChan; err != nil {
+			t.Fatalf("syncer2 err: %v", err)
+		}
+
+		diff := <-syncer2.Synced
+		if have, want := diff.Repos().Names(), []string{string(updatedRepo.Name)}; !cmp.Equal(want, have) {
+			t.Fatalf("syncer2 Synced mismatch: (-want, +have): %s", cmp.Diff(want, have))
+		}
+
+		tx2.Done(nil)
 
 		fromDB, err = store.RepoStore.List(ctx, database.ReposListOptions{})
 		if err != nil {
@@ -1594,16 +1168,8 @@ func testConflictingSyncers(store *repos.Store, streaming bool) func(*testing.T)
 	}
 }
 
-func testBatchSyncRepoMaintainsOtherSources(store *repos.Store) func(*testing.T) {
-	return testSyncRepoMaintainsOtherSources(store, false)
-}
-
-func testStreamingSyncRepoMaintainsOtherSources(store *repos.Store) func(*testing.T) {
-	return testSyncRepoMaintainsOtherSources(store, true)
-}
-
 // Test that sync repo does not clear out any other repo relationships
-func testSyncRepoMaintainsOtherSources(store *repos.Store, streaming bool) func(*testing.T) {
+func testSyncRepoMaintainsOtherSources(store *repos.Store) func(*testing.T) {
 	return func(t *testing.T) {
 		ctx, cancel := context.WithCancel(context.Background())
 		defer cancel()
@@ -1648,11 +1214,10 @@ func testSyncRepoMaintainsOtherSources(store *repos.Store, streaming bool) func(
 				s := repos.NewFakeSource(svc1, nil, githubRepo)
 				return repos.Sources{s}, nil
 			},
-			Store:     store,
-			Now:       time.Now,
-			Streaming: streaming,
+			Store: store,
+			Now:   time.Now,
 		}
-		if err := syncer.SyncExternalService(ctx, store, svc1.ID, 10*time.Second); err != nil {
+		if err := syncer.SyncExternalService(ctx, svc1.ID, 10*time.Second); err != nil {
 			t.Fatal(err)
 		}
 
@@ -1662,11 +1227,10 @@ func testSyncRepoMaintainsOtherSources(store *repos.Store, streaming bool) func(
 				s := repos.NewFakeSource(svc2, nil, githubRepo)
 				return repos.Sources{s}, nil
 			},
-			Store:     store,
-			Now:       time.Now,
-			Streaming: streaming,
+			Store: store,
+			Now:   time.Now,
 		}
-		if err := syncer.SyncExternalService(ctx, store, svc2.ID, 10*time.Second); err != nil {
+		if err := syncer.SyncExternalService(ctx, svc2.ID, 10*time.Second); err != nil {
 			t.Fatal(err)
 		}
 
@@ -1681,7 +1245,7 @@ func testSyncRepoMaintainsOtherSources(store *repos.Store, streaming bool) func(
 				CloneURL: "cloneURL",
 			},
 		}
-		if err := syncer.SyncRepo(ctx, store, githubRepo); err != nil {
+		if err := syncer.SyncRepo(ctx, githubRepo); err != nil {
 			t.Fatal(err)
 		}
 
@@ -1690,15 +1254,7 @@ func testSyncRepoMaintainsOtherSources(store *repos.Store, streaming bool) func(
 	}
 }
 
-func testBatchUserAddedRepos(store *repos.Store) func(*testing.T) {
-	return testUserAddedRepos(store, false)
-}
-
-func testStreamingUserAddedRepos(store *repos.Store) func(*testing.T) {
-	return testUserAddedRepos(store, true)
-}
-
-func testUserAddedRepos(store *repos.Store, streaming bool) func(*testing.T) {
+func testUserAddedRepos(store *repos.Store) func(*testing.T) {
 	return func(t *testing.T) {
 		ctx, cancel := context.WithCancel(context.Background())
 		defer cancel()
@@ -1770,11 +1326,10 @@ func testUserAddedRepos(store *repos.Store, streaming bool) func(*testing.T) {
 				s := repos.NewFakeSource(adminService, nil, publicRepo, privateRepo)
 				return repos.Sources{s}, nil
 			},
-			Store:     store,
-			Now:       time.Now,
-			Streaming: streaming,
+			Store: store,
+			Now:   time.Now,
 		}
-		if err := syncer.SyncExternalService(ctx, store, adminService.ID, 10*time.Second); err != nil {
+		if err := syncer.SyncExternalService(ctx, adminService.ID, 10*time.Second); err != nil {
 			t.Fatal(err)
 		}
 
@@ -1787,11 +1342,10 @@ func testUserAddedRepos(store *repos.Store, streaming bool) func(*testing.T) {
 				s := repos.NewFakeSource(adminService, nil)
 				return repos.Sources{s}, nil
 			},
-			Store:     store,
-			Now:       time.Now,
-			Streaming: streaming,
+			Store: store,
+			Now:   time.Now,
 		}
-		if err := syncer.SyncExternalService(ctx, store, adminService.ID, 10*time.Second); err != nil {
+		if err := syncer.SyncExternalService(ctx, adminService.ID, 10*time.Second); err != nil {
 			t.Fatal(err)
 		}
 
@@ -1804,11 +1358,10 @@ func testUserAddedRepos(store *repos.Store, streaming bool) func(*testing.T) {
 				s := repos.NewFakeSource(userService, nil, publicRepo, privateRepo)
 				return repos.Sources{s}, nil
 			},
-			Store:     store,
-			Now:       time.Now,
-			Streaming: streaming,
+			Store: store,
+			Now:   time.Now,
 		}
-		if err := syncer.SyncExternalService(ctx, store, userService.ID, 10*time.Second); err != nil {
+		if err := syncer.SyncExternalService(ctx, userService.ID, 10*time.Second); err != nil {
 			t.Fatal(err)
 		}
 
@@ -1827,11 +1380,10 @@ func testUserAddedRepos(store *repos.Store, streaming bool) func(*testing.T) {
 				s := repos.NewFakeSource(userService, nil, publicRepo, privateRepo)
 				return repos.Sources{s}, nil
 			},
-			Store:     store,
-			Now:       time.Now,
-			Streaming: streaming,
+			Store: store,
+			Now:   time.Now,
 		}
-		if err := syncer.SyncExternalService(ctx, store, userService.ID, 10*time.Second); err != nil {
+		if err := syncer.SyncExternalService(ctx, userService.ID, 10*time.Second); err != nil {
 			t.Fatal(err)
 		}
 
@@ -1850,11 +1402,10 @@ func testUserAddedRepos(store *repos.Store, streaming bool) func(*testing.T) {
 				s := repos.NewFakeSource(userService, nil, publicRepo, privateRepo)
 				return repos.Sources{s}, nil
 			},
-			Store:     store,
-			Now:       time.Now,
-			Streaming: streaming,
+			Store: store,
+			Now:   time.Now,
 		}
-		if err := syncer.SyncExternalService(ctx, store, userService.ID, 10*time.Second); err != nil {
+		if err := syncer.SyncExternalService(ctx, userService.ID, 10*time.Second); err != nil {
 			t.Fatal(err)
 		}
 
@@ -1874,9 +1425,8 @@ func testUserAddedRepos(store *repos.Store, streaming bool) func(*testing.T) {
 			Now:                 time.Now,
 			Store:               store,
 			UserReposMaxPerUser: 1,
-			Streaming:           streaming,
 		}
-		if err := syncer.SyncExternalService(ctx, store, userService.ID, 10*time.Second); err == nil {
+		if err := syncer.SyncExternalService(ctx, userService.ID, 10*time.Second); err == nil {
 			t.Fatal("Expected an error, got none")
 		}
 
@@ -1889,9 +1439,8 @@ func testUserAddedRepos(store *repos.Store, streaming bool) func(*testing.T) {
 			Now:                 time.Now,
 			Store:               store,
 			UserReposMaxPerSite: 1,
-			Streaming:           streaming,
 		}
-		if err := syncer.SyncExternalService(ctx, store, userService.ID, 10*time.Second); err == nil {
+		if err := syncer.SyncExternalService(ctx, userService.ID, 10*time.Second); err == nil {
 			t.Fatal("Expected an error, got none")
 		}
 	}
@@ -1958,7 +1507,7 @@ func testNameOnConflictDiscardOld(store *repos.Store) func(*testing.T) {
 			Store: store,
 			Now:   time.Now,
 		}
-		if err := syncer.SyncExternalService(ctx, store, svc1.ID, 10*time.Second); err != nil {
+		if err := syncer.SyncExternalService(ctx, svc1.ID, 10*time.Second); err != nil {
 			t.Fatal(err)
 		}
 
@@ -1971,7 +1520,7 @@ func testNameOnConflictDiscardOld(store *repos.Store) func(*testing.T) {
 			Store: store,
 			Now:   time.Now,
 		}
-		if err := syncer.SyncExternalService(ctx, store, svc2.ID, 10*time.Second); err != nil {
+		if err := syncer.SyncExternalService(ctx, svc2.ID, 10*time.Second); err != nil {
 			t.Fatal(err)
 		}
 
@@ -2056,7 +1605,7 @@ func testNameOnConflictDiscardNew(store *repos.Store) func(*testing.T) {
 			Store: store,
 			Now:   time.Now,
 		}
-		if err := syncer.SyncExternalService(ctx, store, svc1.ID, 10*time.Second); err != nil {
+		if err := syncer.SyncExternalService(ctx, svc1.ID, 10*time.Second); err != nil {
 			t.Fatal(err)
 		}
 
@@ -2069,7 +1618,7 @@ func testNameOnConflictDiscardNew(store *repos.Store) func(*testing.T) {
 			Store: store,
 			Now:   time.Now,
 		}
-		if err := syncer.SyncExternalService(ctx, store, svc2.ID, 10*time.Second); err != nil {
+		if err := syncer.SyncExternalService(ctx, svc2.ID, 10*time.Second); err != nil {
 			t.Fatal(err)
 		}
 
@@ -2093,15 +1642,7 @@ func testNameOnConflictDiscardNew(store *repos.Store) func(*testing.T) {
 	}
 }
 
-func testBatchNameOnConflictOnRename(store *repos.Store) func(*testing.T) {
-	return testNameOnConflictOnRename(store, false)
-}
-
-func testStreamingNameOnConflictOnRename(store *repos.Store) func(*testing.T) {
-	return testNameOnConflictOnRename(store, true)
-}
-
-func testNameOnConflictOnRename(store *repos.Store, streaming bool) func(*testing.T) {
+func testNameOnConflictOnRename(store *repos.Store) func(*testing.T) {
 	return func(t *testing.T) {
 		// Test the case where more than one external service returns the same name for different repos. The names
 		// are the same, but the external id are different.
@@ -2159,11 +1700,10 @@ func testNameOnConflictOnRename(store *repos.Store, streaming bool) func(*testin
 				s := repos.NewFakeSource(svc1, nil, githubRepo1)
 				return repos.Sources{s}, nil
 			},
-			Store:     store,
-			Now:       time.Now,
-			Streaming: streaming,
+			Store: store,
+			Now:   time.Now,
 		}
-		if err := syncer.SyncExternalService(ctx, store, svc1.ID, 10*time.Second); err != nil {
+		if err := syncer.SyncExternalService(ctx, svc1.ID, 10*time.Second); err != nil {
 			t.Fatal(err)
 		}
 
@@ -2173,11 +1713,10 @@ func testNameOnConflictOnRename(store *repos.Store, streaming bool) func(*testin
 				s := repos.NewFakeSource(svc2, nil, githubRepo2)
 				return repos.Sources{s}, nil
 			},
-			Store:     store,
-			Now:       time.Now,
-			Streaming: streaming,
+			Store: store,
+			Now:   time.Now,
 		}
-		if err := syncer.SyncExternalService(ctx, store, svc2.ID, 10*time.Second); err != nil {
+		if err := syncer.SyncExternalService(ctx, svc2.ID, 10*time.Second); err != nil {
 			t.Fatal(err)
 		}
 
@@ -2192,11 +1731,10 @@ func testNameOnConflictOnRename(store *repos.Store, streaming bool) func(*testin
 				s := repos.NewFakeSource(svc1, nil, renamedRepo1)
 				return repos.Sources{s}, nil
 			},
-			Store:     store,
-			Now:       time.Now,
-			Streaming: streaming,
+			Store: store,
+			Now:   time.Now,
 		}
-		if err := syncer.SyncExternalService(ctx, store, svc1.ID, 10*time.Second); err != nil {
+		if err := syncer.SyncExternalService(ctx, svc1.ID, 10*time.Second); err != nil {
 			t.Fatal(err)
 		}
 
@@ -2212,15 +1750,10 @@ func testNameOnConflictOnRename(store *repos.Store, streaming bool) func(*testin
 		found := fromDB[0]
 		var expectedID string
 
-		if !streaming {
-			// We expect repo1 to be synced since it sorts before repo2 because the ID is alphabetically first
-			expectedID = "foo-external-bar"
-		} else {
-			// We expect repo2 to be synced since we always pick the just sourced repo as the winner, deleting the other.
-			// If the existing conflicting repo still exists, it'll have a different name (because names are unique in
-			// the code host), so it'll get re-created once we sync it later.
-			expectedID = "foo-external-foo"
-		}
+		// We expect repo2 to be synced since we always pick the just sourced repo as the winner, deleting the other.
+		// If the existing conflicting repo still exists, it'll have a different name (because names are unique in
+		// the code host), so it'll get re-created once we sync it later.
+		expectedID = "foo-external-foo"
 
 		if found.ExternalRepo.ID != expectedID {
 			t.Fatalf("Want %q, got %q", expectedID, found.ExternalRepo.ID)
@@ -2228,15 +1761,7 @@ func testNameOnConflictOnRename(store *repos.Store, streaming bool) func(*testin
 	}
 }
 
-func testBatchDeleteExternalService(store *repos.Store) func(*testing.T) {
-	return testDeleteExternalService(store, false)
-}
-
-func testStreamingDeleteExternalService(store *repos.Store) func(*testing.T) {
-	return testDeleteExternalService(store, true)
-}
-
-func testDeleteExternalService(store *repos.Store, streaming bool) func(*testing.T) {
+func testDeleteExternalService(store *repos.Store) func(*testing.T) {
 	return func(t *testing.T) {
 		ctx, cancel := context.WithCancel(context.Background())
 		defer cancel()
@@ -2281,11 +1806,10 @@ func testDeleteExternalService(store *repos.Store, streaming bool) func(*testing
 				s := repos.NewFakeSource(svc1, nil, githubRepo)
 				return repos.Sources{s}, nil
 			},
-			Store:     store,
-			Now:       time.Now,
-			Streaming: streaming,
+			Store: store,
+			Now:   time.Now,
 		}
-		if err := syncer.SyncExternalService(ctx, store, svc1.ID, 10*time.Second); err != nil {
+		if err := syncer.SyncExternalService(ctx, svc1.ID, 10*time.Second); err != nil {
 			t.Fatal(err)
 		}
 
@@ -2295,11 +1819,10 @@ func testDeleteExternalService(store *repos.Store, streaming bool) func(*testing
 				s := repos.NewFakeSource(svc2, nil, githubRepo)
 				return repos.Sources{s}, nil
 			},
-			Store:     store,
-			Now:       time.Now,
-			Streaming: streaming,
+			Store: store,
+			Now:   time.Now,
 		}
-		if err := syncer.SyncExternalService(ctx, store, svc2.ID, 10*time.Second); err != nil {
+		if err := syncer.SyncExternalService(ctx, svc2.ID, 10*time.Second); err != nil {
 			t.Fatal(err)
 		}
 

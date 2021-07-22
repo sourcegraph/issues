@@ -54,28 +54,6 @@ func TestReposNamesSummary(t *testing.T) {
 	}
 }
 
-// Our uses of pick happen from iterating through a map. So we can't guarantee
-// that we test both pick(a, b) and pick(b, a) without writing this specific
-// test.
-func TestPick(t *testing.T) {
-	eid := func(id string) api.ExternalRepoSpec {
-		return api.ExternalRepoSpec{
-			ID:          id,
-			ServiceType: "fake",
-			ServiceID:   "https://fake.com",
-		}
-	}
-	a := &types.Repo{Name: "bar", ExternalRepo: eid("1")}
-	b := &types.Repo{Name: "bar", ExternalRepo: eid("2")}
-
-	for _, args := range [][2]*types.Repo{{a, b}, {b, a}} {
-		keep, discard := pick(args[0], args[1])
-		if keep != a || discard != b {
-			t.Errorf("unexpected pick(%v, %v)", args[0], args[1])
-		}
-	}
-}
-
 func TestSyncRateLimiters(t *testing.T) {
 	now := time.Now()
 	ctx := context.Background()

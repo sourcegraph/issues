@@ -14,15 +14,6 @@ import (
 	"github.com/sourcegraph/sourcegraph/internal/types"
 )
 
-// pick deterministically chooses between a and b a repo to keep and
-// discard. It is used when resolving conflicts on sourced repositories.
-func pick(a *types.Repo, b *types.Repo) (keep, discard *types.Repo) {
-	if a.Less(b) {
-		return a, b
-	}
-	return b, a
-}
-
 type externalServiceLister interface {
 	List(context.Context, database.ExternalServicesListOptions) ([]*types.ExternalService, error)
 }
