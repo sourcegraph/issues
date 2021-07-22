@@ -24,6 +24,7 @@ package shared
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/sourcegraph/sourcegraph/monitoring/monitoring"
 )
@@ -77,6 +78,43 @@ func (f ObservableOption) safeApply(observable Observable) Observable {
 // sharedObservable defines the type all shared observable variables should have in this package.
 type sharedObservable func(containerName string, owner monitoring.ObservableOwner) Observable
 
+type ObservableOptions struct {
+	// Namespace is displayed in the title of the group containing the observable. This
+	// value should generally name a component or team owning the group of metrics.
+	Namespace string
+
+	// GroupDescription is a human-readable description of the group of metrics displayed
+	// in the title of the group containing the observable.
+	GroupDescription string
+
+	// MetricName is a prometheus metric name or name fragment that is used to construct
+	// the query for the target panel.
+	MetricName string
+
+	// MetricDescription is a human-readable name for the object represented by each metric.
+	// This is used to disambiguate more generic terms such as "requests" or "records". The
+	// value in the panel description or legend will be generated but made more specific
+	// by this value (e.g. "code intel resolver operations").
+	//          metric desc ^^^^^^^^^^^^^^^^^^^ ^^^^^^^^^^ generic term
+	MetricDescription string
+
+	// Filters are additional prometheus filter expressions used to select or hide values
+	// for a given label pattern.
+	Filters []string
+
+	// By are label names that should not be aggregated together. Supplying labels here
+	// will increase the number of series on the target panel. The legends for each series
+	// will be updated to include the value of each label group supplied here.
+	By []string
+
+	// Hidden sets the Hidden field of the resulting group.
+	Hidden bool
+}
+
+// observableConstructor is a type of constructor function used in this package that creates
+// a shared observable given a set of common observable options.
+type observableConstructor func(options ObservableOptions) sharedObservable
+
 // CadvisorNameMatcher generates Prometheus matchers that capture metrics that match the
 // given container name while excluding some irrelevant series.
 func CadvisorNameMatcher(containerName string) string {
@@ -92,4 +130,31 @@ func CadvisorNameMatcher(containerName string) string {
 	//   See https://sourcegraph.com/search?q=repo:%5Egithub%5C.com/sourcegraph/deploy-sourcegraph%24+target_label:+name&patternType=literal
 	// - because of above, suffix could be pod name in Kubernetes
 	return fmt.Sprintf(`name=~"^%s.*"`, containerName)
+}
+
+// makeFilters creates metric filters based on the given container name that matches
+// against the container name as well as any additionally supplied label filter expressions.
+func makeFilters(containerName string, filters ...string) string {
+	filters = append(filters, fmt.Sprintf(`job=~"%s"`, containerName))
+	return strings.Join(filters, ",")
+}
+
+// makeBy returns the suffix if the aggregator expression (e.g., max by (queue)),
+//                                                                   ^^^^^^^^^^
+// as well as a prefix to be used as part of the legend consisting of placeholder
+// values that will render to the value of the label/variable in the Grafana UI.
+func makeBy(labels ...string) (aggregateExprSuffix string, legendPrefix string) {
+	if len(labels) == 0 {
+		return "", ""
+	}
+
+	placeholders := make([]string, 0, len(labels))
+	for _, label := range labels {
+		placeholders = append(placeholders, fmt.Sprintf("{{%s}}", label))
+	}
+
+	aggregateExprSuffix = fmt.Sprintf(" by (%s)", strings.Join(labels, ","))
+	legendPrefix = fmt.Sprintf("%s ", strings.Join(placeholders, "-"))
+
+	return aggregateExprSuffix, legendPrefix
 }
