@@ -2,7 +2,6 @@ import * as Monaco from 'monaco-editor'
 
 import {
     decorate,
-    toMonacoRange,
     DecoratedToken,
     MetaRegexp,
     MetaRegexpKind,
@@ -16,7 +15,7 @@ import {
     MetaPredicate,
 } from './decoratedToken'
 import { resolveFilter } from './filters'
-import { Token } from './token'
+import { CharacterRange, Token } from './token'
 
 const toRegexpHover = (token: MetaRegexp): string => {
     switch (token.kind) {
@@ -193,17 +192,33 @@ const toHover = (token: DecoratedToken): string => {
     return ''
 }
 
-const inside = (column: number) => ({ range }: Pick<Token | DecoratedToken, 'range'>): boolean =>
-    range.start + 1 <= column && range.end >= column
+/**
+ * Converts a zero-indexed offset {@link CharacterRange} to a {@link Monaco.IRange} line-and-column range.
+ * This ensures hover tooltips happen at correct line and column offsets, and for ranges that span multiple lines.
+ */
+const toMonacoHoverRange = ({ start, end }: CharacterRange, textModel: Monaco.editor.ITextModel): Monaco.IRange => {
+    const startPosition = textModel.getPositionAt(start)
+    const endPosition = textModel.getPositionAt(end)
+    return {
+        startLineNumber: startPosition.lineNumber,
+        endLineNumber: endPosition.lineNumber,
+        startColumn: startPosition.column,
+        endColumn: endPosition.column,
+    }
+}
+
+const inside = (offset: number) => ({ range }: Pick<Token | DecoratedToken, 'range'>): boolean =>
+    range.start <= offset && range.end > offset
 
 /**
  * Returns the hover result for a hovered search token in the Monaco query input.
  */
 export const getHoverResult = (
     tokens: Token[],
-    { column }: Pick<Monaco.Position, 'column'>
+    position: Monaco.Position,
+    textModel: Monaco.editor.ITextModel
 ): Monaco.languages.Hover | null => {
-    const tokensAtCursor = tokens.flatMap(decorate).filter(inside(column))
+    const tokensAtCursor = tokens.flatMap(decorate).filter(inside(textModel.getOffsetAt(position)))
     if (tokensAtCursor.length === 0) {
         return null
     }
@@ -220,7 +235,7 @@ export const getHoverResult = (
                             : resolvedFilter.definition.description
                     )
                     // Add 1 to end of range to include the ':'.
-                    range = toMonacoRange({ start: token.range.start, end: token.range.end + 1 })
+                    range = toMonacoHoverRange({ start: token.range.start, end: token.range.end + 1 }, textModel)
                 }
                 break
             }
@@ -229,13 +244,13 @@ export const getHoverResult = (
             case 'metaRepoRevisionSeparator':
             case 'metaSelector':
                 values.push(toHover(token))
-                range = toMonacoRange(token.range)
+                range = toMonacoHoverRange(token.range, textModel)
                 break
             case 'metaRegexp':
             case 'metaStructural':
             case 'metaPredicate':
                 values.push(toHover(token))
-                range = toMonacoRange(token.groupRange ? token.groupRange : token.range)
+                range = toMonacoHoverRange(token.groupRange ? token.groupRange : token.range, textModel)
                 break
         }
     })

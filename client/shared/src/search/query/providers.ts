@@ -65,7 +65,9 @@ export function getProviders(
                 of(textModel.getValue())
                     .pipe(
                         map(value => scanSearchQuery(value, options.interpretComments ?? false, options.patternType)),
-                        map(scanned => (scanned.type === 'error' ? null : getHoverResult(scanned.term, position))),
+                        map(scanned =>
+                            scanned.type === 'error' ? null : getHoverResult(scanned.term, position, textModel)
+                        ),
                         takeUntil(fromEventPattern(handler => token.onCancellationRequested(handler)))
                     )
                     .toPromise(),
