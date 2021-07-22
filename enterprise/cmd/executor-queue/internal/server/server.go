@@ -1,12 +1,11 @@
 package server
 
 import (
-	"context"
 	"fmt"
 	"net/http"
 
 	"github.com/derision-test/glock"
-	"github.com/inconshreveable/log15"
+	"github.com/gorilla/mux"
 
 	"github.com/sourcegraph/sourcegraph/internal/goroutine"
 	"github.com/sourcegraph/sourcegraph/internal/httpserver"
@@ -15,18 +14,19 @@ import (
 )
 
 // NewServer returns an HTTP job queue server.
-func NewServer(options Options, observationContext *observation.Context) goroutine.BackgroundRoutine {
+func NewServer(options Options, queueOptions []QueueOptions, observationContext *observation.Context) goroutine.BackgroundRoutine {
 	addr := fmt.Sprintf(":%d", options.Port)
-	handler := newHandlerWithMetrics(options, glock.NewRealClock(), observationContext)
-	httpHandler := ot.Middleware(httpserver.NewHandler(handler.setupRoutes))
-	server := httpserver.NewFromAddr(addr, &http.Server{Handler: httpHandler})
-	janitor := goroutine.NewPeriodicGoroutine(context.Background(), options.CleanupInterval, &handlerWrapper{handler})
-	return goroutine.CombinedRoutine{server, janitor}
+
+	queueMetrics := newQueueMetrics(observationContext)
+	serverHandler := ot.Middleware(httpserver.NewHandler(func(router *mux.Router) {
+		for _, queueOption := range queueOptions {
+			handler := newHandlerWithMetrics(options, queueOption, glock.NewRealClock(), queueMetrics)
+			subRouter := router.PathPrefix(fmt.Sprintf("/%s/", queueOption.Name)).Subrouter()
+			handler.setupRoutes(subRouter)
+		}
+	}))
+
+	server := httpserver.NewFromAddr(addr, &http.Server{Handler: serverHandler})
+
+	return server
 }
-
-type handlerWrapper struct{ handler *handler }
-
-var _ goroutine.Handler = &handlerWrapper{}
-
-func (hw *handlerWrapper) Handle(ctx context.Context) error { return hw.handler.cleanup(ctx) }
-func (hw *handlerWrapper) HandleError(err error)            { log15.Error("Failed to requeue jobs", "err", err) }

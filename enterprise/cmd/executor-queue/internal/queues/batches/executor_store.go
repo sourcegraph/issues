@@ -1,4 +1,4 @@
-package background
+package batches
 
 import (
 	"context"
@@ -13,6 +13,7 @@ import (
 	"github.com/graph-gophers/graphql-go/relay"
 	"github.com/keegancsmith/sqlf"
 
+	apiserver "github.com/sourcegraph/sourcegraph/enterprise/cmd/executor-queue/internal/server"
 	"github.com/sourcegraph/sourcegraph/enterprise/internal/batches/store"
 	"github.com/sourcegraph/sourcegraph/internal/database/basestore"
 	"github.com/sourcegraph/sourcegraph/internal/observation"
@@ -45,8 +46,8 @@ var executorWorkerStoreOptions = dbworkerstore.Options{
 
 // NewExecutorStore creates a dbworker store that wraps the batch_spec_executions
 // table.
-func NewExecutorStore(s basestore.ShareableStore, observationContext *observation.Context) dbworkerstore.Store {
-	return &executorStore{Store: dbworkerstore.NewWithMetrics(s.Handle(), executorWorkerStoreOptions, observationContext)}
+func NewExecutorStore(s basestore.ShareableStore, observationContext *observation.Context) apiserver.QueueStore {
+	return &executorStore{Store: dbworkerstore.NewWithMetrics(s.Handle(), executorWorkerStoreOptions, observationContext), options: executorWorkerStoreOptions}
 }
 
 var _ dbworkerstore.Store = &executorStore{}
@@ -56,6 +57,7 @@ var _ dbworkerstore.Store = &executorStore{}
 // separate columns when marking a job as complete.
 type executorStore struct {
 	dbworkerstore.Store
+	options dbworkerstore.Options
 }
 
 // markCompleteQuery is taken from internal/workerutil/dbworker/store/store.go
@@ -79,6 +81,80 @@ func (s *executorStore) MarkComplete(ctx context.Context, id int) (_ bool, err e
 
 	_, ok, err := basestore.ScanFirstInt(batchesStore.Query(ctx, sqlf.Sprintf(markCompleteQuery, batchSpecRandID, id)))
 	return ok, err
+}
+
+func (s *executorStore) ExecutorLastUpdate(ctx context.Context, executorName string) (time.Time, error) {
+	q := sqlf.Sprintf(`
+	SELECT
+		max(last_heartbeat_at)
+	FROM
+		batch_spec_executions
+	WHERE
+		worker_hostname = %s AND last_heartbeat_at IS NOT NULL
+	GROUP BY
+		worker_hostname
+	`, executorName)
+	time, _, err := basestore.ScanFirstTime(s.Store.Handle().DB().QueryContext(ctx, q.Query(sqlf.PostgresBindVar), q.Args()...))
+	return time, err
+}
+
+func (s *executorStore) RecordStartedAt(ctx context.Context, executorName string, recordID int) (time.Time, error) {
+	q := sqlf.Sprintf(`
+	SELECT
+		started_at
+	FROM
+	batch_spec_executions
+	WHERE
+		worker_hostname = %s AND id = %s AND state = 'processing'
+	`, executorName, recordID)
+	time, _, err := basestore.ScanFirstTime(s.Store.Handle().DB().QueryContext(ctx, q.Query(sqlf.PostgresBindVar), q.Args()...))
+	return time, err
+}
+
+func (s *executorStore) HeartbeatRecords(ctx context.Context, executorName string, recordIDs []int) ([]int, error) {
+	ids := make([]*sqlf.Query, 0, len(recordIDs))
+	for _, id := range recordIDs {
+		ids = append(ids, sqlf.Sprintf("%s", id))
+	}
+	q := sqlf.Sprintf(`
+	WITH alive_candidates AS (
+		SELECT
+			id
+		FROM
+			batch_spec_executions
+		WHERE
+			id IN (%s)
+			AND
+			state = 'processing'
+			AND
+			worker_hostname = %s
+			AND
+			NOT cancel
+		FOR UPDATE
+	)
+	UPDATE
+		batch_spec_executions
+	SET
+		last_heartbeat_at = %s
+	WHERE
+		id IN (SELECT id FROM alive_candidates)
+	RETURNING id
+	`, sqlf.Join(ids, ","), executorName, time.Now())
+	rows, err := s.Store.Handle().DB().QueryContext(ctx, q.Query(sqlf.PostgresBindVar), q.Args()...)
+	if err != nil {
+		return []int{}, err
+	}
+	defer func() { err = basestore.CloseRows(rows, err) }()
+
+	resultIDs := make([]int, 0)
+	for rows.Next() {
+		var value int
+		if err := rows.Scan(&value); err != nil {
+			return []int{}, err
+		}
+		resultIDs = append(resultIDs, value)
+	}
+	return resultIDs, err
 }
 
 func loadAndExtractBatchSpecRandID(ctx context.Context, s *store.Store, id int64) (string, error) {

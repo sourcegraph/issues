@@ -73,28 +73,28 @@ func main() {
 	close(ready)
 
 	// Initialize queues
-	queueOptions := map[string]apiserver.QueueOptions{
-		"codeintel": codeintel.QueueOptions(db, codeintelConfig, observationContext),
-		"batches":   batches.QueueOptions(db, batchesConfig, observationContext),
+	queueOptions := []apiserver.QueueOptions{
+		codeintel.QueueOptions(db, codeintelConfig, observationContext),
+		batches.QueueOptions(db, batchesConfig, observationContext),
 	}
 
-	for queueName, options := range queueOptions {
+	for _, options := range queueOptions {
 		prometheus.DefaultRegisterer.MustRegister(prometheus.NewGaugeFunc(prometheus.GaugeOpts{
 			Name:        "src_executor_queue_total",
 			Help:        "Total number of jobs in the queued state.",
-			ConstLabels: map[string]string{"queue": queueName},
+			ConstLabels: map[string]string{"queue": options.Name},
 		}, func() float64 {
 			// TODO(efritz) - do not count soft-deleted code intel index records
 			count, err := options.Store.QueuedCount(context.Background(), nil)
 			if err != nil {
-				log15.Error("Failed to get queued job count", "queue", queueName, "error", err)
+				log15.Error("Failed to get queued job count", "queue", options.Name, "error", err)
 			}
 
 			return float64(count)
 		}))
 	}
 
-	server := apiserver.NewServer(serviceConfig.ServerOptions(queueOptions), observationContext)
+	server := apiserver.NewServer(serviceConfig.ServerOptions(), queueOptions, observationContext)
 	goroutine.MonitorBackgroundRoutines(context.Background(), server)
 }
 

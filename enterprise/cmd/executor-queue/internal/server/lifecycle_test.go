@@ -30,8 +30,7 @@ func TestHeartbeat(t *testing.T) {
 			"q1": {Store: store1, RecordTransformer: recordTransformer},
 			"q2": {Store: store2, RecordTransformer: recordTransformer},
 		},
-		MaximumNumTransactions: 10,
-		UnreportedMaxAge:       time.Second,
+		UnreportedMaxAge: time.Second,
 	}
 	clock := glock.NewMockClock()
 	handler := newHandler(options, clock)
@@ -111,8 +110,7 @@ func TestCleanup(t *testing.T) {
 			"q1": {Store: store1, RecordTransformer: recordTransformer},
 			"q2": {Store: store2, RecordTransformer: recordTransformer},
 		},
-		MaximumNumTransactions: 10,
-		DeathThreshold:         time.Minute * 5,
+		DeathThreshold: time.Minute * 5,
 	}
 	clock := glock.NewMockClock()
 	handler := newHandler(options, clock)

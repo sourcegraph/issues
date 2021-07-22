@@ -2,6 +2,7 @@ package main
 
 import (
 	"net/http"
+	"os"
 	"time"
 
 	"github.com/google/uuid"
@@ -97,8 +98,11 @@ func (c *Config) ResourceOptions() command.ResourceOptions {
 }
 
 func (c *Config) ClientOptions(transport http.RoundTripper) apiclient.Options {
+	hostname, _ := os.Hostname()
+
 	return apiclient.Options{
 		ExecutorName:      uuid.New().String(),
+		ExecutorHostname:  hostname,
 		PathPrefix:        "/.executors/queue",
 		EndpointOptions:   c.EndpointOptions(),
 		BaseClientOptions: c.BaseClientOptions(transport),

@@ -11,7 +11,7 @@ import (
 // newBatchSpecExecutionResetter creates a dbworker.Resetter that re-enqueues
 // lost batch_spec_execution jobs for processing.
 func newBatchSpecExecutionResetter(s *store.Store, observationContext *observation.Context, metrics batchChangesMetrics) *dbworker.Resetter {
-	workerStore := NewExecutorStore(s, observationContext)
+	// workerStore := NewExecutorStore(s, observationContext)
 
 	options := dbworker.ResetterOptions{
 		Name:     "batch_spec_executor_resetter",
@@ -19,6 +19,6 @@ func newBatchSpecExecutionResetter(s *store.Store, observationContext *observati
 		Metrics:  metrics.executionResetterMetrics,
 	}
 
-	resetter := dbworker.NewResetter(workerStore, options)
+	resetter := dbworker.NewResetter(nil, options)
 	return resetter
 }

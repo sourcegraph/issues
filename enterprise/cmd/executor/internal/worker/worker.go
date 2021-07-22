@@ -77,7 +77,7 @@ func NewWorker(options Options, observationContext *observation.Context) gorouti
 
 	indexer := workerutil.NewWorker(context.Background(), store, handler, options.WorkerOptions)
 	heartbeat := goroutine.NewHandlerWithErrorMessage("heartbeat", func(ctx context.Context) error {
-		unknownIDs, err := queueStore.Heartbeat(ctx, idSet.Slice())
+		unknownIDs, err := queueStore.Heartbeat(ctx, options.QueueName, idSet.Slice())
 		if err != nil {
 			return err
 		}
@@ -111,7 +111,7 @@ func connectToFrontend(queueStore *apiclient.Client, options Options) bool {
 	defer signal.Stop(signals)
 
 	for {
-		err := queueStore.Ping(context.Background(), nil)
+		err := queueStore.Ping(context.Background(), options.QueueName, nil)
 		if err == nil {
 			log15.Info("Connected to Sourcegraph instance")
 			return true

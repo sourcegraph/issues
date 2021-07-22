@@ -151,8 +151,8 @@ func (c *Client) MarkFailed(ctx context.Context, queueName string, jobID int, er
 	return c.client.DoAndDrop(ctx, req)
 }
 
-func (c *Client) Ping(ctx context.Context, jobIDs []int) (err error) {
-	req, err := c.makeRequest("POST", "heartbeat", executor.HeartbeatRequest{
+func (c *Client) Ping(ctx context.Context, queueName string, jobIDs []int) (err error) {
+	req, err := c.makeRequest("POST", fmt.Sprintf("%s/heartbeat", queueName), executor.HeartbeatRequest{
 		ExecutorName: c.options.ExecutorName,
 	})
 	if err != nil {
@@ -162,13 +162,14 @@ func (c *Client) Ping(ctx context.Context, jobIDs []int) (err error) {
 	return c.client.DoAndDrop(ctx, req)
 }
 
-func (c *Client) Heartbeat(ctx context.Context, jobIDs []int) (unknownIDs []int, err error) {
+func (c *Client) Heartbeat(ctx context.Context, queueName string, jobIDs []int) (unknownIDs []int, err error) {
 	ctx, endObservation := c.operations.heartbeat.With(ctx, &err, observation.Args{LogFields: []log.Field{
+		log.String("queueName", queueName),
 		log.String("jobIDs", intsToString(jobIDs)),
 	}})
 	defer endObservation(1, observation.Args{})
 
-	req, err := c.makeRequest("POST", "heartbeat", executor.HeartbeatRequest{
+	req, err := c.makeRequest("POST", fmt.Sprintf("%s/heartbeat", queueName), executor.HeartbeatRequest{
 		ExecutorName: c.options.ExecutorName,
 		JobIDs:       jobIDs,
 	})

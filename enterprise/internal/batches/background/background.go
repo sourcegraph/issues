@@ -37,7 +37,7 @@ func Routines(ctx context.Context, batchesStore *store.Store, cf *httpcli.Factor
 		newBulkOperationWorker(ctx, batchesStore, sourcer, metrics),
 		newBulkOperationWorkerResetter(batchesStore, metrics),
 
-		newBatchSpecExecutionResetter(batchesStore, observationContext, metrics),
+		// newBatchSpecExecutionResetter(batchesStore, observationContext, metrics),
 	}
 	return routines
 }
