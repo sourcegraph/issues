@@ -46,6 +46,6 @@ export const OpenSourceWebApp: React.FunctionComponent = () => (
         repoSettingsSidebarGroups={repoSettingsSideBarGroups}
         routes={routes}
         keyboardShortcuts={KEYBOARD_SHORTCUTS}
-        showBatchChanges={false}
+        batchChangesEnabled={false}
     />
 )

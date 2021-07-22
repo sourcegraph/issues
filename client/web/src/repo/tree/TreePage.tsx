@@ -39,6 +39,7 @@ import { Container, PageHeader } from '@sourcegraph/wildcard'
 
 import { getFileDecorations } from '../../backend/features'
 import { queryGraphQL } from '../../backend/graphql'
+import { BatchChangesProps } from '../../batches/batches'
 import { RepoBatchChangesButton } from '../../batches/RepoBatchChangesButton'
 import { ErrorAlert } from '../../components/alerts'
 import { BreadcrumbSetters } from '../../components/Breadcrumbs'
@@ -114,6 +115,7 @@ interface Props
         PatternTypeProps,
         CaseSensitivityProps,
         VersionContextProps,
+        BatchChangesProps,
         Pick<SearchContextProps, 'selectedSearchContextSpec'>,
         BreadcrumbSetters {
     repo: TreePageRepositoryFields
@@ -124,7 +126,6 @@ interface Props
     location: H.Location
     history: H.History
     globbing: boolean
-    showBatchChanges: boolean
 }
 
 export const treePageRepositoryFragment = gql`
@@ -145,7 +146,7 @@ export const TreePage: React.FunctionComponent<Props> = ({
     caseSensitive,
     settingsCascade,
     useBreadcrumb,
-    showBatchChanges,
+    batchChangesEnabled,
     ...props
 }) => {
     useEffect(() => {
@@ -425,7 +426,7 @@ export const TreePage: React.FunctionComponent<Props> = ({
                                         >
                                             <UserIcon className="icon-inline" /> Contributors
                                         </Link>
-                                        {showBatchChanges && (
+                                        {batchChangesEnabled && (
                                             <RepoBatchChangesButton
                                                 className="btn btn-outline-secondary"
                                                 repoName={repo.name}

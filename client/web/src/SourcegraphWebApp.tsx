@@ -33,6 +33,7 @@ import {
 
 import { authenticatedUser, AuthenticatedUser } from './auth'
 import { client } from './backend/graphql'
+import { BatchChangesProps } from './batches/batches'
 import { ErrorBoundary } from './components/ErrorBoundary'
 import { queryExternalServices } from './components/externalServices/backend'
 import { FeedbackText } from './components/FeedbackText'
@@ -98,7 +99,7 @@ import {
     experimentalFeaturesFromSettings,
 } from './util/settings'
 
-export interface SourcegraphWebAppProps extends KeyboardShortcutsProps {
+export interface SourcegraphWebAppProps extends BatchChangesProps, KeyboardShortcutsProps {
     extensionAreaRoutes: readonly ExtensionAreaRoute[]
     extensionAreaHeaderNavItems: readonly ExtensionAreaHeaderNavItem[]
     extensionsAreaRoutes: readonly ExtensionsAreaRoute[]
@@ -118,7 +119,6 @@ export interface SourcegraphWebAppProps extends KeyboardShortcutsProps {
     repoSettingsAreaRoutes: readonly RepoSettingsAreaRoute[]
     repoSettingsSidebarGroups: readonly RepoSettingsSideBarGroup[]
     routes: readonly LayoutRouteProps<any>[]
-    showBatchChanges: boolean
 }
 
 interface SourcegraphWebAppState extends SettingsCascadeProps {
@@ -516,7 +516,7 @@ export class SourcegraphWebApp extends React.Component<SourcegraphWebAppProps, S
                                             authenticatedUser={authenticatedUser}
                                             viewerSubject={this.state.viewerSubject}
                                             settingsCascade={this.state.settingsCascade}
-                                            showBatchChanges={this.props.showBatchChanges}
+                                            batchChangesEnabled={this.props.batchChangesEnabled}
                                             // Theme
                                             isLightTheme={this.isLightTheme()}
                                             themePreference={this.state.themePreference}

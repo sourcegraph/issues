@@ -43,8 +43,8 @@ export const enterpriseUserSettingsAreaRoutes: readonly UserSettingsAreaRoute[] 
             () => import('../../batches/settings/BatchChangesSettingsArea'),
             'BatchChangesSettingsArea'
         ),
-        condition: ({ isSourcegraphDotCom, user: { viewerCanAdminister } }) =>
-            !isSourcegraphDotCom && window.context.batchChangesEnabled && viewerCanAdminister,
+        condition: ({ batchChangesEnabled, user: { viewerCanAdminister } }) =>
+            batchChangesEnabled && viewerCanAdminister,
     },
     {
         path: '/subscriptions/new',

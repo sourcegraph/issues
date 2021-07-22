@@ -39,7 +39,7 @@ const PROPS: React.ComponentProps<typeof GlobalNavbar> = {
     setCaseSensitivity: () => undefined,
     platformContext: {} as any,
     settingsCascade: NOOP_SETTINGS_CASCADE,
-    showBatchChanges: false,
+    batchChangesEnabled: false,
     enableCodeMonitoring: false,
     telemetryService: {} as any,
     hideNavLinks: true, // used because reactstrap Popover is incompatible with react-test-renderer

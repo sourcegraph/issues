@@ -25,6 +25,7 @@ import { RevisionSpec } from '@sourcegraph/shared/src/util/url'
 import { useRedesignToggle } from '@sourcegraph/shared/src/util/useRedesignToggle'
 
 import { AuthenticatedUser } from '../auth'
+import { BatchChangesProps } from '../batches/batches'
 import { ErrorMessage } from '../components/alerts'
 import { BreadcrumbSetters } from '../components/Breadcrumbs'
 import { HeroPage } from '../components/HeroPage'
@@ -61,6 +62,7 @@ export interface RepoRevisionContainerContext
         Pick<SearchContextProps, 'selectedSearchContextSpec'>,
         RevisionSpec,
         BreadcrumbSetters,
+        BatchChangesProps,
         ActionItemsBarProps {
     repo: RepositoryFields
     resolvedRev: ResolvedRevision
@@ -69,8 +71,6 @@ export interface RepoRevisionContainerContext
     routePrefix: string
 
     globbing: boolean
-
-    showBatchChanges: boolean
 }
 
 /** A sub-route of {@link RepoRevisionContainer}. */
@@ -92,6 +92,7 @@ interface RepoRevisionContainerProps
         Pick<SearchContextProps, 'selectedSearchContextSpec'>,
         RevisionSpec,
         BreadcrumbSetters,
+        BatchChangesProps,
         ActionItemsBarProps {
     routes: readonly RepoRevisionContainerRoute[]
     repoSettingsAreaRoutes: readonly RepoSettingsAreaRoute[]
@@ -109,7 +110,6 @@ interface RepoRevisionContainerProps
     history: H.History
 
     globbing: boolean
-    showBatchChanges: boolean
 }
 
 interface RepoRevisionBreadcrumbProps

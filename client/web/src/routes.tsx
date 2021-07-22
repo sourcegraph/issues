@@ -3,6 +3,7 @@ import { Redirect, RouteComponentProps } from 'react-router'
 
 import { isErrorLike } from '@sourcegraph/shared/src/util/errors'
 
+import { BatchChangesProps } from './batches/batches'
 import { BreadcrumbsProps, BreadcrumbSetters } from './components/Breadcrumbs'
 import type { LayoutProps } from './Layout'
 import type { ExtensionAlertProps } from './repo/RepoContainer'
@@ -40,6 +41,7 @@ export interface LayoutRouteComponentProps<RouteParameters extends { [K in keyof
         BreadcrumbsProps,
         BreadcrumbSetters,
         ExtensionAlertProps,
+        BatchChangesProps,
         UserExternalServicesOrRepositoriesUpdateProps {
     isSourcegraphDotCom: boolean
     isRedesignEnabled: boolean

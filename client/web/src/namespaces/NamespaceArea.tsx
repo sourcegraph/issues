@@ -3,6 +3,7 @@ import * as GQL from '@sourcegraph/shared/src/graphql/schema'
 import { ThemeProps } from '@sourcegraph/shared/src/theme'
 
 import { AuthenticatedUser } from '../auth'
+import { BatchChangesProps } from '../batches/batches'
 import { PatternTypeProps } from '../search'
 import { NavItemWithIconDescriptor, RouteDescriptor } from '../util/contributions'
 
@@ -20,7 +21,8 @@ export interface NamespaceAreaContext
 
 export interface NamespaceAreaRoute extends RouteDescriptor<NamespaceAreaContext> {}
 
-export interface NamespaceAreaNavItem
-    extends NavItemWithIconDescriptor<{
-        isSourcegraphDotCom: boolean
-    }> {}
+interface NavItemDescriptorContext extends BatchChangesProps {
+    isSourcegraphDotCom: boolean
+}
+
+export interface NamespaceAreaNavItem extends NavItemWithIconDescriptor<NavItemDescriptorContext> {}

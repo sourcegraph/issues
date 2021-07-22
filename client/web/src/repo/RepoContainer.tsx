@@ -36,6 +36,7 @@ import { useObservable } from '@sourcegraph/shared/src/util/useObservable'
 import { useRedesignToggle } from '@sourcegraph/shared/src/util/useRedesignToggle'
 
 import { AuthenticatedUser } from '../auth'
+import { BatchChangesProps } from '../batches/batches'
 import { ErrorMessage } from '../components/alerts'
 import { BreadcrumbSetters, BreadcrumbsProps } from '../components/Breadcrumbs'
 import { ErrorBoundary } from '../components/ErrorBoundary'
@@ -81,6 +82,7 @@ export interface RepoContainerContext
         VersionContextProps,
         Pick<SearchContextProps, 'selectedSearchContextSpec'>,
         BreadcrumbSetters,
+        BatchChangesProps,
         ActionItemsBarProps {
     repo: RepositoryFields
     authenticatedUser: AuthenticatedUser | null
@@ -93,8 +95,6 @@ export interface RepoContainerContext
     onDidUpdateExternalLinks: (externalLinks: ExternalLinkFields[] | undefined) => void
 
     globbing: boolean
-
-    showBatchChanges: boolean
 }
 
 /** A sub-route of {@link RepoContainer}. */
@@ -118,6 +118,7 @@ interface RepoContainerProps
         VersionContextProps,
         Pick<SearchContextProps, 'selectedSearchContextSpec'>,
         BreadcrumbSetters,
+        BatchChangesProps,
         BreadcrumbsProps {
     repoContainerRoutes: readonly RepoContainerRoute[]
     repoRevisionContainerRoutes: readonly RepoRevisionContainerRoute[]
@@ -128,7 +129,6 @@ interface RepoContainerProps
     onNavbarQueryChange: (state: QueryState) => void
     history: H.History
     globbing: boolean
-    showBatchChanges: boolean
 }
 
 export const HOVER_COUNT_KEY = 'hover-count'

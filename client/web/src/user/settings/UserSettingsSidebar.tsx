@@ -5,6 +5,7 @@ import * as React from 'react'
 import { Link, RouteComponentProps } from 'react-router-dom'
 
 import { AuthenticatedUser } from '../../auth'
+import { BatchChangesProps } from '../../batches/batches'
 import { Badge, BadgeStatus } from '../../components/Badge'
 import { SidebarGroup, SidebarGroupHeader, SidebarGroupItems, SidebarNavItem } from '../../components/Sidebar'
 import { UserAreaUserFields } from '../../graphql-operations'
@@ -14,7 +15,7 @@ import { HAS_CANCELLED_TOUR_KEY, HAS_COMPLETED_TOUR_KEY } from '../../search/inp
 import { NavItemDescriptor } from '../../util/contributions'
 import { UserAreaRouteContext } from '../area/UserArea'
 
-export interface UserSettingsSidebarItemConditionContext {
+export interface UserSettingsSidebarItemConditionContext extends BatchChangesProps {
     user: UserAreaUserFields
     authenticatedUser: Pick<AuthenticatedUser, 'id' | 'siteAdmin' | 'tags'>
     isSourcegraphDotCom: boolean
@@ -26,7 +27,11 @@ type UserSettingsSidebarItem = NavItemDescriptor<UserSettingsSidebarItemConditio
 
 export type UserSettingsSidebarItems = readonly UserSettingsSidebarItem[]
 
-export interface UserSettingsSidebarProps extends UserAreaRouteContext, OnboardingTourProps, RouteComponentProps<{}> {
+export interface UserSettingsSidebarProps
+    extends UserAreaRouteContext,
+        BatchChangesProps,
+        OnboardingTourProps,
+        RouteComponentProps<{}> {
     items: UserSettingsSidebarItems
     isSourcegraphDotCom: boolean
     className?: string
@@ -45,7 +50,8 @@ export const UserSettingsSidebar: React.FunctionComponent<UserSettingsSidebarPro
 
     // When the site admin is viewing another user's account.
     const siteAdminViewingOtherUser = props.user.id !== props.authenticatedUser.id
-    const context = {
+    const context: UserSettingsSidebarItemConditionContext = {
+        batchChangesEnabled: props.batchChangesEnabled,
         user: props.user,
         authenticatedUser: props.authenticatedUser,
         isSourcegraphDotCom: props.isSourcegraphDotCom,

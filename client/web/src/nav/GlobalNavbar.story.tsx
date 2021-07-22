@@ -62,7 +62,7 @@ const defaultProps = (
     navbarSearchQueryState: { query: '' },
     onNavbarQueryChange: () => {},
     isExtensionAlertAnimating: false,
-    showBatchChanges: true,
+    batchChangesEnabled: true,
     enableCodeMonitoring: true,
     activation: undefined,
     hideNavLinks: false,

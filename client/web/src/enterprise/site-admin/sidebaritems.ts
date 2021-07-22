@@ -49,7 +49,7 @@ export const batchChangesGroup: SiteAdminSideBarGroup = {
             to: '/site-admin/batch-changes',
         },
     ],
-    condition: ({ isSourcegraphDotCom }) => !isSourcegraphDotCom && window.context.batchChangesEnabled,
+    condition: ({ batchChangesEnabled }) => batchChangesEnabled,
 }
 
 const businessGroup: SiteAdminSideBarGroup = {

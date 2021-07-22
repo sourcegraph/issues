@@ -46,6 +46,6 @@ export const EnterpriseWebApp: React.FunctionComponent = () => (
         repoSettingsSidebarGroups={enterpriseRepoSettingsSidebarGroups}
         routes={enterpriseRoutes}
         keyboardShortcuts={KEYBOARD_SHORTCUTS}
-        showBatchChanges={window.context.batchChangesEnabled}
+        batchChangesEnabled={window.context.batchChangesEnabled}
     />
 )

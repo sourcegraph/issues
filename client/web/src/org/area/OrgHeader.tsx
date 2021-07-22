@@ -4,6 +4,7 @@ import { Link, NavLink, RouteComponentProps } from 'react-router-dom'
 
 import { PageHeader } from '@sourcegraph/wildcard'
 
+import { BatchChangesProps } from '../../batches/batches'
 import { NavItemWithIconDescriptor } from '../../util/contributions'
 import { OrgAvatar } from '../OrgAvatar'
 
@@ -15,7 +16,9 @@ interface Props extends OrgAreaPageProps, RouteComponentProps<{}> {
     className?: string
 }
 
-export type OrgAreaHeaderContext = Pick<Props, 'org'> & { isSourcegraphDotCom: boolean }
+export interface OrgAreaHeaderContext extends BatchChangesProps, Pick<Props, 'org'> {
+    isSourcegraphDotCom: boolean
+}
 
 export interface OrgAreaHeaderNavItem extends NavItemWithIconDescriptor<OrgAreaHeaderContext> {}
 
@@ -23,6 +26,7 @@ export interface OrgAreaHeaderNavItem extends NavItemWithIconDescriptor<OrgAreaH
  * Header for the organization area.
  */
 export const OrgHeader: React.FunctionComponent<Props> = ({
+    batchChangesEnabled,
     org,
     navItems,
     match,
@@ -56,7 +60,7 @@ export const OrgHeader: React.FunctionComponent<Props> = ({
                         <ul className="nav nav-tabs w-100">
                             {navItems.map(
                                 ({ to, label, exact, icon: Icon, condition = () => true }) =>
-                                    condition({ org, isSourcegraphDotCom }) && (
+                                    condition({ batchChangesEnabled, org, isSourcegraphDotCom }) && (
                                         <li key={label} className="nav-item">
                                             <NavLink
                                                 to={match.url + to}

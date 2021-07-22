@@ -12,6 +12,7 @@ import { PageHeader } from '@sourcegraph/wildcard'
 
 import { AuthenticatedUser } from '../auth'
 import { withAuthenticatedUser } from '../auth/withAuthenticatedUser'
+import { BatchChangesProps } from '../batches/batches'
 import { ErrorBoundary } from '../components/ErrorBoundary'
 import { HeroPage } from '../components/HeroPage'
 import { Page } from '../components/Page'
@@ -35,6 +36,7 @@ export interface SiteAdminAreaRouteContext
     extends PlatformContextProps,
         SettingsCascadeProps,
         ActivationProps,
+        BatchChangesProps,
         TelemetryProps {
     site: Pick<GQL.ISite, '__typename' | 'id'>
     authenticatedUser: AuthenticatedUser
@@ -52,6 +54,7 @@ interface SiteAdminAreaProps
         PlatformContextProps,
         SettingsCascadeProps,
         ActivationProps,
+        BatchChangesProps,
         TelemetryProps {
     routes: readonly SiteAdminAreaRoute[]
     sideBarGroups: SiteAdminSideBarGroups
@@ -83,6 +86,7 @@ const AuthenticatedSiteAdminArea: React.FunctionComponent<SiteAdminAreaProps> = 
         settingsCascade: props.settingsCascade,
         isLightTheme: props.isLightTheme,
         isSourcegraphDotCom: props.isSourcegraphDotCom,
+        batchChangesEnabled: props.batchChangesEnabled,
         activation: props.activation,
         site: { __typename: 'Site' as const, id: window.context.siteGQLID },
         overviewComponents: props.overviewComponents,
@@ -97,6 +101,7 @@ const AuthenticatedSiteAdminArea: React.FunctionComponent<SiteAdminAreaProps> = 
                     className="sidebar flex-0 mr-3"
                     groups={props.sideBarGroups}
                     isSourcegraphDotCom={props.isSourcegraphDotCom}
+                    batchChangesEnabled={props.batchChangesEnabled}
                 />
                 <div className="flex-bounded">
                     <ErrorBoundary location={props.location}>

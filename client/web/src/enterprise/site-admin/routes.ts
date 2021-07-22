@@ -84,7 +84,7 @@ export const enterpriseSiteAdminAreaRoutes: readonly SiteAdminAreaRoute[] = [
             () => import('../batches/settings/BatchChangesSiteConfigSettingsArea'),
             'BatchChangesSiteConfigSettingsArea'
         ),
-        condition: ({ isSourcegraphDotCom }) => !isSourcegraphDotCom && window.context.batchChangesEnabled,
+        condition: ({ batchChangesEnabled }) => batchChangesEnabled,
     },
 
     // Code intelligence upload routes

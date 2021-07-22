@@ -101,7 +101,7 @@ const commonProps = () =>
         setSelectedSearchContextSpec: () => {},
         defaultSearchContextSpec: '',
         authRequired: false,
-        showBatchChanges: false,
+        batchChangesEnabled: false,
         authenticatedUser: authUser,
         repogroupMetadata: python2To3Metadata,
         globbing: false,

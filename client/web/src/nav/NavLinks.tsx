@@ -14,6 +14,7 @@ import { isErrorLike } from '@sourcegraph/shared/src/util/errors'
 
 import { AuthenticatedUser } from '../auth'
 import { BatchChangesNavItem } from '../batches/BatchChangesNavItem'
+import { BatchChangesProps } from '../batches/batches'
 import { CodeMonitoringProps } from '../code-monitoring'
 import { CodeMonitoringNavItem } from '../code-monitoring/CodeMonitoringNavItem'
 import { LinkWithIcon } from '../components/LinkWithIcon'
@@ -47,12 +48,12 @@ interface Props
         TelemetryProps,
         CodeMonitoringProps,
         ActivationProps,
+        BatchChangesProps,
         Pick<SearchContextProps, 'showSearchContext' | 'showSearchContextManagement'> {
     location: H.Location
     history: H.History
     authenticatedUser: AuthenticatedUser | null
     showDotComMarketing: boolean
-    showBatchChanges: boolean
     isSourcegraphDotCom: boolean
     minimalNavLinks?: boolean
     routes: readonly LayoutRouteProps<{}>[]
@@ -92,7 +93,7 @@ const getAnonymousUserNavItems = (props: Props): JSX.Element[] => {
 }
 
 const getMinimizableNavItems = (props: Props): JSX.Element[] => {
-    const { showBatchChanges, enableCodeMonitoring, settingsCascade } = props
+    const { batchChangesEnabled, enableCodeMonitoring, settingsCascade } = props
 
     const settings = !isErrorLike(settingsCascade.final) ? settingsCascade.final : null
     const codeInsights =
@@ -101,7 +102,7 @@ const getMinimizableNavItems = (props: Props): JSX.Element[] => {
     return getReactElements([
         codeInsights && <InsightsNavItem />,
         enableCodeMonitoring && <CodeMonitoringNavItem />,
-        showBatchChanges && <BatchChangesNavItem isSourcegraphDotCom={props.isSourcegraphDotCom} />,
+        batchChangesEnabled && <BatchChangesNavItem isSourcegraphDotCom={props.isSourcegraphDotCom} />,
     ])
 }
 

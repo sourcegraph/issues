@@ -16,6 +16,7 @@ import { ErrorLike, isErrorLike, asError } from '@sourcegraph/shared/src/util/er
 
 import { AuthenticatedUser } from '../../auth'
 import { requestGraphQL } from '../../backend/graphql'
+import { BatchChangesProps } from '../../batches/batches'
 import { ErrorMessage } from '../../components/alerts'
 import { BreadcrumbsProps, BreadcrumbSetters } from '../../components/Breadcrumbs'
 import { ErrorBoundary } from '../../components/ErrorBoundary'
@@ -87,6 +88,7 @@ interface Props
         BreadcrumbsProps,
         BreadcrumbSetters,
         ExtensionsControllerProps,
+        BatchChangesProps,
         Omit<PatternTypeProps, 'setPatternType'> {
     orgAreaRoutes: readonly OrgAreaRoute[]
     orgAreaHeaderNavItems: readonly OrgAreaHeaderNavItem[]
@@ -117,6 +119,7 @@ export interface OrgAreaPageProps
         NamespaceProps,
         BreadcrumbsProps,
         BreadcrumbSetters,
+        BatchChangesProps,
         Omit<PatternTypeProps, 'setPatternType'> {
     /** The org that is the subject of the page. */
     org: OrgAreaOrganizationFields
@@ -229,6 +232,7 @@ export class OrgArea extends React.Component<Props> {
             patternType: this.props.patternType,
             telemetryService: this.props.telemetryService,
             isSourcegraphDotCom: this.props.isSourcegraphDotCom,
+            batchChangesEnabled: this.props.batchChangesEnabled,
             breadcrumbs: this.props.breadcrumbs,
             setBreadcrumb: this.state.setBreadcrumb,
             useBreadcrumb: this.state.useBreadcrumb,

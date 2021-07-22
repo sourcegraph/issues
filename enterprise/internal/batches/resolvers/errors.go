@@ -24,21 +24,13 @@ func (e ErrIDIsZero) Extensions() map[string]interface{} {
 	return map[string]interface{}{"code": "ErrIDIsZero"}
 }
 
-type ErrBatchChangesDisabled struct{}
-
-func (e ErrBatchChangesDisabled) Error() string {
-	return "batch changes are disabled. Set 'batchChanges.enabled' in the site configuration to enable the feature."
-}
+type ErrBatchChangesDisabled struct{ error }
 
 func (e ErrBatchChangesDisabled) Extensions() map[string]interface{} {
 	return map[string]interface{}{"code": "ErrBatchChangesDisabled"}
 }
 
-type ErrBatchChangesDisabledForUser struct{}
-
-func (e ErrBatchChangesDisabledForUser) Error() string {
-	return "batch changes are disabled for non-site-admin users"
-}
+type ErrBatchChangesDisabledForUser struct{ error }
 
 func (e ErrBatchChangesDisabledForUser) Extensions() map[string]interface{} {
 	return map[string]interface{}{"code": "ErrBatchChangesDisabledForUser"}
@@ -52,14 +44,10 @@ func (e ErrBatchChangesUnlicensed) Extensions() map[string]interface{} {
 	return map[string]interface{}{"code": "ErrBatchChangesUnlicensed"}
 }
 
-type ErrBatchChangesDotcom struct{}
+type ErrBatchChangesDisabledDotcom struct{ error }
 
-func (e ErrBatchChangesDotcom) Error() string {
-	return "access to batch changes on Sourcegraph.com is currently not available"
-}
-
-func (e ErrBatchChangesDotcom) Extensions() map[string]interface{} {
-	return map[string]interface{}{"code": "ErrBatchChangesDotCom"}
+func (e ErrBatchChangesDisabledDotcom) Extensions() map[string]interface{} {
+	return map[string]interface{}{"code": "ErrBatchChangesDisabledDotcom"}
 }
 
 type ErrEnsureBatchChangeFailed struct{}

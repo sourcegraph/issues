@@ -72,7 +72,7 @@ describe('NavLinks', () => {
         settingsCascade: SETTINGS_CASCADE,
         history,
         isSourcegraphDotCom: false,
-        showBatchChanges: true,
+        batchChangesEnabled: true,
         enableCodeMonitoring: true,
         showSearchContext: true,
         showSearchContextManagement: true,

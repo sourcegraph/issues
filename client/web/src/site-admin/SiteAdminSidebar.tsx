@@ -2,10 +2,11 @@ import React from 'react'
 import { Link } from 'react-router-dom'
 import { ListGroup, ListGroupItem } from 'reactstrap'
 
+import { BatchChangesProps } from '../batches/batches'
 import { SidebarCollapseItems, SidebarGroupItems, SidebarNavItem } from '../components/Sidebar'
 import { NavGroupDescriptor } from '../util/contributions'
 
-export interface SiteAdminSideBarGroupContext {
+export interface SiteAdminSideBarGroupContext extends BatchChangesProps {
     isSourcegraphDotCom: boolean
 }
 
@@ -13,7 +14,7 @@ export interface SiteAdminSideBarGroup extends NavGroupDescriptor<SiteAdminSideB
 
 export type SiteAdminSideBarGroups = readonly SiteAdminSideBarGroup[]
 
-export interface SiteAdminSidebarProps {
+export interface SiteAdminSidebarProps extends BatchChangesProps {
     isSourcegraphDotCom: boolean
     /** The items for the side bar, by group */
     groups: SiteAdminSideBarGroups
@@ -23,23 +24,19 @@ export interface SiteAdminSidebarProps {
 /**
  * Sidebar for the site admin area.
  */
-export const SiteAdminSidebar: React.FunctionComponent<SiteAdminSidebarProps> = ({
-    className,
-    groups,
-    isSourcegraphDotCom,
-}) => (
+export const SiteAdminSidebar: React.FunctionComponent<SiteAdminSidebarProps> = ({ className, groups, ...props }) => (
     <div className={`site-admin-sidebar ${className}`}>
         <ListGroup>
             {groups.map(
                 ({ header, items, condition = () => true }, index) =>
-                    condition({ isSourcegraphDotCom }) &&
+                    condition(props) &&
                     (items.length > 1 ? (
                         <ListGroupItem className="p-0" key={index}>
                             <SidebarCollapseItems icon={header?.icon} label={header?.label} openByDefault={true}>
                                 <SidebarGroupItems>
                                     {items.map(
                                         ({ label, to, source = 'client', condition = () => true }) =>
-                                            condition({ isSourcegraphDotCom }) && (
+                                            condition(props) && (
                                                 <SidebarNavItem to={to} exact={true} key={label} source={source}>
                                                     {label}
                                                 </SidebarNavItem>

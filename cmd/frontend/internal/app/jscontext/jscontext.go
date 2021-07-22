@@ -11,7 +11,7 @@ import (
 	"github.com/gorilla/csrf"
 
 	"github.com/sourcegraph/sourcegraph/cmd/frontend/auth/providers"
-	"github.com/sourcegraph/sourcegraph/cmd/frontend/backend"
+	"github.com/sourcegraph/sourcegraph/cmd/frontend/enterprise"
 	"github.com/sourcegraph/sourcegraph/cmd/frontend/envvar"
 	"github.com/sourcegraph/sourcegraph/cmd/frontend/globals"
 	"github.com/sourcegraph/sourcegraph/cmd/frontend/graphqlbackend"
@@ -139,12 +139,6 @@ func NewJSContextFromRequest(req *http.Request) JSContext {
 		sentryDSN = &siteConfig.Log.Sentry.Dsn
 	}
 
-	// Check if batch changes are enabled for this user.
-	batchChangesEnabled := conf.BatchChangesEnabled()
-	if conf.BatchChangesRestrictedToAdmins() && backend.CheckCurrentUserIsSiteAdmin(req.Context(), dbconn.Global) != nil {
-		batchChangesEnabled = false
-	}
-
 	// 🚨 SECURITY: This struct is sent to all users regardless of whether or
 	// not they are logged in, for example on an auth.public=false private
 	// server. Including secret fields here is OK if it is based on the user's
@@ -189,7 +183,7 @@ func NewJSContextFromRequest(req *http.Request) JSContext {
 
 		Branding: globals.Branding(),
 
-		BatchChangesEnabled: batchChangesEnabled,
+		BatchChangesEnabled: enterprise.BatchChangesEnabledForUser(req.Context(), dbconn.Global) == nil,
 
 		CodeIntelAutoIndexingEnabled: conf.CodeIntelAutoIndexingEnabled(),
 

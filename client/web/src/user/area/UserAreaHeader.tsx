@@ -4,6 +4,7 @@ import { NavLink } from 'react-router-dom'
 
 import { PageHeader } from '@sourcegraph/wildcard'
 
+import { BatchChangesProps } from '../../batches/batches'
 import { NavItemWithIconDescriptor } from '../../util/contributions'
 import { UserAvatar } from '../UserAvatar'
 
@@ -14,7 +15,7 @@ interface Props extends UserAreaRouteContext {
     className?: string
 }
 
-export interface UserAreaHeaderContext extends Pick<Props, 'user'> {
+export interface UserAreaHeaderContext extends BatchChangesProps, Pick<Props, 'user'> {
     isSourcegraphDotCom: boolean
 }
 
