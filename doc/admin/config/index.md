@@ -17,6 +17,7 @@
 - [Use a custom domain](../url.md)
 - [Update Sourcegraph](../updates.md)
 - [Using external services (PostgreSQL, Redis, S3/GCS)](../external_services/index.md)
+- [PostgreSQL Config](./postgres-conf.md)
 
 ## Advanced tasks
 
