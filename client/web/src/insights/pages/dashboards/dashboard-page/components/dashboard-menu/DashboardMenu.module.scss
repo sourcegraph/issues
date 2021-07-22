@@ -12,6 +12,11 @@
 
     // Explicit override @reach ui border styles
     border: 1px solid var(--dropdown-border-color);
+
+    // The .dropdown-menu class adds absolute position to the element
+    // that makes parent of this element wrong width/height settled
+    // Therefore this breaks popover position of reach-ui popover
+    position: static;
 }
 
 .menu-item[data-reach-menu-item] {

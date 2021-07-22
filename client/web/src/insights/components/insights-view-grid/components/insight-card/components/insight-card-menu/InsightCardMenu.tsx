@@ -1,8 +1,10 @@
-import { Menu, MenuButton, MenuList, MenuItem, MenuLink } from '@reach/menu-button'
+import { Menu, MenuButton, MenuItem, MenuItems, MenuLink, MenuPopover } from '@reach/menu-button'
 import classnames from 'classnames'
 import DotsVerticalIcon from 'mdi-react/DotsVerticalIcon'
 import React, { MouseEvent } from 'react'
 import { useHistory } from 'react-router'
+
+import { positionRight } from '../../../../../context-menu/utils'
 
 import styles from './InsightCardMenu.module.scss'
 
@@ -29,23 +31,28 @@ export const InsightCardMenu: React.FunctionComponent<InsightCardMenuProps> = pr
             <MenuButton data-testid="InsightContextMenuButton" className={classnames(className, 'btn btn-outline p-1')}>
                 <DotsVerticalIcon size={16} />
             </MenuButton>
-            <MenuList data-testid={`context-menu.${insightID}`} className={classnames(styles.panel, 'dropdown-menu')}>
-                <MenuLink
-                    data-testid="InsightContextMenuEditLink"
-                    className={classnames('btn btn-outline', styles.item)}
-                    onClick={handleEditClick}
+            <MenuPopover portal={true} position={positionRight}>
+                <MenuItems
+                    data-testid={`context-menu.${insightID}`}
+                    className={classnames(styles.panel, 'dropdown-menu')}
                 >
-                    Edit
-                </MenuLink>
+                    <MenuLink
+                        data-testid="InsightContextMenuEditLink"
+                        className={classnames('btn btn-outline', styles.item)}
+                        onClick={handleEditClick}
+                    >
+                        Edit
+                    </MenuLink>
 
-                <MenuItem
-                    data-testid="insight-context-menu-delete-button"
-                    onSelect={() => onDelete(insightID)}
-                    className={classnames('btn btn-outline-', styles.item)}
-                >
-                    Delete
-                </MenuItem>
-            </MenuList>
+                    <MenuItem
+                        data-testid="insight-context-menu-delete-button"
+                        onSelect={() => onDelete(insightID)}
+                        className={classnames('btn btn-outline-', styles.item)}
+                    >
+                        Delete
+                    </MenuItem>
+                </MenuItems>
+            </MenuPopover>
         </Menu>
     )
 }
