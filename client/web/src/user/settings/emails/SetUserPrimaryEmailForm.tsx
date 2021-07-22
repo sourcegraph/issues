@@ -48,7 +48,7 @@ export const SetUserPrimaryEmailForm: FunctionComponent<Props> = ({ user, emails
                         gql`
                             mutation SetUserEmailPrimary($user: ID!, $email: String!) {
                                 setUserEmailPrimary(user: $user, email: $email) {
-                                    alwaysNil
+                                    id
                                 }
                             }
                         `,

@@ -49,7 +49,7 @@ export const UserEmail: FunctionComponent<Props> = ({
                     gql`
                         mutation RemoveUserEmail($user: ID!, $email: String!) {
                             removeUserEmail(user: $user, email: $email) {
-                                alwaysNil
+                                id
                             }
                         }
                     `,
@@ -77,7 +77,7 @@ export const UserEmail: FunctionComponent<Props> = ({
                     gql`
                         mutation SetUserEmailVerified($user: ID!, $email: String!, $verified: Boolean!) {
                             setUserEmailVerified(user: $user, email: $email, verified: $verified) {
-                                alwaysNil
+                                id
                             }
                         }
                     `,

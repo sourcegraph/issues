@@ -74,7 +74,7 @@ export function setUserEmailVerified(user: Scalars['ID'], email: string, verifie
         gql`
             mutation SetUserEmailVerified($user: ID!, $email: String!, $verified: Boolean!) {
                 setUserEmailVerified(user: $user, email: $email, verified: $verified) {
-                    alwaysNil
+                    id
                 }
             }
         `,

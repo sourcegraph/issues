@@ -166,26 +166,26 @@ type Mutation {
 
     Only the user and site admins may perform this mutation.
     """
-    addUserEmail(user: ID!, email: String!): EmptyResponse!
+    addUserEmail(user: ID!, email: String!): User!
     """
     Removes an email address from the user's account.
 
     Only the user and site admins may perform this mutation.
     """
-    removeUserEmail(user: ID!, email: String!): EmptyResponse!
+    removeUserEmail(user: ID!, email: String!): User!
     """
     Set an email address as the user's primary.
 
     Only the user and site admins may perform this mutation.
     """
-    setUserEmailPrimary(user: ID!, email: String!): EmptyResponse!
+    setUserEmailPrimary(user: ID!, email: String!): User!
     """
     Manually set the verification status of a user's email, without going through the normal verification process
     (of clicking on a link in the email with a verification code).
 
     Only site admins may perform this mutation.
     """
-    setUserEmailVerified(user: ID!, email: String!, verified: Boolean!): EmptyResponse!
+    setUserEmailVerified(user: ID!, email: String!, verified: Boolean!): User!
     """
     Resend a verification email, no op if the email is already verified.
 
@@ -4641,6 +4641,8 @@ type User implements Node & SettingsSubject & Namespace {
     """
     publicRepositories: [Repository!]!
 }
+
+union UserOrEmptyResponse = User | EmptyResponse
 
 """
 An access token that grants to the holder the privileges of the user who created it.

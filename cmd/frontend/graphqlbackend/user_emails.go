@@ -75,7 +75,7 @@ func (r *userEmailResolver) ViewerCanManuallyVerify(ctx context.Context) (bool, 
 func (r *schemaResolver) AddUserEmail(ctx context.Context, args *struct {
 	User  graphql.ID
 	Email string
-}) (*EmptyResponse, error) {
+}) (*UserResolver, error) {
 	userID, err := UnmarshalUserID(args.User)
 	if err != nil {
 		return nil, err
@@ -90,13 +90,13 @@ func (r *schemaResolver) AddUserEmail(ctx context.Context, args *struct {
 		}
 	}
 
-	return &EmptyResponse{}, nil
+	return UserByIDInt32(ctx, r.db, userID)
 }
 
 func (r *schemaResolver) RemoveUserEmail(ctx context.Context, args *struct {
 	User  graphql.ID
 	Email string
-}) (*EmptyResponse, error) {
+}) (*UserResolver, error) {
 	userID, err := UnmarshalUserID(args.User)
 	if err != nil {
 		return nil, err
@@ -122,13 +122,13 @@ func (r *schemaResolver) RemoveUserEmail(ctx context.Context, args *struct {
 		}
 	}
 
-	return &EmptyResponse{}, nil
+	return UserByIDInt32(ctx, r.db, userID)
 }
 
 func (r *schemaResolver) SetUserEmailPrimary(ctx context.Context, args *struct {
 	User  graphql.ID
 	Email string
-}) (*EmptyResponse, error) {
+}) (*UserResolver, error) {
 	userID, err := UnmarshalUserID(args.User)
 	if err != nil {
 		return nil, err
@@ -149,14 +149,14 @@ func (r *schemaResolver) SetUserEmailPrimary(ctx context.Context, args *struct {
 		}
 	}
 
-	return &EmptyResponse{}, nil
+	return UserByIDInt32(ctx, r.db, userID)
 }
 
 func (r *schemaResolver) SetUserEmailVerified(ctx context.Context, args *struct {
 	User     graphql.ID
 	Email    string
 	Verified bool
-}) (*EmptyResponse, error) {
+}) (*UserResolver, error) {
 	// 🚨 SECURITY: Only site admins (NOT users themselves) can manually set email verification
 	// status. Users themselves must go through the normal email verification process.
 	if err := backend.CheckCurrentUserIsSiteAdmin(ctx, r.db); err != nil {
@@ -182,7 +182,7 @@ func (r *schemaResolver) SetUserEmailVerified(ctx context.Context, args *struct 
 		}
 	}
 
-	return &EmptyResponse{}, nil
+	return UserByIDInt32(ctx, r.db, userID)
 }
 
 func (r *schemaResolver) ResendVerificationEmail(ctx context.Context, args *struct {

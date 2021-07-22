@@ -46,7 +46,7 @@ export const AddUserEmailForm: FunctionComponent<Props> = ({ user, className, on
                         gql`
                             mutation AddUserEmail($user: ID!, $email: String!) {
                                 addUserEmail(user: $user, email: $email) {
-                                    alwaysNil
+                                    id
                                 }
                             }
                         `,
