@@ -19,7 +19,7 @@ import { CodeExcerpt, FetchFileParameters } from './CodeExcerpt'
 import { CodeExcerptUnhighlighted } from './CodeExcerptUnhighlighted'
 import { MatchItem } from './FileMatch'
 import { MatchGroup, calculateMatchGroups } from './FileMatchContext'
-import { Link } from './Link'
+import { LinkWithSelectableText } from './LinkWithSelectableText'
 
 export interface EventLogger {
     log: (eventLabel: string, eventProperties?: any) => void
@@ -148,7 +148,7 @@ export const FileMatchChildren: React.FunctionComponent<FileMatchProps> = props 
 
             {/* Symbols */}
             {((result.type === 'symbol' && result.symbols) || []).map(symbol => (
-                <Link
+                <LinkWithSelectableText
                     to={symbol.url}
                     className="file-match-children__item test-file-match-children-item"
                     key={`symbol:${symbol.name}${String(symbol.containerName)}${symbol.url}`}
@@ -158,7 +158,7 @@ export const FileMatchChildren: React.FunctionComponent<FileMatchProps> = props 
                         {symbol.name}{' '}
                         {symbol.containerName && <span className="text-muted">{symbol.containerName}</span>}
                     </code>
-                </Link>
+                </LinkWithSelectableText>
             ))}
 
             {/* Line matches */}
@@ -167,9 +167,9 @@ export const FileMatchChildren: React.FunctionComponent<FileMatchProps> = props 
                     key={`linematch:${getFileMatchUrl(result)}${group.position.line}:${group.position.character}`}
                     className="file-match-children__item-code-wrapper test-file-match-children-item-wrapper"
                 >
-                    <Link
+                    <LinkWithSelectableText
                         to={createCodeExcerptLink(group)}
-                        className="file-match-children__item file-match-children__item-clickable test-file-match-children-item"
+                        className="file-match-children__item test-file-match-children-item"
                         onClick={props.onSelect}
                     >
                         <CodeExcerpt
@@ -184,7 +184,7 @@ export const FileMatchChildren: React.FunctionComponent<FileMatchProps> = props 
                             fetchHighlightedFileRangeLines={fetchHighlightedFileRangeLines}
                             isFirst={index === 0}
                         />
-                    </Link>
+                    </LinkWithSelectableText>
                 </div>
             ))}
         </div>

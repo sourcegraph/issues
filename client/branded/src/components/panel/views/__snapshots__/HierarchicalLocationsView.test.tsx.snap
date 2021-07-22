@@ -92,66 +92,72 @@ exports[`<HierarchicalLocationsView /> displays a single location when complete 
               <div
                 className="file-match-children__item-code-wrapper test-file-match-children-item-wrapper"
               >
-                <a
-                  className="file-match-children__item file-match-children__item-clickable test-file-match-children-item"
-                  href="/github.com/foo/bar/-/blob/?L2:1&subtree=true"
-                  onClick={[Function]}
+                <div
+                  aria-label="Link with selectable text"
+                  className="file-match-children__item test-file-match-children-item"
+                  onMouseUp={[Function]}
+                  role="link"
+                  tabIndex={0}
                 >
-                  <VisibilitySensor
-                    offset={
-                      Object {
-                        "bottom": -500,
-                      }
-                    }
-                    onChange={[Function]}
-                    partialVisibility={true}
+                  <div
+                    className="cursorText"
                   >
-                    <code
-                      className="code-excerpt file-match-children__item-code-excerpt"
+                    <VisibilitySensor
+                      offset={
+                        Object {
+                          "bottom": -500,
+                        }
+                      }
+                      onChange={[Function]}
+                      partialVisibility={true}
                     >
-                      <table>
-                        <tbody>
-                          <tr>
-                            <td
-                              className="line"
-                            >
-                              1
-                            </td>
-                            <td
-                              className="code"
-                            >
-                               
-                            </td>
-                          </tr>
-                          <tr>
-                            <td
-                              className="line"
-                            >
-                              2
-                            </td>
-                            <td
-                              className="code"
-                            >
-                               
-                            </td>
-                          </tr>
-                          <tr>
-                            <td
-                              className="line"
-                            >
-                              3
-                            </td>
-                            <td
-                              className="code"
-                            >
-                               
-                            </td>
-                          </tr>
-                        </tbody>
-                      </table>
-                    </code>
-                  </VisibilitySensor>
-                </a>
+                      <code
+                        className="code-excerpt file-match-children__item-code-excerpt"
+                      >
+                        <table>
+                          <tbody>
+                            <tr>
+                              <td
+                                className="line"
+                              >
+                                1
+                              </td>
+                              <td
+                                className="code"
+                              >
+                                 
+                              </td>
+                            </tr>
+                            <tr>
+                              <td
+                                className="line"
+                              >
+                                2
+                              </td>
+                              <td
+                                className="code"
+                              >
+                                 
+                              </td>
+                            </tr>
+                            <tr>
+                              <td
+                                className="line"
+                              >
+                                3
+                              </td>
+                              <td
+                                className="code"
+                              >
+                                 
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </code>
+                    </VisibilitySensor>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -332,90 +338,96 @@ exports[`<HierarchicalLocationsView /> displays multiple locations grouped by fi
               <div
                 className="file-match-children__item-code-wrapper test-file-match-children-item-wrapper"
               >
-                <a
-                  className="file-match-children__item file-match-children__item-clickable test-file-match-children-item"
-                  href="/github.com/foo/bar/-/blob/file1.txt?L2:1&subtree=true"
-                  onClick={[Function]}
+                <div
+                  aria-label="Link with selectable text"
+                  className="file-match-children__item test-file-match-children-item"
+                  onMouseUp={[Function]}
+                  role="link"
+                  tabIndex={0}
                 >
-                  <VisibilitySensor
-                    offset={
-                      Object {
-                        "bottom": -500,
-                      }
-                    }
-                    onChange={[Function]}
-                    partialVisibility={true}
+                  <div
+                    className="cursorText"
                   >
-                    <code
-                      className="code-excerpt file-match-children__item-code-excerpt"
+                    <VisibilitySensor
+                      offset={
+                        Object {
+                          "bottom": -500,
+                        }
+                      }
+                      onChange={[Function]}
+                      partialVisibility={true}
                     >
-                      <table>
-                        <tbody>
-                          <tr>
-                            <td
-                              className="line"
-                            >
-                              1
-                            </td>
-                            <td
-                              className="code"
-                            >
-                               
-                            </td>
-                          </tr>
-                          <tr>
-                            <td
-                              className="line"
-                            >
-                              2
-                            </td>
-                            <td
-                              className="code"
-                            >
-                               
-                            </td>
-                          </tr>
-                          <tr>
-                            <td
-                              className="line"
-                            >
-                              3
-                            </td>
-                            <td
-                              className="code"
-                            >
-                               
-                            </td>
-                          </tr>
-                          <tr>
-                            <td
-                              className="line"
-                            >
-                              4
-                            </td>
-                            <td
-                              className="code"
-                            >
-                               
-                            </td>
-                          </tr>
-                          <tr>
-                            <td
-                              className="line"
-                            >
-                              5
-                            </td>
-                            <td
-                              className="code"
-                            >
-                               
-                            </td>
-                          </tr>
-                        </tbody>
-                      </table>
-                    </code>
-                  </VisibilitySensor>
-                </a>
+                      <code
+                        className="code-excerpt file-match-children__item-code-excerpt"
+                      >
+                        <table>
+                          <tbody>
+                            <tr>
+                              <td
+                                className="line"
+                              >
+                                1
+                              </td>
+                              <td
+                                className="code"
+                              >
+                                 
+                              </td>
+                            </tr>
+                            <tr>
+                              <td
+                                className="line"
+                              >
+                                2
+                              </td>
+                              <td
+                                className="code"
+                              >
+                                 
+                              </td>
+                            </tr>
+                            <tr>
+                              <td
+                                className="line"
+                              >
+                                3
+                              </td>
+                              <td
+                                className="code"
+                              >
+                                 
+                              </td>
+                            </tr>
+                            <tr>
+                              <td
+                                className="line"
+                              >
+                                4
+                              </td>
+                              <td
+                                className="code"
+                              >
+                                 
+                              </td>
+                            </tr>
+                            <tr>
+                              <td
+                                className="line"
+                              >
+                                5
+                              </td>
+                              <td
+                                className="code"
+                              >
+                                 
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </code>
+                    </VisibilitySensor>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -518,66 +530,72 @@ exports[`<HierarchicalLocationsView /> displays partial locations before complet
               <div
                 className="file-match-children__item-code-wrapper test-file-match-children-item-wrapper"
               >
-                <a
-                  className="file-match-children__item file-match-children__item-clickable test-file-match-children-item"
-                  href="/github.com/foo/bar/-/blob/?L2:1&subtree=true"
-                  onClick={[Function]}
+                <div
+                  aria-label="Link with selectable text"
+                  className="file-match-children__item test-file-match-children-item"
+                  onMouseUp={[Function]}
+                  role="link"
+                  tabIndex={0}
                 >
-                  <VisibilitySensor
-                    offset={
-                      Object {
-                        "bottom": -500,
-                      }
-                    }
-                    onChange={[Function]}
-                    partialVisibility={true}
+                  <div
+                    className="cursorText"
                   >
-                    <code
-                      className="code-excerpt file-match-children__item-code-excerpt"
+                    <VisibilitySensor
+                      offset={
+                        Object {
+                          "bottom": -500,
+                        }
+                      }
+                      onChange={[Function]}
+                      partialVisibility={true}
                     >
-                      <table>
-                        <tbody>
-                          <tr>
-                            <td
-                              className="line"
-                            >
-                              1
-                            </td>
-                            <td
-                              className="code"
-                            >
-                               
-                            </td>
-                          </tr>
-                          <tr>
-                            <td
-                              className="line"
-                            >
-                              2
-                            </td>
-                            <td
-                              className="code"
-                            >
-                               
-                            </td>
-                          </tr>
-                          <tr>
-                            <td
-                              className="line"
-                            >
-                              3
-                            </td>
-                            <td
-                              className="code"
-                            >
-                               
-                            </td>
-                          </tr>
-                        </tbody>
-                      </table>
-                    </code>
-                  </VisibilitySensor>
-                </a>
+                      <code
+                        className="code-excerpt file-match-children__item-code-excerpt"
+                      >
+                        <table>
+                          <tbody>
+                            <tr>
+                              <td
+                                className="line"
+                              >
+                                1
+                              </td>
+                              <td
+                                className="code"
+                              >
+                                 
+                              </td>
+                            </tr>
+                            <tr>
+                              <td
+                                className="line"
+                              >
+                                2
+                              </td>
+                              <td
+                                className="code"
+                              >
+                                 
+                              </td>
+                            </tr>
+                            <tr>
+                              <td
+                                className="line"
+                              >
+                                3
+                              </td>
+                              <td
+                                className="code"
+                              >
+                                 
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </code>
+                    </VisibilitySensor>
+                  </div>
+                </div>
               </div>
             </div>
           </div>

@@ -4,6 +4,7 @@
         border: 1px solid var(--border-color);
         border-radius: var(--border-radius);
         padding: 0.25rem 0;
+        cursor: pointer;
     }
 
     &__item {
@@ -15,10 +16,6 @@
 
         .theme-redesign & {
             background-color: var(--code-bg);
-        }
-
-        &-clickable {
-            cursor: pointer;
         }
 
         &:hover {

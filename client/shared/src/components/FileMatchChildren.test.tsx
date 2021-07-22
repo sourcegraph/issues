@@ -1,6 +1,7 @@
 import { cleanup, fireEvent, render } from '@testing-library/react'
 import * as H from 'history'
 import * as React from 'react'
+import { MemoryRouter } from 'react-router'
 import _VisibilitySensor from 'react-visibility-sensor'
 import { of } from 'rxjs'
 import sinon from 'sinon'
@@ -46,13 +47,26 @@ const defaultProps = {
 }
 
 describe('FileMatchChildren', () => {
+    const realWindowGetSelection = window.getSelection
+    beforeAll(() => {
+        window.getSelection = () => null
+    })
+
+    afterAll(() => {
+        window.getSelection = realWindowGetSelection
+    })
+
     afterAll(cleanup)
 
-    it('calls onSelect callback when an item is clicked', () => {
-        const { container } = render(<FileMatchChildren {...defaultProps} onSelect={onSelect} />)
+    it('calls onSelect callback on item mouse up', () => {
+        const { container } = render(
+            <MemoryRouter>
+                <FileMatchChildren {...defaultProps} onSelect={onSelect} />
+            </MemoryRouter>
+        )
         const item = container.querySelector('.file-match-children__item')
         expect(item).toBeVisible()
-        fireEvent.click(item!)
+        fireEvent.mouseUp(item!)
         expect(onSelect.calledOnce).toBe(true)
     })
 
