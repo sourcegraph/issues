@@ -97,6 +97,9 @@ func InitDB() (*sql.DB, error) {
 	if err := dbconn.SetupGlobalConnection(opts); err != nil {
 		return nil, errors.Errorf("failed to connect to frontend database: %s", err)
 	}
+	if err := dbconn.SetupRestrictedConnection(opts); err != nil {
+		return nil, errors.Errorf("failed to connect to frontend database in restricted role: %s", err)
+	}
 
 	ctx := context.Background()
 	migrate := true
