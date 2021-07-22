@@ -199,6 +199,35 @@ func matchRepos(pattern *regexp.Regexp, resolved []*search.RepositoryRevisions, 
 	<-last
 }
 
+func reposContainingPath(ctx context.Context, args *search.TextParameters, repos []*search.RepositoryRevisions, pattern string) ([]*result.FileMatch, error) {
+	// Use a max FileMatchLimit to ensure we get all the repo matches we
+	// can. Setting it to len(repos) could mean we miss some repos since
+	// there could be for example len(repos) file matches in the first repo
+	// and some more in other repos. deduplicate repo results
+	p := search.TextPatternInfo{
+		IsRegExp:                     true,
+		FileMatchLimit:               math.MaxInt32,
+		IncludePatterns:              []string{pattern},
+		PathPatternsAreCaseSensitive: false,
+		PatternMatchesContent:        true,
+		PatternMatchesPath:           true,
+	}
+	q, err := query.ParseLiteral("file:" + pattern)
+	if err != nil {
+		return nil, err
+	}
+	newArgs := *args
+	newArgs.PatternInfo = &p
+	newArgs.RepoPromise = (&search.RepoPromise{}).Resolve(repos)
+	newArgs.Query = q
+	newArgs.UseFullDeadline = true
+	matches, _, err := unindexed.SearchFilesInReposBatch(ctx, &newArgs)
+	if err != nil {
+		return nil, err
+	}
+	return matches, err
+}
+
 // reposToAdd determines which repositories should be included in the result set based on whether they fit in the subset
 // of repostiories specified in the query's `repohasfile` and `-repohasfile` fields if they exist.
 func reposToAdd(ctx context.Context, args *search.TextParameters, repos []*search.RepositoryRevisions) ([]*search.RepositoryRevisions, error) {
@@ -207,25 +236,11 @@ func reposToAdd(ctx context.Context, args *search.TextParameters, repos []*searc
 	matchCounts := make(map[api.RepoID]int)
 	if len(args.PatternInfo.FilePatternsReposMustInclude) > 0 {
 		for _, pattern := range args.PatternInfo.FilePatternsReposMustInclude {
-			// The high FileMatchLimit here is to make sure we get all the repo matches we can. Setting it to
-			// len(repos) could mean we miss some repos since there could be for example len(repos) file matches in
-			// the first repo and some more in other repos.
-			p := search.TextPatternInfo{IsRegExp: true, FileMatchLimit: math.MaxInt32, IncludePatterns: []string{pattern}, PathPatternsAreCaseSensitive: false, PatternMatchesContent: true, PatternMatchesPath: true}
-			q, err := query.ParseLiteral("file:" + pattern)
-			if err != nil {
-				return nil, err
-			}
-			newArgs := *args
-			newArgs.PatternInfo = &p
-			newArgs.RepoPromise = (&search.RepoPromise{}).Resolve(repos)
-			newArgs.Query = q
-			newArgs.UseFullDeadline = true
-			matches, _, err := unindexed.SearchFilesInReposBatch(ctx, &newArgs)
+			matches, err := reposContainingPath(ctx, args, repos, pattern)
 			if err != nil {
 				return nil, err
 			}
 
-			// deduplicate repo results
 			matchedIDs := make(map[api.RepoID]struct{})
 			for _, m := range matches {
 				matchedIDs[m.Repo.ID] = struct{}{}
@@ -245,18 +260,7 @@ func reposToAdd(ctx context.Context, args *search.TextParameters, repos []*searc
 
 	if len(args.PatternInfo.FilePatternsReposMustExclude) > 0 {
 		for _, pattern := range args.PatternInfo.FilePatternsReposMustExclude {
-			p := search.TextPatternInfo{IsRegExp: true, FileMatchLimit: math.MaxInt32, IncludePatterns: []string{pattern}, PathPatternsAreCaseSensitive: false, PatternMatchesContent: true, PatternMatchesPath: true}
-			q, err := query.ParseLiteral("file:" + pattern)
-			if err != nil {
-				return nil, err
-			}
-			newArgs := *args
-			newArgs.PatternInfo = &p
-			rp := (&search.RepoPromise{}).Resolve(repos)
-			newArgs.RepoPromise = rp
-			newArgs.Query = q
-			newArgs.UseFullDeadline = true
-			matches, _, err := unindexed.SearchFilesInReposBatch(ctx, &newArgs)
+			matches, err := reposContainingPath(ctx, args, repos, pattern)
 			if err != nil {
 				return nil, err
 			}
