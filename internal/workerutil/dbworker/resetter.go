@@ -69,7 +69,7 @@ loop:
 		resetIDs, erroredIDs, err := r.store.ResetStalled(r.ctx)
 		if err != nil {
 			if r.ctx.Err() != nil && errors.Is(err, r.ctx.Err()) {
-				// If the error is due to the loop being shut down, just break`
+				// If the error is due to the loop being shut down, just break
 				break loop
 			}
 

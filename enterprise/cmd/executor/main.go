@@ -69,7 +69,7 @@ func makeWorkerMetrics(queueName string) workerutil.WorkerMetrics {
 		Registerer: prometheus.DefaultRegisterer,
 	}
 
-	return workerutil.NewMetrics(observationContext, "executor_queue_processor", map[string]string{
+	return workerutil.NewMetrics(observationContext, "executor_processor", map[string]string{
 		"queue": queueName,
 	})
 }

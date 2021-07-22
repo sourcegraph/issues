@@ -79,13 +79,16 @@ func main() {
 	}
 
 	for queueName, options := range queueOptions {
+		// Make local copy of queue name for capture below
+		queueName, store := queueName, options.Store
+
 		prometheus.DefaultRegisterer.MustRegister(prometheus.NewGaugeFunc(prometheus.GaugeOpts{
-			Name:        "src_executor_queue_total",
+			Name:        "src_executor_total",
 			Help:        "Total number of jobs in the queued state.",
 			ConstLabels: map[string]string{"queue": queueName},
 		}, func() float64 {
 			// TODO(efritz) - do not count soft-deleted code intel index records
-			count, err := options.Store.QueuedCount(context.Background(), nil)
+			count, err := store.QueuedCount(context.Background(), nil)
 			if err != nil {
 				log15.Error("Failed to get queued job count", "queue", queueName, "error", err)
 			}

@@ -19,13 +19,13 @@ func newOperations(dbStore DBStore, observationContext *observation.Context) *op
 		Name: "codeintel.commitUpdater",
 		Metrics: metrics.NewOperationMetrics(
 			observationContext.Registerer,
-			"codeintel_commit_graph_updater",
+			"codeintel_commit_graph_processor",
 			metrics.WithCountHelp("Total number of method invocations."),
 		),
 	})
 
 	observationContext.Registerer.MustRegister(prometheus.NewGaugeFunc(prometheus.GaugeOpts{
-		Name: "src_dirty_repositories_total",
+		Name: "src_codeintel_commit_graph_total",
 		Help: "Total number of repositories with stale commit graphs.",
 	}, func() float64 {
 		dirtyRepositories, err := dbStore.DirtyRepositories(context.Background())

@@ -43,6 +43,11 @@ func (j *janitorJob) Routines(ctx context.Context) ([]goroutine.BackgroundRoutin
 		return nil, err
 	}
 
+	dependencyIndexStore, err := InitDependencyIndexStore()
+	if err != nil {
+		return nil, err
+	}
+
 	dbStoreShim := &janitor.DBStoreShim{Store: dbStore}
 	uploadWorkerStore := dbstore.WorkerutilUploadStore(dbStoreShim, observationContext)
 	indexWorkerStore := dbstore.WorkerutilIndexStore(dbStoreShim, observationContext)
@@ -55,6 +60,7 @@ func (j *janitorJob) Routines(ctx context.Context) ([]goroutine.BackgroundRoutin
 		janitor.NewRecordExpirer(dbStoreShim, janitorConfigInst.DataTTL, janitorConfigInst.CleanupTaskInterval, metrics),
 		janitor.NewUploadResetter(uploadWorkerStore, janitorConfigInst.CleanupTaskInterval, metrics, observationContext),
 		janitor.NewIndexResetter(indexWorkerStore, janitorConfigInst.CleanupTaskInterval, metrics, observationContext),
+		janitor.NewDependencyIndexResetter(dependencyIndexStore, janitorConfigInst.CleanupTaskInterval, metrics, observationContext),
 		janitor.NewUnknownCommitJanitor(dbStoreShim, janitorConfigInst.CommitResolverMinimumTimeSinceLastCheck, janitorConfigInst.CommitResolverBatchSize, janitorConfigInst.CommitResolverTaskInterval, metrics),
 	}
 

@@ -22,7 +22,7 @@ func newOperations(observationContext *observation.Context) *operations {
 	once.Do(func() {
 		metrics := metrics.NewOperationMetrics(
 			observationContext.Registerer,
-			"codeintel_indexing",
+			"codeintel_index_scheduler",
 			metrics.WithLabels("op"),
 			metrics.WithCountHelp("Total number of method invocations."),
 		)

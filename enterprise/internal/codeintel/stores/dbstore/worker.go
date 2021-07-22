@@ -22,7 +22,7 @@ const StalledUploadMaxAge = time.Second * 5
 const UploadMaxNumResets = 3
 
 var uploadWorkerStoreOptions = dbworkerstore.Options{
-	Name:              "precise_code_intel_upload_worker_store",
+	Name:              "codeintel_upload",
 	TableName:         "lsif_uploads",
 	ViewName:          "lsif_uploads_with_repository_name u",
 	ColumnExpressions: uploadColumnsWithNullRank,
@@ -48,7 +48,7 @@ const StalledIndexMaxAge = time.Second * 5
 const IndexMaxNumResets = 3
 
 var indexWorkerStoreOptions = dbworkerstore.Options{
-	Name:              "precise_code_intel_index_worker_store",
+	Name:              "codeintel_index",
 	TableName:         "lsif_indexes",
 	ViewName:          "lsif_indexes_with_repository_name u",
 	ColumnExpressions: indexColumnsWithNullRank,
@@ -75,7 +75,7 @@ const StalledDependencyIndexingJobMaxAge = time.Second * 5
 const DependencyIndexingJobMaxNumResets = 3
 
 var dependencyIndexingJobWorkerStoreOptions = dbworkerstore.Options{
-	Name:              "precise_code_intel_dependency_indexing_scheduler_worker_store",
+	Name:              "codeintel_dependency_index",
 	TableName:         "lsif_dependency_indexing_jobs j",
 	ColumnExpressions: dependencyIndexingJobColumns,
 	Scan:              scanFirstDependencyIndexingJobRecord,
@@ -84,6 +84,6 @@ var dependencyIndexingJobWorkerStoreOptions = dbworkerstore.Options{
 	MaxNumResets:      DependencyIndexingJobMaxNumResets,
 }
 
-func WorkerutilDependencyIndexingJobStore(s basestore.ShareableStore, observationContext *observation.Context) dbworkerstore.Store {
+func WorkerutilDependencyIndexStore(s basestore.ShareableStore, observationContext *observation.Context) dbworkerstore.Store {
 	return dbworkerstore.NewWithMetrics(s.Handle(), dependencyIndexingJobWorkerStoreOptions, observationContext)
 }

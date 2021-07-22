@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/cockroachdb/errors"
+	"github.com/hashicorp/go-multierror"
 	"github.com/inconshreveable/log15"
 
 	"github.com/sourcegraph/sourcegraph/internal/goroutine"
@@ -31,6 +32,23 @@ func NewRecordExpirer(dbStore DBStore, ttl, interval time.Duration, metrics *met
 }
 
 func (e *recordExpirer) Handle(ctx context.Context) error {
+	err1 := e.expireUploads(ctx)
+	err2 := e.expireIndexes(ctx)
+	if err1 != nil && err2 != nil {
+		err1 = multierror.Append(err1, err2)
+	}
+	if err1 != nil {
+		return err1
+	}
+	return err2
+}
+
+func (e *recordExpirer) HandleError(err error) {
+	e.metrics.numErrors.Inc()
+	log15.Error("Failed to delete old codeintel records", "error", err)
+}
+
+func (e *recordExpirer) expireUploads(ctx context.Context) error {
 	tx, err := e.dbStore.Transact(ctx)
 	if err != nil {
 		return err
@@ -46,7 +64,17 @@ func (e *recordExpirer) Handle(ctx context.Context) error {
 		e.metrics.numUploadRecordsRemoved.Add(float64(count))
 	}
 
-	count, err = tx.DeleteOldIndexes(ctx, e.ttl, time.Now())
+	return nil
+}
+
+func (e *recordExpirer) expireIndexes(ctx context.Context) error {
+	tx, err := e.dbStore.Transact(ctx)
+	if err != nil {
+		return err
+	}
+	defer func() { err = tx.Done(err) }()
+
+	count, err := tx.DeleteOldIndexes(ctx, e.ttl, time.Now())
 	if err != nil {
 		return errors.Wrap(err, "DeleteOldIndexes")
 	}
@@ -56,9 +84,4 @@ func (e *recordExpirer) Handle(ctx context.Context) error {
 	}
 
 	return nil
-}
-
-func (e *recordExpirer) HandleError(err error) {
-	e.metrics.numErrors.Inc()
-	log15.Error("Failed to delete old codeintel records", "error", err)
 }
