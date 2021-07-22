@@ -9,6 +9,7 @@ import (
 	"os/exec"
 	"path"
 	"path/filepath"
+	"sort"
 	"strings"
 	"sync"
 
@@ -23,11 +24,11 @@ import (
 )
 
 type projectResult struct {
-	name       string
-	success    bool
-	usage      usageStats
-	output     string
-	testResult testSuiteResult
+	name         string
+	usage        usageStats
+	output       string
+	bundleResult bundleResult
+	suiteResult  testSuiteResult
 }
 
 type usageStats struct {
@@ -42,6 +43,11 @@ type passedTest struct {
 type failedTest struct {
 	Name string
 	Diff string
+}
+
+type bundleResult struct {
+	Valid  bool
+	Errors []string
 }
 
 type testFileResult struct {
@@ -83,12 +89,12 @@ func main() {
 		logFatal("Indexer is required. Pass with --indexer")
 	}
 
-	var indexer = strings.Split(raw_indexer, " ")
-
 	log15.Info("Starting Execution: ", "directory", directory, "indexer", raw_indexer)
 
+	indexer := strings.Split(raw_indexer, " ")
 	if err := testDirectory(context.Background(), indexer, directory); err != nil {
 		logFatal("Failed with", "err", err)
+		return
 	}
 	log15.Info("Tests passed:", "directory", directory, "indexer", raw_indexer)
 }
@@ -100,6 +106,7 @@ func testDirectory(ctx context.Context, indexer []string, directory string) erro
 	}
 
 	type channelResult struct {
+		name   string
 		result projectResult
 		err    error
 	}
@@ -114,8 +121,8 @@ func testDirectory(ctx context.Context, indexer []string, directory string) erro
 			defer wg.Done()
 
 			projResult, err := testProject(ctx, indexer, path.Join(directory, name), name)
-
 			resultChan <- channelResult{
+				name:   name,
 				result: projResult,
 				err:    err,
 			}
@@ -126,16 +133,27 @@ func testDirectory(ctx context.Context, indexer []string, directory string) erro
 	wg.Wait()
 	close(resultChan)
 
-	allPassed := true
-	for chanResult := range resultChan {
-		if chanResult.err != nil {
-			log15.Warn("Failed to run test. Got err:", "error", chanResult.err)
+	successful := true
+	for res := range resultChan {
+		fmt.Println("====================")
+		if res.err != nil {
+			successful = false
+
+			log15.Warn("Failed to run test.", "name", res.name)
+			fmt.Println(res.err)
 			continue
 		}
 
-		for _, fileResult := range chanResult.result.testResult.FileResults {
+		if !res.result.bundleResult.Valid {
+			successful = false
+
+			fmt.Printf("%s bundle was found to be invalid:\n%s\n", res.name, res.result.bundleResult.Errors)
+		}
+
+		for _, fileResult := range res.result.suiteResult.FileResults {
 			if len(fileResult.Failed) > 0 {
-				allPassed = false
+				successful = false
+
 				for _, failed := range fileResult.Failed {
 					fmt.Printf("Failed test: File: %s, Name: %s\nDiff: %s\n", fileResult.Name, failed.Name, failed.Diff)
 				}
@@ -143,8 +161,8 @@ func testDirectory(ctx context.Context, indexer []string, directory string) erro
 		}
 	}
 
-	if !allPassed {
-		return errors.New("Failed some tests. Try again later :)")
+	if !successful {
+		return errors.New(fmt.Sprintf("'%s' Failed.", directory))
 	}
 
 	return nil
@@ -153,43 +171,43 @@ func testDirectory(ctx context.Context, indexer []string, directory string) erro
 func testProject(ctx context.Context, indexer []string, project, name string) (projectResult, error) {
 	output, err := setupProject(project)
 	if err != nil {
-		return projectResult{name: name, success: false, output: string(output)}, err
+		return projectResult{name: name, output: string(output)}, err
 	}
 
 	log15.Debug("... Completed setup project", "command", indexer)
-
 	result, err := runIndexer(ctx, indexer, project, name)
 	if err != nil {
 		return projectResult{
-			name:    name,
-			success: false,
-			output:  result.output,
+			name:   name,
+			output: result.output,
 		}, err
 	}
 
 	log15.Debug("... \t Resource Usage:", "usage", result.usage)
 
-	if err := validateDump(project); err != nil {
+	bundleResult, err := validateDump(project)
+	if err != nil {
 		return projectResult{}, err
 	}
 	log15.Debug("... Validated dump.lsif")
 
 	bundle, err := readBundle(project)
 	if err != nil {
-		return projectResult{}, err
+		return projectResult{name: name}, err
 	}
+	log15.Debug("... Read bundle")
 
 	testResult, err := validateTestCases(project, bundle)
 	if err != nil {
-		return projectResult{}, err
+		return projectResult{name: name}, err
 	}
 
 	return projectResult{
-		name:       name,
-		success:    true,
-		usage:      result.usage,
-		output:     string(output),
-		testResult: testResult,
+		name:         name,
+		usage:        result.usage,
+		output:       string(output),
+		bundleResult: bundleResult,
+		suiteResult:  testResult,
 	}, nil
 }
 
@@ -217,57 +235,62 @@ func runIndexer(ctx context.Context, indexer []string, directory, name string) (
 	mem, _ := MaxMemoryInKB(sysUsage)
 
 	return projectResult{
-		name:    name,
-		success: false,
-		usage:   usageStats{memory: mem},
-		output:  string(output),
+		name:   name,
+		usage:  usageStats{memory: mem},
+		output: string(output),
 	}, err
 }
 
-func validateDump(directory string) error {
+// Returns the bundle result. Only errors when the bundle doesn't exist or is
+// unreadable. Otherwise, we send errors back in bundleResult so that we can
+// run the tests even with invalid bundles.
+func validateDump(directory string) (bundleResult, error) {
 	dumpFile, err := os.Open(filepath.Join(directory, "dump.lsif"))
 	if err != nil {
-		return err
+		return bundleResult{}, err
 	}
 
 	ctx := validation.NewValidationContext()
 	validator := &validation.Validator{Context: ctx}
 
 	if err := validator.Validate(dumpFile); err != nil {
-		return err
+		return bundleResult{}, err
 	}
 
 	if len(ctx.Errors) > 0 {
-		msg := fmt.Sprintf("Detected %d errors", len(ctx.Errors))
+		errors := make([]string, len(ctx.Errors)+1)
+		errors[0] = fmt.Sprintf("Detected %d errors", len(ctx.Errors))
 		for i, err := range ctx.Errors {
-			msg += fmt.Sprintf("%d. %s", i, err)
+			errors[i+1] = fmt.Sprintf("%d. %s", i, err)
 		}
-		return errors.New(msg)
+
+		return bundleResult{Valid: false, Errors: errors}, nil
 	}
 
-	return nil
+	return bundleResult{Valid: true}, nil
 }
 
-func validateTestCases(directory string, bundle *semantic.GroupedBundleDataMaps) (testSuiteResult, error) {
-	testFiles, err := os.ReadDir(filepath.Join(directory, "lsif_tests"))
+func validateTestCases(projectRoot string, bundle *semantic.GroupedBundleDataMaps) (testSuiteResult, error) {
+	testFiles, err := os.ReadDir(filepath.Join(projectRoot, "lsif_tests"))
 	if err != nil {
 		if os.IsNotExist(err) {
-			log15.Warn("No lsif test directory exists here", "directory", directory)
+			log15.Warn("No lsif test directory exists here", "directory", projectRoot)
 			return testSuiteResult{}, nil
 		}
 
 		return testSuiteResult{}, err
 	}
 
-	fileResults := make([]testFileResult, len(testFiles))
+	fileResults := []testFileResult{}
 	for _, file := range testFiles {
-		if testFileExtension := filepath.Ext(file.Name()); testFileExtension != "json" {
+		if testFileExtension := filepath.Ext(file.Name()); testFileExtension != ".json" {
 			continue
 		}
 
-		fileResult, err := runOneTestFile(filepath.Join(directory, "lsif_tests", file.Name()), bundle)
+		testFileName := filepath.Join(projectRoot, "lsif_tests", file.Name())
+		fileResult, err := runOneTestFile(projectRoot, testFileName, bundle)
 		if err != nil {
-			logFatal("Had an error while we do the test file", "err", err)
+			logFatal("Had an error while we do the test file", "file", testFileName, "err", err)
 		}
 
 		fileResults = append(fileResults, fileResult)
@@ -276,7 +299,7 @@ func validateTestCases(directory string, bundle *semantic.GroupedBundleDataMaps)
 	return testSuiteResult{FileResults: fileResults}, nil
 }
 
-func runOneTestFile(file string, bundle *semantic.GroupedBundleDataMaps) (testFileResult, error) {
+func runOneTestFile(projectRoot, file string, bundle *semantic.GroupedBundleDataMaps) (testFileResult, error) {
 	doc, err := os.ReadFile(file)
 	if err != nil {
 		return testFileResult{}, errors.Wrap(err, "Failed to read file")
@@ -289,51 +312,227 @@ func runOneTestFile(file string, bundle *semantic.GroupedBundleDataMaps) (testFi
 
 	fileResult := testFileResult{Name: file}
 
-	for _, definitionRequest := range testCase.Definitions {
-		path := definitionRequest.Request.TextDocument
-		line := definitionRequest.Request.Position.Line
-		character := definitionRequest.Request.Position.Character
-
-		results, err := semantic.Query(bundle, path, line, character)
-		if err != nil {
-			return testFileResult{}, err
+	for _, definitionTest := range testCase.Definitions {
+		if err := runOneDefinitionRequest(projectRoot, bundle, definitionTest, &fileResult); err != nil {
+			return fileResult, err
 		}
+	}
 
-		// TODO: We probably can have more than one result and have that make sense...
-		//		should allow testing that
-		if len(results) > 1 {
-			return testFileResult{}, errors.New("Had too many results")
-		} else if len(results) == 0 {
-			return testFileResult{}, errors.New("Found no results")
-		}
-
-		definitions := results[0].Definitions
-
-		if len(definitions) > 1 {
-			logFatal("Had too many definitions", "definitions", definitions)
-		} else if len(definitions) == 0 {
-			logFatal("Found no definitions", "definitions", definitions)
-		}
-
-		response := transformLocationToResponse(definitions[0])
-		if diff := cmp.Diff(response, definitionRequest.Response); diff != "" {
-			fileResult.Failed = append(fileResult.Failed, failedTest{
-				Name: definitionRequest.Name,
-				Diff: diff,
-			})
-		} else {
-			fileResult.Passed = append(fileResult.Passed, passedTest{
-				Name: definitionRequest.Name,
-			})
+	for _, referencesTest := range testCase.References {
+		if err := runOneReferencesRequest(projectRoot, bundle, referencesTest, &fileResult); err != nil {
+			return fileResult, err
 		}
 	}
 
 	return fileResult, nil
 }
 
-func transformLocationToResponse(location semantic.LocationData) DefinitionResponse {
-	return DefinitionResponse{
-		TextDocument: location.URI,
+// Stable sort for references so that we can compare much more easily.
+// Without this, it's a bit annoying to get the diffs.
+func sortReferences(references []Location) {
+	sort.SliceStable(references, func(i, j int) bool {
+		left := references[i]
+		right := references[j]
+
+		if left.URI > right.URI {
+			return false
+		} else if left.URI < right.URI {
+			return true
+		}
+
+		cmpRange := sortRange(left.Range, right.Range)
+		if cmpRange != 0 {
+			return cmpRange > 0
+		}
+
+		return i < j
+	})
+}
+
+func sortRange(left, right Range) int {
+	start := sortPosition(left.Start, right.Start)
+	if start != 0 {
+		return start
+	}
+
+	end := sortPosition(left.End, right.End)
+	if end != 0 {
+		return end
+	}
+
+	return 0
+}
+func sortPosition(left, right Position) int {
+	if left.Line > right.Line {
+		return -1
+	} else if left.Line < right.Line {
+		return 1
+	}
+
+	if left.Character > right.Character {
+		return -1
+	} else if left.Character < right.Character {
+		return 1
+	}
+
+	return 0
+}
+
+func runOneReferencesRequest(projectRoot string, bundle *semantic.GroupedBundleDataMaps, testCase ReferencesTest, fileResult *testFileResult) error {
+	request := testCase.Request
+
+	filePath := request.TextDocument
+	line := request.Position.Line
+	character := request.Position.Character
+
+	results, err := semantic.Query(bundle, filePath, line, character)
+	if err != nil {
+		return err
+	}
+
+	// TODO: We need to add support for not including the declaration from the context.
+	//       I don't know of any way to do that currently, so it would require changes to Query or similar.
+	if !request.Context.IncludeDeclaration {
+		return errors.New("'context.IncludeDeclaration = false' configuration is not currently supported")
+	}
+
+	// At this point we can have multiple references, but can handle only one _set_ of references.
+	if len(results) > 1 {
+		return errors.New("Had too many results")
+	}
+
+	// Short circuit for expected empty but didn't get empty
+	if len(testCase.Response) == 0 {
+		if len(results[0].References) != 0 {
+			fileResult.Failed = append(fileResult.Failed, failedTest{
+				Name: testCase.Name,
+				Diff: cmp.Diff(testCase.Response, results),
+			})
+		} else {
+			fileResult.Passed = append(fileResult.Passed, passedTest{
+				Name: testCase.Name,
+			})
+		}
+
+		return nil
+	}
+
+	// Expected results but didn't get any
+	if len(results) == 0 {
+		fileResult.Failed = append(fileResult.Failed, failedTest{
+			Name: testCase.Name,
+			Diff: "Found no results\n" + cmp.Diff(testCase.Response, results),
+		})
+
+		return nil
+	}
+
+	semanticReferences := results[0].References
+
+	actualReferences := make([]Location, len(semanticReferences))
+	for index, ref := range semanticReferences {
+		actualReferences[index] = transformLocationToResponse(ref)
+	}
+
+	expectedReferences := []Location(testCase.Response)
+
+	sortReferences(actualReferences)
+	sortReferences(expectedReferences)
+
+	if !cmp.Equal(actualReferences, expectedReferences) {
+		diff := ""
+		for index, actual := range actualReferences {
+			if len(expectedReferences) <= index {
+				diff += fmt.Sprintf("Missing Reference:\n%+v", actual)
+				continue
+			}
+
+			expected := expectedReferences[index]
+			if actual == expected {
+				continue
+			}
+
+			thisDiff, err := getLocationDiff(projectRoot, expected, actual)
+			if err != nil {
+				return err
+			}
+
+			diff += cmp.Diff(actual, expected)
+			diff += "\n" + thisDiff
+		}
+
+		fileResult.Failed = append(fileResult.Failed, failedTest{
+			Name: testCase.Name,
+			Diff: diff,
+		})
+	} else {
+		fileResult.Passed = append(fileResult.Passed, passedTest{
+			Name: testCase.Name,
+		})
+	}
+
+	return nil
+}
+
+func runOneDefinitionRequest(projectRoot string, bundle *semantic.GroupedBundleDataMaps, testCase DefinitionTest, fileResult *testFileResult) error {
+	request := testCase.Request
+
+	path := request.TextDocument
+	line := request.Position.Line
+	character := request.Position.Character
+
+	results, err := semantic.Query(bundle, path, line, character)
+	if err != nil {
+		return err
+	}
+
+	// TODO: We probably can have more than one result and have that make sense...
+	//       should allow testing that at some point
+	if len(results) > 1 {
+		return errors.New("Had too many results")
+	}
+
+	// Expected results but didn't get any
+	if len(results) == 0 {
+		fileResult.Failed = append(fileResult.Failed, failedTest{
+			Name: testCase.Name,
+			Diff: "Found no results\n" + cmp.Diff(testCase.Response, results),
+		})
+
+		return nil
+	}
+
+	definitions := results[0].Definitions
+
+	if len(definitions) > 1 {
+		logFatal("Had too many definitions", "definitions", definitions)
+	} else if len(definitions) == 0 {
+		logFatal("Found no definitions", "definitions", definitions)
+	}
+
+	response := transformLocationToResponse(definitions[0])
+	if diff := cmp.Diff(response, testCase.Response); diff != "" {
+		thisDiff, err := getLocationDiff(projectRoot, testCase.Response, response)
+		if err != nil {
+			return err
+		}
+
+		fileResult.Failed = append(fileResult.Failed, failedTest{
+			Name: testCase.Name,
+			Diff: diff + "\n" + thisDiff,
+		})
+	} else {
+		fileResult.Passed = append(fileResult.Passed, passedTest{
+			Name: testCase.Name,
+		})
+	}
+
+	return nil
+}
+
+func transformLocationToResponse(location semantic.LocationData) Location {
+	return Location{
+		URI: "file://" + location.URI,
 		Range: Range{
 			Start: Position{
 				Line:      location.StartLine,
@@ -348,10 +547,44 @@ func transformLocationToResponse(location semantic.LocationData) DefinitionRespo
 
 }
 func readBundle(root string) (*semantic.GroupedBundleDataMaps, error) {
-	bundle, err := conversion.CorrelateLocalGit(context.Background(), path.Join(root, "dump.lsif"), root)
+	bundle, err := conversion.CorrelateLocalGitRelative(context.Background(), path.Join(root, "dump.lsif"), root)
 	if err != nil {
 		return nil, err
 	}
 
 	return semantic.GroupedBundleDataChansToMaps(bundle), nil
+}
+
+var filesToContents = make(map[string]string)
+
+func getFileContents(projectRoot, uri string) (string, error) {
+	contents, ok := filesToContents[uri]
+	if !ok {
+		// ok, read the file
+		fileName := strings.Replace(uri, "file://", "", 1)
+		byteContents, err := os.ReadFile(path.Join(projectRoot, fileName))
+		if err != nil {
+			return "", err
+		}
+
+		contents = string(byteContents)
+		filesToContents[uri] = contents
+	}
+
+	return contents, nil
+}
+
+func getLocationDiff(projectRoot string, expected, actual Location) (string, error) {
+
+	contents, err := getFileContents(projectRoot, actual.URI)
+	if err != nil {
+		return "", err
+	}
+
+	diff, err := DrawLocations(contents, expected, actual, 2)
+	if err != nil {
+		return "", errors.Wrap(err, "Unable to draw the pretty diff")
+	}
+
+	return diff, nil
 }

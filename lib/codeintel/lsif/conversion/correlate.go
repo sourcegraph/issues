@@ -48,6 +48,28 @@ func Correlate(ctx context.Context, r io.Reader, root string, getChildren pathex
 	return groupedBundleData, nil
 }
 
+func CorrelateLocalGitRelative(ctx context.Context, dumpPath, relativeRoot string) (*semantic.GroupedBundleDataChans, error) {
+	absoluteProjectRoot, err := filepath.Abs(relativeRoot)
+	if err != nil {
+		return nil, errors.Wrap(err, "Error getting absolute root of project: "+relativeRoot)
+	}
+
+	getChildrenFunc := pathexistence.LocalGitGetChildrenFunc(absoluteProjectRoot)
+
+	file, err := os.Open(dumpPath)
+	if err != nil {
+		return nil, errors.Wrap(err, "Error opening dump path: "+dumpPath)
+	}
+	defer file.Close()
+
+	bundle, err := Correlate(context.Background(), file, "", getChildrenFunc)
+	if err != nil {
+		return nil, errors.Wrap(err, "Error correlating dump: "+dumpPath)
+	}
+
+	return bundle, nil
+}
+
 func CorrelateLocalGit(ctx context.Context, dumpPath, projectRoot string) (*semantic.GroupedBundleDataChans, error) {
 	absoluteProjectRoot, err := filepath.Abs(projectRoot)
 	if err != nil {
