@@ -28,7 +28,7 @@ import sidebarStyles from './SearchSidebarSection.module.scss'
 
 const SEARCH_REFERENCE_TAB_KEY = 'SearchProduct.SearchReference.Tab'
 
-export interface SearchReferenceInfo {
+export interface FilterInfo {
     type: FilterType
     placeholder: Placeholder
     description: string
@@ -45,17 +45,27 @@ export interface SearchReferenceInfo {
     examples?: string[]
 }
 
+interface OperatorInfo {
+    operator: string
+    placeholder: Placeholder
+    description: string
+    alias?: string
+    examples?: string[]
+}
+
+type SearchReferenceInfo = FilterInfo | OperatorInfo
+
 /**
  * Adds additional search reference information from the existing filters list.
  */
-function augmentSearchReference(searchReference: SearchReferenceInfo): void {
+function augmentFilterInfo(searchReference: FilterInfo): void {
     const filter = FILTERS[searchReference.type]
     if (filter?.alias) {
         searchReference.alias = filter.alias
     }
 }
 
-const searchReferenceInfo: SearchReferenceInfo[] = [
+const filterInfos: FilterInfo[] = [
     {
         type: FilterType.after,
         placeholder: parsePlaceholder('"{last week}"'),
@@ -235,20 +245,47 @@ To use this filter, the search query must contain \`type:diff\` or \`type:commit
     },
 ]
 
-for (const searchReference of searchReferenceInfo) {
-    augmentSearchReference(searchReference)
+for (const info of filterInfos) {
+    augmentFilterInfo(info)
 }
 
-const commonFilters = searchReferenceInfo
+const commonFilters = filterInfos
     .filter(info => info.commonRank !== undefined)
     // commonRank will never be undefined here, but TS doesn't seem to know
     .sort((a, b) => (a.commonRank as number) - (b.commonRank as number))
+
+const operatorInfo: OperatorInfo[] = [
+    {
+        operator: 'AND',
+        alias: 'and',
+        placeholder: parsePlaceholder('{a} AND {b}'),
+        description:
+            'Returns results for files containing matches on the left and right side of the `and` (set intersection).',
+        examples: ['conf.Get( and log15.Error(', 'conf.Get( AND log15.Error( AND after'],
+    },
+    {
+        operator: 'OR',
+        alias: 'or',
+        placeholder: parsePlaceholder('{a} OR {b}'),
+        description:
+            'Returns file content matching either on the left or right side, or both (set union). The number of results reports the number of matches of both strings. Note the regex or operator `|` may not work as expected with certain operators for example `file:(internal/repos)|(internal/gitserver)`, to recieve the expected results use [subexpressions](https://docs.sourcegraph.com/code_search/tutorials/search_subexpressions), `(file:internal/repos or file:internal/gitserver)`',
+        examples: ['conf.Get( or log15.Error(', 'conf.Get( OR log15.Error( OR after'],
+    },
+    {
+        operator: 'NOT',
+        alias: 'not',
+        placeholder: parsePlaceholder('NOT {a}'),
+        description:
+            '`NOT` can be used in place of `-` to negate keywords, such as `file`, `content`, `lang`, `repohasfile`, and `repo`. For search patterns, `NOT` excludes documents that contain the term after `NOT`. For readability, you can also include the `AND` operator before a `NOT` (i.e. `panic NOT ever` is equivalent to `panic AND NOT ever`).',
+        examples: ['lang:go not file:main.go panic', 'panic NOT ever'],
+    },
+]
 
 /**
  * Returns true if the provided regular expressions all match the provided
  * filter information (name, description, ...)
  */
-function matches(searchTerms: RegExp[], info: SearchReferenceInfo): boolean {
+function matches(searchTerms: RegExp[], info: FilterInfo): boolean {
     return searchTerms.every(term => term.test(info.type) || term.test(info.description || ''))
 }
 
@@ -285,7 +322,7 @@ function selectionForPlaceholder(
  * Whether or not to trigger the suggestion popover when adding this filter to
  * the query.
  */
-function shouldShowSuggestions(searchReference: SearchReferenceInfo): boolean {
+function shouldShowSuggestions(searchReference: FilterInfo): boolean {
     return Boolean(searchReference.showSuggestions !== false && FILTERS[searchReference.type].discreteValues)
 }
 
@@ -296,22 +333,22 @@ function shouldShowSuggestions(searchReference: SearchReferenceInfo): boolean {
  */
 export function updateQueryWithFilter(
     currentQueryState: QueryState,
-    searchReference: SearchReferenceInfo,
+    filterInfo: FilterInfo,
     negate: boolean,
     allFilters: typeof FILTERS
 ): QueryState {
-    const { singular } = allFilters[searchReference.type]
+    const { singular } = allFilters[filterInfo.type]
     let { query } = currentQueryState
-    const showSuggestions = shouldShowSuggestions(searchReference)
+    const showSuggestions = shouldShowSuggestions(filterInfo)
     let selection: Selection | undefined
     let revealRange: Range
-    let field: string = searchReference.type
+    let field: string = filterInfo.type
 
-    if (negate && isNegatableFilter(searchReference.type)) {
+    if (negate && isNegatableFilter(filterInfo.type)) {
         field = '-' + field
     }
 
-    const existingFilter = findFilter(query, searchReference.type, FilterKind.Global)
+    const existingFilter = findFilter(query, filterInfo.type, FilterKind.Global)
 
     if (existingFilter && singular) {
         // Filter can only appear once
@@ -334,10 +371,10 @@ export function updateQueryWithFilter(
         // +1 because appendFilter inserts a whitespace character at the end of
         // the query
         const rangeStart = query.length + 1
-        query = appendFilter(query, field, showSuggestions ? '' : searchReference.placeholder.text)
-        const offset = query.length - (showSuggestions ? 0 : searchReference.placeholder.text.length)
+        query = appendFilter(query, field, showSuggestions ? '' : filterInfo.placeholder.text)
+        const offset = query.length - (showSuggestions ? 0 : filterInfo.placeholder.text.length)
         selection = selectionForPlaceholder(
-            searchReference.placeholder,
+            filterInfo.placeholder,
             offset,
             // If we need to trigger the suggestion popover we have to make
             // sure the input cursor is positioned at the beginning of the
@@ -398,6 +435,10 @@ export function parsePlaceholder(placeholder: string): Placeholder {
     return parsedPlaceholder
 }
 
+function isFilterInfo(searchReference: SearchReferenceInfo): searchReference is FilterInfo {
+    return (searchReference as FilterInfo).type !== undefined
+}
+
 const classNameTokenMap = {
     text: 'search-filter-keyword',
     value: styles.placeholder,
@@ -405,7 +446,7 @@ const classNameTokenMap = {
 
 interface SearchReferenceExampleProps {
     example: string
-    onClick: (example: string) => void
+    onClick?: (example: string) => void
 }
 
 const SearchReferenceExample: React.FunctionComponent<SearchReferenceExampleProps> = ({ example, onClick }) => {
@@ -414,7 +455,7 @@ const SearchReferenceExample: React.FunctionComponent<SearchReferenceExampleProp
     // We only use valid queries as examples, so this will always be true
     if (scanResult.type === 'success') {
         return (
-            <button className="btn p-0 flex-1" type="button" onClick={() => onClick(example)}>
+            <button className="btn p-0 flex-1" type="button" onClick={() => onClick?.(example)}>
                 {scanResult.term.map((term, index) => {
                     switch (term.type) {
                         case 'filter':
@@ -423,6 +464,15 @@ const SearchReferenceExample: React.FunctionComponent<SearchReferenceExampleProp
                                     <span className="search-filter-keyword">{term.field.value}:</span>
                                     {term.value?.quoted ? `"${term.value.value}"` : term.value?.value}
                                 </React.Fragment>
+                            )
+                        case 'keyword':
+                            // We are using example.slice instead of term.value
+                            // to get the actual character sequence in the
+                            // example. term.value doesn't preserve case
+                            return (
+                                <span className="search-filter-keyword">
+                                    {example.slice(term.range.start, term.range.end)}
+                                </span>
                             )
                         default:
                             return example.slice(term.range.start, term.range.end)
@@ -434,19 +484,24 @@ const SearchReferenceExample: React.FunctionComponent<SearchReferenceExampleProp
     return null
 }
 
-interface SearchReferenceEntryProps {
-    searchReference: SearchReferenceInfo
-    onClick: (searchReference: SearchReferenceInfo, negate: boolean) => void
-    onExampleClick: (example: string) => void
+interface SearchReferenceEntryProps<T extends SearchReferenceInfo> {
+    searchReference: T
+    onClick: (searchReference: T, negate: boolean) => void
+    onExampleClick?: (example: string) => void
 }
 
-const SearchReferenceEntry: React.FunctionComponent<SearchReferenceEntryProps> = ({
+const SearchReferenceEntry = <T extends SearchReferenceInfo>({
     searchReference,
     onClick,
     onExampleClick,
-}) => {
+}: SearchReferenceEntryProps<T>): ReactElement | null => {
     const [collapsed, setCollapsed] = useState(true)
     const CollapseIcon = collapsed ? ChevronLeftIcon : ChevronDownIcon
+
+    let buttonTextPrefix: ReactElement | null = null
+    if (isFilterInfo(searchReference)) {
+        buttonTextPrefix = <span className="search-filter-keyword">{searchReference.type}:</span>
+    }
 
     return (
         <li>
@@ -461,7 +516,7 @@ const SearchReferenceEntry: React.FunctionComponent<SearchReferenceEntryProps> =
                     onClick={event => onClick(searchReference, event.altKey)}
                 >
                     <span className="text-monospace">
-                        <span className="search-filter-keyword">{searchReference.type}:</span>
+                        {buttonTextPrefix}
                         {searchReference.placeholder.tokens.map(token => (
                             <span key={token.start} className={classNameTokenMap[token.type]}>
                                 {token.content}
@@ -489,10 +544,14 @@ const SearchReferenceEntry: React.FunctionComponent<SearchReferenceEntryProps> =
                     )}
                     {searchReference.alias && (
                         <p>
-                            Alias: <span className="text-code search-filter-keyword">{searchReference.alias}:</span>
+                            Alias:{' '}
+                            <span className="text-code search-filter-keyword">
+                                {searchReference.alias}
+                                {isFilterInfo(searchReference) ? ':' : ''}
+                            </span>
                         </p>
                     )}
-                    {isNegatableFilter(searchReference.type) && (
+                    {isFilterInfo(searchReference) && isNegatableFilter(searchReference.type) && (
                         <p>
                             Negation: <span className="test-code search-filter-keyword">-{searchReference.type}:</span>
                             {searchReference.alias && (
@@ -523,18 +582,18 @@ const SearchReferenceEntry: React.FunctionComponent<SearchReferenceEntryProps> =
     )
 }
 
-interface SearchReferenceListProps {
-    filters: SearchReferenceInfo[]
-    onClick: (info: SearchReferenceInfo, negate: boolean) => void
+interface FilterInfoListProps<T extends SearchReferenceInfo> {
+    filters: T[]
+    onClick: (info: T, negate: boolean) => void
     onExampleClick: (example: string) => void
 }
 
-const SearchReferenceList = ({ filters, onClick, onExampleClick }: SearchReferenceListProps): ReactElement => (
+const FilterInfoList = ({ filters, onClick, onExampleClick }: FilterInfoListProps<FilterInfo>): ReactElement => (
     <ul className={styles.list}>
         {filters.map(filterInfo => (
             <SearchReferenceEntry
-                searchReference={filterInfo}
                 key={filterInfo.type + filterInfo.placeholder.text}
+                searchReference={filterInfo}
                 onClick={onClick}
                 onExampleClick={onExampleClick}
             />
@@ -563,15 +622,23 @@ const SearchReference = (props: SearchReferenceProps): ReactElement => {
 
     const selectedFilters = useMemo(() => {
         if (!hasFilter) {
-            return searchReferenceInfo
+            return filterInfos
         }
         const searchTerms = parseSearchInput(filter)
-        return searchReferenceInfo.filter(info => matches(searchTerms, info))
+        return filterInfos.filter(info => matches(searchTerms, info))
     }, [filter, hasFilter])
 
     const updateQuery = useCallback(
-        (searchReference: SearchReferenceInfo, negate: boolean) => {
+        (searchReference: FilterInfo, negate: boolean) => {
             onNavbarQueryChange(updateQueryWithFilter(navbarSearchQueryState, searchReference, negate, FILTERS))
+        },
+        [onNavbarQueryChange, navbarSearchQueryState]
+    )
+    const updateQueryWithOperator = useCallback(
+        (info: OperatorInfo) => {
+            onNavbarQueryChange({
+                query: navbarSearchQueryState.query + ` ${info.operator} `,
+            })
         },
         [onNavbarQueryChange, navbarSearchQueryState]
     )
@@ -584,7 +651,7 @@ const SearchReference = (props: SearchReferenceProps): ReactElement => {
     )
 
     const filterList = (
-        <SearchReferenceList filters={selectedFilters} onClick={updateQuery} onExampleClick={updateQueryWithExample} />
+        <FilterInfoList filters={selectedFilters} onClick={updateQuery} onExampleClick={updateQueryWithExample} />
     )
 
     return (
@@ -596,16 +663,29 @@ const SearchReference = (props: SearchReferenceProps): ReactElement => {
                     <TabList className={styles.tablist}>
                         <Tab>Common</Tab>
                         <Tab>All filters</Tab>
+                        <Tab>Operators</Tab>
                     </TabList>
                     <TabPanels>
                         <TabPanel>
-                            <SearchReferenceList
+                            <FilterInfoList
                                 filters={commonFilters}
                                 onClick={updateQuery}
                                 onExampleClick={updateQueryWithExample}
                             />
                         </TabPanel>
                         <TabPanel>{filterList}</TabPanel>
+                        <TabPanel>
+                            <ul className={styles.list}>
+                                {operatorInfo.map(operatorInfo => (
+                                    <SearchReferenceEntry
+                                        searchReference={operatorInfo}
+                                        key={operatorInfo.operator + operatorInfo.placeholder.text}
+                                        onClick={updateQueryWithOperator}
+                                        onExampleClick={updateQueryWithExample}
+                                    />
+                                ))}
+                            </ul>
+                        </TabPanel>
                     </TabPanels>
                 </Tabs>
             )}

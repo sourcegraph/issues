@@ -5,7 +5,7 @@ import { FILTERS, FilterType } from '@sourcegraph/shared/src/search/query/filter
 
 import { QueryChangeSource, QueryState } from '../../helpers'
 
-import { parsePlaceholder, updateQueryWithFilter } from './SearchReference'
+import { FilterInfo, parsePlaceholder, updateQueryWithFilter } from './SearchReference'
 
 /**
  * Automatically sets cursor position and selections from example query.
@@ -39,7 +39,7 @@ function queryStateFromExample(query: string, showSuggestions = false): QuerySta
     }
 }
 
-function createSearchReference(type: FilterType, placeholder: string) {
+function createFilterInfo(type: FilterType, placeholder: string): FilterInfo {
     return {
         type,
         placeholder: parsePlaceholder(placeholder),
@@ -50,14 +50,14 @@ function createSearchReference(type: FilterType, placeholder: string) {
 describe('repeatable filters', () => {
     it('appends placeholder filter and selects placeholder', () => {
         assert.deepStrictEqual(
-            updateQueryWithFilter({ query: 'foo' }, createSearchReference(FilterType.after, '{test}'), false, FILTERS),
+            updateQueryWithFilter({ query: 'foo' }, createFilterInfo(FilterType.after, '{test}'), false, FILTERS),
             queryStateFromExample('foo {after:[test]}')
         )
     })
 
     it('appends suggestions filter', () => {
         assert.deepStrictEqual(
-            updateQueryWithFilter({ query: 'foo' }, createSearchReference(FilterType.lang, '{lang}'), false, FILTERS),
+            updateQueryWithFilter({ query: 'foo' }, createFilterInfo(FilterType.lang, '{lang}'), false, FILTERS),
             queryStateFromExample('foo {lang:[]}', true)
         )
     })
@@ -66,12 +66,7 @@ describe('repeatable filters', () => {
 describe('unique filters', () => {
     it('appends placeholder filter and selects placeholder', () => {
         assert.deepStrictEqual(
-            updateQueryWithFilter(
-                { query: 'foo' },
-                createSearchReference(FilterType.repogroup, '{test}'),
-                false,
-                FILTERS
-            ),
+            updateQueryWithFilter({ query: 'foo' }, createFilterInfo(FilterType.repogroup, '{test}'), false, FILTERS),
             queryStateFromExample('foo {repogroup:[test]}')
         )
     })
@@ -80,7 +75,7 @@ describe('unique filters', () => {
         assert.deepStrictEqual(
             updateQueryWithFilter(
                 { query: 'repogroup:value foo' },
-                createSearchReference(FilterType.repogroup, '{test}'),
+                createFilterInfo(FilterType.repogroup, '{test}'),
                 false,
                 FILTERS
             ),
@@ -90,7 +85,7 @@ describe('unique filters', () => {
 
     it('appends suggestions filter', () => {
         assert.deepStrictEqual(
-            updateQueryWithFilter({ query: 'foo' }, createSearchReference(FilterType.case, '{test}'), false, FILTERS),
+            updateQueryWithFilter({ query: 'foo' }, createFilterInfo(FilterType.case, '{test}'), false, FILTERS),
             queryStateFromExample('foo {case:[]}', true)
         )
     })
@@ -99,7 +94,7 @@ describe('unique filters', () => {
         assert.deepStrictEqual(
             updateQueryWithFilter(
                 { query: 'case:yes foo' },
-                createSearchReference(FilterType.case, '{test}'),
+                createFilterInfo(FilterType.case, '{test}'),
                 false,
                 FILTERS
             ),
