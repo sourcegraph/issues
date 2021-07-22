@@ -1,0 +1,10 @@
+.rendered-search-notebook-markdown-wrapper {
+    background: var(--color-bg-1);
+    overflow: auto;
+    flex: 1;
+}
+
+.rendered-search-notebook-markdown {
+    padding: 1rem;
+    max-width: 80rem;
+}

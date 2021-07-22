@@ -31,6 +31,7 @@ export type BlockInitializer = Pick<Block, 'type' | 'input'>
 export type BlockDirection = 'up' | 'down'
 
 export interface BlockProps {
+    isReadOnly: boolean
     isSelected: boolean
     isOtherBlockSelected: boolean
     onRunBlock(id: string): void

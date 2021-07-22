@@ -73,7 +73,7 @@ export class ToggleRenderedFileMode extends React.PureComponent<Props> {
                 className="btn btn-icon repo-header__action"
             >
                 <EyeIcon className="icon-inline" />{' '}
-                <span className="d-none d-lg-inline">{otherMode === 'code' ? 'Raw' : 'Formatted'}</span>
+                <span className="d-none d-lg-inline ml-1">{otherMode === 'code' ? 'Raw' : 'Formatted'}</span>
             </ButtonLink>
         )
     }

@@ -29,6 +29,8 @@ export const useBlockShortcuts = ({
                 const direction = event.key === 'ArrowUp' ? 'up' : 'down'
                 if (isModifierKeyDown) {
                     onMoveBlock(id, direction)
+                    // Prevent page scrolling in Firefox
+                    event.preventDefault()
                 } else {
                     onMoveBlockSelection(id, direction)
                 }

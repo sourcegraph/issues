@@ -30,6 +30,7 @@ export const SearchNotebookMarkdownBlock: React.FunctionComponent<SearchNotebook
     isSelected,
     isLightTheme,
     isMacPlatform,
+    isReadOnly,
     onRunBlock,
     onSelectBlock,
     ...props
@@ -49,11 +50,14 @@ export const SearchNotebookMarkdownBlock: React.FunctionComponent<SearchNotebook
     const { isInputFocused } = useMonacoBlockInput({ editor, id, ...props, onSelectBlock, onRunBlock: runBlock })
 
     const onDoubleClick = useCallback(() => {
+        if (isReadOnly) {
+            return
+        }
         if (!isEditing) {
             setIsEditing(true)
             onSelectBlock(id)
         }
-    }, [id, isEditing, setIsEditing, onSelectBlock])
+    }, [id, isReadOnly, isEditing, setIsEditing, onSelectBlock])
 
     // setTimeout turns on editing mode in a separate run-loop which prevents adding a newline at the start of the input
     const onEnterBlock = useCallback(() => {
@@ -80,7 +84,13 @@ export const SearchNotebookMarkdownBlock: React.FunctionComponent<SearchNotebook
     }, [isEditing, editor])
 
     const modifierKeyLabel = isMacPlatform ? '⌘' : 'Ctrl'
-    const commonMenuActions = useCommonBlockMenuActions({ modifierKeyLabel, isInputFocused, isMacPlatform, ...props })
+    const commonMenuActions = useCommonBlockMenuActions({
+        modifierKeyLabel,
+        isInputFocused,
+        isReadOnly,
+        isMacPlatform,
+        ...props,
+    })
     const menuActions = useMemo(
         () =>
             [
@@ -101,7 +111,7 @@ export const SearchNotebookMarkdownBlock: React.FunctionComponent<SearchNotebook
         [isEditing, modifierKeyLabel, runBlock, onEnterBlock, commonMenuActions]
     )
 
-    const blockMenu = isSelected && <SearchNotebookBlockMenu id={id} actions={menuActions} />
+    const blockMenu = isSelected && !isReadOnly && <SearchNotebookBlockMenu id={id} actions={menuActions} />
 
     if (!isEditing) {
         return (

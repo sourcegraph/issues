@@ -38,3 +38,22 @@ add('default', () => (
         )}
     </WebStory>
 ))
+
+add('default read-only', () => (
+    <WebStory>
+        {props => (
+            <SearchNotebook
+                {...props}
+                isReadOnly={true}
+                isMacPlatform={true}
+                globbing={true}
+                telemetryService={NOOP_TELEMETRY_SERVICE}
+                streamSearch={() => NEVER}
+                fetchHighlightedFileLineRanges={() => NEVER}
+                onSerializeBlocks={() => {}}
+                blocks={blocks}
+                settingsCascade={EMPTY_SETTINGS_CASCADE}
+            />
+        )}
+    </WebStory>
+))

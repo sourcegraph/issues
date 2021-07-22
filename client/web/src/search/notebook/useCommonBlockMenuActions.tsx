@@ -9,7 +9,7 @@ import { BlockMenuAction } from './SearchNotebookBlockMenu'
 import { BlockProps } from '.'
 
 interface UseCommonBlockMenuActionsOptions
-    extends Pick<BlockProps, 'onDeleteBlock' | 'onDuplicateBlock' | 'onMoveBlock'> {
+    extends Pick<BlockProps, 'isReadOnly' | 'onDeleteBlock' | 'onDuplicateBlock' | 'onMoveBlock'> {
     modifierKeyLabel: string
     isInputFocused: boolean
     isMacPlatform: boolean
@@ -17,14 +17,18 @@ interface UseCommonBlockMenuActionsOptions
 
 export const useCommonBlockMenuActions = ({
     isInputFocused,
+    isReadOnly,
     modifierKeyLabel,
     isMacPlatform,
     onMoveBlock,
     onDeleteBlock,
     onDuplicateBlock,
 }: UseCommonBlockMenuActionsOptions): BlockMenuAction[] =>
-    useMemo(
-        () => [
+    useMemo(() => {
+        if (isReadOnly) {
+            return []
+        }
+        return [
             {
                 label: 'Duplicate',
                 icon: <ContentDuplicateIcon className="icon-inline" />,
@@ -49,6 +53,5 @@ export const useCommonBlockMenuActions = ({
                 onClick: onDeleteBlock,
                 keyboardShortcutLabel: !isInputFocused ? (isMacPlatform ? '⌘ + ⌫' : 'Del') : '',
             },
-        ],
-        [isInputFocused, isMacPlatform, modifierKeyLabel, onMoveBlock, onDeleteBlock, onDuplicateBlock]
-    )
+        ]
+    }, [isReadOnly, isMacPlatform, isInputFocused, modifierKeyLabel, onMoveBlock, onDeleteBlock, onDuplicateBlock])

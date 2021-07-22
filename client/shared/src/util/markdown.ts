@@ -29,6 +29,9 @@ export const highlightCodeSafe = (code: string, language?: string): string => {
         if (language === 'plaintext' || language === 'text') {
             return escapeHTML(code)
         }
+        if (language === 'sourcegraph') {
+            return code
+        }
         if (language) {
             return highlight(language, code, true).value
         }
@@ -168,3 +171,5 @@ export const renderMarkdown = (
 
     return sanitize(rendered, sanitizeOptions)
 }
+
+export const markdownLexer = (markdown: string): marked.TokensList => marked.lexer(markdown)

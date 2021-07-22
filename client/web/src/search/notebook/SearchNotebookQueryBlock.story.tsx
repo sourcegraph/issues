@@ -47,6 +47,7 @@ add('default', () => (
                 input="query"
                 output={of(streamingSearchResult)}
                 isSelected={false}
+                isReadOnly={false}
                 isOtherBlockSelected={false}
                 isMacPlatform={true}
                 telemetryService={NOOP_TELEMETRY_SERVICE}
@@ -67,6 +68,28 @@ add('selected', () => (
                 input="query"
                 output={of(streamingSearchResult)}
                 isSelected={true}
+                isOtherBlockSelected={false}
+                isReadOnly={false}
+                isMacPlatform={true}
+                telemetryService={NOOP_TELEMETRY_SERVICE}
+                fetchHighlightedFileLineRanges={() => of(HIGHLIGHTED_FILE_LINES_LONG)}
+                settingsCascade={EMPTY_SETTINGS_CASCADE}
+            />
+        )}
+    </WebStory>
+))
+
+add('read-only selected', () => (
+    <WebStory>
+        {props => (
+            <SearchNotebookQueryBlock
+                {...props}
+                {...noopBlockCallbacks}
+                id="query-block-1"
+                input="query"
+                output={of(streamingSearchResult)}
+                isSelected={true}
+                isReadOnly={true}
                 isOtherBlockSelected={false}
                 isMacPlatform={true}
                 telemetryService={NOOP_TELEMETRY_SERVICE}

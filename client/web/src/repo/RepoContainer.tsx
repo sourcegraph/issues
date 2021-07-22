@@ -45,8 +45,15 @@ import { ActionItemsBarProps, useWebActionItems } from '../extensions/components
 import { ExternalLinkFields, RepositoryFields } from '../graphql-operations'
 import { IS_CHROME } from '../marketing/util'
 import { Settings } from '../schema/settings.schema'
-import { CaseSensitivityProps, PatternTypeProps, SearchContextProps, searchQueryForRepoRevision } from '../search'
+import {
+    CaseSensitivityProps,
+    PatternTypeProps,
+    SearchContextProps,
+    searchQueryForRepoRevision,
+    SearchStreamingProps,
+} from '../search'
 import { QueryState } from '../search/helpers'
+import { StreamingSearchResultsListProps } from '../search/results/StreamingSearchResultsList'
 import { browserExtensionInstalled } from '../tracking/analyticsUtils'
 import { RouteDescriptor } from '../util/contributions'
 import { parseBrowserRepoURL } from '../util/url'
@@ -81,7 +88,9 @@ export interface RepoContainerContext
         VersionContextProps,
         Pick<SearchContextProps, 'selectedSearchContextSpec'>,
         BreadcrumbSetters,
-        ActionItemsBarProps {
+        ActionItemsBarProps,
+        SearchStreamingProps,
+        Pick<StreamingSearchResultsListProps, 'fetchHighlightedFileLineRanges'> {
     repo: RepositoryFields
     authenticatedUser: AuthenticatedUser | null
     repoSettingsAreaRoutes: readonly RepoSettingsAreaRoute[]
@@ -93,6 +102,10 @@ export interface RepoContainerContext
     onDidUpdateExternalLinks: (externalLinks: ExternalLinkFields[] | undefined) => void
 
     globbing: boolean
+
+    showSearchNotebook: boolean
+
+    isMacPlatform: boolean
 
     showBatchChanges: boolean
 }
@@ -118,7 +131,9 @@ interface RepoContainerProps
         VersionContextProps,
         Pick<SearchContextProps, 'selectedSearchContextSpec'>,
         BreadcrumbSetters,
-        BreadcrumbsProps {
+        BreadcrumbsProps,
+        SearchStreamingProps,
+        Pick<StreamingSearchResultsListProps, 'fetchHighlightedFileLineRanges'> {
     repoContainerRoutes: readonly RepoContainerRoute[]
     repoRevisionContainerRoutes: readonly RepoRevisionContainerRoute[]
     repoHeaderActionButtons: readonly RepoHeaderActionButton[]
@@ -128,6 +143,8 @@ interface RepoContainerProps
     onNavbarQueryChange: (state: QueryState) => void
     history: H.History
     globbing: boolean
+    showSearchNotebook: boolean
+    isMacPlatform: boolean
     showBatchChanges: boolean
 }
 

@@ -30,6 +30,8 @@ import { ErrorMessage } from '../../components/alerts'
 import { BreadcrumbSetters } from '../../components/Breadcrumbs'
 import { HeroPage } from '../../components/HeroPage'
 import { PageTitle } from '../../components/PageTitle'
+import { SearchStreamingProps } from '../../search'
+import { StreamingSearchResultsListProps } from '../../search/results/StreamingSearchResultsList'
 import { toTreeURL } from '../../util/url'
 import { FilePathBreadcrumbs } from '../FilePathBreadcrumbs'
 import { HoverThresholdProps } from '../RepoContainer'
@@ -43,6 +45,7 @@ import { Blob, BlobInfo } from './Blob'
 import { GoToRawAction } from './GoToRawAction'
 import { useBlobPanelViews } from './panel/BlobPanel'
 import { RenderedFile } from './RenderedFile'
+import { RenderedSearchNotebookMarkdown, SEARCH_NOTEBOOK_FILE_EXTENSION } from './RenderedSearchNotebookMarkdown'
 
 function fetchBlobCacheKey(parsed: ParsedRepoURI & { isLightTheme: boolean; disableTimeout: boolean }): string {
     return makeRepoURI(parsed) + String(parsed.isLightTheme) + String(parsed.disableTimeout)
@@ -102,11 +105,16 @@ interface Props
         ExtensionsControllerProps,
         ThemeProps,
         HoverThresholdProps,
-        BreadcrumbSetters {
+        BreadcrumbSetters,
+        SearchStreamingProps,
+        Pick<StreamingSearchResultsListProps, 'fetchHighlightedFileLineRanges'> {
     location: H.Location
     history: H.History
     repoID: Scalars['ID']
     authenticatedUser: AuthenticatedUser | null
+    globbing: boolean
+    isMacPlatform: boolean
+    showSearchNotebook: boolean
 }
 
 export const BlobPage: React.FunctionComponent<Props> = props => {
@@ -208,6 +216,12 @@ export const BlobPage: React.FunctionComponent<Props> = props => {
     }
 
     useBlobPanelViews(props)
+
+    const isSearchNotebook =
+        blobInfoOrError &&
+        !isErrorLike(blobInfoOrError) &&
+        blobInfoOrError.filePath.endsWith(SEARCH_NOTEBOOK_FILE_EXTENSION) &&
+        props.showSearchNotebook
 
     // If url explicitly asks for a certain rendering mode, renderMode is set to that mode, else it checks:
     // - If file contains richHTML and url does not include a line number: We render in richHTML.
@@ -312,7 +326,10 @@ export const BlobPage: React.FunctionComponent<Props> = props => {
                     )}
                 </RepoHeaderContributionPortal>
             )}
-            {blobInfoOrError.richHTML && renderMode === 'rendered' && (
+            {isSearchNotebook && renderMode === 'rendered' && (
+                <RenderedSearchNotebookMarkdown {...props} markdown={blobInfoOrError.content} />
+            )}
+            {!isSearchNotebook && blobInfoOrError.richHTML && renderMode === 'rendered' && (
                 <RenderedFile dangerousInnerHTML={blobInfoOrError.richHTML} location={props.location} />
             )}
             {!blobInfoOrError.richHTML && blobInfoOrError.aborted && (
